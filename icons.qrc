@@ -1,0 +1,35 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/application-exit.png</file>
+        <file>icons/document-new.png</file>
+        <file>icons/document-open.png</file>
+        <file>icons/document-save.png</file>
+        <file>icons/document-save-as.png</file>
+        <file>icons/edit-copy.png</file>
+        <file>icons/edit-delete.png</file>
+        <file>icons/edit-paste.png</file>
+        <file>icons/edit-redo.png</file>
+        <file>icons/edit-undo.png</file>
+        <file>icons/help-browser.png</file>
+        <file>icons/list-add.png</file>
+        <file>icons/list-remove.png</file>
+        <file>icons/media-playback-start.png</file>
+        <file>icons/media-record.png</file>
+        <file>icons/preferences-system.png</file>
+        <file>icons/tools-check-spelling.png</file>
+        <file>icons/utilities-system-monitor.png</file>
+        <file>icons/view-sort-ascending.png</file>
+        <file>icons/window-close.png</file>
+        <file>icons/zoom-in.png</file>
+        <file>icons/zoom-original.png</file>
+        <file>icons/zoom-out.png</file>
+        <file>icons/gtk-go-down.png</file>
+        <file>icons/gtk-go-forward-ltr.png</file>
+        <file>icons/1D-64.png</file>
+        <file>icons/2D-64.png</file>
+        <file>icons/3D-64.png</file>
+        <file>icons/1D-64-W.png</file>
+        <file>icons/2D-64-W.png</file>
+        <file>icons/3D-64-W.png</file>
+    </qresource>
+</RCC>
