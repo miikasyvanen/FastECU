@@ -270,7 +270,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
             if (received.at(2) == 0x6F)
             {
                 read_serial_data(2, Timeout);
-                qDebug() << "Message ACK";
+                //qDebug() << "Message ACK";
                 msg_byte_cnt = received.at(3) - 1;
                 msg_type = received.at(4);
                 msg_type_string = "ACK";
@@ -322,7 +322,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
 
                 if (msg_type == NORM_MSG_START_IND)
                 {
-                    qDebug() << "Message NORM_MSG_START_IND";
+                    //qDebug() << "Message NORM_MSG_START_IND";
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
 
                     msg_index = 0;
@@ -333,7 +333,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 }
                 if (msg_type == NORM_MSG)
                 {
-                    qDebug() << "Message NORM_MSG, byte cnt" << msg_byte_cnt;
+                    //qDebug() << "Message NORM_MSG, byte cnt" << msg_byte_cnt;
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
                     qDebug() << "MSG:" << parseMessageToHex(received);
 
@@ -373,7 +373,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 }
                 if (msg_type == RX_MSG_END_IND)
                 {
-                    qDebug() << "Message RX_MSG_END_IND";
+                    //qDebug() << "Message RX_MSG_END_IND";
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
 
                     char data[4];

@@ -159,9 +159,13 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "sti04")
     {
-        result = connect_bootloader_subaru_kline_04_32bit();
+        send_log_window_message("Connecting to Subaru 04 32-bit k-line bootloader, please wait...", true, true);
+        result = connect_bootloader_subaru_kline_32bit();
         if (result == STATUS_SUCCESS && !kernel_alive)
-            result = upload_kernel_subaru_kline_04_32bit(kernel);
+        {
+            send_log_window_message("Initializing Subaru K-Line 04 32-bit kernel upload, please wait...", true, true);
+            result = upload_kernel_subaru_kline_32bit(kernel);
+        }
         if (result == STATUS_SUCCESS)
         {
             if (cmd_type == "read")
@@ -173,9 +177,13 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "sti05")
     {
-        result = connect_bootloader_subaru_kline_05_32bit();
+        send_log_window_message("Connecting to Subaru 05 32-bit k-line bootloader, please wait...", true, true);
+        result = connect_bootloader_subaru_kline_32bit();
         if (result == STATUS_SUCCESS)
-            result = upload_kernel_subaru_kline_05_32bit(kernel);
+        {
+            send_log_window_message("Initializing Subaru K-Line 05 32-bit kernel upload, please wait...", true, true);
+            result = upload_kernel_subaru_kline_32bit(kernel);
+        }
         if (result == STATUS_SUCCESS)
         {
             if (cmd_type == "read")
@@ -322,7 +330,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_32bit()
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_32bit()
+int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
 {
     QByteArray output;
     QByteArray received;
@@ -331,7 +339,6 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_32bit()
 
     QString msg;
 
-    send_log_window_message("Connecting to Subaru 04 32-bit k-line bootloader, please wait...", true, true);
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -368,30 +375,29 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_32bit()
 
     serial->serialport_protocol_14230 = false;
 
-    if (serial->use_openport2_adapter)
-        serial->reset_connection();
+    //if (serial->use_openport2_adapter)
+        //serial->reset_connection();
     serial->change_port_speed("4800");
-    if (serial->use_openport2_adapter)
-        serial->init_j2534_connection();
+    //if (serial->use_openport2_adapter)
+        //serial->init_j2534_connection();
 
     delay(100);
-/*
-    received = sub_sid_a8_read_mem();
-    if (received == "" || (uint8_t)received.at(4) != 0xE8)
-        return STATUS_ERROR;
-    received.remove(0,5);
-    received.remove(received.length() - 1, 1);
-    send_log_window_message("ECU ID = " + parse_message_to_hex(received), true, true);
-*/
 
     // SSM init
     received = sub_sid_bf_ssm_init();
     //send_log_window_message("SID BF = " + parse_message_to_hex(received), true, true);
     if (received == "")
         return STATUS_ERROR;
+    qDebug() << "Received:" << parse_message_to_hex(received);
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
-    QString ecuid = QString("%1%2%3%4%5").arg(received.at(0),2,16,QLatin1Char('0')).toUpper().arg(received.at(1),2,16,QLatin1Char('0')).arg(received.at(2),2,16,QLatin1Char('0')).arg(received.at(3),2,16,QLatin1Char('0')).arg(received.at(4),2,16,QLatin1Char('0'));
+    qDebug() << "Received length:" << received.length();
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+    }
+    QString ecuid = msg;
+    //QString ecuid = QString("%1%2%3%4%5").arg(received.at(0),2,16,QLatin1Char('0')).toUpper().arg(received.at(1),2,16,QLatin1Char('0')).arg(received.at(2),2,16,QLatin1Char('0')).arg(received.at(3),2,16,QLatin1Char('0')).arg(received.at(4),2,16,QLatin1Char('0'));
 
     send_log_window_message("ECU ID = " + ecuid, true, true);
 
@@ -447,22 +453,6 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_32bit()
     //delay(500);
 
     return STATUS_SUCCESS;
-}
-
-int EcuOperationsSubaru::connect_bootloader_subaru_kline_05_32bit()
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-
-    send_log_window_message("Connecting to Subaru 05 32-bit k-line bootloader, please wait...", true, true);
-    if (!serial->is_serial_port_open())
-    {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
-        return STATUS_ERROR;
-    }
-
-    return STATUS_ERROR;
 }
 
 int EcuOperationsSubaru::connect_bootloader_subaru_can_05_32bit()
@@ -569,7 +559,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
+int EcuOperationsSubaru::upload_kernel_subaru_kline_32bit(QString kernel)
 {
     //qDebug() << "Kernel:" << kernel;
     QFile file(kernel);
@@ -586,9 +576,18 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     QByteArray cks_bypass;
     uint8_t chk_sum = 0;
 
-    start_address = flashdevices[mcu_type_index].rblocks->start + 4;
+    QString mcu_name;
 
-    send_log_window_message("Initializing Subaru K-Line 04 32-bit kernel upload, please wait...", true, true);
+    qDebug() << "MCU name:" << flashdevices[mcu_type_index].name;
+
+    mcu_name = "SH7055";
+    if (flashdevices[mcu_type_index].name == mcu_name)
+        start_address = flashdevices[mcu_type_index].rblocks->start + 4;
+    mcu_name = "SH7058";
+    if (flashdevices[mcu_type_index].name == mcu_name)
+        start_address = flashdevices[mcu_type_index].rblocks->start;
+
+    qDebug() << "Start address to upload kernel:"<< hex << start_address;
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -704,31 +703,6 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     send_log_window_message("Request kernel ID OK" + received, true, true);
 
     return STATUS_SUCCESS;
-}
-
-int EcuOperationsSubaru::upload_kernel_subaru_kline_05_32bit(QString kernel)
-{
-    QFile file(kernel);
-
-    QByteArray output;
-    QByteArray payload;
-    QByteArray received;
-    QByteArray msg;
-    QByteArray pl_encr;
-    uint32_t file_len = 0;
-    uint32_t pl_len = 0;
-    uint32_t len = 0;
-    QByteArray cks_bypass;
-    uint8_t chk_sum = 0;
-
-    send_log_window_message("Initializing Subaru K-Line 05 32-bit kernel upload, please wait...", true, true);
-    if (!serial->is_serial_port_open())
-    {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
-        return STATUS_ERROR;
-    }
-
-    return STATUS_ERROR;
 }
 
 int EcuOperationsSubaru::upload_kernel_subaru_can_05_32bit(QString kernel)
@@ -943,11 +917,12 @@ QByteArray EcuOperationsSubaru::sub_sid_bf_ssm_init()
     //qDebug() << "SSM init";
     output.append((uint8_t)0xBF);
     serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    delay(250);
     received = serial->read_serial_data(100, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
-        //qDebug() << "Next BF loop";
-        //qDebug() << "BF received:" << parse_message_to_hex(received);
+        qDebug() << "Next BF loop";
+        qDebug() << "BF received:" << parse_message_to_hex(received);
         send_log_window_message("SSM init", true, true);
         //qDebug() << "SSM init";
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
