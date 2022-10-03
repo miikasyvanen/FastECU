@@ -90,11 +90,8 @@ private:
         "wrx02",
         "wrx04",
         "ftx02",
-        "ftx02can",
         "sti04",
-        "sti04can",
         "sti05",
-        "sti05can",
         "subarucan",
     };
 

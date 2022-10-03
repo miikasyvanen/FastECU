@@ -261,86 +261,6 @@ bool MainWindow::ecu_init()
 
 void MainWindow::ssm_can_init()
 {
-    QByteArray output;
-    QByteArray received;
-    uint32_t start_address = 0xFFFF6000;
-
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0xAA);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(100, 500);
-    qDebug() << "ECU CAN init:" << parse_message_to_hex(received);
-    qDebug() << "ECU ID:" << parse_ecuid(received);
-
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0x86);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(100, 500);
-    qDebug() << "SSM CAN init:" << parse_message_to_hex(received);
-    qDebug() << "ECU ID:" << parse_ecuid(received);
-
-    for (int i = 0; i < 5; i++)
-    {
-        output.clear();
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x07);
-        output.append((uint8_t)0xE0);
-        output.append((uint8_t)0x7A);
-        output.append((uint8_t)(0x98 + 0x04));
-        output.append((uint8_t)((start_address >> 24) & 0xFF));
-        output.append((uint8_t)((start_address >> 16) & 0xFF));
-        output.append((uint8_t)((start_address >> 8) & 0xFF));
-        output.append((uint8_t)(start_address & 0xFF));
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        serial->write_serial_data_echo_check(output);
-        delay(200);
-        received = serial->read_serial_data(100, 500);
-
-        qDebug() << "SSM CAN init" + QString::number(i) + ":" << parse_message_to_hex(received);
-        qDebug() << "ECU ID:" << parse_ecuid(received);
-
-        start_address += 0x100;
-    }
-    /*
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0x10);
-    output.append((uint8_t)0x03);
-
-    serial->write_serial_data_echo_check(output);
-    received = serial->read_serial_data(100, 500);
-
-    qDebug() << "SSM CAN init:" << parse_message_to_hex(received);
-    qDebug() << "ECU ID:" << parse_ecuid(received);
-    */
 
 }
 
@@ -349,39 +269,12 @@ void MainWindow::ssm_kline_init()
     QByteArray output;
     QByteArray received;
 
-    qDebug() << "Check ECU INIT";
+    //qDebug() << "Check ECU INIT";
     if (!ecu_init_started)
     {
         ecu_init_started = true;
 /*
-        output.clear();
-        output.append((uint8_t)0xB8);
-        output.append((uint8_t)0xFF);
-        output.append((uint8_t)0xDF);
-        output.append((uint8_t)0xFC);
-        output.append((uint8_t)0x5A);
-        output.append((uint8_t)0xA5);
-        output.append((uint8_t)0xA5);
-        output.append((uint8_t)0x5A);
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        received = serial->read_serial_data(100, 500);
-        qDebug() << "MEM:" << parse_message_to_hex(received);
-    */
-        qDebug() << "Read MEM with A0";
-
-        output.clear();
-        output.append((uint8_t)0xA0);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0xFF);
-        output.append((uint8_t)0xDF);
-        output.append((uint8_t)0xFC);
-        output.append((uint8_t)0x03);
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        delay(200);
-        received = serial->read_serial_data(100, 500);
-        qDebug() << "MEM:" << parse_message_to_hex(received);
-
-        qDebug() << "Read ECU ID with A8";
+        //qDebug() << "Read ECU ID with A8";
         output.clear();
         output.append((uint8_t)0xA8);
         output.append((uint8_t)0x00);
@@ -403,9 +296,9 @@ void MainWindow::ssm_kline_init()
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
         delay(200);
         received = serial->read_serial_data(100, 500);
-        qDebug() << "ECU ID:" << parse_message_to_hex(received);
-
-        qDebug() << "SSM init with BF";
+        //qDebug() << "ECU ID:" << parse_message_to_hex(received);
+*/
+        //qDebug() << "SSM init with BF";
         output.clear();
         output.append((uint8_t)0xBF);
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
@@ -532,14 +425,6 @@ QStringList MainWindow::create_car_models_list()
 
 QStringList MainWindow::create_flash_methods_list()
 {
-/*
-    QStringList flash_methods;
-    flash_methods.append("wrx02");
-    flash_methods.append("fxt02");
-    flash_methods.append("sti04");
-    flash_methods.append("sti05");
-    flash_methods.append("subarucan");
-*/
     return flash_methods;
 }
 
@@ -551,16 +436,10 @@ QString MainWindow::check_kernel(QString flash_method)
     if (flash_method == "wrx02")
         kernel = prefix + "ssmk_HC16.bin";
     if (flash_method == "fxt02")
-        kernel = prefix + "ssmk_SH7055_02fxt_35.bin";
-    if (flash_method == "fxt02can")
-        kernel = prefix + "ssmk_SH7055_02fxt_35.bin";
+        kernel = prefix + "ssmk_SH7055.bin";
     if (flash_method == "sti04")
-        kernel = prefix + "ssmk_SH7055_02fxt_35.bin";
-    if (flash_method == "sti04can")
-        kernel = prefix + "ssmk_SH7055_02fxt_35.bin";
+        kernel = prefix + "ssmk_SH7055.bin";
     if (flash_method == "sti05")
-        kernel = prefix + "ssmk_SH7058.bin";
-    if (flash_method == "sti05can")
         kernel = prefix + "ssmk_SH7058.bin";
     if (flash_method == "subarucan")
         kernel = prefix + "ssmk_SH7058.bin";
@@ -632,13 +511,18 @@ void MainWindow::open_serial_port()
 
 void MainWindow::start_ecu_operations(QString cmd_type)
 {
+    serial_poll_timer->stop();
+    ssm_init_poll_timer->stop();
+    logging_poll_timer->stop();
+
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
 
     if (cmd_type == "test_write" || cmd_type == "write")
     {
-        ecuCalDef[romNumber]->Kernel = check_kernel(flash_method_list->currentText());
-        qDebug() << ecuCalDef[romNumber]->Kernel;
+        ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
+        //ecuCalDef[romNumber]->Kernel = check_kernel(flash_method_list->currentText());
+        qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
         EcuOperationsSubaru *ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
 
         delete ecuOperationsSubaru;
@@ -672,6 +556,8 @@ void MainWindow::start_ecu_operations(QString cmd_type)
 
     serial->serialport_protocol_14230 = false;
     serial->change_port_speed("4800");
+    serial_poll_timer->start();
+    ssm_init_poll_timer->start();
 }
 
 void MainWindow::start_manual_ecu_operations()
@@ -1246,10 +1132,11 @@ QString MainWindow::parse_message_to_hex(QByteArray received)
 QString MainWindow::parse_ecuid(QByteArray received)
 {
     QString msg;
-    received.remove(0,8);
+    received.remove(0, 8);
     received.remove(5, received.length() - 5);
 
-    for (unsigned long i = 0; i < received.length(); i++)
+    qDebug() << "Received length:" << received.length();
+    for (int i = 0; i < received.length(); i++)
     {
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
     }
