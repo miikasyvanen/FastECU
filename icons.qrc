@@ -31,5 +31,9 @@
         <file>icons/1D-64-W.png</file>
         <file>icons/2D-64-W.png</file>
         <file>icons/3D-64-W.png</file>
+        <file>icons/view-refresh.png</file>
+        <file>icons/read.png</file>
+        <file>icons/test_write.png</file>
+        <file>icons/write.png</file>
     </qresource>
 </RCC>

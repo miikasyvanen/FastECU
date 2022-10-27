@@ -1,5 +1,5 @@
 #include "logbox.h"
-#include "ui_preferences.h"
+//#include "ui_preferences.h"
 
 LogBox::LogBox(QWidget *parent) : QWidget(parent)
 {
@@ -8,7 +8,7 @@ LogBox::LogBox(QWidget *parent) : QWidget(parent)
 
 QGroupBox *LogBox::drawLogBoxes(QString type, uint8_t index, uint8_t logBoxCount, QString title, QString unit, QString value)
 {
-    QGroupBox *gb;
+    QGroupBox *gb = NULL;
 
     if (type == "switch")
         gb = drawLogSwitchBox(index, logBoxCount, title, unit, value);
@@ -40,8 +40,10 @@ QGroupBox *LogBox::drawLogSwitchBox(uint8_t index, uint8_t switchBoxCount, QStri
     QLabel *switchBoxLabel = new QLabel();
     //switchBoxLabel->setFixedWidth(100);
     switchBoxLabel->setAlignment(Qt::AlignCenter);
+    switchBoxLabel->setAlignment(Qt::AlignLeft);
     switchBoxLabel->setText(labelText);
-    int labelFontSize = size.width() / 180;
+    //int labelFontSize = size.width() / 180;
+    int labelFontSize = size.width() / 200;
     QFont f("Arial", labelFontSize, QFont::Bold);
     QFontMetrics fm(f);
     switchBoxLabel->setFont(f);
@@ -62,7 +64,7 @@ QGroupBox *LogBox::drawLogValueBox(uint8_t index, uint8_t logBoxCount, QString t
 
     QGroupBox *logGroupBox = new QGroupBox(title);
     logGroupBox->setContextMenuPolicy(Qt::CustomContextMenu);
-    logGroupBox->setObjectName("switchGroupBox" + QString::number(index));
+    logGroupBox->setObjectName("valueGroupBox" + QString::number(index));
     int minWidth = size.width() / (logBoxCount) / 2;
     int maxWidth = size.width() / (logBoxCount);
     int groupBoxFontSize = size.width() / 170;
@@ -72,18 +74,20 @@ QGroupBox *LogBox::drawLogValueBox(uint8_t index, uint8_t logBoxCount, QString t
     logGroupBox->setMaximumWidth(maxWidth);
     logGroupBox->setFont(t);
 
-    QString labelText = QString::number(value.toFloat(), 'f', 2);
+    //QString labelText = QString::number(value.toFloat(), 'f', 2);
+    QString labelText = "0";
     labelText.append(" <font size=1px color=grey>");
     labelText.append(unit);
     labelText.append("</font>");
 
     QLabel *logBoxLabel = new QLabel();
+    logBoxLabel->setObjectName("log_label" + QString::number(index));
     //logBoxLabel->setFixedWidth(100);
     logBoxLabel->setAlignment(Qt::AlignRight);
     logBoxLabel->setText(labelText);
     int labelFontSize = size.width() / 90;
     QFont f("Arial",labelFontSize);
-    QFontMetrics fm(f);
+    //QFontMetrics fm(f);
     logBoxLabel->setFont(f);
 
     QVBoxLayout *logBoxLayout = new QVBoxLayout();

@@ -28,7 +28,6 @@
 #include <ecu_operations_manual.h>
 #include <file_actions.h>
 #include <logbox.h>
-#include <logvalues.h>
 #include <preferences.h>
 #include <serial_port_actions.h>
 
@@ -51,7 +50,15 @@ public:
     void delay(int n);
 
 private:
+    static const QColor RED_LIGHT_OFF;
+    static const QColor RED_LIGHT_ON;
+    static const QColor YELLOW_LIGHT_OFF;
+    static const QColor YELLOW_LIGHT_ON;
+    static const QColor GREEN_LIGHT_OFF;
+    static const QColor GREEN_LIGHT_ON;
+
     bool loggingState = false;
+    bool log_params_request_started = false;
     bool ecu_init_started = false;
     bool ecu_init_complete = false;
 
@@ -73,6 +80,7 @@ private:
     FileActions *fileActions;
     FileActions::LogValuesStructure *logValues;
     FileActions::ConfigValuesStructure *configValues;
+    EcuOperationsSubaru *ecuOperationsSubaru;
 
     SerialPortActions *serial;
     QTimer *serial_poll_timer;
@@ -93,6 +101,7 @@ private:
         "sti04",
         "sti05",
         "subarucan",
+        "subarucan_iso",
     };
 
     enum RomInfoEnum {
@@ -113,7 +122,8 @@ private:
         FileSize,
     };
 
-    QString ecuid;
+    QString ecuid = "";
+    QString protocol = "";
 
     QTimer *ssm_init_poll_timer;
     uint16_t ssm_init_poll_timer_timeout = 250;
@@ -122,6 +132,12 @@ private:
     uint16_t logging_poll_timer_timeout = 150;
     uint16_t logging_counter = 0;
     bool logging_request_active = false;
+
+    QTimer *logparams_poll_timer;
+    uint16_t logparams_poll_timer_timeout = 10;
+    bool logparams_read_active = false;
+
+    QElapsedTimer *log_speed_timer;
 
     LogBox *logBoxes;
 
@@ -139,16 +155,20 @@ private:
     Ui::MainWindow *ui;
 
     // fileactions.c
-    void open_calibration_file();
+    bool open_calibration_file(QString filename);
     void save_calibration_file();
     void save_calibration_file_as();
     QStringList parse_stringlist_from_expression_string(QString expression, QString x);
     float calculate_value_from_expression(QStringList expression);
 
+    // logvalues.c
+    void change_log_values(int tabIndex, QString protocol);
+
     // mainwindow.c
     void ssm_kline_init();
     void ssm_can_init();
-    QString parse_log_params(QByteArray received);
+    QString parse_log_params(QByteArray received, QString protocol);
+    void parse_log_value_list(QByteArray received, QString protocol);
     QByteArray add_ssm_header(QByteArray output, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QStringList create_car_models_list();
@@ -166,6 +186,8 @@ private:
     void toggle_realtime();
     void toggle_log_to_file();
     void set_maptablewidget_items();
+    QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian);
+    void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, float map_value);
     int get_mapvalue_decimal_count(QString valueFormat);
     int get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, float mapDataValue, int mapIndex);
 
@@ -180,11 +202,17 @@ private slots:
     void calibration_data_treewidget_item_selected(QTreeWidgetItem* item);
     void calibration_data_treewidget_item_expanded(QTreeWidgetItem* item);
     void calibration_data_treewidget_item_collapsed(QTreeWidgetItem* item);
+
     // menuactions.c
     void menu_action_triggered(QString action);
+
     // mainwindow.c
     bool ecu_init();
     void log_ssm_values();
+    void read_serial_data();
+    void car_model_changed();
+    void flash_method_changed();
+    void check_serial_ports();
     void open_serial_port();
     void start_ecu_operations(QString cmd_type);
     void start_manual_ecu_operations();
@@ -193,6 +221,8 @@ private slots:
     void change_gauge_values();
     void change_digital_values();
     void change_switch_values();
+    void update_logboxes(QString protocol);
+    void update_logbox_values(QString protocol);
     void add_new_ecu_definition_file();
     void remove_ecu_definition_file();
     void add_new_logger_definition_file();
@@ -200,20 +230,19 @@ private slots:
     QString parse_message_to_hex(QByteArray received);
     QString parse_ecuid(QByteArray received);
     void set_status_bar_label(bool serialConnectionState, bool ecuConnectionState, QString romId);
-    // serialactions.c
-    // void parse_received_data(QByteArray ReceivedDataToParse);
     void custom_menu_requested(QPoint pos);
-
     void selectable_combobox_item_changed(QString item);
-
+    void checkbox_state_changed(int state);
     void close_app();
+
+    // logvalues.c
+    void change_log_gauge_value(int index);
+    void change_log_digital_value(int index);
+    void change_log_switch_value(int index);
 
 signals:
     void check_serial_port();
     void send_serial_data(QByteArray output);
 
-private slots:
-    void flash_method_changed();
-    void check_serial_ports();
 };
 #endif // MAINWINDOW_H

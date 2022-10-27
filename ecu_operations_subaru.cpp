@@ -7,8 +7,7 @@ EcuOperationsSubaru::EcuOperationsSubaru(SerialPortActions *serial, FileActions:
 {
     ui->setupUi(this);
     this->setParent(parent);
-    this->setAttribute(Qt::WA_DeleteOnClose);
-    //this->setAttribute(Qt::WA_QuitOnClose);
+
     if (cmd_type == "test_write")
         this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "write")
@@ -20,35 +19,39 @@ EcuOperationsSubaru::EcuOperationsSubaru(SerialPortActions *serial, FileActions:
 
     int result = 0;
 
-    //qDebug() << "Start ECU operations window";
-
     ui->progressbar->setValue(0);
-    //serial = new SerialPortActions();
 
     result = ecu_functions(ecuCalDef, cmd_type);
-    if (result == STATUS_SUCCESS)
+
+    if (result == STATUS_SUCCESS){
         QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+        this->close();
+    }
     else
         QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+
 }
 
 EcuOperationsSubaru::~EcuOperationsSubaru()
 {
+    delete ui;
+}
 
-    //free(ecuOperations);
-
-    this->close();
+void EcuOperationsSubaru::closeEvent(QCloseEvent *bar)
+{
+    kill_process = true;
+    ecuOperations->kill_process = true;
 }
 
 void EcuOperationsSubaru::check_mcu_type(QString flash_method)
 {
     if (flash_method == "wrx02")
         mcu_type_string = "MC68HC16Y5";
-    if (flash_method == "fxt02" || flash_method == "fxt02can")
+    if (flash_method == "fxt02")
         mcu_type_string = "SH7055";
-    if (flash_method == "sti04" || flash_method == "sti04can")
+    if (flash_method == "sti04")
         mcu_type_string = "SH7055";
-    if (flash_method == "sti05" || flash_method == "sti05can")
+    if (flash_method == "sti05")
         mcu_type_string = "SH7058";
     if (flash_method == "subarucan")
         mcu_type_string = "SH7058";
@@ -62,14 +65,6 @@ void EcuOperationsSubaru::check_mcu_type(QString flash_method)
             break;
         mcu_type_index++;
     }
-
-/*
-    qDebug() << "MCU type:" << flashdevices[mcu_type_index].name;
-    qDebug() << "MCU ROM size:" << flashdevices[mcu_type_index].romsize;
-    qDebug() << "MCU block count:" << flashdevices[mcu_type_index].numblocks;
-    for (unsigned i = 0; i < flashdevices[mcu_type_index].numblocks; i++)
-        qDebug() << "Block start:" << flashdevices[mcu_type_index].fblocks[i].start << "| length:" << flashdevices[mcu_type_index].fblocks[i].len;
-*/
 }
 
 int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
@@ -78,7 +73,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     QString flash_method;
     QString kernel;
     int test_write = 0;
-    int result;
+    int result = STATUS_ERROR;
 
     if (cmd_type == "read")
     {
@@ -117,13 +112,20 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
 
     if (flash_method == "wrx02")
     {
-        result = connect_bootloader_subaru_kline_02_16bit();
-        if (result == STATUS_SUCCESS)
+        send_log_window_message("Connecting to Subaru 02 16-bit bootloader, please wait...", true, true);
+        result = connect_bootloader_subaru_kline_16bit();
+        if (result == STATUS_SUCCESS && !kernel_alive)
+        {
+            send_log_window_message("Initializing Subaru K-Line 02 16-bit kernel upload, please wait...", true, true);
             result = upload_kernel_subaru_kline_02_16bit(kernel);
+        }
         if (result == STATUS_SUCCESS)
         {
             if (cmd_type == "read")
+            {
+                send_log_window_message("Reading ROM from Subaru K-Line 16-bit", true, true);
                 result = read_rom_subaru_kline_02_16bit(ecuCalDef);
+            }
             else if (cmd_type == "test_write" || cmd_type == "write")
                 result = write_rom_subaru_kline_02_16bit(ecuCalDef, test_write);
         }
@@ -145,15 +147,25 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "fxt02")
     {
-        result = connect_bootloader_subaru_kline_02_32bit();
-        if (result == STATUS_SUCCESS)
+        send_log_window_message("Connecting to Subaru 02 32-bit bootloader, please wait...", true, true);
+        result = connect_bootloader_subaru_kline_16bit();
+        if (result == STATUS_SUCCESS && !kernel_alive)
+        {
+            send_log_window_message("Initializing Subaru K-Line 02 32-bit kernel upload, please wait...", true, true);
             result = upload_kernel_subaru_kline_02_32bit(kernel);
+        }
         if (result == STATUS_SUCCESS)
         {
             if (cmd_type == "read")
+            {
+                send_log_window_message("Reading ROM from Subaru K-Line 32-bit", true, true);
                 result = read_rom_subaru_kline_02_32bit(ecuCalDef);
+            }
             else if (cmd_type == "test_write" || cmd_type == "write")
+            {
+                send_log_window_message("Writing ROM to Subaru K-Line 32-bit", true, true);
                 result = write_rom_subaru_kline_02_32bit(ecuCalDef, test_write);
+            }
         }
         return result;
     }
@@ -169,9 +181,15 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         if (result == STATUS_SUCCESS)
         {
             if (cmd_type == "read")
-                result = read_rom_subaru_kline_04_32bit(ecuCalDef);
+            {
+                send_log_window_message("Reading ROM from Subaru K-Line 32-bit", true, true);
+                result = read_rom_subaru_kline_32bit(ecuCalDef);
+            }
             else if (cmd_type == "test_write" || cmd_type == "write")
-                result = write_rom_subaru_kline_04_32bit(ecuCalDef, test_write);
+            {
+                send_log_window_message("Writing ROM to Subaru K-Line 32-bit", true, true);
+                result = write_rom_subaru_kline_32bit(ecuCalDef, test_write);
+            }
         }
         return result;
     }
@@ -179,7 +197,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     {
         send_log_window_message("Connecting to Subaru 05 32-bit k-line bootloader, please wait...", true, true);
         result = connect_bootloader_subaru_kline_32bit();
-        if (result == STATUS_SUCCESS)
+        if (result == STATUS_SUCCESS && !kernel_alive)
         {
             send_log_window_message("Initializing Subaru K-Line 05 32-bit kernel upload, please wait...", true, true);
             result = upload_kernel_subaru_kline_32bit(kernel);
@@ -187,9 +205,15 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         if (result == STATUS_SUCCESS)
         {
             if (cmd_type == "read")
-                result = read_rom_subaru_kline_05_32bit(ecuCalDef);
+            {
+                send_log_window_message("Reading ROM from Subaru K-Line 32-bit", true, true);
+                result = read_rom_subaru_kline_32bit(ecuCalDef);
+            }
             else if (cmd_type == "test_write" || cmd_type == "write")
-                result = write_rom_subaru_kline_05_32bit(ecuCalDef, test_write);
+            {
+                send_log_window_message("Writing ROM to Subaru K-Line 32-bit", true, true);
+                result = write_rom_subaru_kline_32bit(ecuCalDef, test_write);
+            }
         }
         return result;
     }
@@ -210,18 +234,16 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     else
     {
         send_log_window_message("Unknown flashmethod " + flash_method, true, true);
-        return 0;
+        return STATUS_ERROR;
     }
 
-    return 0;
+    return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_16bit()
+int EcuOperationsSubaru::connect_bootloader_subaru_kline_16bit()
 {
     QByteArray output;
     QByteArray received;
-
-    send_log_window_message("Connecting to Subaru 02 16-bit bootloader, please wait...", true, true);
 
     // Change serial speed and set 'line end checks' to low level
     if (!serial->is_serial_port_open())
@@ -240,16 +262,16 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_16bit()
     delay(1000);
     serial->pulse_lec_2_line(200);
     output.clear();
-    for (uint8_t i = 0; i < subaru_02_16bit_bootloader_init.length(); i++)
+    for (uint8_t i = 0; i < subaru_16bit_bootloader_init.length(); i++)
     {
-        output.append(subaru_02_16bit_bootloader_init[i]);
+        output.append(subaru_16bit_bootloader_init[i]);
     }
     received = serial->write_serial_data_echo_check(output);
     send_log_window_message("Sent to bootloader: " + parse_message_to_hex(received), true, true);
     received = serial->read_serial_data(output.length(), serial_read_short_timeout);
     send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
 
-    if (received.length() != 3 || !check_received_message(subaru_02_16bit_bootloader_init_ok, received))
+    if (received.length() != 3 || !check_received_message(subaru_16bit_bootloader_init_ok, received))
     {
         send_log_window_message("Bad response from bootloader", true, true);
         return STATUS_ERROR;
@@ -280,56 +302,6 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_16bit()
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_32bit()
-{
-    QByteArray output;
-    QByteArray received;
-
-    send_log_window_message("Connecting to Subaru 02 32-bit k-line bootloader, please wait...", true, true);
-
-    // Change serial speed and set 'line end checks' to low level
-    if (!serial->is_serial_port_open())
-    {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
-        return STATUS_ERROR;
-    }
-    serial->change_port_speed("9600");
-    serial->set_lec_lines(0, 0);
-
-    delay(10);
-    // Start countdown
-    connect_bootloader_start_countdown(5);
-
-    // Connect to bootloader
-    delay(1000);
-    serial->pulse_lec_2_line(200);
-    output.clear();
-    for (uint8_t i = 0; i < subaru_02_32bit_bootloader_init.length(); i++)
-    {
-        output.append(subaru_02_32bit_bootloader_init[i]);
-    }
-    received = serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent to bootloader: " + parse_message_to_hex(received), true, true);
-
-    received = serial->read_serial_data(output.length(), serial_read_short_timeout);
-    send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
-
-    if (received.length() != 3 || !check_received_message(subaru_02_32bit_bootloader_init_ok, received))
-    {
-        send_log_window_message("Bad response from bootloader", true, true);
-        return STATUS_ERROR;
-    }
-    else
-    {
-        send_log_window_message("Connected to bootloader", true, true);
-        return STATUS_SUCCESS;
-    }
-
-    delay(10);
-
-    return STATUS_ERROR;
-}
-
 int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
 {
     QByteArray output;
@@ -345,7 +317,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
         return STATUS_ERROR;
     }
 
-    connect_bootloader_start_countdown(2);
+    connect_bootloader_start_countdown(5);
 
     serial->change_port_speed("62500");
     serial->serialport_protocol_14230 = true;
@@ -367,7 +339,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
                 return STATUS_ERROR;
 
             received.remove(0, 2);
-            send_log_window_message("Request kernel id ok" + received, true, true);
+            send_log_window_message("Request kernel id ok: " + received, true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -403,7 +375,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
 
     // Start communication
     received = sub_sid_81_start_communication();
-    //send_log_window_message("SID_81 = " + parse_message_to_hex(received), true, true);
+    send_log_window_message("SID_81 = " + parse_message_to_hex(received), true, true);
     if (received == "" || (uint8_t)received.at(4) != 0xC1)
         return STATUS_ERROR;
 
@@ -484,7 +456,6 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
     uint32_t len = 0;
     uint8_t chk_sum = 0;
 
-    send_log_window_message("Initializing Subaru K-Line 02 16-bit kernel upload, please wait...", true, true);
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -549,19 +520,134 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_16bit(QString kernel)
 
 int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
 {
-    send_log_window_message("Uploading Subaru K-Line 02 32-bit kernel upload, please wait...", true, true);
+    QFile file(kernel);
+
+    QByteArray output;
+    QByteArray payload;
+    QByteArray received;
+    QByteArray msg;
+    QByteArray pl_encr;
+    uint32_t file_len = 0;
+    uint32_t pl_len = 0;
+    uint32_t len = 0;
+    uint32_t ram_addr = 0;
+    uint8_t chk_sum = 0;
+
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
-    return STATUS_ERROR;
+    // Check kernel file
+    if (!file.open(QIODevice::ReadOnly ))
+    {
+        send_log_window_message("Unable to open kernel file for reading", true, true);
+        return -1;
+    }
+
+    file_len = file.size();
+    pl_len = (file_len + 3) & ~3;
+    pl_encr = file.readAll();
+    len = pl_len &= ~3;
+
+    send_log_window_message("File length " + QString::number(file_len) + ", payload length " + QString::number(pl_len), true, true);
+
+    if (pl_len >= KERNEL_MAXSIZE_SUB) {
+        send_log_window_message("***************** warning : large kernel detected *****************", true, true);
+        send_log_window_message("That file seems way too big (%lu bytes) to be a typical kernel.", true, true);
+        send_log_window_message("Trying anyway, but you might be using an invalid/corrupt file" + QString::number((unsigned long) pl_len), true, true);
+    }
+
+    if (file_len != pl_len) {
+        send_log_window_message("Using " + QString::number(file_len) + " byte payload, padding with garbage to " + QString::number(pl_len) + " (" + QString::number(file_len) + ") bytes.\n", true, true);
+    } else {
+        send_log_window_message("Using " + QString::number(file_len) + " (" + QString::number(file_len) + ") byte payload.", true, true);
+    }
+
+    if ((uint32_t)pl_encr.size() != file_len)
+    {
+        send_log_window_message("File size error (" + QString::number(file_len) + "/" + QString::number(pl_encr.size()) + ")", true, true);
+        return STATUS_ERROR;
+    }
+
+    for (uint32_t i = 0; i < len; i++) {
+        pl_encr[i] = (uint8_t) (pl_encr[i] ^ 0x55) + 0x10;
+        chk_sum += pl_encr[i];
+    }
+
+    send_log_window_message("Create kernel data header...", true, true);
+    output.clear();
+    output.append((uint8_t)SID_OE_UPLOAD_KERNEL & 0xFF);
+    output.append((uint8_t)(flashdevices[mcu_type_index].rblocks->start >> 16) & 0xFF);
+    output.append((uint8_t)(flashdevices[mcu_type_index].rblocks->start >> 8) & 0xFF);
+    output.append((uint8_t)((len + 4) >> 16) & 0xFF);
+    output.append((uint8_t)((len + 4) >> 8) & 0xFF);
+    output.append((uint8_t)(len + 4) & 0xFF);
+    output.append((uint8_t)((0x00 ^ 0x55) + 0x10) & 0xFF);
+    output.append((uint8_t)0x00 & 0xFF);
+    output.append((uint8_t)0x31 & 0xFF);
+    output.append((uint8_t)0x61 & 0xFF);
+
+    output[7] = calculate_checksum(output, true);
+    output.append(pl_encr);
+    chk_sum = calculate_checksum(output, true);
+    output.append((uint8_t) chk_sum);
+
+    send_log_window_message("Start sending kernel... please wait...", true, true);
+    received = serial->write_serial_data_echo_check(output);
+    received = serial->read_serial_data(100, serial_read_short_timeout);
+    msg.clear();
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
+    }
+    if (received.length())
+        send_log_window_message("Message received " + QString::number(received.length()) + " bytes '" + msg + "'", true, true);
+    else
+        send_log_window_message("Kernel uploaded succesfully", true, true);
+
+    send_log_window_message("Kernel started, initializing...", true, true);
+
+    serial->change_port_speed("62500");
+    serial->serialport_protocol_14230 = true;
+
+    delay(100);
+
+    received = ecuOperations->request_kernel_init();
+    if (received == "")
+    {
+        qDebug() << "Kernel init NOK! No response from kernel. " + parse_message_to_hex(received);
+        send_log_window_message("Kernel init NOK! No response from kernel. " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+    if ((uint8_t)received.at(1) != SID_KERNEL_INIT + 0x40)
+    {
+        qDebug() << "Kernel init NOK! Got bad startcomm response from kernel. " + parse_message_to_hex(received);
+        send_log_window_message("Kernel init NOK! Got bad startcomm response from kernel. " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+    else
+    {
+        send_log_window_message("Kernel init OK", true, true);
+    }
+
+    send_log_window_message("Requesting kernel ID", true, true);
+
+    delay(100);
+
+    received = ecuOperations->request_kernel_id();
+    if (received == "")
+        return STATUS_ERROR;
+
+    received.remove(0, 2);
+    send_log_window_message("Request kernel ID OK" + received, true, true);
+
+    return STATUS_SUCCESS;
 }
 
 int EcuOperationsSubaru::upload_kernel_subaru_kline_32bit(QString kernel)
 {
-    //qDebug() << "Kernel:" << kernel;
     QFile file(kernel);
 
     QByteArray output;
@@ -587,7 +673,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_32bit(QString kernel)
     if (flashdevices[mcu_type_index].name == mcu_name)
         start_address = flashdevices[mcu_type_index].rblocks->start;
 
-    qDebug() << "Start address to upload kernel:"<< hex << start_address;
+    qDebug() << "Start address to upload kernel:" << hex << start_address;
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -720,7 +806,6 @@ int EcuOperationsSubaru::upload_kernel_subaru_can_05_32bit(QString kernel)
     QByteArray cks_bypass;
     uint8_t chk_sum = 0;
 
-    send_log_window_message("Initializing Subaru CAN 05 32-bit kernel upload, please wait...", true, true);
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -771,28 +856,19 @@ int EcuOperationsSubaru::read_rom_subaru_kline_02_32bit(FileActions::EcuCalDefSt
     return success;
 }
 
-int EcuOperationsSubaru::read_rom_subaru_kline_04_32bit(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::read_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     QByteArray received;
 
-    send_log_window_message("Reading ROM from Subaru K-Line 04 32-bit", true, true);
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
-    //ecuOperations->read_mem_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, 0x001000);
     bool success = ecuOperations->read_mem_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;
-}
-
-int EcuOperationsSubaru::read_rom_subaru_kline_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef)
-{
-    send_log_window_message("Reading ROM from Subaru K-Line 05 32-bit", true, true);
-
-    return STATUS_ERROR;
 }
 
 int EcuOperationsSubaru::read_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef)
@@ -823,22 +899,12 @@ int EcuOperationsSubaru::write_rom_subaru_kline_02_32bit(FileActions::EcuCalDefS
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::write_rom_subaru_kline_04_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int EcuOperationsSubaru::write_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
-    send_log_window_message("Writing ROM to Subaru K-Line 04 32-bit", true, true);
-
     bool success = ecuOperations->write_mem_32bit(ecuCalDef, test_write);
 
     return success;
 }
-
-int EcuOperationsSubaru::write_rom_subaru_kline_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
-{
-    send_log_window_message("Writing ROM to Subaru K-Line 05 32-bit", true, true);
-
-    return STATUS_ERROR;
-}
-
 
 int EcuOperationsSubaru::write_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
@@ -1169,6 +1235,9 @@ QByteArray EcuOperationsSubaru::sub_sid_36_transferdata(uint32_t dataaddr, QByte
 
     for (blockno = 0; blockno <= maxblocks; blockno++)
     {
+        if (kill_process)
+            return NULL;
+
         blockaddr = dataaddr + blockno * 128;
         output.clear();
         output.append(0x36);
@@ -1309,6 +1378,7 @@ void EcuOperationsSubaru::send_log_window_message(QString message, bool timestam
         ui->text_edit->insertPlainText(message);
         ui->text_edit->ensureCursorVisible();
     }
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 void EcuOperationsSubaru::delay(int n)

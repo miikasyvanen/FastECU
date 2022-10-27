@@ -8,62 +8,42 @@ FileActions::FileActions()
 FileActions::ConfigValuesStructure *FileActions::checkConfigDir(){
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
-    //qDebug() << "Checking if dir" << configValues->baseDir << "exists";
     if (!QDir(configValues->base_directory).exists()){
-        //qDebug() << "Create FastECU base directory";
         QDir().mkdir(configValues->base_directory);
     }
 
-    //qDebug() << "Checking if dir" << configValues->calibrationsDir << "exists";
     if (!QDir(configValues->calibration_files_base_directory).exists()){
-        //qDebug() << "Create calibrations directory";
         QDir().mkdir(configValues->calibration_files_base_directory);
         QDir dir("calibrations/");
-        //qDebug() << "Copying files to directory";
         foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
-            //qDebug() << entry.fileName();
             QFile().copy("calibrations/" + entry.fileName(), configValues->calibration_files_base_directory + "/" + entry.fileName());
         }
     }
-    //qDebug() << "Checking if dir" << configValues->configDir << "exists";
     if (!QDir(configValues->config_base_directory).exists()){
-        //qDebug() << "Create config directory";
         QDir().mkdir(configValues->config_base_directory);
         QDir dir("config/");
-        //qDebug() << "Copying files to directory";
         foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
-            //qDebug() << entry.fileName();
             QFile().copy("config/" + entry.fileName(), configValues->config_base_directory + "/" + entry.fileName());
         }
+        saveConfigFile();
     }
-    //qDebug() << "Checking if dir" << configValues->definitionsDir << "exists";
     if (!QDir(configValues->definition_files_base_directory).exists()){
-        //qDebug() << "Create definitions directory";
         QDir().mkdir(configValues->definition_files_base_directory);
         QDir dir("definitions/");
-        //qDebug() << "Copying files to directory";
         foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
-            //qDebug() << entry.fileName();
             QFile().copy("definitions/" + entry.fileName(), configValues->definition_files_base_directory + "/" + entry.fileName());
         }
     }
-    //qDebug() << "Checking if dir" << configValues->kernelsDir << "exists";
     if (!QDir(configValues->kernel_files_base_directory).exists()){
-        //qDebug() << "Create kernels directory";
         QDir().mkdir(configValues->kernel_files_base_directory);
         QDir dir("kernels/");
-        //qDebug() << "Copying files to directory";
         foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
-            //qDebug() << entry.fileName();
             QFile().copy("kernels/" + entry.fileName(), configValues->kernel_files_base_directory + "/" + entry.fileName());
         }
     }
-    //qDebug() << "Checking if dir" << configValues->logsDir << "exists";
     if (!QDir(configValues->log_files_base_directory).exists()){
-        //qDebug() << "Create logs directory";
         QDir().mkdir(configValues->log_files_base_directory);
     }
-    //qDebug() << "Directories checked";
 
     return configValues;
 }
@@ -92,90 +72,124 @@ FileActions::ConfigValuesStructure *FileActions::readConfigFile()
             {
                 if (reader.name() == "software_settings")
                 {
-                    //qDebug() << "Software settings";
                     while (reader.readNextStartElement())
                     {
-                        if (reader.name() == "setting")
+                        if (reader.name() == "setting" && reader.attributes().value("name") == "serial_port")
                         {
-                            if (reader.attributes().value("name") == "serial_port"){
-                                //qDebug() << "Serial port";
-                                while(reader.readNextStartElement())
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
                                 {
                                     configValues->serial_port = reader.attributes().value("data").toString();
-                                    QString s = reader.readElementText();
+                                    reader.skipCurrentElement();
                                 }
-                            }
-                            if (reader.attributes().value("name") == "flash_method"){
-                                //qDebug() << "Flash method";
-                                while(reader.readNextStartElement())
-                                {
-                                    configValues->flash_method = reader.attributes().value("data").toString();
-                                    QString s = reader.readElementText();
-                                }
-                            }
-                            if (reader.attributes().value("name") == "calibration_files"){
-                                //qDebug() << "Calibration files";
-                                while(reader.readNextStartElement())
-                                {
-                                    //qDebug() << "Cal files:" << reader.name() << reader.attributes().value("data");
-                                    configValues->calibration_files.append(reader.attributes().value("data").toString());
-                                    QString s = reader.readElementText();
-                                }
-                            }
-                            if (reader.attributes().value("name") == "calibration_files_directory"){
-                                //qDebug() << "Calibration files directory";
-                                while(reader.readNextStartElement())
-                                {
-                                    //qDebug() << "Calibration files directory:" << reader.name() << reader.attributes().value("data");
-                                    configValues->calibration_files_directory = reader.attributes().value("data").toString();
-                                    QString s = reader.readElementText();
-                                }
-
-                            }
-                            if (reader.attributes().value("name") == "ecu_definition_files"){
-                                //qDebug() << "ECU definition files";
-                                while(reader.readNextStartElement())
-                                {
-                                    //qDebug() << "ECU definition files:" << reader.name() << reader.attributes().value("data");
-                                    configValues->ecu_definition_files.append(reader.attributes().value("data").toString());
-                                    QString s = reader.readElementText();
-                                }
-                            }
-                            if (reader.attributes().value("name") == "logger_definition_file"){
-                                //qDebug() << "Logger definition files";
-                                while(reader.readNextStartElement())
-                                {
-                                    //qDebug() << "Logger definition files:" << reader.name() << reader.attributes().value("data");
-                                    configValues->logger_definition_file = reader.attributes().value("data").toString();
-                                    QString s = reader.readElementText();
-                                }
-                            }
-                            if (reader.attributes().value("name") == "kernel_files_directory"){
-                                //qDebug() << "Kernel files directory";
-                                while(reader.readNextStartElement())
-                                {
-                                    //qDebug() << "Kernel files directory:" << reader.name() << reader.attributes().value("data");
-                                    configValues->kernel_files_directory = reader.attributes().value("data").toString();
-                                    QString s = reader.readElementText();
-                                }
-
-                            }
-                            if (reader.attributes().value("name") == "logfiles_directory"){
-                                //qDebug() << "Logfiles directory";
-                                while(reader.readNextStartElement())
-                                {
-                                    //qDebug() << "Logfiles directory:" << reader.name() << reader.attributes().value("data");
-                                    configValues->log_files_base_directory = reader.attributes().value("data").toString();
-                                    QString s = reader.readElementText();
-                                }
-
+                                else
+                                    reader.skipCurrentElement();
                             }
                         }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "flash_method")
+                        {
+                            qDebug() << "Flash method";
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->flash_method = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "calibration_files")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->calibration_files.append(reader.attributes().value("data").toString());
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "calibration_files_directory")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->calibration_files_directory = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "ecu_definition_files")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->ecu_definition_files.append(reader.attributes().value("data").toString());
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "logger_definition_file")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->logger_definition_file = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                            qDebug() << "Logger def file:" << configValues->logger_definition_file;
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "kernel_files_directory")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->kernel_files_directory = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "logfiles_directory")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->log_files_base_directory = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+
+                        }
+                        else
+                            reader.skipCurrentElement();
                     }
                 }
             }
         }
     }
+    file.close();
 
     return configValues;
 }
@@ -269,6 +283,133 @@ FileActions::ConfigValuesStructure *FileActions::saveConfigFile(){
     return 0;
 }
 
+FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id)
+{
+    //LogValuesStructure *logValues = &LogValuesStruct;
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    //The QDomDocument class represents an XML document.
+    QDomDocument xmlBOM;
+
+    QString filename = configValues->logger_config_file;
+    //qDebug() << "Logger filename =" << filename;
+    QFile file(filename);
+    if(!file.open(QFile::ReadOnly | QFile::Text)) {
+        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger definition file for reading");
+        return NULL;
+    }
+    xmlBOM.setContent(&file);
+    file.close();
+
+    // Extract the root markup
+    QDomElement root = xmlBOM.documentElement();
+
+    logValues->dashboard_log_value_id.clear();
+    logValues->lower_panel_log_value_id.clear();
+    logValues->lower_panel_switch_id.clear();
+
+    if (root.tagName() == "logger")
+    {
+        //qDebug() << "Logger start element";
+        QDomElement ecus = root.firstChild().toElement();
+        while (!ecus.isNull())
+        {
+            if (ecus.tagName() == "ecus")
+            {
+                //qDebug() << "Found ecus tag";
+                QDomElement ecu = ecus.firstChild().toElement();
+                while (!ecu.isNull())
+                {
+                    if (ecu.tagName() == "ecu")
+                    {
+                        QString file_ecu_id = ecu.attribute("id","No id");
+
+                        if (ecu_id == file_ecu_id)
+                        {
+                            //qDebug() << "Found ECU ID" << file_ecu_id;
+                            QDomElement protocol = ecu.firstChild().toElement();
+                            while (!protocol.isNull())
+                            {
+                                //qDebug() << "Protocols start element";
+                                if (protocol.tagName() == "protocol")
+                                {
+                                    //qDebug() << "Found protocol" << protocol.attribute("id","No id");
+                                    QDomElement parameters = protocol.firstChild().toElement();
+                                    while(!parameters.isNull())
+                                    {
+                                        if (parameters.tagName() == "parameters")
+                                        {
+                                            //qDebug() << "Found parameters tag";
+                                            QDomElement parameter_type = parameters.firstChild().toElement();
+                                            while(!parameter_type.isNull())
+                                            {
+                                                if (parameter_type.tagName() == "gauges")
+                                                {
+                                                    //qDebug() << "Found gauges tag";
+                                                    QDomElement gauges = parameter_type.firstChild().toElement();
+                                                    while(!gauges.isNull())
+                                                    {
+                                                        if (gauges.tagName() == "parameter")
+                                                        {
+                                                            //qDebug() << "Found gauge parameter tag with ID" << gauges.attribute("id","No id");
+                                                            logValues->dashboard_log_value_id.append(gauges.attribute("id","No id"));
+                                                        }
+                                                        gauges = gauges.nextSibling().toElement();
+                                                    }
+                                                }
+                                                if (parameter_type.tagName() == "lower_panel")
+                                                {
+                                                    //qDebug() << "Found lower_panel tag";
+                                                    QDomElement lower_panel = parameter_type.firstChild().toElement();
+                                                    while(!lower_panel.isNull())
+                                                    {
+                                                        if (lower_panel.tagName() == "parameter")
+                                                        {
+                                                            //qDebug() << "Found lower_panel parameter tag with ID" << lower_panel.attribute("id","No id");
+                                                            logValues->lower_panel_log_value_id.append(lower_panel.attribute("id","No id"));
+                                                        }
+                                                        lower_panel = lower_panel.nextSibling().toElement();
+                                                    }
+                                                }
+                                                parameter_type = parameter_type.nextSibling().toElement();
+                                            }
+                                        }
+                                        if (parameters.tagName() == "switches")
+                                        {
+                                            //qDebug() << "Found switches tag";
+                                            QDomElement switches = parameters.firstChild().toElement();
+                                            while(!switches.isNull())
+                                            {
+                                                if (switches.tagName() == "switch")
+                                                {
+                                                    //qDebug() << "Found switch tag with ID" << switches.attribute("id","No id");
+                                                    logValues->lower_panel_switch_id.append(switches.attribute("id","No id"));
+                                                }
+                                                switches = switches.nextSibling().toElement();
+                                            }
+                                        }
+                                        parameters = parameters.nextSibling().toElement();
+                                    }
+                                }
+                                protocol = protocol.nextSibling().toElement();
+                            }
+                        }
+                    }
+                    ecu = ecu.nextSibling().toElement();
+                }
+            }
+            ecus = ecus.nextSibling().toElement();
+        }
+    }
+
+    return logValues;
+}
+
+FileActions::LogValuesStructure *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id)
+{
+
+}
+
 FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
 {
     LogValuesStructure *logValues = &LogValuesStruct;
@@ -295,6 +436,7 @@ FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
     //QString Name = root.attribute("name","No name");
 
     int log_value_index = 0;
+    int log_switch_index = 0;
 
     if (root.tagName() == "logger")
     {
@@ -311,6 +453,7 @@ FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
                 {
                     if (protocol.tagName() == "protocol")
                     {
+                        QString log_value_protocol = protocol.attribute("id","No protocol id");
                         //qDebug() << "Protocol =" << protocol.attribute("id","No id");
                         QDomElement transports = protocol.firstChild().toElement();
                         while(!transports.isNull())
@@ -344,14 +487,29 @@ FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
                                 {
                                     if (parameter.tagName() == "parameter")
                                     {
+                                        QString log_value_id = parameter.attribute("id","No id");
                                         //qDebug() << "Parameter =" << parameter.attribute("id","No id") << parameter.attribute("name","No name") << parameter.attribute("desc","No description");
+                                        logValues->log_value_protocol.append(log_value_protocol);
+                                        logValues->log_value_id.append(parameter.attribute("id","No id"));
                                         logValues->log_value_name.append(parameter.attribute("name","No name"));
+                                        logValues->log_value_description.append(parameter.attribute("desc","No desc"));
+                                        logValues->log_value_ecu_byte_index.append(parameter.attribute("ecubyteindex","No byte index"));
+                                        logValues->log_value_ecu_bit.append(parameter.attribute("ecubit","No ecu bit"));
+                                        logValues->log_value_target.append(parameter.attribute("target","No target"));
+                                        logValues->log_value_enabled.append("0");
+                                        logValues->log_value.append("0.00");
+                                        if (log_value_index < 12)
+                                            logValues->lower_panel_log_value_id.append(log_value_id);
+                                        if (log_value_index < 15)
+                                            logValues->dashboard_log_value_id.append(log_value_id);
+
                                         QDomElement param_options = parameter.firstChild().toElement();
                                         while (!param_options.isNull())
                                         {
                                             if (param_options.tagName() == "address")
                                             {
                                                 //qDebug() << "Address =" << param_options.text();
+                                                logValues->log_value_length.append(parameter.attribute("length","1"));
                                                 logValues->log_value_address.append(param_options.text());
                                             }
                                             if (param_options.tagName() == "conversions")
@@ -381,11 +539,6 @@ FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
                                             }
                                             param_options = param_options.nextSibling().toElement();
                                         }
-                                        logValues->log_value.append("0.00");
-                                        if (log_value_index < 12)
-                                            logValues->lower_panel_log_value_id.append(QString::number(log_value_index));
-                                        else
-                                            logValues->lower_panel_log_value_id.append("-1");
                                         log_value_index++;
                                     }
                                     parameter = parameter.nextSibling().toElement();
@@ -398,6 +551,20 @@ FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
                                 {
                                     if (paramswitch.tagName() == "switch")
                                     {
+                                        QString log_switch_id = paramswitch.attribute("id","No id");
+                                        logValues->log_switch_protocol.append(log_value_protocol);
+                                        logValues->log_switch_id.append(paramswitch.attribute("id","No id"));
+                                        logValues->log_switch_name.append(paramswitch.attribute("name","No name"));
+                                        logValues->log_switch_description.append(paramswitch.attribute("desc","No desc"));
+                                        logValues->log_switch_address.append(paramswitch.attribute("byte","No address"));
+                                        logValues->log_switch_ecu_byte_index.append(paramswitch.attribute("ecubyteindex","No ecu byte index"));
+                                        logValues->log_switch_ecu_bit.append(paramswitch.attribute("bit","No ecu bit"));
+                                        logValues->log_switch_target.append(paramswitch.attribute("target","No target"));
+                                        logValues->log_switch_enabled.append("0");
+                                        logValues->log_switch_state.append("0");
+                                        if (log_switch_index < 20)
+                                            logValues->lower_panel_switch_id.append(log_switch_id);
+                                        log_switch_index++;
                                         //qDebug() << "Switch =" << paramswitch.attribute("id","No id") << paramswitch.attribute("name","No name") << paramswitch.attribute("desc","No description");
                                     }
                                     paramswitch = paramswitch.nextSibling().toElement();
@@ -437,7 +604,8 @@ FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
         }
     }
 
-
+    //log_values_names_sorted
+    //log_switch_names_sorted
     return logValues;
 }
 
@@ -575,16 +743,6 @@ QSignalMapper *FileActions::readMenuFile(QMenuBar *menubar, QToolBar *toolBar)
     return mapper;
 }
 
-/****************************************************************
- *
- *  OEM ECU Fileactions area
- *
- *
- *
- *
- *
- *
- ****************************************************************/
 FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure *ecuCalDef)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -639,6 +797,7 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
 
         if (TagType.tagName() == "rom")
         {
+            //qDebug() << ecuCalDef->RomInfo[RomBase];
             //qDebug() << "Found <rom> section";
             rombase = TagType.attribute("base","No base");
             if (rombase == "No base")
@@ -685,9 +844,9 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                     ecuCalDef->TypeList.append(Table.attribute("type"," "));
                                     ecuCalDef->CategoryList.append(Table.attribute("category"," "));
 
-                                    if (ecuCalDef->XSizeList.at(i) == " ")
+                                    if (ecuCalDef->XSizeList.at(i) == "" || ecuCalDef->XSizeList.at(i) == " ")
                                         ecuCalDef->XSizeList.replace(i, Table.attribute("sizex", "1"));
-                                    if (ecuCalDef->YSizeList.at(i) == " ")
+                                    if (ecuCalDef->YSizeList.at(i) == "" || ecuCalDef->YSizeList.at(i) == " ")
                                         ecuCalDef->YSizeList.replace(i, Table.attribute("sizey", "1"));
                                     ecuCalDef->MinValueList.append(Table.attribute("minvalue","0"));
                                     ecuCalDef->MaxValueList.append(Table.attribute("maxvalue","0"));
@@ -708,16 +867,20 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                     QString TableSelections;
                                     QString TableSelectionsSorted;
                                     QString TableDescription;
+                                    QString TableStates;
+                                    bool ContainsTableScalings = false;
                                     bool ContainsTableSelections = false;
                                     bool ContainsTableDescription = false;
                                     bool ContainsTableXScale = false;
                                     bool ContainsTableYScale = false;
                                     bool ContainsTableStaticYScale = false;
+                                    bool ContainsTableState = false;
 
                                     // Read each child of the Table node
                                     while (!TableChild.isNull())
                                     {
                                         if (TableChild.tagName() == "scaling"){
+                                            ContainsTableScalings = true;
                                             ecuCalDef->UnitsList.append(TableChild.attribute("units"," "));
                                             ecuCalDef->FormatList.append(TableChild.attribute("format"," "));
                                             ecuCalDef->FineIncList.append(TableChild.attribute("fineincrement"," "));
@@ -725,12 +888,12 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
 
                                             ecuCalDef->FromByteList.append(TableChild.attribute("expression","x"));
                                             ecuCalDef->ToByteList.append(TableChild.attribute("to_byte","x"));
-
                                         }
                                         else if (TableChild.tagName() == "table")
                                         {
                                             QString ScaleType = TableChild.attribute("type"," ");
                                             if (ScaleType == "X Axis"){
+                                                ContainsTableXScale = true;
                                                 ecuCalDef->XScaleNameList.append(TableChild.attribute("name"," "));
                                                 ecuCalDef->XScaleTypeList.append(ScaleType);
                                                 //ecuCalDef->XScaleAddressList.append(TableChild.attribute("storageaddress"," "));
@@ -738,9 +901,6 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                                 ecuCalDef->XScaleEndianList.append(TableChild.attribute("endian"," "));
                                                 ecuCalDef->XScaleLogParamList.append(TableChild.attribute("logparam"," "));
 
-                                                //qDebug() << TableChild.attribute("name"," ");
-
-                                                ContainsTableXScale = true;
                                                 QDomElement SubChild = TableChild.firstChild().toElement();
                                                 while (!SubChild.isNull())
                                                 {
@@ -758,17 +918,14 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                                 }
                                             }
                                             else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "3D"){
+                                                ContainsTableYScale = true;
                                                 ecuCalDef->YScaleNameList.append(TableChild.attribute("name"," "));
                                                 ecuCalDef->YScaleTypeList.append(ScaleType);
-                                                //ecuCalDef->YScaleAddressList.append(TableChild.attribute("storageaddress"," "));
                                                 ecuCalDef->YScaleStorageTypeList.append(TableChild.attribute("storagetype"," "));
                                                 ecuCalDef->YScaleEndianList.append(TableChild.attribute("endian"," "));
                                                 ecuCalDef->YScaleLogParamList.append(TableChild.attribute("logparam"," "));
                                                 ecuCalDef->XScaleStaticDataList.append(" ");
 
-                                                //qDebug() << TableChild.attribute("name"," ");
-
-                                                ContainsTableYScale = true;
                                                 QDomElement SubChild = TableChild.firstChild().toElement();
                                                 while (!SubChild.isNull())
                                                 {
@@ -792,8 +949,6 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                                 ecuCalDef->XScaleStorageTypeList.append(TableChild.attribute("storagetype"," "));
                                                 ecuCalDef->XScaleEndianList.append(TableChild.attribute("endian"," "));
                                                 ecuCalDef->XScaleLogParamList.append(TableChild.attribute("logparam"," "));
-
-                                                //qDebug() << TableChild.attribute("name"," ");
 
                                                 QDomElement SubChild = TableChild.firstChild().toElement();
                                                 QString StaticYScaleData;
@@ -843,6 +998,12 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                             else
                                                 ecuCalDef->DescriptionList.append(" ");
                                         }
+                                        else if (TableChild.tagName() == "state"){
+                                            ContainsTableState = true;
+                                            TableStates.append(TableChild.attribute("name"," ") + ",");
+                                            TableStates.append(TableChild.attribute("data"," ") + ",");
+
+                                        }
                                         else
                                         {
                                             ecuCalDef->UnitsList.append(TableChild.attribute("units"," "));
@@ -857,6 +1018,16 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                         TableChild = TableChild.nextSibling().toElement();
                                     }
 
+                                    if (!ContainsTableScalings)
+                                    {
+                                        ecuCalDef->UnitsList.append(" ");
+                                        ecuCalDef->FormatList.append(" ");
+                                        ecuCalDef->FineIncList.append(" ");
+                                        ecuCalDef->CoarseIncList.append(" ");
+
+                                        ecuCalDef->FromByteList.append(" ");
+                                        ecuCalDef->ToByteList.append(" ");
+                                    }
                                     if (!ContainsTableSelections)
                                     {
                                         ecuCalDef->SelectionsList.append(" ");
@@ -875,10 +1046,15 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                             ecuCalDef->SelectionsListSorted.append(" ");
                                         }
                                     }
-                                    ContainsTableSelections = false;
+
                                     if (!ContainsTableDescription)
                                         ecuCalDef->DescriptionList.append(" ");
-                                    ContainsTableDescription = false;
+
+                                    if (!ContainsTableState)
+                                        ecuCalDef->StateList.append(" ");
+                                    else
+                                        ecuCalDef->StateList.append(TableStates);
+
                                     if (!ContainsTableXScale){
                                         ecuCalDef->XScaleTypeList.append(" ");
                                         ecuCalDef->XScaleNameList.append(" ");
@@ -908,6 +1084,11 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                         ecuCalDef->YScaleFromByteList.append(" ");
                                         ecuCalDef->YScaleToByteList.append(" ");
                                     }
+
+                                    ContainsTableScalings = false;
+                                    ContainsTableSelections = false;
+                                    ContainsTableDescription = false;
+                                    ContainsTableState = false;
                                     ContainsTableXScale = false;
                                     ContainsTableYScale = false;
                                     ContainsTableStaticYScale = false;
@@ -954,12 +1135,22 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
     QString flashmethod;
     QString filesize;
 
+    QDateTime dateTime = dateTime.currentDateTime();
+    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
+    qDebug() << dateTimeString << "Start looking ECU ID";
+
     //EcuCalDefStructure *ecuCalDef = new EcuCalDefStructure;
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     //The QDomDocument class represents an XML document.
     QDomDocument xmlBOM;
     // Load xml file as raw data
+    if (!configValues->ecu_definition_files.length()) {
+        QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
+        ecuCalDef = NULL;
+        return NULL;
+    }
+
     QString filename = configValues->ecu_definition_files.at(0);
     QFile file(filename);
 
@@ -971,6 +1162,173 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
         return NULL;
     }
 
+    QXmlStreamReader reader;
+    reader.setDevice(&file);
+    int index = 0;
+
+    while (ecuCalDef->RomInfo.length() < RomInfoStrings.length())
+    {
+        ecuCalDef->RomInfo.append(" ");
+    }
+
+    if (reader.readNextStartElement())
+    {
+        if (reader.name() == "roms")
+        {
+            //qDebug() << "<roms> TAG";
+            while (reader.readNextStartElement())
+            {
+                if (reader.name() == "rom")
+                {
+                    rombase = reader.attributes().value("base").toString();
+                    //qDebug() << "<rom> TAG";
+                    while (reader.readNextStartElement())
+                    {
+                        if (xmlid == ecuId)
+                        {
+                            dateTime = dateTime.currentDateTime();
+                            dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
+                            //qDebug() << dateTimeString << "ECU ID" << xmlid << "found";
+
+                            //qDebug() << "Correct ROM ID found =" << xmlid;
+                            OemEcuDefFileFound = true;
+                            ecuCalDef->RomInfo.replace(XmlId, xmlid);
+                            ecuCalDef->RomInfo.replace(InternalIdAddress, internalidaddress);
+                            ecuCalDef->RomInfo.replace(InternalIdString, internalidstring);
+                            ecuCalDef->RomInfo.replace(EcuId, ecuid);
+                            ecuCalDef->RomInfo.replace(Year, year);
+                            ecuCalDef->RomInfo.replace(Market, market);
+                            ecuCalDef->RomInfo.replace(Make, make);
+                            ecuCalDef->RomInfo.replace(Model, model);
+                            ecuCalDef->RomInfo.replace(SubModel, submodel);
+                            ecuCalDef->RomInfo.replace(Transmission, transmission);
+                            ecuCalDef->RomInfo.replace(MemModel, memmodel);
+                            ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
+                            ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
+                            ecuCalDef->RomInfo.replace(FileSize, filesize);
+                            ecuCalDef->RomInfo.replace(RomBase, rombase);
+
+                            ecuCalDef->RomBase = rombase;
+
+                            xmlid = "";
+
+                            //qDebug() << "Header ready " + ecuCalDef->RomInfo.at(MemModel);
+                        }
+                        if (reader.name() == "romid")
+                        {
+                            //qDebug() << "<romid> TAG";
+                            while (reader.readNextStartElement())
+                            {
+                                if (reader.name() == "xmlid")
+                                    xmlid = reader.readElementText();
+                                else if (reader.name() == "internalidaddress")
+                                    internalidaddress = reader.readElementText();
+                                else if (reader.name() == "internalidstring")
+                                    internalidstring = reader.readElementText();
+                                else if (reader.name() == "ecuid")
+                                    ecuid = reader.readElementText();
+                                else if (reader.name() == "year")
+                                    year = reader.readElementText();
+                                else if (reader.name() == "market")
+                                    market = reader.readElementText();
+                                else if (reader.name() == "make")
+                                    make = reader.readElementText();
+                                else if (reader.name() == "model")
+                                    model = reader.readElementText();
+                                else if (reader.name() == "submodel")
+                                    submodel = reader.readElementText();
+                                else if (reader.name() == "transmission")
+                                    transmission = reader.readElementText();
+                                else if (reader.name() == "memmodel")
+                                    memmodel = reader.readElementText();
+                                else if (reader.name() == "checksummodule")
+                                    checksummodule = reader.readElementText();
+                                else if (reader.name() == "flashmethod")
+                                    flashmethod = reader.readElementText();
+                                else if (reader.name() == "filesize")
+                                    filesize = reader.readElementText();
+                                else
+                                    reader.skipCurrentElement();
+
+                            }
+                            //reader.readNextStartElement();
+                        }
+                        else if (reader.name() == "table" && OemEcuDefFileFound)
+                        {
+                            //qDebug() << "Create body with table name '" + reader.attributes().value("name").toString() + "' and type " + reader.attributes().value("type").toString();
+
+                            ecuCalDef->NameList.append(" ");
+                            ecuCalDef->AddressList.append(" ");
+                            ecuCalDef->XSizeList.append(" ");
+                            ecuCalDef->YSizeList.append(" ");
+                            //ecuCalDef->XScaleAddressList.append(" ");
+                            //ecuCalDef->YScaleAddressList.append(" ");
+
+                            //qDebug() << "Add values";
+                            //qDebug() << Table.attribute("name"," ");
+                            ecuCalDef->NameList.replace(index, reader.attributes().value("name").toString());
+                            ecuCalDef->AddressList.replace(index, reader.attributes().value("storageaddress").toString());
+                            ecuCalDef->XSizeList.replace(index, reader.attributes().value("sizex").toString());
+                            ecuCalDef->YSizeList.replace(index, reader.attributes().value("sizey").toString());
+                            index++;
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "table")
+                                {
+                                    //qDebug() << "Body sub with table name '" + reader.attributes().value("name").toString() + "' and type " + reader.attributes().value("type").toString();
+                                    if (reader.attributes().value("type").toString() == "X Axis")
+                                    {
+                                        ContainsTableXScale = true;
+                                        //ecuCalDef->XScaleNameList.append(reader.attributes().value("name").toString());
+                                        ecuCalDef->XScaleAddressList.append(reader.attributes().value("storageaddress").toString());
+                                    }
+                                    if (reader.attributes().value("type").toString() == "Y Axis")
+                                    {
+                                        ContainsTableYScale = true;
+                                        //ecuCalDef->YScaleNameList.append(reader.attributes().value("name").toString());
+                                        ecuCalDef->YScaleAddressList.append(reader.attributes().value("storageaddress").toString());
+                                    }
+                                    if (reader.attributes().value("type").toString() == "Static Y Axis")
+                                    {
+                                        //ContainsTableYScale = true;
+                                        //ecuCalDef->YScaleNameList.append(reader.attributes().value("name").toString());
+                                        //ecuCalDef->YScaleAddressList.append(reader.attributes().value("storageaddress").toString());
+                                    }
+                                }
+                                //else
+                                    //reader.skipCurrentElement();
+                                QString s = reader.readElementText();
+                            }
+                            if (!ContainsTableXScale){
+                                //ecuCalDef->XScaleNameList.append(" ");
+                                ecuCalDef->XScaleAddressList.append(" ");
+                            }
+                            if (!ContainsTableYScale){
+                                //ecuCalDef->YScaleNameList.append(" ");
+                                ecuCalDef->YScaleAddressList.append(" ");
+                            }
+                            ContainsTableXScale = false;
+                            ContainsTableYScale = false;
+                        }
+                        else
+                            reader.skipCurrentElement();
+                        //QString s = reader.readElementText();
+                    }
+                }
+                else
+                    reader.skipCurrentElement();
+                //QString s = reader.readElementText();
+
+                if (OemEcuDefFileFound)
+                    break;
+            }
+            if (!OemEcuDefFileFound)
+                return NULL;
+        }
+    }
+    file.close();
+
+/*
     //qDebug() << filename;
     // Set data into the QDomDocument before processing
     xmlBOM.setContent(&file);
@@ -1055,6 +1413,10 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
 
                 if (xmlid == ecuId)
                 {
+                    dateTime = dateTime.currentDateTime();
+                    dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
+                    qDebug() << dateTimeString << "ECU ID found";
+
                     //qDebug() << "Correct ROM ID found =" << xmlid;
                     OemEcuDefFileFound = true;
                     ecuCalDef->RomInfo.replace(XmlId, xmlid);
@@ -1138,10 +1500,24 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
     }
     if (!OemEcuDefFileFound)
         return NULL;
+*/
+    //qDebug() << ecuCalDef->NameList.length();
+    //qDebug() << ecuCalDef->AddressList.length();
+    //qDebug() << ecuCalDef->XSizeList.length();
+    //qDebug() << ecuCalDef->YSizeList.length();
+    //qDebug() << ecuCalDef->XScaleAddressList.length();
+    //qDebug() << ecuCalDef->YScaleAddressList.length();
 
     ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
+    dateTime = dateTime.currentDateTime();
+    dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
+    qDebug() << dateTimeString << "Read ECU base def";
 
     readEcuBaseDef(ecuCalDef);
+
+    dateTime = dateTime.currentDateTime();
+    dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
+    qDebug() << dateTimeString << "ECU base def read";
 
     return ecuCalDef;
 
@@ -1171,6 +1547,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
 
             if (filename.isEmpty()){
                 QMessageBox::information(this, tr("Calibration file"), "No file selected");
+                free(ecuCalDef);
                 return NULL;
             }
 
@@ -1256,6 +1633,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
+        //qDebug() << "Map number " + QString::number(i) + " and name " + ecuCalDef->NameList.at(i);
         if (ecuCalDef->StorageTypeList.at(i) == "uint8")
             storagesize = 1;
         if (ecuCalDef->StorageTypeList.at(i) == "uint16")
@@ -1269,7 +1647,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
         {
             uint32_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x1FFFF)
+            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
                 byteAddress -= 0x8000;
             for (int k = 0; k < storagesize; k++)
             {
@@ -1295,9 +1673,15 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                     value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
                 }
             }
+            /*
+            QString mapFormat = ecuCalDef->FormatList.at(i);
+            int format = 0;
+            if (mapFormat.contains("0"))
+                format = mapFormat.count(QLatin1Char('0')) - 1;
+*/
+            //mapData.append(QString::number(value, 'f', format) + ",");
             mapData.append(QString::number(value, 'g', float_precision) + ",");
         }
-
         ecuCalDef->MapData.insert(i, mapData);
         if (ecuCalDef->XSizeList.at(i).toUInt() > 1)
         {
@@ -1320,7 +1704,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                 {
                     uint32_t dataByte = 0;
                     uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x1FFFF)
+                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
                         byteAddress -= 0x8000;
                     for (int k = 0; k < storagesize; k++)
                     {
@@ -1343,7 +1727,14 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                         else
                             value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(dataByte)));
                     }
+                    /*
+                    QString mapFormat = ecuCalDef->XScaleFormatList.at(i);
+                    int format = 0;
+                    if (mapFormat.contains("0"))
+                        format = mapFormat.count(QLatin1Char('0')) - 1;
+*/
                     mapData.append(QString::number(value, 'g', float_precision) + ",");
+                    //mapData.append(QString::number(value, 'f', format) + ",");
                 }
                 ecuCalDef->XScaleData.insert(i, mapData);
             }
@@ -1365,7 +1756,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x1FFFF)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
                     byteAddress -= 0x8000;
                 for (int k = 0; k < storagesize; k++)
                 {
@@ -1388,7 +1779,14 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                     else
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(dataByte)));
                 }
+                /*
+                QString mapFormat = ecuCalDef->YScaleFormatList.at(i);
+                int format = 0;
+                if (mapFormat.contains("0"))
+                    format = mapFormat.count(QLatin1Char('0')) - 1;
+*/
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
+                //mapData.append(QString::number(value, 'f', format) + ",");
             }
             ecuCalDef->YScaleData.insert(i, mapData);
         }
@@ -1414,14 +1812,6 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
 
 FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
-    //qDebug() << "Saving file" << filename;
-
-    //ConfigValuesStructure *configValues = &ConfigValuesStruct;
-
-    bool bStatus = false;
-
-    //qDebug() << "Checking file name";
-
     QFile file(filename);
     if (!file.open(QIODevice::WriteOnly ))
     {
@@ -1430,8 +1820,18 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
         return NULL;
     }
 
+    ecuCalDef = apply_cal_changes_to_rom_data(ecuCalDef);
+    file.write(ecuCalDef->FullRomData);
+    file.close();
+
+    return 0;
+}
+
+FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef)
+{
     int storagesize = 0;
     QString mapData;
+    bool bStatus = false;
 
     union mapData{
         uint8_t oneByteValue[4];
@@ -1456,21 +1856,23 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
         {
             uint32_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x1FFFF)
+            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
                 byteAddress -= 0x8000;
 
             if (ecuCalDef->TypeList.at(i) != "Switch")
             {
                 if (ecuCalDef->StorageTypeList.at(i) == "float"){
-                    //QStringList expression = parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j));
-                    //if (ecuCalDef->NameList.at(i) == "Extended Feedback Correction High RPM Compensation")
-                        //qDebug() << expression;
                     mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
                 }
-                else{
+                else
+                {
                     mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
                     mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
                 }
+                if (ecuCalDef->NameList.at(i) == "Min Idle Speed High Electrical Load (AT)")
+                    qDebug() << mapDataList.at(j) << mapDataValue.floatValue << mapDataValue.fourByteValue;
+                if (ecuCalDef->NameList.at(i) == "Min Idle Speed High Electrical Load (MT)")
+                    qDebug() << mapDataList.at(j) << mapDataValue.floatValue << mapDataValue.fourByteValue;
 
                 if (mapDataValue.floatValue == 0)
                     mapDataValue.floatValue = 0.0f;
@@ -1504,7 +1906,7 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x1FFFF)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
                     byteAddress -= 0x8000;
 
                 if (ecuCalDef->XScaleTypeList.at(i) != "Switch")
@@ -1512,7 +1914,8 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
                     if (ecuCalDef->XScaleStorageTypeList.at(i) == "float"){
                         mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleToByteList.at(i), mapDataList.at(j)));
                     }
-                    else{
+                    else
+                    {
                         mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleToByteList.at(i), mapDataList.at(j)));
                         mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
                         //mapDataValue.fourByteValue = (qRound(mapDataValue.floatValue));
@@ -1551,7 +1954,7 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x1FFFF)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
                     byteAddress -= 0x8000;
 
                 if (ecuCalDef->YScaleTypeList.at(i) != "Switch")
@@ -1559,7 +1962,8 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
                     if (ecuCalDef->YScaleStorageTypeList.at(i) == "float"){
                         mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleToByteList.at(i), mapDataList.at(j)));
                     }
-                    else{
+                    else
+                    {
                         mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleToByteList.at(i), mapDataList.at(j)));
                         mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
                         //mapDataValue.fourByteValue = (qRound(mapDataValue.floatValue));
@@ -1589,10 +1993,7 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
     if (ecuCalDef->RomInfo[MemModel] == "SH7058")
         checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
 
-    file.write(ecuCalDef->FullRomData);
-    file.close();
-
-    return 0;
+    return ecuCalDef;
 }
 
 QByteArray FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_length)
@@ -1624,11 +2025,7 @@ QByteArray FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructur
             checksum_dword_addr_lo = (checksum_dword_addr_lo << 8) + (uint8_t)(ecuCalDef->FullRomData[i + j]);
             checksum_dword_addr_hi = (checksum_dword_addr_hi << 8) + (uint8_t)(ecuCalDef->FullRomData[i + 4 + j]);
             checksum_diff = (checksum_diff << 8) + (uint8_t)(ecuCalDef->FullRomData[i + 8 + j]);
-            //qDebug() << Qt::hex << (uint8_t)(filedata[i + j]) << Qt::hex << (uint8_t)(filedata[i + 4 + j]) << Qt::hex << (uint8_t)(filedata[i + 8 + j]);
         }
-        //qDebug() << "Checksum dword addr lo:" << Qt::hex << checksum_dword_addr_lo;
-        //qDebug() << "Checksum dword addr hi:" << Qt::hex << checksum_dword_addr_hi;
-        //qDebug() << "Checksum read diff:" << Qt::hex << checksum_diff;
         if (i == checksum_area_start && checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
         {
             QMessageBox::information(this, tr("32-bit checksum"), "ROM has all checksums disabled");
@@ -1653,8 +2050,6 @@ QByteArray FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructur
             }
         }
         checksum_check = 0x5aa5a55a - checksum;
-        //qDebug() << "Checksum calc diff:" << Qt::hex << checksum_check;
-        //qDebug() << "Checksum:" << Qt::hex << checksum;
 
         if (checksum_diff == checksum_check)
         {
@@ -1686,7 +2081,10 @@ QByteArray FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructur
     //qDebug() << "checksum_array:" << checksum_array.length() << checksum_array;
 
     if (!checksum_ok)
+    {
         ecuCalDef->FullRomData.replace(checksum_area_start, checksum_area_length, checksum_array);
+        QMessageBox::information(this, tr("32-bit checksum"), "Checksums corrected");
+    }
 
     return 0;
 }

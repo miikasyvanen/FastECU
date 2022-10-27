@@ -7,6 +7,7 @@
 #include <QString>
 #include <QMdiSubWindow>
 #include <QComboBox>
+#include <QCheckBox>
 
 #include <file_actions.h>
 #include <verticallabel.h>
@@ -40,6 +41,24 @@ public:
     int ySizeOffset = 0;
 
 private:
+    enum RomInfoEnum {
+        XmlId,
+        InternalIdAddress,
+        Make,
+        Model,
+        SubModel,
+        Market,
+        Transmission,
+        Year,
+        EcuId,
+        InternalIdString,
+        MemModel,
+        ChecksumModule,
+        RomBase,
+        FlashMethod,
+        FileSize,
+    };
+
     void setMapTableWidgetSize(int maxWidth, int maxHeight, int sizeX);
     void setMapTableWidgetItems(FileActions::EcuCalDefStructure *ecuCalDef, int mapIndex);
     int getMapValueDecimalCount(QString valueFormat);
@@ -56,6 +75,7 @@ signals:
     void fetchFromEcuButtonClicked();
     void storeToEcuButtonClicked();
     void selectable_combobox_item_changed(QString);
+    void checkbox_state_changed(int);
 
 private:
     Ui::CalibrationMaps *ui;

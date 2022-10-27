@@ -12,6 +12,7 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <QElapsedTimer>
+#include <QDateTime>
 
 #include <string.h>
 #include <iostream>
@@ -51,13 +52,13 @@ public:
         QString logger_config_file = config_base_directory + "/logger.cfg";
 
         QStringList calibration_files;
-        QString calibration_files_directory = "./calibrations";
+        QString calibration_files_directory = calibration_files_base_directory;
         QStringList ecu_definition_files;
-        QString logger_definition_file;
-        QString definition_files_directory = "./definitions";
-        QString kernel_files_directory = "./kernels";
+        QString logger_definition_file = definition_files_base_directory + "/logger_METRIC_EN_v370.xml";
+        QString definition_files_directory = definition_files_base_directory;
+        QString kernel_files_directory = kernel_files_base_directory;
         QString kernel_files;
-        QString log_files_directory = "./logs";
+        QString log_files_directory = log_files_base_directory;
     } ConfigValuesStruct;
 
     struct protocolsStructure {
@@ -71,6 +72,7 @@ public:
     } protocolsStruct;
 
     struct LogValuesStructure {
+        QString ecu_id;
         QStringList log_value_protocol;
         QStringList log_value_id;
         QStringList log_value_name;
@@ -91,7 +93,10 @@ public:
         QStringList log_value_type;
         QStringList log_value;
 
-        QStringList log_values_name_sorted;
+        QStringList log_value_enabled;
+
+        QStringList log_values_names_sorted;
+        QStringList log_values_by_protocol;
 
         QStringList dashboard_log_value_id;
         QStringList lower_panel_log_value_id;
@@ -105,7 +110,11 @@ public:
         QStringList log_switch_ecu_byte_index;
         QStringList log_switch_ecu_bit;
         QStringList log_switch_target;
-        QStringList switch_state;
+        QStringList log_switch_enabled;
+
+        QStringList log_switches_names_sorted;
+
+        QStringList log_switch_state;
 
         QStringList lower_panel_switch_id;
     } LogValuesStruct;
@@ -141,6 +150,7 @@ public:
         QStringList SelectionsList;
         QStringList SelectionsListSorted;
         QStringList DescriptionList;
+        QStringList StateList;
         QStringList MapData;
 
         QStringList XScaleTypeList;
@@ -248,6 +258,16 @@ public:
      ***********************/
     LogValuesStructure *readLoggerDefinitionFile();
 
+    /*************************
+     * Read logger conf file
+     ************************/
+    LogValuesStructure *read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
+
+    /*************************
+     * Save logger conf file
+     ************************/
+    LogValuesStructure *save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
+
     /****************************
      * Read ECU base definition
      ***************************/
@@ -269,6 +289,12 @@ public:
      * checksum calculations and value conversions
      **********************************************/
     EcuCalDefStructure *saveRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
+
+    /***********************************************
+     * Apply changes made to calibration
+     * to rom data array
+     **********************************************/
+    EcuCalDefStructure *apply_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef);
 
     /***************************
      * Read software menu file
