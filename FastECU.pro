@@ -41,6 +41,7 @@ SOURCES += \
     ecu_operations_nissan.cpp \
     ecu_operations_subaru.cpp \
     file_actions.cpp \
+    log_operations_ssm.cpp \
     logbox.cpp \
     logvalues.cpp \
     main.cpp \
@@ -61,7 +62,6 @@ HEADERS += \
     kernelcomms.h \
     kernelmemorymodels.h \
     logbox.h \
-    logvalues.h \
     mainwindow.h \
     preferences.h \
     serial_port_actions.h \
@@ -84,6 +84,12 @@ RESOURCES += \
     icons.qrc
 
 DISTFILES += \
-    fastecu.rc
+    LICENSE \
+    README.md \
+    USING.txt \
+    fastecu.rc \
+    precompiled/FastECU-Linux.zip \
+    precompiled/FastECU-Win7-32bit.zip \
+    precompiled/FastECU-Win7-64bit.zip
 
 RC_FILE = fastecu.rc

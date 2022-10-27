@@ -40,14 +40,20 @@ public:
 
     int ecu_functions(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
 private:
+    void closeEvent(QCloseEvent *bar);
+
     #define STATUS_SUCCESS							0x00
     #define STATUS_ERROR							0x01
+
+    #define KERNEL_MAXSIZE_SUB 8*1024U
+    uint8_t FILE_SIZE_ERROR = 11;
 
     bool ssm_init_ok = true;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
     bool test_write = false;
     bool kernel_alive = false;
+    bool kill_process = false;
 
     int mcu_type_index;
 
@@ -59,14 +65,9 @@ private:
 
     SerialPortActions *serial;
 
-    QByteArray subaru_02_16bit_bootloader_init = { "\x4D\xFF\xB4" };
-    //QByteArray subaru_04_16bit_bootloader_init = { "\x4D\xFF\xB4" };
-    QByteArray subaru_02_32bit_bootloader_init = { "\x4D\xFF\xB4" };
-    //QByteArray subaru_04_32bit_bootloader_init = { "\x4D\xFF\xB4" };
-    //QByteArray subaru_05_32bit_bootloader_init = { "\x4D\xFF\xB4" };
+    QByteArray subaru_16bit_bootloader_init = { "\x4D\xFF\xB4" };
 
-    QByteArray subaru_02_16bit_bootloader_init_ok = { "\x4D\x00\xB3" };
-    QByteArray subaru_02_32bit_bootloader_init_ok = { "\x4D\x00\xB3" };
+    QByteArray subaru_16bit_bootloader_init_ok = { "\x4D\x00\xB3" };
 
     unsigned long serial_read_extra_short_timeout = 50;
     unsigned long serial_read_short_timeout = 200;
@@ -76,15 +77,8 @@ private:
 
     void check_mcu_type(QString mcu_type_string);
 
-    //QByteArray ssm_init();
-    //QByteArray ssm_get_ecu_id();
-    //QByteArray start_communication();
-    //QByteArray request_seed();
-    //QByteArray send_seed_key(QByteArray seed_key);
-
-    int connect_bootloader_subaru_kline_02_16bit();
+    int connect_bootloader_subaru_kline_16bit();
     int connect_bootloader_subaru_kline_04_16bit();
-    int connect_bootloader_subaru_kline_02_32bit();
     int connect_bootloader_subaru_can_05_32bit();
     int connect_bootloader_subaru_kline_32bit();
     int connect_bootloader_subaru_can_32bit();
@@ -99,15 +93,13 @@ private:
     int read_rom_subaru_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_kline_04_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_kline_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
 
     int write_rom_subaru_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_kline_04_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_kline_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
 
     QByteArray sub_sid_a8_read_mem();

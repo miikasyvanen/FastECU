@@ -20,11 +20,13 @@ class LogValues : public QWidget
     Q_OBJECT
 
 public:
-    explicit LogValues(FileActions::LogValuesStructure *logValues, int tabIndex, QWidget *parent = nullptr);
+    explicit LogValues(FileActions::LogValuesStructure *logValues, int tabIndex, QString protocol, QWidget *parent = nullptr);
     ~LogValues();
 
 private:
-    Ui::LogValues *ui;
+    FileActions::LogValuesStructure *logValues;
+
+    QString protocol;
 
     struct log_value {
         uint16_t address;
@@ -97,8 +99,12 @@ private:
         "",
     };
 
+    Ui::LogValues *ui;
 
 private slots:
+    void change_log_gauge_value(int);
+    void change_log_digital_value(int);
+    void change_log_switch_value(int);
 
 };
 

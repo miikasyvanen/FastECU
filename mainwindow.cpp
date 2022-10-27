@@ -1,6 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+const QColor MainWindow::RED_LIGHT_OFF = QColor(96, 32, 32);
+const QColor MainWindow::YELLOW_LIGHT_OFF = QColor(96, 96, 32);
+const QColor MainWindow::GREEN_LIGHT_OFF = QColor(32, 96, 32);
+const QColor MainWindow::RED_LIGHT_ON = QColor(255, 64, 64);
+const QColor MainWindow::YELLOW_LIGHT_ON = QColor(223, 223, 64);
+const QColor MainWindow::GREEN_LIGHT_ON = QColor(64, 255, 64);
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -16,8 +23,8 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
 
 #ifdef Q_OS_WIN32
-    serialPort = serialPortWindows;
-    serialPortPrefix = "";
+    //serialPort = serialPortWindows;
+    serial_port_prefix = "";
 #endif
 
 #if Q_PROCESSOR_WORDSIZE == 4
@@ -38,6 +45,9 @@ MainWindow::MainWindow(QWidget *parent)
     fileActions->checkConfigDir();
     configValues = fileActions->readConfigFile();
 
+    if (!configValues->ecu_definition_files.length())
+        QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
+
     if (QDir(configValues->kernel_files_directory).exists()){
         QDir dir(configValues->kernel_files_directory);
         QStringList nameFilter("*.bin");
@@ -47,59 +57,27 @@ MainWindow::MainWindow(QWidget *parent)
 
     QSignalMapper *mapper = fileActions->readMenuFile(ui->menubar, ui->toolBar);
     connect(mapper, SIGNAL(mapped   (QString)), this, SLOT(menu_action_triggered(QString)));
-
+/*
     for (int i = 0; i < configValues->calibration_files.count(); i++)
     {
-        QString fileName = configValues->calibration_files.at(i);
-        //qDebug() << "Open file" << fileName;
-        ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
-        //ecuCalDef[ecuCalDefIndex]->FullRomData.clear();
-        fileActions->openRomFile(ecuCalDef[ecuCalDefIndex], fileName);
-        if(ecuCalDef[ecuCalDefIndex] != NULL)
+        QString filename = configValues->calibration_files.at(i);
+        bool result = false;
+        //qDebug() << "Open file" << filename;
+        //ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
+        result = open_calibration_file(filename);
+        if (result)
         {
-            calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
-            calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
-
-            ecuCalDefIndex++;
+            configValues->calibration_files.removeAt(i);
+            fileActions->saveConfigFile();
+            i--;
         }
     }
     if(ecuCalDefIndex > 0)
     {
-        //QTreeWidgetItem *currentItem = ui->calibrationFilesTreeWidget->topLevelItem(0);
         const QModelIndex index = ui->calibrationFilesTreeWidget->selectionModel()->currentIndex();
-        //currentItem->setSelected(true);
         emit ui->calibrationFilesTreeWidget->clicked(index);
     }
-    logValues = &fileActions->LogValuesStruct;
-    logValues = fileActions->readLoggerDefinitionFile();
-    //fileActions->saveLoggerDefinitionFile();
-
-    logBoxes = new LogBox();
-
-    int switchBoxCount = 20;
-    int logBoxCount = 12;
-
-    for (int i = 0; i < logValues->lower_panel_switch_id.count(); i++)
-    {
-        if (logValues->lower_panel_switch_id.at(i).toInt() > -1)
-        {
-            QGroupBox *switchBox = logBoxes->drawLogBoxes("switch", i, switchBoxCount, logValues->log_switch_name.at(i), logValues->log_switch_name.at(i), logValues->switch_state.at(i));
-            switchBox->setAttribute(Qt::WA_TransparentForMouseEvents);
-            ui->switchBoxLayout->addWidget(switchBox);
-        }
-    }
-    for (int i = 0; i < logValues->lower_panel_log_value_id.count(); i++)
-    {
-        if (logValues->lower_panel_log_value_id.at(i).toInt() > -1)
-        {
-            QStringList value_unit = logValues->log_value_units.at(i).split(",");
-            QGroupBox *logBox = logBoxes->drawLogBoxes("log", i, logBoxCount, logValues->log_value_name.at(i), value_unit.at(0), logValues->log_value.at(i));
-            //QGroupBox *logBox = logBoxes->drawLogBoxes("log", i, logBoxCount, logValues->log_value_name.at(i), logValues->log_value_units.at(i), logValues->log_value.at(i));
-            logBox->setAttribute(Qt::WA_TransparentForMouseEvents);
-            ui->logBoxLayout->addWidget(logBox);
-        }
-    }
-
+*/
     connect(ui->switchBoxWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(change_switch_values()));
     connect(ui->logBoxWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(change_digital_values()));
     connect(ui->mdiArea, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(change_gauge_values()));
@@ -147,18 +125,18 @@ MainWindow::MainWindow(QWidget *parent)
             car_model_list->setCurrentIndex(car_model_index);
         car_model_index++;
     }
+    connect(car_model_list, SIGNAL(currentIndexChanged(int)), this, SLOT(car_model_changed()));
     ui->toolBar->addWidget(car_model_list);
+    emit car_model_list->currentIndexChanged(car_model_index - 1);
 
     flash_method_list = new QComboBox();
     flash_method_list->setFixedWidth(80);
     flash_method_list->setObjectName("flash_method_list");
     QStringList flash_methods = create_flash_methods_list();
-    int flash_method_index = 0;
-    foreach (QString flash_method, flash_methods){
-        flash_method_list->addItem(flash_method);
-        if (configValues->flash_method == flash_method)
-            flash_method_list->setCurrentIndex(flash_method_index);
-        flash_method_index++;
+    for (int i = 0; i < flash_methods.length(); i++){
+        flash_method_list->addItem(flash_methods.at(i));
+        if (configValues->flash_method == flash_methods.at(i))
+            flash_method_list->setCurrentIndex(i);
     }
     connect(flash_method_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_method_changed()));
     ui->toolBar->addWidget(flash_method_list);
@@ -192,14 +170,23 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBar->addWidget(serial_port_list);
 
     QPushButton *refresh_serial_list = new QPushButton();
-    //refresh_serial_list->setText("Refresh");
-    refresh_serial_list->setIcon(QIcon(":/icons/help-browser.png"));
-    //connect(refresh_serial_list, SIGNAL(clicked(bool)), this, SLOT(start_manual_ecu_operations()));
+    refresh_serial_list->setIcon(QIcon(":/icons/view-refresh.png"));
     connect(refresh_serial_list, SIGNAL(clicked(bool)), this, SLOT(check_serial_ports()));
     ui->toolBar->addWidget(refresh_serial_list);
 
-    serial_port = serial_port_prefix + configValues->serial_port;
+    logValues = &fileActions->LogValuesStruct;
+    logValues = fileActions->readLoggerDefinitionFile();
+    logBoxes = new LogBox();
 
+    if (logValues != NULL)
+    {
+        int switchBoxCount = 20;
+        int logBoxCount = 12;
+
+        update_logboxes(protocol);
+    }
+
+    serial_port = serial_port_prefix + configValues->serial_port;
     serial_port_baudrate = default_serial_port_baudrate;
     serial->serial_port_baudrate = serial_port_baudrate;
     serial->serial_port = serial_port;
@@ -217,202 +204,33 @@ MainWindow::MainWindow(QWidget *parent)
     logging_poll_timer = new QTimer(this);
     logging_poll_timer->setInterval(logging_poll_timer_timeout);
     connect(logging_poll_timer, SIGNAL(timeout()), this, SLOT(log_ssm_values()));
-    //logging_poll_timer->start();
 
-    //qDebug() << "Started";
+    logparams_poll_timer = new QTimer(this);
+    logparams_poll_timer->setInterval(logparams_poll_timer_timeout);
+    connect(logparams_poll_timer, SIGNAL(timeout()), this, SLOT(read_serial_data()));
+
+    log_speed_timer = new QElapsedTimer();
+
+    if(ecuCalDefIndex > 0)
+    {
+        const QModelIndex index = ui->calibrationFilesTreeWidget->selectionModel()->currentIndex();
+        emit ui->calibrationFilesTreeWidget->clicked(index);
+    }
+
 }
 
 MainWindow::~MainWindow()
 {
+    if (loggingState)
+    {
+        loggingState = false;
+        log_params_request_started = false;
+        log_ssm_values();
+        delay(200);
+    }
+    ssm_init_poll_timer->stop();
+    serial_poll_timer->stop();
     delete ui;
-}
-
-bool MainWindow::ecu_init()
-{
-    QString car_model;
-    QComboBox *car_model_list = ui->toolBar->findChild<QComboBox*>("car_model_list");
-    QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
-
-    //qDebug() << "ECU init";
-
-    if (serial->is_serial_port_open())
-    {
-        if (!ecu_init_complete)
-        {
-            if (car_model_list->currentText() == "Subaru")
-            {
-                if (flash_method_list->currentText() == "subarucan")
-                    ssm_can_init();
-                else
-                    ssm_kline_init();
-            }
-        }
-    }
-    else
-    {
-        //qDebug() << "Connection is not ready!";
-        ecu_init_complete = false;
-        ecuid.clear();
-    }
-    //qDebug() << "ECU ID check complete";
-
-    return ecu_init_complete;
-}
-
-void MainWindow::ssm_can_init()
-{
-
-}
-
-void MainWindow::ssm_kline_init()
-{
-    QByteArray output;
-    QByteArray received;
-
-    //qDebug() << "Check ECU INIT";
-    if (!ecu_init_started)
-    {
-        ecu_init_started = true;
-/*
-        //qDebug() << "Read ECU ID with A8";
-        output.clear();
-        output.append((uint8_t)0xA8);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x01);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x02);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x03);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x04);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x05);
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        delay(200);
-        received = serial->read_serial_data(100, 500);
-        //qDebug() << "ECU ID:" << parse_message_to_hex(received);
-*/
-        //qDebug() << "SSM init with BF";
-        output.clear();
-        output.append((uint8_t)0xBF);
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        delay(200);
-        received = serial->read_serial_data(100, 500);
-        //qDebug() << "ECU ID:" << parse_ecuid(received);
-        if (received.length() == 62)
-        {
-            ecu_init_complete = true;
-            //set_status_bar_label(true, true, ecuid);
-            ecuid = parse_ecuid(received);
-
-            received = serial->read_serial_data(1, 100);
-            while(received.length() > 0)
-            {
-                received = serial->read_serial_data(1, 100);
-            }
-        }
-    }
-    ecu_init_started = false;
-}
-
-void MainWindow::log_ssm_values()
-{
-    QByteArray output;
-    QByteArray received;
-    bool ok = false;
-
-    if (ecu_init_complete)
-    {
-        output.append((uint8_t)0xA8);
-        output.append((uint8_t)0x00);
-        for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
-        {
-            if (logValues->lower_panel_log_value_id.at(i) != "-1")
-            {
-                //qDebug() << logValues->log_value_units.at(i);
-                output.append((uint8_t)(logValues->log_value_address.at(i).toUInt(&ok,16) >> 16));
-                output.append((uint8_t)(logValues->log_value_address.at(i).toUInt(&ok,16) >> 8));
-                output.append((uint8_t)logValues->log_value_address.at(i).toUInt(&ok,16));
-            }
-        }
-        //qDebug() << parse_message_to_hex(add_ssm_header(output, false));
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        received = serial->read_serial_data(100, 500);
-        received.remove(0, 5);
-        received.remove(received.length() - 1, 1);
-        parse_log_params(received);
-        //qDebug() << parse_log_params(received);
-    }
-}
-
-QString MainWindow::parse_log_params(QByteArray received)
-{
-    QString params;
-
-    if (!logging_request_active)
-    {
-        logging_request_active = true;
-        qDebug() << "Log read count:" << logging_counter++;
-        for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
-        {
-            if (logValues->lower_panel_log_value_id.at(i) != "-1")
-            {
-                QStringList conversion = logValues->log_value_units.at(i).split(",");
-                QString value_name = logValues->log_value_name.at(i);
-                QString unit = conversion.at(1);
-                QString from_byte = conversion.at(2);
-                QString format = conversion.at(3);
-                //QString gauge_min = conversion.at(4);
-                //QString gauge_max = conversion.at(5);
-                //QString gauge_step = conversion.at(6);
-                QString value = QString::number((uint8_t)received.at(i));
-                QString calc_value = QString::number(fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(from_byte, value)));
-                qDebug() << value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte;
-                params.append(calc_value);
-                params.append(", ");
-            }
-        }
-        qDebug() << parse_message_to_hex(received);
-        qDebug() << " ";
-        logging_request_active = false;
-    }
-
-    return params;
-}
-
-QByteArray MainWindow::add_ssm_header(QByteArray output, bool dec_0x100)
-{
-    uint8_t length = output.length();
-
-    output.insert(0, (uint8_t)0x80);
-    output.insert(1, (uint8_t)0x10);
-    output.insert(2, (uint8_t)0xF0);
-    output.insert(3, length);
-    output.append(calculate_checksum(output, dec_0x100));
-
-    //qDebug() << "Generated SSM message:" << parseMessageToHex(output);
-
-    return output;
-}
-
-uint8_t MainWindow::calculate_checksum(QByteArray output, bool dec_0x100)
-{
-    uint8_t checksum = 0;
-
-    for (uint16_t i = 0; i < output.length(); i++)
-    {
-        checksum += (uint8_t)output.at(i);
-    }
-    if (dec_0x100)
-        checksum = (uint8_t) (0x100 - checksum);
-
-    return checksum;
 }
 
 QStringList MainWindow::create_car_models_list()
@@ -447,6 +265,14 @@ QString MainWindow::check_kernel(QString flash_method)
     return kernel;
 }
 
+void MainWindow::car_model_changed()
+{
+    qDebug() << "Change protocol";
+    QComboBox *car_model_list = ui->toolBar->findChild<QComboBox*>("car_model_list");
+    if (car_model_list->currentText() == "Subaru")
+        protocol = "SSM";
+}
+
 void MainWindow::flash_method_changed()
 {
     ssm_init_poll_timer->stop();
@@ -456,56 +282,69 @@ void MainWindow::flash_method_changed()
         serial->is_can_connection = true;
     else
         serial->is_can_connection = false;
+    if (flash_method_list->currentText() == "subarucan_iso")
+        serial->is_iso15765_connection = true;
+    else
+        serial->is_iso15765_connection = false;
 
     qDebug() << "CAN:" << serial->is_can_connection;
+
+    configValues->flash_method = flash_method_list->currentText();
+    fileActions->saveConfigFile();
 
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
     ssm_init_poll_timer->start();
-
 }
 
 void MainWindow::check_serial_ports()
 {
-    QStringList serial_ports = serial->check_serial_ports();
     QComboBox *serial_port_list = ui->toolBar->findChild<QComboBox*>("serial_port_list");
+    QString prev_serial_port = serial_port_list->currentText();
+    int index = 0;
+
+    serial_ports = serial->check_serial_ports();
     serial_port_list->clear();
 
     for (int i = 0; i < serial_ports.length(); i += 2)
     {
         serial_port_list->addItem(serial_ports.at(i));
-        if (configValues->serial_port == serial_ports.at(i))
-            serial_port_list->setCurrentIndex(i);
+        if (prev_serial_port == serial_ports.at(i))
+            serial_port_list->setCurrentIndex(index);
+        index++;
     }
 }
 
 void MainWindow::open_serial_port()
 {
     QStringList serial_port;
-    serial_port.append(serial_ports.at(serial_port_list->currentIndex() * 2));
-    serial_port.append(serial_ports.at(serial_port_list->currentIndex() * 2 + 1));
-    //qDebug() << serial_port;
 
-    QString opened_serial_port = serial->open_serial_port(serial_port);
-    if (opened_serial_port != NULL)
+    if (serial_ports.length() > 0)
     {
-        if (opened_serial_port != previous_serial_port)
+        serial_port.append(serial_ports.at(serial_port_list->currentIndex() * 2));
+        serial_port.append(serial_ports.at(serial_port_list->currentIndex() * 2 + 1));
+
+        QString opened_serial_port = serial->open_serial_port(serial_port);
+        if (opened_serial_port != NULL)
         {
-            ecuid.clear();
+            if (opened_serial_port != previous_serial_port)
+            {
+                ecuid.clear();
+                ecu_init_complete = false;
+            }
+            //qDebug() << "Serial port" << opened_serial_port << "opened" << previous_serial_port;
+            previous_serial_port = opened_serial_port;
+            if (ecuid == "")
+                set_status_bar_label(true, false, "");
+            else
+                set_status_bar_label(true, true, ecuid);
+        }
+        else
+        {
+            set_status_bar_label(false, false, "");
             ecu_init_complete = false;
         }
-        //qDebug() << "Serial port" << opened_serial_port << "opened" << previous_serial_port;
-        previous_serial_port = opened_serial_port;
-        if (ecuid == "")
-            set_status_bar_label(true, false, "");
-        else
-            set_status_bar_label(true, true, ecuid);
-    }
-    else
-    {
-        set_status_bar_label(false, false, "");
-        ecu_init_complete = false;
     }
 }
 
@@ -520,12 +359,11 @@ void MainWindow::start_ecu_operations(QString cmd_type)
 
     if (cmd_type == "test_write" || cmd_type == "write")
     {
+        ecuCalDef[romNumber] = fileActions->apply_cal_changes_to_rom_data(ecuCalDef[romNumber]);
         ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
         //ecuCalDef[romNumber]->Kernel = check_kernel(flash_method_list->currentText());
         qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
-        EcuOperationsSubaru *ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
-
-        delete ecuOperationsSubaru;
+        ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
     }
     else
     {
@@ -535,7 +373,8 @@ void MainWindow::start_ecu_operations(QString cmd_type)
         ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, flash_method_list->currentText());
         ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(flash_method_list->currentText());
         qDebug() << ecuCalDef[ecuCalDefIndex]->Kernel;
-        EcuOperationsSubaru *ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
+        ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
+
         if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
         {
             fileActions->openRomFile(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
@@ -547,12 +386,7 @@ void MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDefIndex++;
             }
         }
-        //else
-            //delete ecuCalDef[ecuCalDefIndex];
-
-        delete ecuOperationsSubaru;
     }
-    //ecuFunctionsSubaru->show();
 
     serial->serialport_protocol_14230 = false;
     serial->change_port_speed("4800");
@@ -567,9 +401,6 @@ void MainWindow::start_manual_ecu_operations()
 
     EcuManualOperations *ecuManualOperations = new EcuManualOperations(serial, ecuCalDef[romNumber]);
 
-    //ecuManualFunctions->show();
-    //delete ecuManualFunctions;
-
     serial->change_port_speed("4800");
 }
 
@@ -578,38 +409,37 @@ void MainWindow::custom_menu_requested(QPoint pos)
     QModelIndex index = ui->calibrationFilesTreeWidget->indexAt(pos);
     emit ui->calibrationFilesTreeWidget->clicked(index);
 
-    //qDebug() << "Files tree custom menu request at pos" << pos << "and index" << index;
     QMenu *menu = new QMenu(this);
     menu->addAction("Sync with ECU", this, SLOT(syncCalWithEcu()));
     menu->addAction("Close", this, SLOT(close_calibration()));
     menu->popup(ui->calibrationFilesTreeWidget->viewport()->mapToGlobal(pos));
 
-    //connect(removeAction, SIGNAL(triggered()), this, SLOT(removeLogPanelView()));
 }
 
-void MainWindow::open_calibration_file()
+bool MainWindow::open_calibration_file(QString filename)
 {
     ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
-    qDebug() << ecuCalDefIndex;
-    fileActions->openRomFile(ecuCalDef[ecuCalDefIndex], NULL);
+    ecuCalDef[ecuCalDefIndex] = fileActions->openRomFile(ecuCalDef[ecuCalDefIndex], filename);
+    qDebug() << ecuCalDef[ecuCalDefIndex];
     if(ecuCalDef[ecuCalDefIndex] != NULL)
     {
-        configValues->calibration_files.append(ecuCalDef[ecuCalDefIndex]->FullFileName);
-        //CalibrationTreeWidget *calibrationTreeWidget = new CalibrationTreeWidget();
-        //qDebug() << "Create cal file tree";
         calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
-        //qDebug() << "Create cal data tree";
         calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
-        //qDebug() << "Created!";
 
+        if (filename == NULL)
+        {
+            //configValues->calibration_files.append(ecuCalDef[ecuCalDefIndex]->FullFileName);
+            //fileActions->saveConfigFile();
+        }
         ecuCalDefIndex++;
-        fileActions->saveConfigFile();
     }
     else
     {
-        //qDebug() << "Failed!!";
+        qDebug() << "Failed!!";
         ecuCalDef[ecuCalDefIndex] = {};
+        return 1;
     }
+    return 0;
 }
 
 void MainWindow::save_calibration_file()
@@ -623,9 +453,6 @@ void MainWindow::save_calibration_file()
 
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
-
-    qDebug() << "ROM number" << romNumber << "close button clicked";
-    qDebug() << "ROM index" << romIndex << "close button clicked";
 
     fileActions->saveRomFile(ecuCalDef[romNumber], ecuCalDef[romNumber]->FullFileName);
 
@@ -642,9 +469,6 @@ void MainWindow::save_calibration_file_as()
 
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
-
-    qDebug() << "ROM number" << romNumber << "close button clicked";
-    qDebug() << "ROM index" << romIndex << "close button clicked";
 
     QString filename = "";
 
@@ -668,7 +492,6 @@ void MainWindow::save_calibration_file_as()
 
 void MainWindow::selectable_combobox_item_changed(QString item)
 {
-    //qDebug() << "Combobox" << item << "clicked";
     int mapRomNumber = 0;
     int mapNumber = 0;
 
@@ -679,7 +502,6 @@ void MainWindow::selectable_combobox_item_changed(QString item)
         mapRomNumber = mapWindowString.at(0).toInt();
         mapNumber = mapWindowString.at(1).toInt();
 
-        //qDebug() << w->objectName();
         QTableWidget* mapTableWidget = w->findChild<QTableWidget*>(w->objectName());
         if (mapTableWidget)
         {
@@ -693,6 +515,52 @@ void MainWindow::selectable_combobox_item_changed(QString item)
             }
         }
     }
+}
+
+void MainWindow::checkbox_state_changed(int state)
+{
+
+    bool bStatus;
+
+    int map_rom_number = 0;
+    int map_number = 0;
+
+    QMdiSubWindow* w = ui->mdiArea->activeSubWindow();
+    if (w)
+    {
+        QStringList mapWindowString = w->objectName().split(",");
+        map_rom_number = mapWindowString.at(0).toInt();
+        map_number = mapWindowString.at(1).toInt();
+
+        QTableWidget* mapTableWidget = w->findChild<QTableWidget*>(w->objectName());
+        if (mapTableWidget)
+        {
+            QStringList switch_states = ecuCalDef[map_rom_number]->StateList.at(map_number).split(",");
+            int switch_states_length = (switch_states.length() - 1);
+            for (int i = 0; i < switch_states_length; i += 2)
+            {
+                QStringList switch_data = switch_states.at(i + 1).split(" ");
+                uint32_t byte_address = ecuCalDef[map_rom_number]->AddressList.at(map_number).toUInt(&bStatus, 16);
+                if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < (170 * 1024) && byte_address > 0x27FFF)
+                    byte_address -= 0x8000;
+                if (switch_states.at(i) == "off" && state == 0)
+                {
+                    for (int j = 0; j < switch_data.length(); j++)
+                    {
+                        ecuCalDef[map_rom_number]->FullRomData[byte_address + j] = (uint8_t)switch_data.at(j).toUInt();
+                    }
+                }
+                if (switch_states.at(i) == "on" && state == 2)
+                {
+                    for (int j = 0; j < switch_data.length(); j++)
+                    {
+                        ecuCalDef[map_rom_number]->FullRomData[byte_address + j] = (uint8_t)switch_data.at(j).toUInt();
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 void MainWindow::calibration_files_treewidget_item_selected(QTreeWidgetItem* item)
@@ -718,7 +586,9 @@ void MainWindow::calibration_files_treewidget_item_selected(QTreeWidgetItem* ite
     for (int i = 0; i < flash_method_list->count(); i++)
     {
         if(ecuCalDef[romNumber]->RomInfo.at(FlashMethod) == flash_method_list->itemText(i))
+        {
             flash_method_list->setCurrentIndex(i);
+        }
     }
 }
 
@@ -726,7 +596,6 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
 {
     const QModelIndex index = ui->calibrationDataTreeWidget->selectionModel()->currentIndex();
     QString selectedText = index.data(Qt::DisplayRole).toString();
-    //find out the hierarchy level of the selected item
     int hierarchyLevel=1;
     QModelIndex seekRoot = index;
     QString selectedRom;
@@ -740,17 +609,14 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
     }
 
     if (ui->calibrationDataTreeWidget->indexOfTopLevelItem(item) > -1){
-        //qDebug() << "hierarchyLevel = 1";
         hierarchyLevel = 1;
     }
     else if (ui->calibrationDataTreeWidget->indexOfTopLevelItem(item->parent()) > -1){
-        //qDebug() << "hierarchyLevel = 2, parent is" << ui->calibrationDataTreeWidget->indexOfTopLevelItem(item->parent());
         hierarchyLevel = 2;
 
         QTreeWidgetItem *selectedFilesTreeItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
         int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedFilesTreeItem);
         int romIndex = selectedFilesTreeItem->text(2).toInt();
-        //qDebug() << "Check tree item name";
 
         for (int i = 0; i < ecuCalDef[romNumber]->NameList.count(); i++)
         {
@@ -758,24 +624,19 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
             {
                 if (ecuCalDef[romNumber]->VisibleList.at(i) == "1")
                 {
-                    //qDebug() << "Calibration map found visible";
                     QWidget* w = ui->mdiArea->findChild<QWidget*>(QString::number(romIndex) + "," + QString::number(i) + "," + ecuCalDef[romNumber]->NameList.at(i) + "," + ecuCalDef[romNumber]->TypeList.at(i));
                     if (w)
                     {
-                        //qDebug() << "w =" << w->objectName() << "- active =" << ui->mdiArea->activeSubWindow()->objectName();
                         if (w->objectName() == ui->mdiArea->activeSubWindow()->objectName())
                         {
                             ui->mdiArea->removeSubWindow(w);
-                            //w->close();
                             ecuCalDef[romNumber]->VisibleList.replace(i, "0");
                             item->setCheckState(0, Qt::Unchecked);
-                            //qDebug() << "MdiSubWindow closed";
                         }
                         else
                         {
                             w->setFocus();
                             item->setCheckState(0, Qt::Checked);
-                            //qDebug() << "MdiSubWindow focus set";
 
                         }
                     }
@@ -783,15 +644,11 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
                 else
                 {
                     ecuCalDef[romNumber]->VisibleList.replace(i, "1");
-                    //ecuCalDef[romNumber]->SelectedList.replace(i, "1");
                     item->setCheckState(0, Qt::Checked);
-                    //qDebug() << "MdiSubWindow created";
 
-                    //qDebug() << "Open map number" << i;
                     CalibrationMaps *calibrationMaps = new CalibrationMaps(ecuCalDef[romNumber], romIndex, i, ui->mdiArea->contentsRect());
                     QMdiSubWindow *subWindow = ui->mdiArea->addSubWindow(calibrationMaps);
                     subWindow->setAttribute(Qt::WA_DeleteOnClose, true);
-                    //subWindow->setObjectName(ecuCalDef[romNumber]->NameList.at(i));
                     subWindow->setObjectName(calibrationMaps->objectName());
                     subWindow->show();
                     subWindow->adjustSize();
@@ -800,6 +657,7 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
                     subWindow->setFixedHeight(subWindow->height());
 
                     connect(calibrationMaps, SIGNAL(selectable_combobox_item_changed(QString)), this, SLOT(selectable_combobox_item_changed(QString)));
+                    connect(calibrationMaps, SIGNAL(checkbox_state_changed(int)), this, SLOT(checkbox_state_changed(int)));
                     connect(subWindow, SIGNAL(destroyed(QObject*)), this, SLOT(close_calibration_map(QObject*)));
                 }
             }
@@ -815,7 +673,6 @@ void MainWindow::calibration_data_treewidget_item_expanded(QTreeWidgetItem* item
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     QString categoryName = ui->calibrationDataTreeWidget->topLevelItem(itemIndex)->text(0);
 
-    //qDebug() << "Item" << categoryName << "expanded in rom" << romNumber;
     calibrationTreeWidget->calibrationDataTreeWidgetItemExpanded(ecuCalDef[romNumber], categoryName);
 }
 
@@ -827,8 +684,6 @@ void MainWindow::calibration_data_treewidget_item_collapsed(QTreeWidgetItem* ite
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     QString categoryName = ui->calibrationDataTreeWidget->topLevelItem(itemIndex)->text(0);
 
-    //qDebug() << "Item" << categoryName << "collapsed in rom" << romNumber;
-
     calibrationTreeWidget->calibrationDataTreeWidgetItemCollapsed(ecuCalDef[romNumber], categoryName);
 }
 
@@ -839,35 +694,20 @@ void MainWindow::close_calibration()
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
-    //qDebug() << "ROM number" << romNumber << "close button clicked";
-    //qDebug() << "ROM index" << romIndex << "close button clicked";
-
-    //qDebug() << "ToplevelItemCount" << ui->calibrationDataTreeWidget->topLevelItemCount();
     for (int i = 0; i < ui->calibrationDataTreeWidget->topLevelItemCount(); i++)
     {
-        //qDebug() << "ChildCount" << ui->calibrationDataTreeWidget->topLevelItem(i)->childCount();
         for (int j = 0; j < ui->calibrationDataTreeWidget->topLevelItem(i)->childCount(); j++)
         {
-            //qDebug() << "Subwindow list count" << ui->mdiArea->subWindowList().count();
             for (int k = 0; k < ui->mdiArea->subWindowList().count(); k++)
             {
                 int mapNumber = ui->calibrationDataTreeWidget->topLevelItem(i)->child(j)->text(1).toInt();
                 QString mapName = ui->calibrationDataTreeWidget->topLevelItem(i)->child(j)->text(0);
                 QString mapType = ecuCalDef[romNumber]->TypeList.at(mapNumber);
-                //qDebug() << romNumber;
-                //qDebug() << mapNumber;
-                //qDebug() << mapName;
-                //qDebug() << mapType;
 
                 QString calMapWindowName = QString::number(romIndex) + "," + QString::number(mapNumber) + "," + mapName;
-                //QMdiSubWindow *w = ui->mdiArea->findChild<QMdiSubWindow*>(calMapWindowName);
                 QMdiSubWindow *w = ui->mdiArea->subWindowList().at(k);
-                //qDebug() << "Checking if map" << calMapWindowName << "found";
-                //qDebug() << "Mapwindow is " << w->objectName();
                 if (w->objectName().startsWith(calMapWindowName))
                 {
-                    qDebug() << calMapWindowName << "found, closing...";
-                    //w->close();
                     ui->mdiArea->removeSubWindow(w);
                 }
 
@@ -875,25 +715,20 @@ void MainWindow::close_calibration()
 
         }
     }
-    //qDebug() << "Delete rom item";
     delete ui->calibrationFilesTreeWidget->takeTopLevelItem(romNumber);
 
-    //qDebug() << "Copy rom data structures";
     ecuCalDefIndex--;
     for (int i = romNumber; i < ecuCalDefIndex; i++)
     {
         if (ecuCalDefIndex > romNumber)
         {
-            //qDebug() << i;
             ecuCalDef[i] = ecuCalDef[i + 1];
             int rom_index = ui->calibrationFilesTreeWidget->topLevelItem(i)->text(2).toInt();
-            //qDebug() << i << rom_index;
             ui->calibrationFilesTreeWidget->topLevelItem(i)->setText(2, QString::number(rom_index - 1));
         }
     }
     ecuCalDef[ecuCalDefIndex] = {};
 
-    //qDebug() << "Set new active rom";
     if (ui->calibrationFilesTreeWidget->topLevelItemCount() > 0)
     {
         for (int i = 0; i < ui->calibrationFilesTreeWidget->topLevelItemCount(); i++)
@@ -915,7 +750,6 @@ void MainWindow::close_calibration()
             delete ui->calibrationDataTreeWidget->takeTopLevelItem(0);
         }
     }
-    //qDebug() << "Ecu Cal def index" << ecuCalDefIndex;
     configValues->calibration_files.removeAt(romNumber);
     fileActions->saveConfigFile();
 }
@@ -924,43 +758,28 @@ void MainWindow::close_calibration_map(QObject* obj)
 {
     QStringList mapWindowString = obj->objectName().split(",");
     int mapRomNumber = mapWindowString.at(0).toInt();
-    //int mapNumber = mapWindowString.at(1).toInt();
     QString mapName = mapWindowString.at(2);
 
-    //qDebug() << "Map closed";
     for (int i = 0; i < ui->calibrationFilesTreeWidget->topLevelItemCount(); i++)
     {
         ui->calibrationFilesTreeWidget->topLevelItem(i)->setSelected(false);
     }
-    //qDebug() << "Map window close event";
-    //qDebug() << "QObject" << obj->objectName();
     QTreeWidgetItem *currentItem = ui->calibrationFilesTreeWidget->topLevelItem(mapRomNumber);
-    //qDebug() << "Get item";
     currentItem->setSelected(true);
-    //qDebug() << "Set item selected";
     const QModelIndex index = ui->calibrationFilesTreeWidget->selectionModel()->currentIndex();
-    //qDebug() << "Emit item selected signal";
     emit ui->calibrationFilesTreeWidget->clicked(index);
 
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
-    //int treeRomNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = selectedItem->text(2).toInt();
 
-    //qDebug() << mapRomNumber;
-    //qDebug() << mapNumber;
-    //qDebug() << mapName;
-
     QTreeWidgetItem *item;
-    //qDebug() << "Top level item count" << ui->calibrationDataTreeWidget->topLevelItemCount();
     for(int i = 0 ; i < ui->calibrationDataTreeWidget->topLevelItemCount(); i++)
     {
-        //qDebug() << "Top level item child count" << ui->calibrationDataTreeWidget->topLevelItem(i)->childCount();
         for(int j = 0 ; j < ui->calibrationDataTreeWidget->topLevelItem(i)->childCount(); j++)
         {
             item = ui->calibrationDataTreeWidget->topLevelItem(i)->child(j);
             if (item->text(0) == mapName)
             {
-                //qDebug() << item->text(0);
                 if (mapRomNumber == romIndex)
                     item->setCheckState(0, Qt::Unchecked);
 
@@ -980,7 +799,6 @@ void MainWindow::close_calibration_map(QObject* obj)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    //qDebug() << "Closing application with event:" << event;
     close_app();
 }
 
@@ -988,35 +806,111 @@ void MainWindow::close_app()
 {
     FileActions::ConfigValuesStructure *configValues = &fileActions->ConfigValuesStruct;
 
-    //qDebug() << "Closing serial port" << configValues->serialPort;
-
-    //qDebug() << "Closing mainwindow";
     qApp->exit();
 }
 
 void MainWindow::change_gauge_values()
 {
-    //qDebug() << "Change log values start";
-    LogValues *logValuesDialog = new LogValues(logValues, 0);
-    logValuesDialog->show();
-    //qDebug() << "Change log values end";
+    change_log_values(0, protocol);
 }
 
 void MainWindow::change_digital_values()
 {
-    //qDebug() << "Change log values start";
-    LogValues *logValuesDialog = new LogValues(logValues, 1);
-    logValuesDialog->show();
-    //qDebug() << "Change log values end";
+    change_log_values(1, protocol);
 }
 
 void MainWindow::change_switch_values()
 {
-    //qDebug() << "Change switch values start";
-    LogValues *logValuesDialog = new LogValues(logValues, 2);
-    logValuesDialog->show();
-    //qDebug() << "Change switch values end";
+    change_log_values(2, protocol);
 }
+
+void MainWindow::update_logboxes(QString protocol)
+{
+    int switchBoxCount = 20;
+    int logBoxCount = 12;
+
+    while(!ui->switchBoxLayout->isEmpty()) {
+        QWidget *wg = ui->switchBoxLayout->takeAt(0)->widget();
+        delete wg;
+    }
+    while(!ui->logBoxLayout->isEmpty()) {
+        QWidget *wg = ui->logBoxLayout->takeAt(0)->widget();
+        delete wg;
+    }
+
+    for (int i = 0; i < logValues->lower_panel_switch_id.count(); i++)
+    {
+        for (int j = 0; j < logValues->log_switch_id.length(); j++)
+        {
+            if (logValues->lower_panel_switch_id.at(i) == logValues->log_switch_id.at(j) && logValues->log_switch_protocol.at(j) == protocol)
+            {
+                QGroupBox *switchBox = logBoxes->drawLogBoxes("switch", i, switchBoxCount, logValues->log_switch_name.at(j), logValues->log_switch_name.at(j), logValues->log_switch_state.at(j));
+                switchBox->setAttribute(Qt::WA_TransparentForMouseEvents);
+                ui->switchBoxLayout->addWidget(switchBox);
+            }
+        }
+    }
+    for (int i = 0; i < logValues->lower_panel_log_value_id.count(); i++)
+    {
+        for (int j = 0; j < logValues->log_value_id.length(); j++)
+        {
+            if (logValues->lower_panel_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
+            {
+                QStringList value_unit = logValues->log_value_units.at(j).split(",");
+                QGroupBox *logBox = logBoxes->drawLogBoxes("log", i, logBoxCount, logValues->log_value_name.at(j), value_unit.at(1), logValues->log_value.at(j));
+                logBox->setAttribute(Qt::WA_TransparentForMouseEvents);
+                ui->logBoxLayout->addWidget(logBox);
+            }
+        }
+    }
+}
+
+void MainWindow::update_logbox_values(QString protocol)
+{
+    int index = 0;
+    int decimal_count;
+    QString warningMin;
+    QString warningMax;
+    QString labelText;
+    QString label;
+    QString unit;
+    double log_value;
+    bool warning = false;
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect size = screen->geometry();
+
+    for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++){
+        QWidget *wg = ui->logBoxLayout->itemAt(i)->widget();
+        QVBoxLayout* logVBoxLayout = wg->findChild<QVBoxLayout*>();
+        if (logVBoxLayout){
+            QLabel* log_label = wg->findChild<QLabel*>("log_label" + QString::number(i));
+            if (log_label){
+
+                for (int j = 0; j < logValues->log_value_id.count(); j++)
+                {
+                    if (logValues->log_value_id.at(j) == logValues->lower_panel_log_value_id.at(i) && logValues->log_value_protocol.at(j) == protocol)
+                        index = j;
+                }
+
+                log_value = logValues->log_value.at(index).toDouble();
+                unit = logValues->log_value_units.at(index).split(",").at(1);
+
+                labelText = logValues->log_value.at(index);
+                labelText.append(" <font size=1px color=grey>");
+                labelText.append(unit);
+                labelText.append("</font>");
+
+                log_label->setAlignment(Qt::AlignRight);
+                log_label->setText(labelText);
+                int labelFontSize = size.width() / 90;
+                QFont f("Arial",labelFontSize);
+                log_label->setFont(f);
+            }
+        }
+    }
+}
+
 
 void MainWindow::resizeEvent( QResizeEvent * event)
 {
@@ -1060,25 +954,20 @@ void MainWindow::add_new_ecu_definition_file()
 {
     QString filename;
     QObject* obj = sender();
-    // Search for listwidget
     QListWidget* definition_files = obj->parent()->parent()->findChild<QListWidget*>("ecu_definition_files_list");
 
-    // Get new file name
     QFileDialog openDialog;
     openDialog.setDefaultSuffix("xml");
     filename = QFileDialog::getOpenFileName(this, tr("Select definition file"), configValues->definition_files_directory, tr("ECU definition file (*.xml)"));
 
-    // No file selected
     if (filename.isEmpty())
     {
         QMessageBox::information(this, tr("ECU definition file"), "No file selected");
     }
     else
     {
-        // Add file to list
         definition_files->addItem(filename);
         configValues->ecu_definition_files.append(filename);
-        // save config file with new settings
         fileActions->saveConfigFile();
     }
 
@@ -1087,20 +976,16 @@ void MainWindow::add_new_ecu_definition_file()
 void MainWindow::remove_ecu_definition_file()
 {
     QObject* obj = sender();
-    // Search for listwidget
     QListWidget* definition_files = obj->parent()->parent()->findChild<QListWidget*>("ecu_definition_files_list");
-    // Get selected indexes
     QList<QModelIndex> index = definition_files->selectionModel()->selectedIndexes();
 
     int row = 0;
     for (int i = index.length() - 1; i >= 0; i--)
     {
         row = index.at(i).row();
-        // Remove item from list
         definition_files->model()->removeRow(row);
         configValues->ecu_definition_files.removeAt(row);
     }
-    // If items removed, save config file with new settings
     if (index.length() > 0)
         fileActions->saveConfigFile();
 }
@@ -1135,7 +1020,6 @@ QString MainWindow::parse_ecuid(QByteArray received)
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
 
-    qDebug() << "Received length:" << received.length();
     for (int i = 0; i < received.length(); i++)
     {
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());

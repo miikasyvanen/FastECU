@@ -25,8 +25,18 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     ui->xScaleUnitsLabel->setText(xScaleUnitsTitle);
 
-    ui->mapDataUnitsLabel->setText(ecuCalDef->UnitsList.at(mapIndex));
+    if (mapIndex < ecuCalDef->UnitsList.length())
+        ui->mapDataUnitsLabel->setText(ecuCalDef->UnitsList.at(mapIndex));
 
+    if (ecuCalDef->TypeList.at(mapIndex) == "Switch")
+    {
+        qDebug() << "Switchable map";
+        mapWindowObjectName = mapWindowObjectName + "," + "Switch";
+        mapCellWidth = mapCellWidthSelectable;
+        xSize = 1;
+        ySize = 1;
+        ui->xScaleUnitsLabel->setFixedHeight(0);
+    }
     if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
     {
         mapWindowObjectName = mapWindowObjectName + "," + "MultiSelectable";
@@ -45,6 +55,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "1D")
     {
+        qDebug() << "1D map";
         mapWindowObjectName = mapWindowObjectName + "," + "1D";
         mapCellWidth = mapCellWidth1D;
         xSize = 1;
@@ -53,16 +64,17 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "2D")
     {
+        qDebug() << "2D map";
         if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
             this->setWindowIcon(QIcon(":/icons/2D-64-W.png"));
         else
             this->setWindowIcon(QIcon(":/icons/1D-64-W.png"));
         if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
-            mapWindowObjectName = mapWindowObjectName + "," + "Static Y Axis 2D";
+            mapWindowObjectName = mapWindowObjectName + "," + "Static Y Axis";
         else if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1)
-            mapWindowObjectName = mapWindowObjectName + "," + "Y Axis 2D";
+            mapWindowObjectName = mapWindowObjectName + "," + "Y Axis";
         else if (ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
-            mapWindowObjectName = mapWindowObjectName + "," + "X Axis 2D";
+            mapWindowObjectName = mapWindowObjectName + "," + "X Axis";
         xSizeOffset = 0;
         ySizeOffset = 0;
         if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->YScaleTypeList.at(mapIndex) == "Static Y Axis")
@@ -74,6 +86,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
+        qDebug() << "3D map";
         this->setWindowIcon(QIcon(":/icons/3D-64-W.png"));
         mapWindowObjectName = mapWindowObjectName + "," + "3D";
         xSizeOffset = 0;
@@ -119,7 +132,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     setMapTableWidgetItems(ecuCalDef, mapIndex);
     setMapTableWidgetSize(mdiAreaSize.width(), mdiAreaSize.height(), xSize);
 
-    if (ecuCalDef->TypeList.at(mapIndex) != "Selectable")
+    if (ecuCalDef->TypeList.at(mapIndex) != "Selectable" && ecuCalDef->TypeList.at(mapIndex) != "Switch")
     {
         connect(ui->mapDataTableWidget, SIGNAL(cellClicked(int, int)), this, SLOT (cellClicked(int, int)));
         connect(ui->mapDataTableWidget, SIGNAL(cellPressed(int, int)), this, SLOT (cellPressed(int, int)));
@@ -208,7 +221,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             ui->mapDataTableWidget->horizontalHeader()->resizeSection(i, maxWidth);
         }
     }
-    if (ySize > 1)
+    if (ySize > 1 && ecuCalDef->TypeList.at(mapIndex) != "Switch")
     {
         QStringList yScaleCellText = ecuCalDef->YScaleData.at(mapIndex).split(",");
         int maxWidth = 0;
@@ -232,13 +245,52 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         }
         ui->mapDataTableWidget->horizontalHeader()->resizeSection(0, maxWidth);
     }
+    if (ecuCalDef->TypeList.at(mapIndex) == "Switch")
+    {
+        qDebug() << "Map type 'switch'";
+        bool checked = false;
+        bool bStatus = false;
+        QString state;
+
+        QCheckBox *checkbox = new QCheckBox("On/Off");
+
+        QStringList switch_states = ecuCalDef->StateList.at(mapIndex).split(",");
+        qDebug() << "Switch state list:" << switch_states;
+        int switch_states_length = (switch_states.length() - 1);
+        for (int i = 0; i < switch_states_length; i += 2)
+        {
+            QStringList switch_data_length = switch_states.at(i + 1).split(" ");
+            QString switch_data = switch_states.at(i + 1);
+            QString map_data;
+            uint32_t byte_address = ecuCalDef->AddressList.at(mapIndex).toUInt(&bStatus, 16);
+            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byte_address > 0x27FFF)
+                byte_address -= 0x8000;
+            for (int j = 0; j < switch_data_length.length(); j++)
+            {
+                map_data.append(QString("%1 ").arg(ecuCalDef->FullRomData.at(byte_address + j) & 0xFF,2,16,QLatin1Char('0')));
+            }
+            map_data.remove(map_data.length() - 1, 1);
+            qDebug() << map_data;
+            if (switch_data == map_data)
+                state = switch_states.at(i);
+        }
+        qDebug() << "Switch state:" << state;
+
+        if (state == "on")
+            checked = true;
+        else
+            checked = false;
+
+        checkbox->setChecked(checked);
+        ui->mapDataTableWidget->setCellWidget(0, 0, checkbox);
+        connect(checkbox, SIGNAL(stateChanged(int)), this, SIGNAL(checkbox_state_changed(int)));
+    }
     if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
     {
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QStringList selectionsList = ecuCalDef->SelectionsList.at(mapIndex).split(",");
         QStringList yScaleCellText = ecuCalDef->YScaleUnitsList.at(mapIndex).split(",");
 
-        //qDebug() << "Selections count =" << mapDataCellText.size();
         for (int i = 0; i < yScaleCellText.length(); i++)
         {
             QTableWidgetItem *cellItem = new QTableWidgetItem;
@@ -249,15 +301,12 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
             QComboBox *selectableComboBox = new QComboBox();
             selectableComboBox->setFont(cellFont);
-            //selectableComboBox->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
             selectableComboBox->setFixedWidth(mapCellWidthSelectable);
             for (int j = 0; j < selectionsList.length(); j++){
-                //if (mapDataCellText.at(j) != "")
                     selectableComboBox->addItem(selectionsList.at(j));
             }
             selectableComboBox->setObjectName("selectableComboBox");
             selectableComboBox->setCurrentIndex(mapDataCellText.at(0).toInt());
-        //        qDebug() << "Selection: " << QString::number(mapData[romNumber][mapAddress]);
             ui->mapDataTableWidget->setCellWidget(i, 1, selectableComboBox);
             connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectableComboBoxItemChanged(QString)));
         }
@@ -268,14 +317,9 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         QStringList selectionsList = ecuCalDef->SelectionsList.at(mapIndex).split(",");
         QStringList selectionsListSorted = ecuCalDef->SelectionsListSorted.at(mapIndex).split(",");
         int currentIndex = 0;
-        //qDebug() << selectionsList;
-        //qDebug() << selectionsListSorted;
-
-        //qDebug() << "Selections count =" << mapDataCellText.size();
 
         QComboBox *selectableComboBox = new QComboBox();
         selectableComboBox->setFont(cellFont);
-        //selectableComboBox->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
         selectableComboBox->setFixedWidth(mapCellWidthSelectable);
         for (int j = 0; j < selectionsListSorted.length(); j++){
             if (selectionsListSorted.at(j) != "")
@@ -286,12 +330,10 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         {
             if (selectionsListSorted.at(i) == selectionsList.at(mapDataCellText.at(0).toInt()))
             {
-                //qDebug() << selectionsListSorted.at(i) << ":" << selectionsList.at(mapDataCellText.at(0).toInt());
                 currentIndex = i;
             }
         }
         selectableComboBox->setCurrentIndex(currentIndex);
-        //qDebug() << "Selection: " << currentIndex << ":" << mapDataCellText.at(0).toInt();
         ui->mapDataTableWidget->setCellWidget(0, 0, selectableComboBox);
         connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectableComboBoxItemChanged(QString)));
     }
@@ -299,13 +341,10 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     if (ecuCalDef->TypeList.at(mapIndex) == "1D")
     {
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
-        //qDebug() << "Set 1D map item to" << mapDataCellText;
         QTableWidgetItem *cellItem = new QTableWidgetItem;
         cellItem->setTextAlignment(Qt::AlignCenter);
         cellItem->setFont(cellFont);
         cellItem->setForeground(Qt::black);
-
-        //qDebug() << "1D data count =" << mapDataCellText.size();
 
         cellItem->setText(QString::number(mapDataCellText.at(0).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->FormatList.at(mapIndex))));
         ui->mapDataTableWidget->setItem(0, 0, cellItem);
@@ -460,7 +499,7 @@ void CalibrationMaps::cellClicked(int row, int col)
     if (objectName.at(3) == "3D")
         ui->mapDataTableWidget->item(0, 0)->setFlags(Qt::ItemIsEditable);
 
-    if (objectName.at(3) == "Static Y Axis 2D" && rows > 1)
+    if (objectName.at(3) == "Static Y Axis" && rows > 1)
     {
         for (int j = 0; j < cols; j++)
         {
@@ -490,7 +529,7 @@ void CalibrationMaps::cellPressed(int row, int col)
     if (objectName.at(3) == "3D")
         ui->mapDataTableWidget->item(0, 0)->setFlags(Qt::ItemIsEditable);
 
-    if (objectName.at(3) == "Static Y Axis 2D" && rows > 1)
+    if (objectName.at(3) == "Static Y Axis" && rows > 1)
     {
         for (int j = 0; j < cols; j++)
         {
@@ -506,7 +545,7 @@ void CalibrationMaps::cellChanged(int curRow, int curCol, int prevRow, int prevC
     int cols = ui->mapDataTableWidget->columnCount();
     int rows = ui->mapDataTableWidget->rowCount();
 
-    //qDebug() << ui->mapDataTableWidget->objectName().split(",").at(3);
+    //qDebug() << "cellChanged" << ui->mapDataTableWidget->objectName().split(",").at(3);
 
     /* Check for 3D table */
     QStringList objectName = ui->mapDataTableWidget->objectName().split(",");
@@ -521,7 +560,7 @@ void CalibrationMaps::cellChanged(int curRow, int curCol, int prevRow, int prevC
             }
         }
     }
-    else if (startRow == 0 && (objectName.at(3) == "3D" || objectName.at(3) == "X Axis 2D" || objectName.at(3) == "Y Axis 2D"))
+    else if (startRow == 0 && (objectName.at(3) == "3D" || objectName.at(3) == "X Axis" || objectName.at(3) == "Y Axis"))
     {
         for (int i = 0; i < cols; i++)
         {
@@ -534,7 +573,7 @@ void CalibrationMaps::cellChanged(int curRow, int curCol, int prevRow, int prevC
     }
     else
     {
-        if (objectName.at(3) == "3D" || objectName.at(3) == "X Axis 2D")
+        if (objectName.at(3) == "3D" || objectName.at(3) == "X Axis")
         {
             for (int i = 0; i < cols; i++)
             {
@@ -554,7 +593,7 @@ void CalibrationMaps::cellChanged(int curRow, int curCol, int prevRow, int prevC
     if (objectName.at(3) == "3D")
         ui->mapDataTableWidget->item(0, 0)->setFlags(Qt::ItemIsEditable);
 
-    if (objectName.at(3) == "Static Y Axis 2D" && rows > 1)
+    if (objectName.at(3) == "Static Y Axis" && rows > 1)
     {
         for (int j = 0; j < cols; j++)
         {

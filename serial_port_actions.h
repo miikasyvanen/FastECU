@@ -36,6 +36,7 @@ public:
     bool setRequestToSend = true;
     bool setDataTerminalReady = true;
     bool is_can_connection = false;
+    bool is_iso15765_connection = false;
 
     bool use_openport2_adapter = false;
 
@@ -43,6 +44,8 @@ public:
     int requestToSendDisabled = 1;
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
+
+    QByteArray ssm_receive_header_start = { "\x80\xf0\x10" };
 
     QString openedSerialPort;
     QString subaru_02_16bit_bootloader_baudrate = "9600";
@@ -104,7 +107,7 @@ private:
     #define STATUS_SUCCESS							0x00
     #define STATUS_ERROR							0x01
 
-    J2534 j2534;
+    J2534 *j2534;
 
     unsigned int baudrate = 4800;
     unsigned long devID;

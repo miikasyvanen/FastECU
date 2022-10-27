@@ -3,7 +3,7 @@
 EcuOperations::EcuOperations(QWidget *ui, SerialPortActions *serial, QString mcu_type_string, int mcu_type_index)
 {
     this->setParent(ui);
-
+    this->setAttribute(Qt::WA_QuitOnClose, true);
     this->mcu_type_string = mcu_type_string;
     this->mcu_type_index = mcu_type_index;
     this->serial = serial;
@@ -13,6 +13,11 @@ EcuOperations::EcuOperations(QWidget *ui, SerialPortActions *serial, QString mcu
 }
 
 EcuOperations::~EcuOperations()
+{
+
+}
+
+void EcuOperations::closeEvent(QCloseEvent *bar)
 {
 
 }
@@ -53,14 +58,14 @@ QByteArray EcuOperations::request_kernel_id()
     if (mcu_type_string == "68HC16Y5")
     {
         request_denso_kernel_id = true;
-/*
+
         output.clear();
-        output.append((uint8_t)(kernel_communication_cmd >> 8) & 0xFF);
-        output.append((uint8_t)kernel_communication_cmd & 0xFF);
+        output.append((uint8_t)((SID_OE_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SID_OE_START_COMM & 0xFF));
         output.append((uint8_t)0x00 & 0xFF);
         output.append((uint8_t)0x01 & 0xFF);
-        output.append((uint8_t)kernel_cmd_get_version_info & 0xFF);
-*/
+        output.append((uint8_t)(SID_OE_RECUID & 0xFF));
+
         chk_sum = calculate_checksum(output, false);
         output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
@@ -125,6 +130,9 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
     mapdata.clear();
     while (willget)
     {
+        if (kill_process)
+            return STATUS_ERROR;
+
         uint32_t numblocks = 0;
         unsigned curspeed = 0, tleft;
         float pleft = 0;
@@ -185,6 +193,7 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         send_log_window_message(msg, true, true);
+        delay(1);
 
         // and drop extra bytes at the end //
         uint32_t extrabytes = (cplen + len_done);   //hypothetical new length
@@ -209,14 +218,11 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
 
 int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
-    QString filename;
+    //QString filename;
     QByteArray filedata;
-    QString origfilename;
-    QByteArray origfiledata;
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t orig_data_array[origfiledata.length()];
     uint8_t data_array[filedata.length()];
 
     //qDebug() << filename << origfilename;
@@ -225,11 +231,6 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
 
     unsigned bcnt = 0;
     unsigned blockno;
-
-    for (int i = 0; i < origfiledata.length(); i++)
-    {
-        orig_data_array[i] = origfiledata.at(i);
-    }
 
     for (int i = 0; i < filedata.length(); i++)
     {
@@ -267,9 +268,7 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
                 flashbytescount += flashdevices[mcu_type_index].fblocks[blockno].len;
             }
         }
-        delay(100);
-        //request_kernel_init();
-        delay(100);
+
         send_log_window_message("--- start writing ROM file to ECU flash memory ---", true, true);
         for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)
         {
@@ -288,12 +287,9 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
             }
         }
 
-        //request_kernel_init();
-
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-        //memset(block_modified, 0, sizeof (block_modified));
         if (get_changed_blocks(data_array, NULL, block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
@@ -329,126 +325,16 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
     return STATUS_SUCCESS;
 
 }
-/*
-int EcuOperations::compare_mem_32bit(QString mcu_type_string)
-{
-    QString filename;
-    QByteArray filedata;
-    QString origfilename;
-    QByteArray origfiledata;
 
-    if (mcu_type_string == "MC68HC16Y5")
-    {
-        send_log_window_message("No flash compare option in 16-bit Denso yet...", true, true);
-        return -1;
-    }
-
-    QFileDialog openFileDialog;
-    //openDialog.setOption(QFileDialog::HideNameFilterDetails, true);
-    openFileDialog.setDefaultSuffix("bin");
-    //openDialog.setViewMode(QFileDialog::Detail);
-    QString filter;
-    filter.append("Bin files (*.bin)");
-    filter.append(";;Hex files (*.hex)");
-    filter += ";;All files (*.*)";
-    filename = QFileDialog::getOpenFileName(this, tr("Open ROM file to flash"), NULL, filter);
-
-    if (filename.isEmpty()){
-        //QMessageBox::information(this, tr("ROM file"), "No file selected");
-        return -1;
-    }
-
-    QFile file(filename);
-    if (!file.open(QIODevice::ReadOnly ))
-    {
-        send_log_window_message("Unable to open ROM file for reading", true, true);
-        return -1;
-    }
-
-    filedata.append(file.readAll());
-
-    if (test_write)
-    {
-        QFileDialog openFileDialog;
-        openFileDialog.setDefaultSuffix("bin");
-        QString filter;
-        filter.append("Bin files (*.bin)");
-        filter.append(";;Hex files (*.hex)");
-        filter += ";;All files (*.*)";
-        origfilename = QFileDialog::getOpenFileName(this, tr("Open ROM file to compare to"), NULL, filter);
-
-        if (origfilename.isEmpty()){
-            //QMessageBox::information(this, tr("ROM file"), "No file selected");
-            return -1;
-        }
-
-        QFile origfile(origfilename);
-        if (!origfile.open(QIODevice::ReadOnly ))
-        {
-            send_log_window_message("Unable to open compare file for reading", true, true);
-            return -1;
-        }
-
-        origfiledata.append(origfile.readAll());
-    }
-
-    uint8_t orig_data_array[origfiledata.length()];
-    uint8_t data_array[filedata.length()];
-
-    int block_modified[16] = {0};
-
-    unsigned bcnt = 0;
-    unsigned blockno;
-
-    for (int i = 0; i < origfiledata.length(); i++)
-    {
-        orig_data_array[i] = origfiledata.at(i);
-    }
-
-    for (int i = 0; i < filedata.length(); i++)
-    {
-        data_array[i] = filedata.at(i);
-    }
-
-    send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
-    send_log_window_message("seg\t\tstart\t\t\tlen\t\tsame?", true, true);
-
-    if (!test_write)
-    {
-        if (get_changed_blocks(data_array, NULL, block_modified)) {
-            goto badexit;
-        }
-    }
-    else
-    {
-        if (get_changed_blocks(data_array, NULL, block_modified)) {
-            goto badexit;
-        }
-    }
-
-    send_log_window_message("Different blocks : ", true, false);
-    for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
-        if (block_modified[blockno]) {
-            send_log_window_message(QString::number(blockno) + ", ", false, false);
-            bcnt += 1;
-        }
-    }
-
-    send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
-    return 0;
-
-badexit:
-    send_log_window_message("Error in ROM compare", true, true);
-
-    return -1;
-}
-*/
 int EcuOperations::get_changed_blocks(const uint8_t *src, const uint8_t *orig, int *modified)
 {
 
     unsigned blockno;
     QByteArray msg;
     for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
+        if (kill_process)
+            return STATUS_ERROR;
+
         uint32_t bs, blen;
         bs = flashdevices[mcu_type_index].fblocks[blockno].start;
         blen = flashdevices[mcu_type_index].fblocks[blockno].len;
@@ -458,6 +344,7 @@ int EcuOperations::get_changed_blocks(const uint8_t *src, const uint8_t *orig, i
         QString block_length = QString("%1").arg((uint32_t)blen,8,16,QLatin1Char('0')).toUpper();
 
         msg = QString("FB" + block_no + "\t0x" + block_start + "\t0x" + block_length).toUtf8();
+        qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
@@ -485,6 +372,9 @@ int EcuOperations::check_romcrc(const uint8_t *src, uint32_t start, uint32_t len
     //request format : <SID_CONF> <SID_CONF_CKS1> <CNH> <CNL> <CRC0H> <CRC0L> ...<CRC3H> <CRC3L>
     //verify if <CRCH:CRCL> hash is valid for n*256B chunk of the ROM (starting at <CNH:CNL> * 256)
     for (; len > 0; len -= ROMCRC_ITERSIZE, chunko += ROMCRC_NUMCHUNKS) {
+        if (kill_process)
+            return STATUS_ERROR;
+
         output.clear();
         output.append(SID_CONF);
         output.append(SID_CONF_CKS1);
@@ -506,36 +396,15 @@ int EcuOperations::check_romcrc(const uint8_t *src, uint32_t start, uint32_t len
         //				03 7F <SID_CONF> <SID_CONF_CKS1_BADCKS> <cks> for bad CRC
         // anything else is an error that causes abort
         received = serial->read_serial_data(3, serial_read_short_timeout);
-        //print_received_message_in_hex("CHECK_ROMCRC", received, true, true);
-/*
-        if (received.length() != 3)
-        {
-            qDebug() << "Chunko:" << parse_message_to_hex(received);
-            send_log_window_message(" ", false, true);
-            send_log_window_message("no response @ chunk 0x" + QString("%1 ").arg((unsigned) chunko,2,16,QLatin1Char('0')).toUtf8(), true, true);
-            goto badexit;
-        }
-*/
-        //qDebug() << "Check 1";
+
         if (received.at(1) == (char)(SID_CONF + 0x40))
         {
             continue;
         }
-        //qDebug() << "Check 2";
 
-        //received.clear();
         received.append(serial->read_serial_data(2, serial_read_short_timeout));
-        //print_received_message_in_hex("CHECK_ROMCRC", received, true, true);
         send_log_window_message("\tNO", false, true);
-/*
-        if (received.length() != 2)
-        {
-            send_log_window_message(" ", false, true);
-            send_log_window_message("weirdness @ chunk 0x" + QString("%1 ").arg((unsigned) chunko,2,16,QLatin1Char('0')).toUtf8(), true, true);
-            goto badexit;
-        }
-        */
-        //qDebug() << "Check 3";
+
         if (received.at(2) != (char)(SID_CONF) && received.at(3) != (char)(SID_CONF_CKS1_BADCKS))
         {
             send_log_window_message(" ", false, true);
@@ -588,6 +457,9 @@ int EcuOperations::npk_raw_flashblock(const uint8_t *src, uint32_t start, uint32
 
     timer.start();
     while (remain) {
+        if (kill_process)
+            return STATUS_ERROR;
+
         unsigned curspeed, tleft;
 
         //delay(1);
@@ -617,7 +489,7 @@ int EcuOperations::npk_raw_flashblock(const uint8_t *src, uint32_t start, uint32
             return -1;
         }
 
-        if ((uint8_t)received.at(1) != (SID_FLASH + 0x40))// && (uint8_t)received.at(2) != (SID_FLASH + 0x40))
+        if ((uint8_t)received.at(1) != (SID_FLASH + 0x40))
         {
             //maybe negative response, if so, get the remaining packet
             send_log_window_message("npk_raw_flashblock: bad response @ " + QString::number((unsigned) start), true, true);
@@ -676,13 +548,7 @@ int EcuOperations::reflash_block(const uint8_t *newdata, const struct flashdev_t
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-/*
-    if (request_kernel_init())
-    {
-        send_log_window_message("Reflash block kernel init failed!", true, true);
-        return -1;
-    }
-*/
+
     if (blockno >= fdt->numblocks) {
         send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
         return -1;
@@ -708,7 +574,7 @@ int EcuOperations::reflash_block(const uint8_t *newdata, const struct flashdev_t
         send_log_window_message("no 'RequestDownload' response", true, true);
         return STATUS_ERROR;
     }
-    if ((uint8_t)received.at(1) != (SID_FLREQ + 0x40))// && (uint8_t)received.at(2) != (SID_FLREQ + 0x40))
+    if ((uint8_t)received.at(1) != (SID_FLREQ + 0x40))
     {
         send_log_window_message("got bad RequestDownload response", true, true);//;
         send_log_window_message("SID_FLREQ: " + parse_message_to_hex(received), true, true);
@@ -775,7 +641,7 @@ int EcuOperations::reflash_block(const uint8_t *newdata, const struct flashdev_t
         send_log_window_message("no 'ERASE_BLOCK' response", true, true);
         return STATUS_ERROR;
     }
-    if ((uint8_t)received.at(1) != (SID_FLASH + 0x40))// && (uint8_t)received.at(2) != (SID_FLASH + 0x40))
+    if ((uint8_t)received.at(1) != (SID_FLASH + 0x40))
     {
         send_log_window_message("got bad ERASE_BLOCK response : ", true, true);
         send_log_window_message("SIDFL_EB: " + parse_message_to_hex(received), true, true);
@@ -823,6 +689,7 @@ void EcuOperations::send_log_window_message(QString message, bool timestamp, boo
         textedit->insertPlainText(message);
         textedit->ensureCursorVisible();
     }
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 void EcuOperations::set_progressbar_value(int value)
@@ -832,7 +699,7 @@ void EcuOperations::set_progressbar_value(int value)
     {
         progressbar->setValue(value);
     }
-
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 void EcuOperations::delay(int n)
