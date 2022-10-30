@@ -258,7 +258,7 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
 	DBGPRINT(("PassThruOpen(name=%s,pDeviceID=@%08X)\n",(char*)pName,pDeviceID));
 
 	result = (*pfPassThruOpen)(pName,pDeviceID);
-	DBGPRINT(("PassThruOpen returned result %d and DeviceID %u\n",result,*pDeviceID));
+    DBGPRINT(("PassThruOpen returned result %d and DeviceID %u\n",result,*pDeviceID));
 
 	return result;
 }

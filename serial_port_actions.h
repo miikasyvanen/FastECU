@@ -16,6 +16,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+//#include <functional>
+//#include <iostream>
+//#include <algorithm>
+using namespace std;
 
 #if defined(Q_OS_LINUX)
     #include "J2534_linux.h"
@@ -100,8 +104,10 @@ public:
     int init_j2534_connection();
     int create_j2534_can_connection();
     int set_j2534_can_connection_filters();
+    int set_j2534_can_timings();
     int create_j2534_iso9141_connection();
     int set_j2534_iso9141_connection_filters();
+    int set_j2534_iso9141_timings();
 
 private:
     #define STATUS_SUCCESS							0x00

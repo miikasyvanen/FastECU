@@ -56,6 +56,7 @@ HEADERS += \
     calibration_treewidget.h \
     ecu_operations.h \
     ecu_operations_manual.h \
+    ecu_operations_manual.h \
     ecu_operations_nissan.h \
     ecu_operations_subaru.h \
     file_actions.h \

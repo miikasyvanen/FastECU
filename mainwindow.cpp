@@ -139,6 +139,7 @@ MainWindow::MainWindow(QWidget *parent)
             flash_method_list->setCurrentIndex(i);
     }
     connect(flash_method_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_method_changed()));
+    //emit flash_method_list->currentIndexChanged(flash_method_list->currentIndex());
     ui->toolBar->addWidget(flash_method_list);
 
     ui->toolBar->addSeparator();
@@ -161,10 +162,10 @@ MainWindow::MainWindow(QWidget *parent)
     serial_port_list->setFixedWidth(160);
     serial_port_list->setObjectName("serial_port_list");
     serial_ports = serial->check_serial_ports();
-    for (int i = 0; i < serial_ports.length(); i += 2)
+    for (int i = 0; i < serial_ports.length(); i ++)
     {
         serial_port_list->addItem(serial_ports.at(i));
-        if (configValues->serial_port == serial_ports.at(i))
+        if (configValues->serial_port == serial_ports.at(i).split(" ").at(0))
             serial_port_list->setCurrentIndex(i);
     }
     ui->toolBar->addWidget(serial_port_list);
@@ -217,6 +218,7 @@ MainWindow::MainWindow(QWidget *parent)
         emit ui->calibrationFilesTreeWidget->clicked(index);
     }
 
+    emit flash_method_list->currentIndexChanged(flash_method_list->currentIndex());
 }
 
 MainWindow::~MainWindow()
@@ -322,8 +324,8 @@ void MainWindow::open_serial_port()
 
     if (serial_ports.length() > 0)
     {
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex() * 2));
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex() * 2 + 1));
+        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" ").at(0));
+        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" ").at(1));
 
         QString opened_serial_port = serial->open_serial_port(serial_port);
         if (opened_serial_port != NULL)
