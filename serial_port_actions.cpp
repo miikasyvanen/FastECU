@@ -177,7 +177,7 @@ QStringList SerialPortActions::check_serial_ports()
         serial_ports.append(serialPortInfo.portName() + " " + serialPortInfo.description());
         qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
-    #ifdef Q_OS_WIN32
+    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
         serial_ports.append("OpenPort2.0 OpenPort2.0");
         //serial_ports.append(" ");
     #endif
@@ -194,7 +194,7 @@ QString SerialPortActions::open_serial_port(QStringList serial_port_list)
     #ifdef Q_OS_LINUX
         serial_port = serial_port_prefix_linux + serial_port_list.at(0);
     #endif
-    #ifdef Q_OS_WIN32
+    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
         serial_port = serial_port_prefix_win + serial_port_list.at(0);
     #endif
 
@@ -232,7 +232,7 @@ QString SerialPortActions::open_serial_port(QStringList serial_port_list)
         #ifdef Q_OS_LINUX
             //serial_port = serial_port_prefix_linux + serial_port;
         #endif
-        #ifdef Q_OS_WIN32
+        #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
             //serial_port = serial_port_prefix_win + serial_port;
         #endif
 

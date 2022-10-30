@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     serial_port_prefix = "/dev/";
 #endif
 
-#ifdef Q_OS_WIN32
+#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
     //serialPort = serialPortWindows;
     serial_port_prefix = "";
 #endif
