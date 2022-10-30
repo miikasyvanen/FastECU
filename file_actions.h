@@ -182,7 +182,6 @@ public:
         QStringList YScaleToByteList;
         QStringList YScaleData;
 
-
         QStringList RomInfo;
         QString RomInfoExpanded;
         QString RomBase;
@@ -263,17 +262,23 @@ public:
      ************************/
     LogValuesStructure *read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
 
-    /*************************
+    /************************
      * Save logger conf file
      ************************/
     LogValuesStructure *save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
 
-    /****************************
+    /*******************************************
+     * Search and read ECU definition from file
+     *******************************************/
+    EcuCalDefStructure *read_ecu_definition_file(EcuCalDefStructure *ecuCalDef, QString ecuId);
+    EcuCalDefStructure *add_def_list_item(EcuCalDefStructure *ecuCalDef);
+
+    /***************************
      * Read ECU base definition
      ***************************/
     EcuCalDefStructure *readEcuBaseDef(FileActions::EcuCalDefStructure *ecuCalDef);
 
-    /***********************
+    /**********************
      * Read ECU definition
      **********************/
     EcuCalDefStructure *readEcuDef(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);

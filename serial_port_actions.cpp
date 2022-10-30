@@ -171,21 +171,18 @@ QStringList SerialPortActions::check_serial_ports()
 
     serialPortAvailable = false;
 
-
     //ui->serial_ports->clear();
     for (const QSerialPortInfo &serialPortInfo : serialPortsInfo){
         //ui->serial_ports->addItem(serialPortPrefix + serialPortInfo.portName());
-        if (serialPortInfo.description() != "")
-            serial_ports.append(serialPortInfo.description());
-        else
-            serial_ports.append(serialPortInfo.portName());
-        serial_ports.append(serialPortInfo.portName());
-        qDebug() << "Serial port name:" << serialPortInfo.description() << serialPortInfo.portName();
+        serial_ports.append(serialPortInfo.portName() + " " + serialPortInfo.description());
+        qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
     #ifdef Q_OS_WIN32
-        serial_ports.append("OpenPort 2.0");
-        serial_ports.append(" ");
+        serial_ports.append("OpenPort2.0 OpenPort2.0");
+        //serial_ports.append(" ");
     #endif
+
+    sort(serial_ports.begin(), serial_ports.end(), less<QString>());
 
     return serial_ports;
 }
@@ -193,15 +190,15 @@ QStringList SerialPortActions::check_serial_ports()
 QString SerialPortActions::open_serial_port(QStringList serial_port_list)
 {
     //qDebug() << "Serial port =" << serial_port_list;
-    QString serial_port_text = serial_port_list.at(0);
+    QString serial_port_text = serial_port_list.at(1);
     #ifdef Q_OS_LINUX
-        serial_port = serial_port_prefix_linux + serial_port_list.at(1);
+        serial_port = serial_port_prefix_linux + serial_port_list.at(0);
     #endif
     #ifdef Q_OS_WIN32
-        serial_port = serial_port_prefix_win + serial_port_list.at(1);
+        serial_port = serial_port_prefix_win + serial_port_list.at(0);
     #endif
 
-    if (serial_port_text == "OpenPort 2.0")
+    if (serial_port_text == "OpenPort2.0")
     {
         close_serial_port();
         use_openport2_adapter = true;
@@ -584,7 +581,7 @@ int SerialPortActions::init_j2534_connection()
     }
     else
     {
-        qDebug() << "J2534 opened";
+        qDebug() << "J2534 opened, devID" << devID;
     }
 
     // Get J2534 adapter and driver version numbers
@@ -616,25 +613,10 @@ int SerialPortActions::init_j2534_connection()
     else
         create_j2534_iso9141_connection();
 
-    // Set timeouts etc.
-    SCONFIG_LIST scl;
-    SCONFIG scp[5] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0}};
-    scl.NumOfParams = 5;
-    scp[0].Value = 0;
-    scp[1].Value = 1;
-    scp[2].Value = 0;
-    scp[3].Value = 0;
-    scp[4].Value = parity;
-    scl.ConfigPtr = scp;
-    if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
-    {
-        reportJ2534Error();
-        return STATUS_ERROR;
-    }
+    if (is_can_connection || is_iso15765_connection)
+        set_j2534_can_timings();
     else
-    {
-        qDebug() << "Set timings OK";
-    }
+        set_j2534_iso9141_timings();
 
     if (is_can_connection || is_iso15765_connection)
         set_j2534_can_connection_filters();
@@ -662,9 +644,31 @@ int SerialPortActions::create_j2534_can_connection()
     }
     else
     {
-        chanID = protocol;
+        #ifdef Q_OS_LINUX
+            chanID = protocol;
+        #endif
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
-        //qDebug() << "J2534 connected";
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int SerialPortActions::set_j2534_can_timings()
+{
+    // Set timeouts etc.
+    SCONFIG_LIST scl;
+    SCONFIG scp[1] = {{LOOPBACK,0}};
+    scl.NumOfParams = 1;
+    scp[0].Value = 0;
+    scl.ConfigPtr = scp;
+    if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
+    {
+        reportJ2534Error();
+        return STATUS_ERROR;
+    }
+    else
+    {
+        qDebug() << "Set timings OK";
     }
 
     return STATUS_SUCCESS;
@@ -683,6 +687,7 @@ int SerialPortActions::set_j2534_can_connection_filters()
 
     if (protocol == CAN)
     {
+        qDebug() << "Set CAN filters";
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         //txmsg.TxFlags = 0;
@@ -771,6 +776,31 @@ int SerialPortActions::create_j2534_iso9141_connection()
         chanID = protocol;
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
         //qDebug() << "J2534 connected";
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int SerialPortActions::set_j2534_iso9141_timings()
+{
+    // Set timeouts etc.
+    SCONFIG_LIST scl;
+    SCONFIG scp[5] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0}};
+    scl.NumOfParams = 5;
+    scp[0].Value = 0;
+    scp[1].Value = 1;
+    scp[2].Value = 0;
+    scp[3].Value = 0;
+    scp[4].Value = parity;
+    scl.ConfigPtr = scp;
+    if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
+    {
+        reportJ2534Error();
+        return STATUS_ERROR;
+    }
+    else
+    {
+        qDebug() << "Set timings OK";
     }
 
     return STATUS_SUCCESS;

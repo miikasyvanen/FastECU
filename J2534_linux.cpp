@@ -225,7 +225,7 @@ long J2534::PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, un
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
     received = read_serial_data(100, 50);
-    //qDebug() << "Received:" << parseMessageToHex(received);
+    qDebug() << "Received:" << parseMessageToHex(received);
 
 
     return result;
