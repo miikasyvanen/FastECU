@@ -440,7 +440,45 @@ int EcuOperationsSubaru::connect_bootloader_subaru_can_05_32bit()
         return STATUS_ERROR;
     }
 
-    return STATUS_ERROR;
+    connect_bootloader_start_countdown(5);
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0x86);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    delay(200);
+    received = serial->read_serial_data(100, 500);
+    qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x7A);
+    output.append((uint8_t)0x90);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    delay(200);
+    received = serial->read_serial_data(100, 500);
+    qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
+
+    return STATUS_SUCCESS;
 }
 
 int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
@@ -811,6 +849,27 @@ int EcuOperationsSubaru::upload_kernel_subaru_can_05_32bit(QString kernel)
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
+
+    uint32_t start_address = 0xFFFF6000;
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x7A);
+    output.append((uint8_t)(0x98 + 0x04));
+    output.append((uint8_t)((start_address >> 24) & 0xFF));
+    output.append((uint8_t)((start_address >> 16) & 0xFF));
+    output.append((uint8_t)((start_address >> 8) & 0xFF));
+    output.append((uint8_t)(start_address & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    delay(200);
+    received = serial->read_serial_data(100, 500);
+    qDebug() << "0x7A 0x98 response:" << parse_message_to_hex(received);
+
 
     return STATUS_ERROR;
 }

@@ -97,7 +97,7 @@ private:
     QStringList flash_methods = {
         "wrx02",
         "wrx04",
-        "ftx02",
+        "fxt02",
         "sti04",
         "sti05",
         "subarucan",
