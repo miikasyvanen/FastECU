@@ -57,7 +57,7 @@ private:
     static const QColor GREEN_LIGHT_OFF;
     static const QColor GREEN_LIGHT_ON;
 
-    bool loggingState = false;
+    bool logging_state = false;
     bool log_params_request_started = false;
     bool ecu_init_started = false;
     bool ecu_init_complete = false;
@@ -152,6 +152,12 @@ private:
     QComboBox *flash_method_list;
     QComboBox *car_model_list;
 
+    QFile log_file;
+    QTextStream log_file_outstream;
+    bool write_log_to_file = false;
+    bool log_file_open = false;
+    QElapsedTimer *log_file_timer;
+
     Ui::MainWindow *ui;
 
     // fileactions.c
@@ -161,16 +167,19 @@ private:
     QStringList parse_stringlist_from_expression_string(QString expression, QString x);
     float calculate_value_from_expression(QStringList expression);
 
-    // logvalues.c
-    void change_log_values(int tabIndex, QString protocol);
-
-    // mainwindow.c
+    // log_operations
     void ssm_kline_init();
     void ssm_can_init();
     QString parse_log_params(QByteArray received, QString protocol);
     void parse_log_value_list(QByteArray received, QString protocol);
     QByteArray add_ssm_header(QByteArray output, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
+    void log_to_file();
+
+    // logvalues.c
+    void change_log_values(int tabIndex, QString protocol);
+
+    // mainwindow.c
     QStringList create_car_models_list();
     QStringList create_flash_methods_list();
     QString check_kernel(QString flash_method);
@@ -203,13 +212,15 @@ private slots:
     void calibration_data_treewidget_item_expanded(QTreeWidgetItem* item);
     void calibration_data_treewidget_item_collapsed(QTreeWidgetItem* item);
 
+    // log_operations.c
+    bool ecu_init();
+    void log_ssm_values();
+    void read_log_serial_data();
+
     // menuactions.c
     void menu_action_triggered(QString action);
 
     // mainwindow.c
-    bool ecu_init();
-    void log_ssm_values();
-    void read_serial_data();
     void car_model_changed();
     void flash_method_changed();
     void check_serial_ports();

@@ -33,14 +33,6 @@ bool MainWindow::ecu_init()
     return ecu_init_complete;
 }
 
-void MainWindow::ssm_can_init()
-{
-    QByteArray output;
-    QByteArray received;
-
-    received = serial->read_serial_data(100, 500);
-}
-
 void MainWindow::ssm_kline_init()
 {
     QByteArray output;
@@ -77,6 +69,14 @@ void MainWindow::ssm_kline_init()
     ecu_init_started = false;
 }
 
+void MainWindow::ssm_can_init()
+{
+    QByteArray output;
+    QByteArray received;
+
+    received = serial->read_serial_data(100, 500);
+}
+
 void MainWindow::log_ssm_values()
 {
     QByteArray output;
@@ -86,7 +86,7 @@ void MainWindow::log_ssm_values()
 
     if (ecu_init_complete)// && !log_params_request_started)
     {
-        if (!loggingState)
+        if (!logging_state)
         {
             output.append((uint8_t)0xA8);
             output.append((uint8_t)0x00);
@@ -143,7 +143,7 @@ void MainWindow::log_ssm_values()
     }
 }
 
-void MainWindow::read_serial_data()
+void MainWindow::read_log_serial_data()
 {
     QByteArray received;
 
@@ -274,9 +274,11 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                 }
             }
         }
+
         //qDebug() << parse_message_to_hex(received);
         //qDebug() << " ";
         logging_request_active = false;
+        log_to_file();
     }
 
     log_speed_timer->start();
@@ -383,3 +385,57 @@ uint8_t MainWindow::calculate_checksum(QByteArray output, bool dec_0x100)
 
     return checksum;
 }
+
+void MainWindow::log_to_file(){
+    if (write_log_to_file){
+        if (!log_file_open){
+            QDateTime dateTime = dateTime.currentDateTime();
+            QString dateTimeString = dateTime.toString("yyyy-MM-dd hh'h'mm'm'ss's'");
+
+            QString log_file_name = configValues->log_files_base_directory;
+            if (configValues->log_files_base_directory.at(configValues->log_files_base_directory.length() - 1) != "/")
+                log_file_name.append("/");
+            log_file_name.append("fastecu_" + dateTimeString + ".csv");
+
+            log_file.setFileName(log_file_name);
+            if (!log_file.open(QIODevice::WriteOnly)) {
+                QMessageBox::information(this, tr("Unable to open file"),
+                log_file.errorString());
+                return;
+            }
+            else
+            {
+                log_file_open = true;
+                log_file_timer->start();
+            }
+
+            log_file_outstream.setDevice(&log_file);
+            log_file_outstream << "Time,";
+            for (int j = 0; j < logValues->dashboard_log_value_id.count() ; j++){
+                log_file_outstream << logValues->log_value_name.at(logValues->log_value_id.indexOf(logValues->dashboard_log_value_id.at(j), 0)) << ",";
+            }
+            for (int j = 0; j < logValues->lower_panel_log_value_id.count() ; j++){
+                log_file_outstream << logValues->log_value_name.at(logValues->log_value_id.indexOf(logValues->lower_panel_log_value_id.at(j), 0)) << ",";
+            }
+            for (int j = 0; j < logValues->lower_panel_switch_id.count() ; j++){
+                log_file_outstream << logValues->log_switch_name.at(logValues->log_switch_id.indexOf(logValues->lower_panel_switch_id.at(j),0)) << ",";
+            }
+            log_file_outstream << "\n";
+        }
+        else{
+
+            log_file_outstream << QString::number(log_file_timer->elapsed() / 1000.0f) << ",";
+            for (int j = 0; j < logValues->dashboard_log_value_id.count() ; j++){
+                log_file_outstream << logValues->log_value.at(logValues->log_value_id.indexOf(logValues->dashboard_log_value_id.at(j), 0)) << ",";
+            }
+            for (int j = 0; j < logValues->lower_panel_log_value_id.count() ; j++){
+                log_file_outstream << logValues->log_value.at(logValues->log_value_id.indexOf(logValues->lower_panel_log_value_id.at(j), 0)) << ",";
+            }
+            for (int j = 0; j < logValues->lower_panel_switch_id.count() ; j++){
+                log_file_outstream << logValues->log_switch_state.at(logValues->log_switch_id.indexOf(logValues->lower_panel_switch_id.at(j), 0)) << ",";
+            }
+            log_file_outstream << "\n";
+        }
+    }
+}
+

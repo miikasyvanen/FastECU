@@ -208,9 +208,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     logparams_poll_timer = new QTimer(this);
     logparams_poll_timer->setInterval(logparams_poll_timer_timeout);
-    connect(logparams_poll_timer, SIGNAL(timeout()), this, SLOT(read_serial_data()));
+    connect(logparams_poll_timer, SIGNAL(timeout()), this, SLOT(read_log_serial_data()));
 
     log_speed_timer = new QElapsedTimer();
+    log_file_timer = new QElapsedTimer();
 
     if(ecuCalDefIndex > 0)
     {
@@ -223,9 +224,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    if (loggingState)
+    if (logging_state)
     {
-        loggingState = false;
+        logging_state = false;
         log_params_request_started = false;
         log_ssm_values();
         delay(200);

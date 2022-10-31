@@ -40,7 +40,7 @@ void MainWindow::menu_action_triggered(QString action)
         interpolate_value(action);
     if (action == "toggle_realtime")
         toggle_realtime();
-    if (action == "toggle_log_to_file")
+    if (action == "log_to_file")
         toggle_log_to_file();
 
     // ECU MENU
@@ -692,16 +692,35 @@ void MainWindow::logger_definition_manager()
 
 void MainWindow::toggle_realtime()
 {
-    if (!loggingState)
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    foreach (QMenu *menu, menus) {
+        foreach (QAction *action, menu->actions()) {
+            if (action->isSeparator()) {
+
+            } else if (action->menu()) {
+
+            } else {
+                if (action->text() == "Logging")
+                    logging_state = action->isChecked();
+            }
+        }
+    }
+
+    if (logging_state)
     {
         logging_counter = 0;
-        loggingState = true;
+        logging_state = true;
         log_ssm_values();
         logparams_poll_timer->start();
     }
     else
     {
-        loggingState = false;
+        if (log_file_open){
+            log_file_open = false;
+            log_file.close();
+        }
+
+        logging_state = false;
         log_params_request_started = false;
         log_ssm_values();
         delay(200);
@@ -711,12 +730,26 @@ void MainWindow::toggle_realtime()
 
 void MainWindow::toggle_log_to_file()
 {
-    bool state = true;
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    foreach (QMenu *menu, menus) {
+        foreach (QAction *action, menu->actions()) {
+            if (action->isSeparator()) {
 
-    if (state)
-        qDebug() << "Log to file on";
-    else
-        qDebug() << "Log to file off";
+            } else if (action->menu()) {
+
+            } else {
+                if (action->text() == "Log to file")
+                    write_log_to_file = action->isChecked();
+            }
+        }
+    }
+
+    if (!write_log_to_file){
+        if (log_file_open){
+            log_file_open = false;
+            log_file.close();
+        }
+    }
 }
 
 
