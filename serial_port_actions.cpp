@@ -174,11 +174,11 @@ QStringList SerialPortActions::check_serial_ports()
     //ui->serial_ports->clear();
     for (const QSerialPortInfo &serialPortInfo : serialPortsInfo){
         //ui->serial_ports->addItem(serialPortPrefix + serialPortInfo.portName());
-        serial_ports.append(serialPortInfo.portName() + " " + serialPortInfo.description());
+        serial_ports.append(serialPortInfo.portName() + " - " + serialPortInfo.description());
         qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
     #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-        serial_ports.append("OpenPort2.0 OpenPort2.0");
+        serial_ports.append("OpenPort 2.0 OpenPort 2.0");
         //serial_ports.append(" ");
     #endif
 
@@ -198,7 +198,7 @@ QString SerialPortActions::open_serial_port(QStringList serial_port_list)
         serial_port = serial_port_prefix_win + serial_port_list.at(0);
     #endif
 
-    if (serial_port_text == "OpenPort2.0")
+    if (serial_port_text == "OpenPort 2.0")
     {
         close_serial_port();
         use_openport2_adapter = true;
@@ -633,7 +633,7 @@ int SerialPortActions::create_j2534_can_connection()
     else
         protocol = ISO15765;
     //flags = 0;
-    flags = ISO15765_FRAME_PAD|CAN_ID_BOTH;
+    flags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
     baudrate = 500000;
 
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages
@@ -691,7 +691,7 @@ int SerialPortActions::set_j2534_can_connection_filters()
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         //txmsg.TxFlags = 0;
-        txmsg.TxFlags = ISO15765_FRAME_PAD;
+        txmsg.TxFlags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
@@ -714,7 +714,7 @@ int SerialPortActions::set_j2534_can_connection_filters()
     {
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
-        txmsg.TxFlags = ISO15765_FRAME_PAD;
+        txmsg.TxFlags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;

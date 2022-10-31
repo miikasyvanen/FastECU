@@ -253,6 +253,9 @@ QString MainWindow::check_kernel(QString flash_method)
     QString kernel;
     QString prefix = configValues->kernel_files_directory;
 
+    if (prefix.at(prefix.length() - 1) != "/")
+        prefix.append("/");
+
     if (flash_method == "wrx02")
         kernel = prefix + "ssmk_HC16.bin";
     if (flash_method == "fxt02")
@@ -280,14 +283,10 @@ void MainWindow::flash_method_changed()
     ssm_init_poll_timer->stop();
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
 
-    if (flash_method_list->currentText() == "subarucan")
+    if (flash_method_list->currentText() == "subarucan" || flash_method_list->currentText() == "subarucan_iso")
         serial->is_can_connection = true;
     else
         serial->is_can_connection = false;
-    if (flash_method_list->currentText() == "subarucan_iso")
-        serial->is_iso15765_connection = true;
-    else
-        serial->is_iso15765_connection = false;
 
     qDebug() << "CAN:" << serial->is_can_connection;
 
@@ -324,8 +323,8 @@ void MainWindow::open_serial_port()
 
     if (serial_ports.length() > 0)
     {
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" ").at(0));
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" ").at(1));
+        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
 
         QString opened_serial_port = serial->open_serial_port(serial_port);
         if (opened_serial_port != NULL)
