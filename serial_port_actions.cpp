@@ -178,7 +178,7 @@ QStringList SerialPortActions::check_serial_ports()
         qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
     #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-        serial_ports.append("OpenPort 2.0 OpenPort 2.0");
+        serial_ports.append("OpenPort 2.0 - OpenPort 2.0");
         //serial_ports.append(" ");
     #endif
 
