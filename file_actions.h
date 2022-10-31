@@ -111,10 +111,9 @@ public:
         QStringList log_switch_ecu_bit;
         QStringList log_switch_target;
         QStringList log_switch_enabled;
+        QStringList log_switch_state;
 
         QStringList log_switches_names_sorted;
-
-        QStringList log_switch_state;
 
         QStringList lower_panel_switch_id;
     } LogValuesStruct;
