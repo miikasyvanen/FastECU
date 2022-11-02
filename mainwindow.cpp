@@ -162,7 +162,7 @@ MainWindow::MainWindow(QWidget *parent)
     serial_port_list->setFixedWidth(160);
     serial_port_list->setObjectName("serial_port_list");
     serial_ports = serial->check_serial_ports();
-    for (int i = 0; i < serial_ports.length(); i ++)
+    for (int i = 0; i < serial_ports.length(); i++)
     {
         serial_port_list->addItem(serial_ports.at(i));
         if (configValues->serial_port == serial_ports.at(i).split(" ").at(0))
@@ -309,7 +309,7 @@ void MainWindow::check_serial_ports()
     serial_ports = serial->check_serial_ports();
     serial_port_list->clear();
 
-    for (int i = 0; i < serial_ports.length(); i += 2)
+    for (int i = 0; i < serial_ports.length(); i++)
     {
         serial_port_list->addItem(serial_ports.at(i));
         if (prev_serial_port == serial_ports.at(i))
@@ -387,6 +387,7 @@ void MainWindow::start_ecu_operations(QString cmd_type)
 
                 ecuCalDefIndex++;
             }
+            save_calibration_file_as();
         }
     }
 
@@ -422,7 +423,7 @@ bool MainWindow::open_calibration_file(QString filename)
 {
     ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
     ecuCalDef[ecuCalDefIndex] = fileActions->openRomFile(ecuCalDef[ecuCalDefIndex], filename);
-    qDebug() << ecuCalDef[ecuCalDefIndex];
+    //qDebug() << ecuCalDef[ecuCalDefIndex];
     if(ecuCalDef[ecuCalDefIndex] != NULL)
     {
         calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
@@ -437,7 +438,7 @@ bool MainWindow::open_calibration_file(QString filename)
     }
     else
     {
-        qDebug() << "Failed!!";
+        //qDebug() << "Failed!!";
         ecuCalDef[ecuCalDefIndex] = {};
         return 1;
     }
@@ -479,17 +480,19 @@ void MainWindow::save_calibration_file_as()
     if (ecuCalDef[romNumber]->OemEcuFile)
     {
         filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_base_directory, tr("Calibration file (*.bin)"));
-        if(!filename.endsWith(QString(".bin")))
-             filename.append(QString(".bin"));
     }
 
     if (filename.isEmpty()){
-        QMessageBox::information(this, tr("Calibration file"), "No file selected");
+        ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
+        QMessageBox::information(this, tr("Calibration file"), "No file name selected");
         return;
     }
 
-    fileActions->saveRomFile(ecuCalDef[romNumber], filename);
+    if(!filename.endsWith(QString(".bin")))
+         filename.append(QString(".bin"));
 
+    fileActions->saveRomFile(ecuCalDef[romNumber], filename);
+    ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
 }
 
 void MainWindow::selectable_combobox_item_changed(QString item)
