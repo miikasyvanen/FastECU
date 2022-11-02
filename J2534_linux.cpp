@@ -335,23 +335,20 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 if (msg_type == NORM_MSG_START_IND)
                 {
                     pMsg->RxStatus = START_OF_MESSAGE;
-                    //qDebug() << "Message NORM_MSG_START_IND";
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
 
                     msg_index = 0;
                     msg_cnt++;
 
-                    qDebug() << "NORM_MSG_START_IND" << parseMessageToHex(received);
+                    //qDebug() << "NORM_MSG_START_IND" << parseMessageToHex(received);
                     received.clear();
-                    //delay(100);
                 }
                 if (msg_type == NORM_MSG)
                 {
                     pMsg->RxStatus = NORM_MSG;
 
-                    //qDebug() << "NORM_MSG, byte cnt" << msg_byte_cnt << "MSG:" << parseMessageToHex(received);
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
-                    qDebug() << msg_byte_cnt << "MSG:" << parseMessageToHex(received);
+                    //qDebug() << msg_byte_cnt << "MSG:" << parseMessageToHex(received);
 
                     for (unsigned long i = 0; i < msg_byte_cnt; i++)
                     {
@@ -391,7 +388,6 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 {
                     pMsg->RxStatus = RX_MSG_END_IND;
 
-                    //qDebug() << "Message RX_MSG_END_IND";
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
 
                     char data[4];
@@ -402,7 +398,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->Timestamp = parse_ts(data);
                     pMsg->DataSize = msg_index;
 
-                    qDebug() << "RX_MSG_END_IND" << parseMessageToHex(received);
+                    //qDebug() << "RX_MSG_END_IND" << parseMessageToHex(received);
                     received.clear();
                     stop_reading = true;
                 }
@@ -410,9 +406,6 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
         }
         if (!stop_reading)
         {
-            //qDebug() << "Read more bytes";
-            //QByteArray response = read_serial_data(3, 50);
-
             QByteArray response = read_serial_data(3, 50);
 
             if (response.length() > 0)

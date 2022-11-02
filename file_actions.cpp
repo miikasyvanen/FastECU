@@ -1521,15 +1521,16 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
     file.close();
 
     ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
-    dateTime = dateTime.currentDateTime();
-    dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
-    qDebug() << dateTimeString << "Read ECU base def";
+
+    //dateTime = dateTime.currentDateTime();
+    //dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
+    //qDebug() << dateTimeString << "Read ECU base def";
 
     readEcuBaseDef(ecuCalDef);
 
-    dateTime = dateTime.currentDateTime();
-    dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
-    qDebug() << dateTimeString << "ECU base def read";
+    //dateTime = dateTime.currentDateTime();
+    //dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
+    //qDebug() << dateTimeString << "ECU base def read";
 
     return ecuCalDef;
 
@@ -1537,20 +1538,16 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
 
 FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
-    //EcuCalDefStructure *ecuCalDef = new EcuCalDefStructure;
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
-    QByteArray file_data;
     QString file_name_str;
     QString ecuId;
     bool ecuIdConfirmed = true;
     bool bStatus = false;
     uint16_t ecuIdAddr[] = { 0x0200, 0x2000 };
 
-    //qDebug() << "Read OEM ECU file";
     if (!ecuCalDef->FullRomData.length())
     {
-        //qDebug() << "Read file";
         if (filename.isEmpty())
         {
             QFileDialog openDialog;
@@ -1565,7 +1562,6 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
 
         }
 
-        //qDebug() << filename;
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());
         file_name_str = fileInfo.fileName();
@@ -1575,32 +1571,31 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
             QMessageBox::warning(this, tr("Calibration file"), "Unable to open calibration file for reading");
             return NULL;
         }
-        file_data = file.readAll();
+        ecuCalDef->FullRomData = file.readAll();
     }
     else
     {
-        //qDebug() << "ROM file from ECU";
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());
         file_name_str = fileInfo.fileName();
-        file_data = ecuCalDef->FullRomData;
     }
 
     ecuIdConfirmed = true;
-    for (unsigned j = 0; j < 2; j++)//sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
+    //for (unsigned j = 0; j < 2; j++)
+    for (unsigned j = 0; j < sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
     {
         //qDebug() << "ECU ID addr 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
         ecuIdConfirmed = true;
         ecuId.clear();
         for (int i = ecuIdAddr[j]; i < ecuIdAddr[j] + 8; i++)
         {
-            if ((uint8_t)file_data.at(i) < 0x30 || (uint8_t)file_data.at(i) > 0x5A)
+            if ((uint8_t)ecuCalDef->FullRomData.at(i) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i) > 0x5A)
             {
                 ecuIdConfirmed = false;
             }
             else
             {
-                ecuId.append((uint8_t)file_data.at(i));
+                ecuId.append((uint8_t)ecuCalDef->FullRomData.at(i));
             }
         }
         if (ecuIdConfirmed)
@@ -1617,12 +1612,8 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
 
     qDebug() << "Read ECU definition test";
     read_ecu_definition_file(ecuCalDef, ecuId);
-    //readEcuBaseDef(ecuCalDef);
 
     qDebug() << "ECU definition test read succesfully";
-    //qDebug() << ecuId;
-    //ecuCalDef = readEcuDef(ecuCalDef, ecuId);
-    //qDebug() << "Returned from readOemEcuDefFile";
 
     if (ecuCalDef == NULL)
     {
@@ -1633,10 +1624,9 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
     ecuCalDef->OemEcuFile = true;
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
-    ecuCalDef->FullRomData.append(file_data);
-    //ecuCalDef->FileSize = file.size();
-    ecuCalDef->FileSize = file_data.size();
+    ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
     ecuCalDef->RomId = ecuId;
+    qDebug() << "File size =" << ecuCalDef->FileSize;
 
     int storagesize = 0;
     QString mapData;
@@ -1690,13 +1680,6 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                     value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
                 }
             }
-            /*
-            QString mapFormat = ecuCalDef->FormatList.at(i);
-            int format = 0;
-            if (mapFormat.contains("0"))
-                format = mapFormat.count(QLatin1Char('0')) - 1;
-*/
-            //mapData.append(QString::number(value, 'f', format) + ",");
             mapData.append(QString::number(value, 'g', float_precision) + ",");
         }
         ecuCalDef->MapData.insert(i, mapData);
@@ -1744,14 +1727,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                         else
                             value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(dataByte)));
                     }
-                    /*
-                    QString mapFormat = ecuCalDef->XScaleFormatList.at(i);
-                    int format = 0;
-                    if (mapFormat.contains("0"))
-                        format = mapFormat.count(QLatin1Char('0')) - 1;
-*/
                     mapData.append(QString::number(value, 'g', float_precision) + ",");
-                    //mapData.append(QString::number(value, 'f', format) + ",");
                 }
                 ecuCalDef->XScaleData.insert(i, mapData);
             }
@@ -1796,14 +1772,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                     else
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(dataByte)));
                 }
-                /*
-                QString mapFormat = ecuCalDef->YScaleFormatList.at(i);
-                int format = 0;
-                if (mapFormat.contains("0"))
-                    format = mapFormat.count(QLatin1Char('0')) - 1;
-*/
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
-                //mapData.append(QString::number(value, 'f', format) + ",");
             }
             ecuCalDef->YScaleData.insert(i, mapData);
         }
@@ -1830,6 +1799,9 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
 FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     QFile file(filename);
+    QFileInfo fileInfo(file.fileName());
+    QString file_name_str = fileInfo.fileName();
+
     if (!file.open(QIODevice::WriteOnly ))
     {
         qDebug() << "Unable to open file for writing";
@@ -1840,6 +1812,9 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
     ecuCalDef = apply_cal_changes_to_rom_data(ecuCalDef);
     file.write(ecuCalDef->FullRomData);
     file.close();
+
+    ecuCalDef->FullFileName = filename;
+    ecuCalDef->FileName = file_name_str;
 
     return 0;
 }
@@ -1886,10 +1861,6 @@ FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(File
                     mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
                     mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
                 }
-                if (ecuCalDef->NameList.at(i) == "Min Idle Speed High Electrical Load (AT)")
-                    qDebug() << mapDataList.at(j) << mapDataValue.floatValue << mapDataValue.fourByteValue;
-                if (ecuCalDef->NameList.at(i) == "Min Idle Speed High Electrical Load (MT)")
-                    qDebug() << mapDataList.at(j) << mapDataValue.floatValue << mapDataValue.fourByteValue;
 
                 if (mapDataValue.floatValue == 0)
                     mapDataValue.floatValue = 0.0f;
@@ -1935,7 +1906,6 @@ FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(File
                     {
                         mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleToByteList.at(i), mapDataList.at(j)));
                         mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
-                        //mapDataValue.fourByteValue = (qRound(mapDataValue.floatValue));
                     }
 
                     if (mapDataValue.floatValue == 0)
@@ -1983,7 +1953,6 @@ FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(File
                     {
                         mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleToByteList.at(i), mapDataList.at(j)));
                         mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
-                        //mapDataValue.fourByteValue = (qRound(mapDataValue.floatValue));
                     }
 
                     if (mapDataValue.floatValue == 0)
