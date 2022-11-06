@@ -508,8 +508,8 @@ long J2534::PassThruSetProgrammingVoltage(unsigned long DeviceID, unsigned long 
     output.clear();
     output.append("atv" + QString::number(Pin) + " " + QString::number(Voltage) + "\r\n");
     write_serial_data(output);
-    received = read_serial_data(100, 50);
-    qDebug() << "Voltage pin9:" << received << parseMessageToHex(received);
+    //received = read_serial_data(5, 15);
+    qDebug() << "Voltage pin" << Pin << received << parseMessageToHex(received);
 
 
     return result;

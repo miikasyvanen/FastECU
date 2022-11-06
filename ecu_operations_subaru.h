@@ -79,7 +79,8 @@ private:
 
     int connect_bootloader_subaru_kline_16bit();
     int connect_bootloader_subaru_kline_04_16bit();
-    int connect_bootloader_subaru_can_05_32bit();
+    //int connect_bootloader_subaru_can_05_32bit();
+    int connect_bootloader_subaru_kline_02_32bit();
     int connect_bootloader_subaru_kline_32bit();
     int connect_bootloader_subaru_can_32bit();
 

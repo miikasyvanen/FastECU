@@ -148,7 +148,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     else if (flash_method == "fxt02")
     {
         send_log_window_message("Connecting to Subaru 02 32-bit bootloader, please wait...", true, true);
-        result = connect_bootloader_subaru_kline_16bit();
+        result = connect_bootloader_subaru_kline_02_32bit();
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
             send_log_window_message("Initializing Subaru K-Line 02 32-bit kernel upload, please wait...", true, true);
@@ -219,7 +219,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "subarucan")
     {
-        result = connect_bootloader_subaru_can_05_32bit();
+        result = connect_bootloader_subaru_can_32bit();
         if (result == STATUS_SUCCESS)
             result = upload_kernel_subaru_can_05_32bit(kernel);
         if (result == STATUS_SUCCESS)
@@ -252,7 +252,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_16bit()
         return STATUS_ERROR;
     }
     serial->change_port_speed("9600");
-    serial->set_lec_lines(0, 0);
+    serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
 
     delay(10);
     // Start countdown
@@ -302,6 +302,82 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_16bit()
     return STATUS_ERROR;
 }
 
+int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_32bit()
+{
+    QByteArray output;
+    QByteArray received;
+
+    // Change serial speed and set 'line end checks' to low level
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
+
+    // Start countdown
+    connect_bootloader_start_countdown(5);
+
+    serial->change_port_speed("62500");
+    serial->serialport_protocol_14230 = true;
+
+    delay(100);
+
+    received = ecuOperations->request_kernel_init();
+    if (received.length() > 0)
+    {
+        if ((uint8_t)received.at(1) == SID_KERNEL_INIT + 0x40)
+        {
+            send_log_window_message("Kernel init ok", true, true);
+            send_log_window_message("Requesting kernel ID", true, true);
+
+            delay(100);
+
+            received = ecuOperations->request_kernel_id();
+            if (received == "")
+                return STATUS_ERROR;
+
+            received.remove(0, 2);
+            send_log_window_message("Request kernel id ok: " + received, true, true);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
+    }
+
+    serial->serialport_protocol_14230 = false;
+
+    serial->change_port_speed("9600");
+
+    // Connect to bootloader
+    delay(1000);
+    serial->pulse_lec_2_line(212);
+    output.clear();
+    for (uint8_t i = 0; i < subaru_16bit_bootloader_init.length(); i++)
+    {
+        output.append(subaru_16bit_bootloader_init[i]);
+    }
+    received = serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent to bootloader: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(output.length(), serial_read_short_timeout);
+    send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
+
+    if (received.length() != 3 || !check_received_message(subaru_16bit_bootloader_init_ok, received))
+    {
+        send_log_window_message("Bad response from bootloader", true, true);
+        return STATUS_ERROR;
+    }
+    else
+    {
+        send_log_window_message("Connected to bootloader", true, true);
+        return STATUS_SUCCESS;
+    }
+
+    delay(10);
+
+    return STATUS_ERROR;
+}
+
 int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
 {
     QByteArray output;
@@ -347,11 +423,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
 
     serial->serialport_protocol_14230 = false;
 
-    //if (serial->use_openport2_adapter)
-        //serial->reset_connection();
     serial->change_port_speed("4800");
-    //if (serial->use_openport2_adapter)
-        //serial->init_j2534_connection();
 
     delay(100);
 
@@ -422,12 +494,10 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
 
     //send_log_window_message("Starting diagnostic session", true, true);
 
-    //delay(500);
-
     return STATUS_SUCCESS;
 }
 
-int EcuOperationsSubaru::connect_bootloader_subaru_can_05_32bit()
+int EcuOperationsSubaru::connect_bootloader_subaru_can_32bit()
 {
     QByteArray output;
     QByteArray received;

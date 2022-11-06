@@ -79,6 +79,9 @@ int SerialPortActions::set_lec_lines(int lec1_state, int lec2_state)
 
 int SerialPortActions::pulse_lec_1_line(int timeout)
 {
+#ifdef Q_OS_LINUX
+    timeout += 17;
+#endif
     line_end_check_1_toggled(requestToSendEnabled);
     delay(timeout);
     line_end_check_1_toggled(requestToSendDisabled);
@@ -89,6 +92,9 @@ int SerialPortActions::pulse_lec_1_line(int timeout)
 
 int SerialPortActions::pulse_lec_2_line(int timeout)
 {
+#ifdef Q_OS_LINUX
+    timeout += 17;
+#endif
     line_end_check_2_toggled(dataTerminalEnabled);
     delay(timeout);
     line_end_check_2_toggled(dataTerminalDisabled);
@@ -103,7 +109,7 @@ int SerialPortActions::line_end_check_1_toggled(int state)
     {
         if (use_openport2_adapter)
         {
-            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 5000);
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 12000);
         }
         else
         {
@@ -115,7 +121,7 @@ int SerialPortActions::line_end_check_1_toggled(int state)
     {
         if (use_openport2_adapter)
         {
-            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 0);
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, -2);
         }
         else
         {
@@ -133,7 +139,7 @@ int SerialPortActions::line_end_check_2_toggled(int state)
     {
         if (use_openport2_adapter)
         {
-            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 12000);
         }
         else
         {
@@ -145,7 +151,7 @@ int SerialPortActions::line_end_check_2_toggled(int state)
     {
         if (use_openport2_adapter)
         {
-            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 0);
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, -2);
         }
         else
         {
@@ -915,6 +921,6 @@ void SerialPortActions::delay(int n)
 {
     QTime dieTime = QTime::currentTime().addMSecs(n);
     while (QTime::currentTime() < dieTime)
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 }
 
