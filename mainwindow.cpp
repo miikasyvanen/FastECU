@@ -914,6 +914,7 @@ void MainWindow::update_logbox_values(QString protocol)
             }
         }
     }
+    delay(1);
 }
 
 
@@ -952,7 +953,7 @@ void MainWindow::delay(int n)
 {
     QTime dieTime = QTime::currentTime().addMSecs(n);
     while (QTime::currentTime() < dieTime)
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 }
 
 void MainWindow::add_new_ecu_definition_file()

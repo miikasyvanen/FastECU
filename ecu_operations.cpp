@@ -92,8 +92,121 @@ QByteArray EcuOperations::request_kernel_id()
 
 int EcuOperations::read_mem_16bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
+    QElapsedTimer timer;
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    QByteArray mapdata;
 
-    return 0;
+    uint32_t pagesize = 0;
+    uint32_t end_addr = 0;
+    uint32_t datalen = 0;
+    uint32_t cplen = 0;
+
+    uint8_t chk_sum = 0;
+
+    datalen = 0x06;
+    pagesize = 0x0400;
+    if (start_addr == 0 && length == 0)
+    {
+        start_addr = 0;
+        length = 0x030000;
+    }
+    end_addr = start_addr + length;
+
+    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
+    uint32_t addr = start_addr - skip_start;
+    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
+    uint32_t len_done = 0;  //total data written to file
+
+    timer.start();
+
+    while (willget)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        uint32_t numblocks = 1;
+        unsigned curspeed = 0, tleft;
+        uint32_t curblock = (addr / pagesize);
+        float pleft = 0;
+        unsigned long chrono;
+
+        pleft = (float)addr / (float)(length + 0x8000) * 100.0f;
+        set_progressbar_value(pleft);
+
+        if (addr >= flashdevices[mcu_type_index].rblocks->start && addr < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len))
+        {
+
+            received.clear();
+            for (unsigned int j = flashdevices[mcu_type_index].rblocks->start; j < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len); j++)
+            {
+                received.append((uint8_t)0x00);
+            }
+            mapdata.append(received);
+
+            addr = 0x028000;
+        }
+
+        output.clear();
+        output.append((uint8_t)((SID_OE_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SID_OE_START_COMM & 0xFF));
+        output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+        output.append((uint8_t)(datalen + 1) & 0xFF);
+        output.append((uint8_t)SID_OE_KERNEL_READ_AREA & 0xFF);
+        output.append((uint8_t)0x00 & 0xFF);
+        output.append((uint8_t)(addr >> 16) & 0xFF);
+        output.append((uint8_t)(addr >> 8) & 0xFF);
+        output.append((uint8_t)addr & 0xFF);
+        output.append((uint8_t)(pagesize >> 8) & 0xFF);
+        output.append((uint8_t)pagesize & 0xFF);
+
+        chk_sum = calculate_checksum(output, false);
+        output.append((uint8_t) chk_sum);
+        received = serial->write_serial_data_echo_check(output);
+        delay(10);
+        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+
+        if (received.startsWith("\xbe\xef"))
+        {
+            received.remove(0, 5);
+            received.remove(received.length() - 1, 1);
+            mapdata.append(received);
+            qDebug() << "DATA:" << addr << parse_message_to_hex(received);
+        }
+        else
+            qDebug() << "ERROR IN DATA RECEIVE!";
+
+        cplen = (numblocks * pagesize);
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (cplen > 0 && chrono > 0)
+            curspeed = cplen * (1000.0f / chrono);
+
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = (willget / curspeed) % 9999;
+        tleft++;
+
+        QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
+        QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        send_log_window_message(msg, true, true);
+        delay(1);
+
+        len_done += cplen;
+        addr += (numblocks * pagesize);
+        willget -= pagesize;
+    }
+
+    ecuCalDef->FullRomData = mapdata;
+    set_progressbar_value(100);
+
+    return STATUS_SUCCESS;
 }
 
 int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
@@ -210,7 +323,6 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
     }
 
     ecuCalDef->FullRomData = mapdata;
-
     set_progressbar_value(100);
 
     return STATUS_SUCCESS;
