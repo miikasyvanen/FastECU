@@ -127,7 +127,10 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
                 result = read_rom_subaru_kline_02_16bit(ecuCalDef);
             }
             else if (cmd_type == "test_write" || cmd_type == "write")
+            {
+                send_log_window_message("Writing ROM to Subaru K-Line 16-bit", true, true);
                 result = write_rom_subaru_kline_02_16bit(ecuCalDef, test_write);
+            }
         }
         return result;
     }
@@ -245,36 +248,39 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_16bit()
     QByteArray output;
     QByteArray received;
 
-    // Change serial speed and set 'line end checks' to low level
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
+
+    // Change serial speed and set 'line end checks' to low level
     serial->change_port_speed("9600");
     serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
 
-    delay(10);
+    /// Was when working
+    //delay(10);
     // Start countdown
     connect_bootloader_start_countdown(5);
 
     // Connect to bootloader
-    delay(1000);
+    /// Was 1000 when working
+    delay(800);
     serial->pulse_lec_2_line(200);
     output.clear();
     for (uint8_t i = 0; i < subaru_16bit_bootloader_init.length(); i++)
     {
         output.append(subaru_16bit_bootloader_init[i]);
     }
-    received = serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent to bootloader: " + parse_message_to_hex(received), true, true);
+    //received = serial->write_serial_data_echo_check(output);
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent to bootloader: " + parse_message_to_hex(output), true, true);
     received = serial->read_serial_data(output.length(), serial_read_short_timeout);
     send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
 
     if (received.length() != 3 || !check_received_message(subaru_16bit_bootloader_init_ok, received))
     {
         send_log_window_message("Bad response from bootloader", true, true);
-        return STATUS_ERROR;
     }
     else
     {
@@ -307,22 +313,58 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_32bit()
     QByteArray output;
     QByteArray received;
 
-    // Change serial speed and set 'line end checks' to low level
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
+    // Change serial speed and set 'line end checks' to low level
+    serial->change_port_speed("9600");
     serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
+
+    //delay(10);
 
     // Start countdown
     connect_bootloader_start_countdown(5);
 
+    // Connect to bootloader
+    delay(800);
+    //for (int i = 0; i < 5; i++)
+    //{
+        //delay(200);
+        serial->pulse_lec_2_line(200);
+        output.clear();
+        //for (uint8_t i = 0; i < (sizeof(subaru_16bit_bootloader_init) / sizeof(subaru_16bit_bootloader_init[0])); i++)
+        for (uint8_t i = 0; i < subaru_16bit_bootloader_init.length(); i++)
+        {
+            output.append(subaru_16bit_bootloader_init[i]);
+        }
+        //received = serial->write_serial_data_echo_check(output);
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent to bootloader: " + parse_message_to_hex(output), true, true);
+        //delay(200);
+        received = serial->read_serial_data(output.length(), serial_read_short_timeout);
+        send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
+
+        if (received.length() != 3 || !check_received_message(subaru_16bit_bootloader_init_ok, received))
+        {
+            send_log_window_message("Bad response from bootloader", true, true);
+        }
+        else
+        {
+            send_log_window_message("Connected to bootloader", true, true);
+            return STATUS_SUCCESS;
+        }
+        //delay(200);
+    //}
+
+    send_log_window_message("Cannot connect to bootloader, testing if kernel is alive", true, true);
+
     serial->change_port_speed("62500");
     serial->serialport_protocol_14230 = true;
 
-    delay(100);
+    //delay(100);
 
     received = ecuOperations->request_kernel_init();
     if (received.length() > 0)
@@ -346,34 +388,6 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_32bit()
     }
 
     serial->serialport_protocol_14230 = false;
-
-    serial->change_port_speed("9600");
-
-    // Connect to bootloader
-    delay(1000);
-    serial->pulse_lec_2_line(212);
-    output.clear();
-    for (uint8_t i = 0; i < subaru_16bit_bootloader_init.length(); i++)
-    {
-        output.append(subaru_16bit_bootloader_init[i]);
-    }
-    received = serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent to bootloader: " + parse_message_to_hex(received), true, true);
-    received = serial->read_serial_data(output.length(), serial_read_short_timeout);
-    send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
-
-    if (received.length() != 3 || !check_received_message(subaru_16bit_bootloader_init_ok, received))
-    {
-        send_log_window_message("Bad response from bootloader", true, true);
-        return STATUS_ERROR;
-    }
-    else
-    {
-        send_log_window_message("Connected to bootloader", true, true);
-        return STATUS_SUCCESS;
-    }
-
-    delay(10);
 
     return STATUS_ERROR;
 }
@@ -607,11 +621,11 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
     else
         send_log_window_message("Kernel uploaded succesfully", true, true);
 
-    delay(200);
-
     serial->change_port_speed("39473");
 
-    return STATUS_ERROR;
+    delay(200);
+
+    return STATUS_SUCCESS;
 }
 
 int EcuOperationsSubaru::upload_kernel_subaru_kline_04_16bit(QString kernel)
@@ -659,7 +673,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
     pl_encr = file.readAll();
     len = pl_len &= ~3;
 
-    send_log_window_message("File length " + QString::number(file_len) + ", payload length " + QString::number(pl_len), true, true);
+    //send_log_window_message("File length " + QString::number(file_len) + ", payload length " + QString::number(pl_len), true, true);
 
     if (pl_len >= KERNEL_MAXSIZE_SUB) {
         send_log_window_message("***************** warning : large kernel detected *****************", true, true);
@@ -684,7 +698,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
         chk_sum += pl_encr[i];
     }
 
-    send_log_window_message("Create kernel data header...", true, true);
+    //send_log_window_message("Create kernel data header...", true, true);
     output.clear();
     output.append((uint8_t)SID_OE_UPLOAD_KERNEL & 0xFF);
     output.append((uint8_t)(flashdevices[mcu_type_index].rblocks->start >> 16) & 0xFF);
@@ -703,7 +717,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
     output.append((uint8_t) chk_sum);
 
     send_log_window_message("Start sending kernel... please wait...", true, true);
-    received = serial->write_serial_data_echo_check(output);
+    serial->write_serial_data_echo_check(output);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     msg.clear();
     for (int i = 0; i < received.length(); i++)
@@ -772,7 +786,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_32bit(QString kernel)
 
     QString mcu_name;
 
-    qDebug() << "MCU name:" << flashdevices[mcu_type_index].name;
+    //qDebug() << "MCU name:" << flashdevices[mcu_type_index].name;
 
     mcu_name = "SH7055";
     if (flashdevices[mcu_type_index].name == mcu_name)
@@ -781,7 +795,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_32bit(QString kernel)
     if (flashdevices[mcu_type_index].name == mcu_name)
         start_address = flashdevices[mcu_type_index].rblocks->start;
 
-    qDebug() << "Start address to upload kernel:" << hex << start_address;
+    //qDebug() << "Start address to upload kernel:" << hex << start_address;
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -973,7 +987,6 @@ int EcuOperationsSubaru::read_rom_subaru_kline_04_16bit(FileActions::EcuCalDefSt
 
 int EcuOperationsSubaru::read_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef)
 {
-    send_log_window_message("Reading ROM from Subaru K-Line 02 32-bit", true, true);
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -1406,6 +1419,59 @@ QByteArray EcuOperationsSubaru::sub_sid_36_transferdata(uint32_t dataaddr, QByte
     }
 
     //qDebug() << "36 received:" << parse_message_to_hex(received);
+
+    return received;
+
+}
+
+QByteArray EcuOperationsSubaru::sub_sid_53_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len)
+{
+    QByteArray output;
+    QByteArray received;
+    uint32_t blockaddr = 0;
+    uint16_t blockno = 0;
+    uint16_t maxblocks = 0;
+    uint8_t loop_cnt = 0;
+
+    //len &= ~0x03;
+    if (!buf.length() || !len) {
+        send_log_window_message("Error in kernel data length!", true, true);
+        return NULL;
+    }
+
+    maxblocks = (len - 1) >> 7;  // number of 128 byte blocks - 1
+
+    //qDebug() << "Kernel upload address:" << dataaddr << "(" << hex << dataaddr << ")";
+    //qDebug() << "Kernel buffer length:" << buf.length() << "(" << hex << buf.length() << ")";
+    //qDebug() << "Kernel file len:" << len << "(" << hex << len << ")";
+
+    for (blockno = 0; blockno <= maxblocks; blockno++)
+    {
+        if (kill_process)
+            return NULL;
+
+        blockaddr = dataaddr + blockno * 128;
+        output.clear();
+
+        if (blockno == maxblocks)
+        {
+            for (uint32_t i = 0; i < len; i++)
+            {
+                output.append(buf.at(i + blockno * 128));
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 128; i++)
+            {
+                output.append(buf.at(i + blockno * 128));
+            }
+            len -= 128;
+        }
+
+        serial->write_serial_data_echo_check(output);
+        //received = serial->read_serial_data(6, receive_timeout);
+    }
 
     return received;
 

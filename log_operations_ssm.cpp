@@ -155,7 +155,21 @@ void MainWindow::read_log_serial_data()
             received = serial->read_serial_data(1, 100);
         else
         {
-            received = serial->read_serial_data(4, 100);
+            int loop_count = 0;
+            while (received.length() < 3 && loop_count < 100)
+            {
+                received.append(serial->read_serial_data(1, 10));
+                loop_count++;
+            }
+            //qDebug() << "Header data" << parse_message_to_hex(received);
+            loop_count = 0;
+            while (((uint8_t)received.at(0) != 0x80 || (uint8_t)received.at(1) != 0xf0 || (uint8_t)received.at(2) != 0x10) && loop_count < 200)
+            {
+                received.remove(0, 1);
+                received.append(serial->read_serial_data(1, 50));
+                loop_count++;
+            }
+            received.append(serial->read_serial_data(1, 50));
             received.append(serial->read_serial_data((uint8_t)received.at(3) + 1, 100));
         }
 
@@ -164,7 +178,7 @@ void MainWindow::read_log_serial_data()
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
             parse_log_params(received, protocol);
-            //parse_message_to_hex(received);
+            qDebug() << "Log params data:" << parse_message_to_hex(received);
         }
         else
             qDebug() << "Log params get failed:" << parse_message_to_hex(received);
@@ -222,7 +236,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                         QString calc_value = QString::number(calc_float_value, 'f', format);
                         logValues->log_value.replace(j, calc_value);
 
-                        //qDebug() << QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte;
+                        qDebug() << QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte;
                         //params.append(calc_value);
                         //params.append(", ");
 

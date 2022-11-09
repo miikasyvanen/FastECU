@@ -1584,7 +1584,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
     //for (unsigned j = 0; j < 2; j++)
     for (unsigned j = 0; j < sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
     {
-        //qDebug() << "ECU ID addr 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
+        qDebug() << "ECU ID addr 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
         ecuIdConfirmed = true;
         ecuId.clear();
         for (int i = ecuIdAddr[j]; i < ecuIdAddr[j] + 8; i++)
@@ -1601,6 +1601,8 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
         if (ecuIdConfirmed)
             break;
     }
+
+    qDebug() << "ECU ID:" << ecuId;
 
     if (!ecuIdConfirmed)
     {

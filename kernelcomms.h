@@ -8,7 +8,7 @@
 
 #define SID_OE_START_COMM           0xBEEF
 #define SID_OE_RECUID               0x01
-
+#define SID_OE_KERNEL_READ_AREA     0x03
 
 /***********************************
  * NisProg based kernels commands

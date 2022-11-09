@@ -35,7 +35,7 @@ int SerialPortActions::change_port_speed(QString portSpeed)
             if (serial->setBaudRate(serial_port_baudrate.toDouble()))
             {
                 delay(50);
-                qDebug() << "Baudrate set to" << serial_port_baudrate;
+                //qDebug() << "Baudrate set to" << serial_port_baudrate;
                 return STATUS_SUCCESS;
             }
             else
@@ -60,7 +60,7 @@ int SerialPortActions::change_port_speed(QString portSpeed)
             }
             else
             {
-                //qDebug() << "Set baudrate OK";
+                //qDebug() << "Set baudrate to" << baudrate << "OK";
                 return STATUS_SUCCESS;
             }
         }
@@ -79,26 +79,24 @@ int SerialPortActions::set_lec_lines(int lec1_state, int lec2_state)
 
 int SerialPortActions::pulse_lec_1_line(int timeout)
 {
-#ifdef Q_OS_LINUX
-    timeout += 17;
-#endif
     line_end_check_1_toggled(requestToSendEnabled);
     delay(timeout);
     line_end_check_1_toggled(requestToSendDisabled);
     delay(timeout);
+
+    read_serial_data(100, 50);
 
     return STATUS_SUCCESS;
 }
 
 int SerialPortActions::pulse_lec_2_line(int timeout)
 {
-#ifdef Q_OS_LINUX
-    timeout += 17;
-#endif
     line_end_check_2_toggled(dataTerminalEnabled);
     delay(timeout);
     line_end_check_2_toggled(dataTerminalDisabled);
     delay(timeout);
+
+    read_serial_data(100, 50);
 
     return STATUS_SUCCESS;
 }
@@ -110,6 +108,9 @@ int SerialPortActions::line_end_check_1_toggled(int state)
         if (use_openport2_adapter)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 12000);
+            #ifdef Q_OS_LINUX
+                delay(17);
+            #endif
         }
         else
         {
@@ -135,11 +136,16 @@ int SerialPortActions::line_end_check_1_toggled(int state)
 
 int SerialPortActions::line_end_check_2_toggled(int state)
 {
+    QByteArray received;
+
     if (state == dataTerminalEnabled)
     {
         if (use_openport2_adapter)
         {
-            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 12000);
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
+            #ifdef Q_OS_LINUX
+                delay(17);
+            #endif
         }
         else
         {
@@ -448,26 +454,41 @@ int SerialPortActions::write_j2534_data(QByteArray output)
 {
     PASSTHRU_MSG txmsg;
     unsigned long NumMsgs;
+    unsigned long numMsgs;
     PASSTHRU_MSG rxmsg;
     unsigned long numRxMsg;
+    unsigned long txMsgLen;
 
-    txmsg.ProtocolID = protocol;
-    txmsg.RxStatus = 0;
-    txmsg.TxFlags = 0;
-    txmsg.Timestamp = 0;
-    txmsg.DataSize = output.length();
-    txmsg.ExtraDataIndex = 0;
+    txMsgLen = output.length();
+    if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
+        txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
 
-    for (int i = 0; i < output.length(); i++)
+    numMsgs = 0;
+
+    while (txMsgLen > 0)
     {
-        txmsg.Data[i] = (uint8_t)output.at(i);
+        txmsg.ProtocolID = protocol;
+        txmsg.RxStatus = 0;
+        txmsg.TxFlags = 0;
+        txmsg.Timestamp = 0;
+        txmsg.DataSize = txMsgLen;
+        txmsg.ExtraDataIndex = 0;
+
+        for (unsigned long i = 0; i < txMsgLen; i++)
+        {
+            txmsg.Data[i] = (uint8_t)output.at(i);
+        }
+        // Indicate that the PASSTHRU_MSG array contains just a single message.
+        NumMsgs = 1;
+
+        j2534->PassThruWriteMsgs(chanID, &txmsg, &NumMsgs, 100);
+
+        numMsgs++;
+        output.remove(0, txMsgLen);
+        txMsgLen = output.length();
+        if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
+            txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
     }
-
-    // Indicate that the PASSTHRU_MSG array contains just a single message.
-    NumMsgs = 1;
-
-    j2534->PassThruWriteMsgs(chanID, &txmsg, &NumMsgs, 100);
-    //j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, 100);
 
     return STATUS_SUCCESS;
 }

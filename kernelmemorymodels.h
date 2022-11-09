@@ -119,7 +119,7 @@ const struct ramblock rblocks_MC68HC16Y5[] = {
 };
 
 const struct flashdev_t flashdevices[] = {
-    { "68HC16Y5", MC68HC16Y5, 160 * 1024, 10, fblocks_MC68HC16Y5, rblocks_MC68HC16Y5 },
+    { "MC68HC16Y5", MC68HC16Y5, 160 * 1024, 10, fblocks_MC68HC16Y5, rblocks_MC68HC16Y5 },
     { "SH7051", SH7051, 256 * 1024, 12, fblocks_SH7051, rblocks_SH7051 },
     { "SH7055", SH7055, 512 * 1024, 16, fblocks_SH7055, rblocks_SH7055 },
     { "SH7058", SH7058, 1024 * 1024, 16, fblocks_SH7058, rblocks_SH7058 },

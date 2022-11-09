@@ -112,6 +112,7 @@ private:
     QByteArray sub_sid_10_start_diagnostic();
     QByteArray sub_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
     QByteArray sub_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
+    QByteArray sub_sid_53_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
     QByteArray sub_sid_31_start_routine();
 
     enum RomInfoEnum {

@@ -5,6 +5,7 @@
 #include <QByteArray>
 #include <QComboBox>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QTime>
@@ -48,6 +49,8 @@ public:
     int requestToSendDisabled = 1;
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
+
+    QElapsedTimer *lec_pulse_timer = new QElapsedTimer();
 
     QByteArray ssm_receive_header_start = { "\x80\xf0\x10" };
 
