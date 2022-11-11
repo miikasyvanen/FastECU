@@ -918,11 +918,13 @@ FileActions::EcuCalDefStructure *FileActions::read_ecu_definition_file(EcuCalDef
                                         {
                                             //contains_x_scale = true;
                                             ecuCalDef->XScaleAddressList.replace(index, reader.attributes().value("storageaddress").toString());
+                                            qDebug() << "Table:" << ecuCalDef->NameList.at(index) << "X Axis address:" << ecuCalDef->XScaleAddressList.at(index);
                                         }
                                         if (reader.attributes().value("type").toString() == "Y Axis")
                                         {
                                             //contains_y_scale = true;
                                             ecuCalDef->YScaleAddressList.replace(index, reader.attributes().value("storageaddress").toString());
+                                            qDebug() << "Table:" << ecuCalDef->NameList.at(index) << "Y Axis address:" << ecuCalDef->YScaleAddressList.at(index);
                                         }
                                         if (reader.attributes().value("type").toString() == "Static Y Axis")
                                         {
@@ -1213,7 +1215,8 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
                                                     }
                                                 }
                                             }
-                                            else if (ScaleType == "Static Y Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D")){
+                                            else if (ScaleType == "Static Y Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
+                                            {
                                                 ecuCalDef->XScaleNameList.replace(i, TableChild.attribute("name"," "));
                                                 ecuCalDef->XScaleTypeList.replace(i, ScaleType);
                                                 ecuCalDef->XScaleStorageTypeList.replace(i, TableChild.attribute("storagetype"," "));
@@ -1222,7 +1225,8 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
 
                                                 QDomElement SubChild = TableChild.firstChild().toElement();
                                                 QString StaticYScaleData;
-                                                if (SubChild.tagName() == "scaling"){
+                                                if (SubChild.tagName() == "scaling")
+                                                {
                                                     ecuCalDef->XScaleUnitsList.replace(i, SubChild.attribute("units"," "));
                                                     ecuCalDef->XScaleFormatList.replace(i, SubChild.attribute("format"," "));
                                                     ecuCalDef->XScaleFineIncList.replace(i, SubChild.attribute("fineincrement"," "));
@@ -1656,7 +1660,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
         {
             uint32_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
+            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
                 byteAddress -= 0x8000;
             for (int k = 0; k < storagesize; k++)
             {
@@ -1706,8 +1710,9 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
                 {
                     uint32_t dataByte = 0;
                     uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
+                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
                         byteAddress -= 0x8000;
+
                     for (int k = 0; k < storagesize; k++)
                     {
                         if (ecuCalDef->XScaleEndianList.at(i) == "little" || ecuCalDef->StorageTypeList.at(i) == "float")
@@ -1751,7 +1756,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
                     byteAddress -= 0x8000;
                 for (int k = 0; k < storagesize; k++)
                 {
@@ -1850,7 +1855,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(File
         {
             uint32_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
+            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
                 byteAddress -= 0x8000;
 
             if (ecuCalDef->TypeList.at(i) != "Switch")
@@ -1896,7 +1901,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(File
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
                     byteAddress -= 0x8000;
 
                 if (ecuCalDef->XScaleTypeList.at(i) != "Switch")
@@ -1943,7 +1948,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(File
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byteAddress > 0x27FFF)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
                     byteAddress -= 0x8000;
 
                 if (ecuCalDef->YScaleTypeList.at(i) != "Switch")

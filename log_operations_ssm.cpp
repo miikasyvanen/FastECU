@@ -130,16 +130,8 @@ void MainWindow::log_ssm_values()
                 }
             }
         }
-        //qDebug() << parse_message_to_hex(add_ssm_header(output, false));
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
         delay(10);
-        /*
-        received = serial->read_serial_data(100, 500);
-        received.remove(0, 5);
-        received.remove(received.length() - 1, 1);
-        parse_log_params(received);
-        */
-        //qDebug() << parse_log_params(received);
     }
 }
 
@@ -178,7 +170,7 @@ void MainWindow::read_log_serial_data()
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
             parse_log_params(received, protocol);
-            qDebug() << "Log params data:" << parse_message_to_hex(received);
+            //qDebug() << "Log params data:" << parse_message_to_hex(received);
         }
         else
             qDebug() << "Log params get failed:" << parse_message_to_hex(received);
@@ -200,7 +192,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
     double data_received = received.length();
     double log_speed = 1000.0f / timer_elapsed * data_received;
 
-    qDebug() << (uint16_t)log_speed << "values read per second:" << data_received << "bytes at" << timer_elapsed << "milliseconds";
+    //qDebug() << (uint16_t)log_speed << "values read per second:" << data_received << "bytes at" << timer_elapsed << "milliseconds";
 
     if (!logging_request_active)
     {
@@ -236,7 +228,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                         QString calc_value = QString::number(calc_float_value, 'f', format);
                         logValues->log_value.replace(j, calc_value);
 
-                        qDebug() << QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte;
+                        //qDebug() << QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte;
                         //params.append(calc_value);
                         //params.append(", ");
 
@@ -362,12 +354,8 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
             }
         }
     }
-    //qDebug() << "Total log value count:" << enabled_log_value_count;
-    //qDebug() << "Total log switch count:" << enabled_log_switch_count;
-
-    //logValues = fileActions->read_logger_conf(logValues, ecuid);
     fileActions->read_logger_conf(logValues, ecuid);
-    //qDebug() << logValues->lower_panel_log_value_id;
+    //if ()
     update_logboxes(protocol);
 }
 

@@ -76,7 +76,7 @@ void MainWindow::change_log_values(int tab_index, QString protocol)
                 if (logValues->dashboard_log_value_id.at(i) == logValues->log_value_id.at(j))
                 {
                     QStringList units = logValues->log_value_units.at(j).split(",");
-                    qDebug() << "Units:" << units;
+                    //qDebug() << "Units:" << units;
                     for (int k = 1; k < units.length(); k += 7)
                     {
                         log_units_combobox->addItem(units.at(k));
@@ -120,7 +120,7 @@ void MainWindow::change_log_values(int tab_index, QString protocol)
                 if (logValues->lower_panel_log_value_id.at(i) == logValues->log_value_id.at(j))
                 {
                     QStringList units = logValues->log_value_units.at(j).split(",");
-                    qDebug() << "Units:" << units;
+                    //qDebug() << "Units:" << units;
                     for (int k = 1; k < units.length(); k += 7)
                     {
                         log_units_combobox->addItem(units.at(k));
