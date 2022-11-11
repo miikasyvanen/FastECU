@@ -190,8 +190,10 @@ QStringList SerialPortActions::check_serial_ports()
         qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
     #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-        serial_ports.append("OpenPort 2.0 - OpenPort 2.0");
-        //serial_ports.append(" ");
+        if (j2534->init())
+            if (!j2534->PassThruOpen(NULL, &devID))
+                serial_ports.append("J2534 - OpenPort 2.0");
+        j2534->PassThruClose(devID);
     #endif
 
     sort(serial_ports.begin(), serial_ports.end(), less<QString>());
