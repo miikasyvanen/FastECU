@@ -52,6 +52,8 @@ void MainWindow::menu_action_triggered(QString action)
         start_ecu_operations("write");
 
     // VIEW MENU
+    if (action == "setlogviews")
+        change_gauge_values();
 
     // HELP MENU
     if (action == "about")
