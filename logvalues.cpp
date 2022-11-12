@@ -206,6 +206,7 @@ void MainWindow::change_log_gauge_value(int index)
             }
         }
         update_logboxes(protocol);
+        fileActions->read_logger_conf(logValues, ecuid, true);
     }
 }
 
@@ -224,11 +225,16 @@ void MainWindow::change_log_digital_value(int index)
             {
                 if (logValues->log_value_name.at(i) == log_digital_box->currentText())
                 {
+                    qDebug() << "Change value at" << comboIndex.at(2) << "to" << logValues->log_value_id.at(i);
                     logValues->lower_panel_log_value_id.replace(comboIndex.at(2).toUInt(), logValues->log_value_id.at(i));
                 }
             }
         }
+        qDebug() << "Update logboxes";
         update_logboxes(protocol);
+        qDebug() << "Update logfile";
+        fileActions->read_logger_conf(logValues, ecuid, true);
+        qDebug() << "Done";
     }
 }
 
@@ -252,6 +258,7 @@ void MainWindow::change_log_switch_value(int index)
             }
         }
         update_logboxes(protocol);
+        fileActions->read_logger_conf(logValues, ecuid, true);
     }
 }
 

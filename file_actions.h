@@ -39,6 +39,7 @@ public:
         QString baudrate;
         QString flash_method;
         QString car_model;
+        QString log_protocol;
 
         QString base_directory = QDir::homePath() + "/FastECU_OEM";
         QString calibration_files_base_directory = base_directory + "/calibrations";
@@ -100,6 +101,7 @@ public:
 
         QStringList dashboard_log_value_id;
         QStringList lower_panel_log_value_id;
+        QString logging_values_protocol;
 
         // Switch values
         QStringList log_switch_protocol;
@@ -259,12 +261,12 @@ public:
     /*************************
      * Read logger conf file
      ************************/
-    LogValuesStructure *read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
+    LogValuesStructure *read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id, bool modify);
 
     /************************
      * Save logger conf file
      ************************/
-    LogValuesStructure *save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
+    void *save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
 
     /*******************************************
      * Search and read ECU definition from file

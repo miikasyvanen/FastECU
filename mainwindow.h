@@ -20,6 +20,7 @@
 #include <QProgressDialog>
 #include <QListWidget>
 #include <QCheckBox>
+#include <QStandardItemModel>
 
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
@@ -94,6 +95,12 @@ private:
     QString serial_port_prefix;
     QStringList serial_ports;
 
+    QStringList log_protocols = {
+        "K-Line",
+        "CAN",
+        "ISO15765",
+    };
+
     QStringList flash_methods = {
         "wrx02",
         "wrx04",
@@ -151,6 +158,7 @@ private:
     QComboBox *serial_port_list;
     QComboBox *flash_method_list;
     QComboBox *car_model_list;
+    QComboBox *log_protocol_list;
 
     QFile log_file;
     QTextStream log_file_outstream;
@@ -180,8 +188,10 @@ private:
     void change_log_values(int tabIndex, QString protocol);
 
     // mainwindow.c
+    void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
     QStringList create_car_models_list();
     QStringList create_flash_methods_list();
+    QStringList create_log_protocols_list();
     QString check_kernel(QString flash_method);
 
     // menuactions.c
@@ -221,6 +231,7 @@ private slots:
     void menu_action_triggered(QString action);
 
     // mainwindow.c
+    void log_protocol_changed();
     void car_model_changed();
     void flash_method_changed();
     void check_serial_ports();

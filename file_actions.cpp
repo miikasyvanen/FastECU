@@ -54,7 +54,8 @@ FileActions::ConfigValuesStructure *FileActions::readConfigFile()
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QDomDocument xmlBOM;
-    QFile file(configValues->config_base_directory + "/fastecu.cfg");
+    //QFile file(configValues->config_base_directory + "/fastecu.cfg");
+    QFile file(configValues->fastecu_config_file);
     if (!file.open(QIODevice::ReadOnly ))
     {
         QMessageBox::warning(this, tr("Config file"), "Unable to open application config file for reading");
@@ -95,6 +96,20 @@ FileActions::ConfigValuesStructure *FileActions::readConfigFile()
                                 if (reader.name() == "value")
                                 {
                                     configValues->flash_method = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "log_protocol")
+                        {
+                            qDebug() << "Log protocol";
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->log_protocol = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -197,7 +212,8 @@ FileActions::ConfigValuesStructure *FileActions::readConfigFile()
 FileActions::ConfigValuesStructure *FileActions::saveConfigFile(){
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
-    QFile file(configValues->config_base_directory + "/fastecu.cfg");
+    //QFile file(configValues->config_base_directory + "/fastecu.cfg");
+    QFile file(configValues->fastecu_config_file);
     if (!file.open(QIODevice::ReadWrite)) {
         QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
         return 0;
@@ -224,6 +240,13 @@ FileActions::ConfigValuesStructure *FileActions::saveConfigFile(){
     stream.writeAttribute("name", "flash_method");
     stream.writeStartElement("value");
     stream.writeAttribute("data", configValues->flash_method);
+    stream.writeEndElement();
+    stream.writeEndElement();
+
+    stream.writeStartElement("setting");
+    stream.writeAttribute("name", "log_protocol");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->log_protocol);
     stream.writeEndElement();
     stream.writeEndElement();
 
@@ -283,40 +306,40 @@ FileActions::ConfigValuesStructure *FileActions::saveConfigFile(){
     return 0;
 }
 
-FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id)
+FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id, bool modify)
 {
-    //LogValuesStructure *logValues = &LogValuesStruct;
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
-    //The QDomDocument class represents an XML document.
     QDomDocument xmlBOM;
 
     QString filename = configValues->logger_config_file;
-    //qDebug() << "Logger filename =" << filename;
+
     QFile file(filename);
-    if(!file.open(QFile::ReadOnly | QFile::Text)) {
+    if(!file.open(QFile::ReadWrite | QFile::Text)) {
         QMessageBox::warning(this, tr("Logger file"), "Unable to open logger definition file for reading");
         return NULL;
     }
     xmlBOM.setContent(&file);
-    file.close();
 
-    // Extract the root markup
     QDomElement root = xmlBOM.documentElement();
 
-    logValues->dashboard_log_value_id.clear();
-    logValues->lower_panel_log_value_id.clear();
-    logValues->lower_panel_switch_id.clear();
+    if (!modify)
+    {
+        logValues->dashboard_log_value_id.clear();
+        logValues->lower_panel_log_value_id.clear();
+        logValues->lower_panel_switch_id.clear();
+    }
+
+    bool ecu_id_found = false;
+    int index = 0;
 
     if (root.tagName() == "logger")
     {
-        //qDebug() << "Logger start element";
         QDomElement ecus = root.firstChild().toElement();
         while (!ecus.isNull())
         {
             if (ecus.tagName() == "ecus")
             {
-                //qDebug() << "Found ecus tag";
                 QDomElement ecu = ecus.firstChild().toElement();
                 while (!ecu.isNull())
                 {
@@ -326,49 +349,61 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
 
                         if (ecu_id == file_ecu_id)
                         {
-                            //qDebug() << "Found ECU ID" << file_ecu_id;
+                            ecu_id_found = true;
+                            qDebug() << "Found ECU ID" << file_ecu_id;
                             QDomElement protocol = ecu.firstChild().toElement();
                             while (!protocol.isNull())
                             {
-                                //qDebug() << "Protocols start element";
                                 if (protocol.tagName() == "protocol")
                                 {
-                                    //qDebug() << "Found protocol" << protocol.attribute("id","No id");
+                                    qDebug() << "Found protocol" << protocol.attribute("id","No id");
+                                    logValues->logging_values_protocol = protocol.attribute("id","No id");
                                     QDomElement parameters = protocol.firstChild().toElement();
                                     while(!parameters.isNull())
                                     {
                                         if (parameters.tagName() == "parameters")
                                         {
-                                            //qDebug() << "Found parameters tag";
                                             QDomElement parameter_type = parameters.firstChild().toElement();
                                             while(!parameter_type.isNull())
                                             {
                                                 if (parameter_type.tagName() == "gauges")
                                                 {
-                                                    //qDebug() << "Found gauges tag";
+                                                    index = 0;
                                                     QDomElement gauges = parameter_type.firstChild().toElement();
                                                     while(!gauges.isNull())
                                                     {
                                                         if (gauges.tagName() == "parameter")
                                                         {
-                                                            //qDebug() << "Found gauge parameter tag with ID" << gauges.attribute("id","No id");
-                                                            logValues->dashboard_log_value_id.append(gauges.attribute("id","No id"));
+                                                            if (!modify)
+                                                                logValues->dashboard_log_value_id.append(gauges.attribute("id","No id"));
+                                                            else
+                                                                gauges.attribute("id", logValues->dashboard_log_value_id.at(index));
                                                         }
                                                         gauges = gauges.nextSibling().toElement();
+                                                        index++;
                                                     }
                                                 }
                                                 if (parameter_type.tagName() == "lower_panel")
                                                 {
-                                                    //qDebug() << "Found lower_panel tag";
+                                                    index = 0;
                                                     QDomElement lower_panel = parameter_type.firstChild().toElement();
                                                     while(!lower_panel.isNull())
                                                     {
                                                         if (lower_panel.tagName() == "parameter")
                                                         {
-                                                            //qDebug() << "Found lower_panel parameter tag with ID" << lower_panel.attribute("id","No id");
-                                                            logValues->lower_panel_log_value_id.append(lower_panel.attribute("id","No id"));
+                                                            if (!modify)
+                                                                logValues->lower_panel_log_value_id.append(lower_panel.attribute("id","No id"));
+                                                            else
+                                                            {
+                                                                QDomElement parameter = xmlBOM.createElement("parameter");
+                                                                parameter.setAttribute("id", logValues->lower_panel_log_value_id.at(index));
+                                                                parameter.setAttribute("name", "");
+
+                                                                lower_panel.setAttribute("id", logValues->lower_panel_log_value_id.at(index));
+                                                            }
                                                         }
                                                         lower_panel = lower_panel.nextSibling().toElement();
+                                                        index++;
                                                     }
                                                 }
                                                 parameter_type = parameter_type.nextSibling().toElement();
@@ -376,16 +411,19 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                                         }
                                         if (parameters.tagName() == "switches")
                                         {
-                                            //qDebug() << "Found switches tag";
+                                            index = 0;
                                             QDomElement switches = parameters.firstChild().toElement();
                                             while(!switches.isNull())
                                             {
                                                 if (switches.tagName() == "switch")
                                                 {
-                                                    //qDebug() << "Found switch tag with ID" << switches.attribute("id","No id");
-                                                    logValues->lower_panel_switch_id.append(switches.attribute("id","No id"));
+                                                    if (!modify)
+                                                        logValues->lower_panel_switch_id.append(switches.attribute("id","No id"));
+                                                    else
+                                                        switches.attribute("id", logValues->lower_panel_switch_id.at(index));
                                                 }
                                                 switches = switches.nextSibling().toElement();
+                                                index++;
                                             }
                                         }
                                         parameters = parameters.nextSibling().toElement();
@@ -397,17 +435,140 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                     }
                     ecu = ecu.nextSibling().toElement();
                 }
+                if (!ecu_id_found)
+                {
+                    file.resize(0);
+
+                    qDebug() << "ECU ID not found, initializing log parameters";
+                    logValues->logging_values_protocol = logValues->log_value_protocol.at(0);
+                    for (int i = 0; i < logValues->log_value_id.length(); i++)
+                    {
+                        if (logValues->log_value_enabled.at(i) == "1" && logValues->dashboard_log_value_id.length() < 15)
+                            logValues->dashboard_log_value_id.append(logValues->log_value_id.at(i));
+                    }
+                    for (int i = 0; i < logValues->log_value_id.length(); i++)
+                    {
+                        if (logValues->log_value_enabled.at(i) == "1" && logValues->lower_panel_log_value_id.length() < 12)
+                        logValues->lower_panel_log_value_id.append(logValues->log_value_id.at(i));
+                    }
+                    for (int i = 0; i < logValues->log_switch_id.length(); i++)
+                    {
+                        if (logValues->log_switch_enabled.at(i) == "1" && logValues->lower_panel_switch_id.length() < 20)
+                        logValues->lower_panel_switch_id.append(logValues->log_switch_id.at(i));
+                    }
+                    qDebug() << "Values initialized, creating xml data";
+                    //save_logger_conf(logValues, ecu_id);
+                    QDomElement ecu = xmlBOM.createElement("ecu");
+                    ecu.setAttribute("id", ecu_id);
+                    ecus.appendChild(ecu);
+                    QDomElement protocol = xmlBOM.createElement("protocol");
+                    protocol.setAttribute("id", logValues->logging_values_protocol);
+                    ecu.appendChild(protocol);
+                    QDomElement parameters = xmlBOM.createElement("parameters");
+                    protocol.appendChild(parameters);
+                    QDomElement gauges = xmlBOM.createElement("gauges");
+                    parameters.appendChild(gauges);
+                    for (int i = 0; i < logValues->dashboard_log_value_id.length(); i++)
+                    {
+                        QDomElement parameter = xmlBOM.createElement("parameter");
+                        gauges.appendChild(parameter);
+                        parameter.setAttribute("id", logValues->dashboard_log_value_id.at(i));
+                        parameter.setAttribute("name", "");
+                    }
+                    QDomElement lower_panel = xmlBOM.createElement("lower_panel");
+                    parameters.appendChild(lower_panel);
+                    for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
+                    {
+                        QDomElement parameter = xmlBOM.createElement("parameter");
+                        lower_panel.appendChild(parameter);
+                        parameter.setAttribute("id", logValues->lower_panel_log_value_id.at(i));
+                        parameter.setAttribute("name", "");
+                    }
+                    QDomElement switches = xmlBOM.createElement("switches");
+                    protocol.appendChild(switches);
+                    for (int i = 0; i < logValues->lower_panel_switch_id.length(); i++)
+                    {
+                        QDomElement parameter = xmlBOM.createElement("switch");
+                        switches.appendChild(parameter);
+                        parameter.setAttribute("id", logValues->lower_panel_switch_id.at(i));
+                        parameter.setAttribute("name", "");
+                    }
+                    qDebug() << "Saving log parameters";
+                    QTextStream output(&file);
+                    output << xmlBOM.toString();
+                    file.close();
+                }
             }
             ecus = ecus.nextSibling().toElement();
         }
     }
+    if (modify)
+    {
+        file.resize(0);
+        QTextStream output(&file);
+        xmlBOM.save(output, 4);
+        //output << xmlBOM.toString();
+    }
+    file.close();
 
     return logValues;
 }
 
-FileActions::LogValuesStructure *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id)
+void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id)
 {
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
+    QFile file(configValues->logger_config_file);
+    if (!file.open(QIODevice::ReadWrite)) {
+        QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
+        return 0;
+    }
+    QXmlStreamReader reader;
+    reader.setDevice(&file);
+
+    QXmlStreamWriter stream(&file);
+    //file.resize(0);
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+    stream.writeStartElement("logger");
+    stream.writeStartElement("ecus");
+    stream.writeStartElement("ecu");
+    stream.writeAttribute("id", ecu_id);
+    stream.writeStartElement("protocol");
+    stream.writeAttribute("id", logValues->logging_values_protocol);
+    stream.writeStartElement("parameters");
+    stream.writeStartElement("gauges");
+    for (int i = 0; i < 15; i++)
+    {
+        stream.writeStartElement("parameter");
+        stream.writeAttribute("id", logValues->dashboard_log_value_id.at(i));
+        stream.writeAttribute("name", "");
+        stream.writeEndElement();
+    }
+    stream.writeEndElement();
+    stream.writeStartElement("lower_panel");
+    for (int i = 0; i < 15; i++)
+    {
+        stream.writeStartElement("parameter");
+        stream.writeAttribute("id", logValues->dashboard_log_value_id.at(i));
+        stream.writeAttribute("name", "");
+        stream.writeEndElement();
+    }
+    stream.writeEndElement();
+    stream.writeEndElement();
+    stream.writeStartElement("switches");
+    for (int i = 0; i < 15; i++)
+    {
+        stream.writeStartElement("switch");
+        stream.writeAttribute("id", logValues->dashboard_log_value_id.at(i));
+        stream.writeAttribute("name", "");
+        stream.writeEndElement();
+    }
+    stream.writeEndElement();
+    stream.writeEndElement();
+    stream.writeEndElement();
+    stream.writeEndElement();
+    stream.writeEndElement();
 }
 
 FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()

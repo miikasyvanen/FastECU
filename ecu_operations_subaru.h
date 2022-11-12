@@ -57,6 +57,8 @@ private:
 
     int mcu_type_index;
 
+    uint8_t bootloader_start_countdown = 3;
+
     uint8_t comm_try_timeout = 50;
     uint8_t comm_try_count = 4;
     uint16_t receive_timeout = 500;
@@ -136,7 +138,7 @@ private:
     QByteArray add_ssm_header(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);
     int check_received_message(QByteArray msg, QByteArray received);
-    void connect_bootloader_start_countdown(int timeout);
+    int connect_bootloader_start_countdown(int timeout);
     QByteArray sub_generate_seed_key(QByteArray seed);
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     void init_crc16_tab(void);
@@ -151,7 +153,7 @@ private:
 public slots:
 
 private slots:
-    void send_log_window_message(QString message, bool timestamp, bool linefeed);
+    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int n);
 
 };

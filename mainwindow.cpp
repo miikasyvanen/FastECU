@@ -114,8 +114,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->toolBar->addSeparator();
 
+    QLabel *car_make = new QLabel("Car make:");
+    car_make->setMargin(10);
+    ui->toolBar->addWidget(car_make);
+
     car_model_list = new QComboBox();
-    car_model_list->setFixedWidth(120);
+    //car_model_list->setFixedWidth(100);
     car_model_list->setObjectName("car_model_list");
     QStringList car_models = create_car_models_list();
     int car_model_index = 0;
@@ -129,8 +133,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBar->addWidget(car_model_list);
     emit car_model_list->currentIndexChanged(car_model_index - 1);
 
+    QLabel *flash_method = new QLabel("Flash method:");
+    flash_method->setMargin(10);
+    ui->toolBar->addWidget(flash_method);
+
     flash_method_list = new QComboBox();
-    flash_method_list->setFixedWidth(80);
+    //flash_method_list->setFixedWidth(100);
     flash_method_list->setObjectName("flash_method_list");
     QStringList flash_methods = create_flash_methods_list();
     for (int i = 0; i < flash_methods.length(); i++){
@@ -139,12 +147,32 @@ MainWindow::MainWindow(QWidget *parent)
             flash_method_list->setCurrentIndex(i);
     }
     connect(flash_method_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_method_changed()));
-    //emit flash_method_list->currentIndexChanged(flash_method_list->currentIndex());
     ui->toolBar->addWidget(flash_method_list);
 
     ui->toolBar->addSeparator();
 
-    QLabel *log_select = new QLabel("Log:  ");
+    QLabel *log_protocol = new QLabel("Log protocol:");
+    log_protocol->setMargin(10);
+    ui->toolBar->addWidget(log_protocol);
+
+    log_protocol_list = new QComboBox();
+
+    log_protocol_list->setObjectName("log_protocol_list");
+    QStringList log_protocols = create_log_protocols_list();
+    for (int i = 0; i < log_protocols.length(); i++){
+        log_protocol_list->addItem(log_protocols.at(i));
+        if (configValues->log_protocol == log_protocols.at(i))
+            log_protocol_list->setCurrentIndex(i);
+    }
+    //SetComboBoxItemEnabled(log_protocol_list, 1, false);
+    //SetComboBoxItemEnabled(log_protocol_list, 2, false);
+    connect(log_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(log_protocol_changed()));
+    ui->toolBar->addWidget(log_protocol_list);
+
+    ui->toolBar->addSeparator();
+
+    QLabel *log_select = new QLabel("Log:");
+    log_select->setMargin(10);
     ui->toolBar->addWidget(log_select);
 
     QCheckBox *ecu_check_box = new QCheckBox("ECU");
@@ -155,11 +183,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->toolBar->addSeparator();
 
-    QLabel *serial_port_select = new QLabel("Port:  ");
+    QLabel *serial_port_select = new QLabel("Port:");
+    serial_port_select->setMargin(10);
     ui->toolBar->addWidget(serial_port_select);
 
     serial_port_list = new QComboBox();
-    serial_port_list->setFixedWidth(160);
+    serial_port_list->setFixedWidth(80);
     serial_port_list->setObjectName("serial_port_list");
     serial_ports = serial->check_serial_ports();
     for (int i = 0; i < serial_ports.length(); i++)
@@ -236,6 +265,18 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled)
+{
+    auto * model = qobject_cast<QStandardItemModel*>(comboBox->model());
+    assert(model);
+    if(!model) return;
+
+    auto * item = model->item(index);
+    assert(item);
+    if(!item) return;
+    item->setEnabled(enabled);
+}
+
 QStringList MainWindow::create_car_models_list()
 {
     QStringList car_models;
@@ -247,6 +288,11 @@ QStringList MainWindow::create_car_models_list()
 QStringList MainWindow::create_flash_methods_list()
 {
     return flash_methods;
+}
+
+QStringList MainWindow::create_log_protocols_list()
+{
+    return log_protocols;
 }
 
 QString MainWindow::check_kernel(QString flash_method)
@@ -271,9 +317,32 @@ QString MainWindow::check_kernel(QString flash_method)
     return kernel;
 }
 
+void MainWindow::log_protocol_changed()
+{
+    QComboBox *log_protocol_list = ui->toolBar->findChild<QComboBox*>("log_protocol_list");
+
+    serial->is_can_connection = false;
+    serial->is_iso15765_connection = false;
+    if (log_protocol_list->currentText() == "CAN")
+        serial->is_can_connection = true;
+    else if (log_protocol_list->currentText() == "ISO15765")
+        serial->is_iso15765_connection = true;
+
+    qDebug() << "CAN:" << serial->is_can_connection;
+    qDebug() << "iso15765:" << serial->is_iso15765_connection;
+
+    configValues->log_protocol = log_protocol_list->currentText();
+    fileActions->saveConfigFile();
+
+    serial->reset_connection();
+    ecuid.clear();
+    ecu_init_complete = false;
+    ssm_init_poll_timer->start();
+}
+
 void MainWindow::car_model_changed()
 {
-    qDebug() << "Change protocol";
+    qDebug() << "Change car model";
     QComboBox *car_model_list = ui->toolBar->findChild<QComboBox*>("car_model_list");
     if (car_model_list->currentText() == "Subaru")
         protocol = "SSM";
@@ -281,23 +350,11 @@ void MainWindow::car_model_changed()
 
 void MainWindow::flash_method_changed()
 {
-    ssm_init_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
-
-    if (flash_method_list->currentText() == "subarucan" || flash_method_list->currentText() == "subarucan_iso")
-        serial->is_can_connection = true;
-    else
-        serial->is_can_connection = false;
-
-    qDebug() << "CAN:" << serial->is_can_connection;
 
     configValues->flash_method = flash_method_list->currentText();
     fileActions->saveConfigFile();
-
-    serial->reset_connection();
-    ecuid.clear();
-    ecu_init_complete = false;
-    ssm_init_poll_timer->start();
 }
 
 void MainWindow::check_serial_ports()
@@ -392,6 +449,7 @@ void MainWindow::start_ecu_operations(QString cmd_type)
     }
 
     serial->serialport_protocol_14230 = false;
+    if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial->change_port_speed("4800");
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
@@ -817,6 +875,8 @@ void MainWindow::close_app()
 void MainWindow::change_gauge_values()
 {
     change_log_values(0, protocol);
+    //if (ecu_init_complete)
+    //    fileActions->read_logger_conf(logValues, ecuid, true);
 }
 
 void MainWindow::change_digital_values()
