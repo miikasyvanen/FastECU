@@ -15,7 +15,7 @@ bool MainWindow::ecu_init()
         {
             if (car_model_list->currentText() == "Subaru")
             {
-                if (flash_method_list->currentText().startsWith("subarucan"))
+                if (configValues->log_protocol == "CAN" || configValues->log_protocol == "ISO15765")
                     ssm_can_init();
                 else
                     ssm_kline_init();
@@ -54,6 +54,7 @@ void MainWindow::ssm_kline_init()
         //qDebug() << "ECU INIT:" << parse_message_to_hex(received);
         if (received.length() == (uint8_t)received.at(3) + 5)
         {
+            //qDebug() << "ECU ID:" << parse_ecuid(received);
             ecu_init_complete = true;
             //set_status_bar_label(true, true, ecuid);
             ecuid = parse_ecuid(received);
@@ -73,6 +74,9 @@ void MainWindow::ssm_can_init()
 {
     QByteArray output;
     QByteArray received;
+
+    if (configValues->log_protocol == "CAN")
+
 
     received = serial->read_serial_data(100, 500);
 }
@@ -354,8 +358,8 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
             }
         }
     }
-    fileActions->read_logger_conf(logValues, ecuid);
-    //if ()
+    fileActions->read_logger_conf(logValues, ecuid, false);
+
     update_logboxes(protocol);
 }
 

@@ -23,18 +23,21 @@ EcuOperationsSubaru::EcuOperationsSubaru(SerialPortActions *serial, FileActions:
 
     result = ecu_functions(ecuCalDef, cmd_type);
 
-    if (result == STATUS_SUCCESS){
+    if (result == STATUS_SUCCESS)
+    {
         QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
         this->close();
     }
     else
+    {
         QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-
+        //delete ecuCalDef;
+    }
 }
 
 EcuOperationsSubaru::~EcuOperationsSubaru()
 {
-    delete ui;
+    //delete ui;
 }
 
 void EcuOperationsSubaru::closeEvent(QCloseEvent *bar)
@@ -220,7 +223,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "subarucan")
+    else if (flash_method == "subarucan" || flash_method == "subarucan_iso")
     {
         result = connect_bootloader_subaru_can_32bit();
         if (result == STATUS_SUCCESS)
@@ -247,6 +250,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_16bit()
 {
     QByteArray output;
     QByteArray received;
+    int result;
 
     if (!serial->is_serial_port_open())
     {
@@ -261,7 +265,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_16bit()
     /// Was when working
     //delay(10);
     // Start countdown
-    connect_bootloader_start_countdown(5);
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
 
     // Connect to bootloader
     /// Was 1000 when working
@@ -326,7 +331,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_02_32bit()
     //delay(10);
 
     // Start countdown
-    connect_bootloader_start_countdown(5);
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
 
     // Connect to bootloader
     delay(800);
@@ -407,7 +413,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_32bit()
         return STATUS_ERROR;
     }
 
-    connect_bootloader_start_countdown(5);
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
 
     serial->change_port_speed("62500");
     serial->serialport_protocol_14230 = true;
@@ -524,7 +531,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_can_32bit()
         return STATUS_ERROR;
     }
 
-    connect_bootloader_start_countdown(5);
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -1545,19 +1553,27 @@ int EcuOperationsSubaru::check_received_message(QByteArray msg, QByteArray recei
     return 1;
 }
 
-void EcuOperationsSubaru::connect_bootloader_start_countdown(int timeout)
+int EcuOperationsSubaru::connect_bootloader_start_countdown(int timeout)
 {
     for (int i = timeout; i > 0; i--)
     {
+        if (kill_process)
+            break;
         send_log_window_message("Start in " + QString::number(i), true, true);
         //qDebug() << "Countdown:" << i;
         delay(1000);
     }
-    send_log_window_message("Turn ignition on NOW!", true, true);
-    delay(500);
+    if (!kill_process)
+    {
+        send_log_window_message("Turn ignition on NOW!", true, true);
+        delay(500);
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_ERROR;
 }
 
-void EcuOperationsSubaru::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int EcuOperationsSubaru::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1572,8 +1588,13 @@ void EcuOperationsSubaru::send_log_window_message(QString message, bool timestam
     {
         ui->text_edit->insertPlainText(message);
         ui->text_edit->ensureCursorVisible();
+
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
+        return STATUS_SUCCESS;
     }
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
+    return STATUS_ERROR;
 }
 
 void EcuOperationsSubaru::delay(int n)
