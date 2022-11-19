@@ -10,9 +10,9 @@
 #define SID_OE_RECUID               0x01
 #define SID_OE_KERNEL_READ_AREA     0x03
 
-/***********************************
- * NisProg based kernels commands
- * ********************************/
+/****************************************
+ * NisProg based kernels k-line commands
+ * *************************************/
 #define SID_RECUID                  0x1A	/* readECUID , in this case kernel ID */
 #define SID_RECUID_PRC              "\x5A"	/* positive response code, to be concatenated to version string */
 
@@ -43,8 +43,16 @@
     #define SID_CONF_SETEEPR        0x02	/* set eeprom_read() function address <SID_CONF> <SID_CONF_SETEEPR> <AH> <AM> <AL> */
     #define SID_CONF_CKS1           0x03	//verify if 4*<CRCH:CRCL> hash is valid for 4*256B chunks of the ROM (starting at <CNH:CNL> * 1024)
                                             //<SID_CONF> <SID_CONF_CKS1> <CNH> <CNL> <CRC0H> <CRC0L> ...<CRC3H> <CRC3L>
-        #define ROMCRC_NUMCHUNKS    4
-        #define ROMCRC_CHUNKSIZE    256
+        #define ROMCRC_NUMCHUNKS        4
+        #define ROMCRC_CHUNKSIZE        256
+        #define ROMCRC_ITERSIZE         (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
+        #define ROMCRC_LENMASK          ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
+
+        #define ROMCRC_NUMCHUNKS_CAN    1
+        #define ROMCRC_CHUNKSIZE_CAN    256
+        #define ROMCRC_ITERSIZE_CAN     (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
+        #define ROMCRC_LENMASK_CAN      ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
+
     #define SID_CONF_R16            0x04    /* for debugging : do a 16bit access read at given adress in RAM (top byte 0xFF)
                                              * <SID_CONF> <SID_CONF_R16> <A2> <A1> <A0> */
 
@@ -53,6 +61,31 @@
 #define SID_KERNEL_INIT             0x81    /* kernel init, same as startcomm */
 
 #define SID_RESET                   0x11	/* restart ECU */
+
+/*************************************
+ * NisProg based kernels can commands
+ * **********************************/
+#define SID_START_COMM_CAN          0x7A
+#define SID_ENTER_BL_CAN            0xFF86
+#define SID_CHECK_COMM_BL_CAN       0x90
+
+#define SID_DUMP_CAN                0xD8
+
+#define SID_KERNEL_ADDRESS          0x98
+#define SID_KERNEL_CHECKSUM         0xB0
+#define SID_KERNEL_JUMP             0xA0
+
+#define SID_KERNEL_STOP_CAN         0xFFC8
+
+/* SID_FLASH and subcommands */
+#define SID_FLASH_CAN               0xE0	/* low-level reflash commands; only available after successful RequestDownload */
+    #define SIDFL_UNPROTECT_CAN     0xA5	//enable erase / write.
+    #define SIDFL_PROTECT_CAN       0x00	//disable erase / write.
+    #define SIDFL_EB_CAN            0xF0	//erase block. format : <SID_FLASH> <SIDFL_EB> <BLOCK #>
+    #define SIDFL_WB_CAN            0xF8
+
+/* SID_CONF and subcommands */
+#define SID_CONF_CKS1_CAN           0xD0
 
 
 /* SID_CONF error codes */

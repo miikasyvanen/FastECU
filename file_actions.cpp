@@ -5,7 +5,7 @@ FileActions::FileActions()
 
 }
 
-FileActions::ConfigValuesStructure *FileActions::checkConfigDir(){
+FileActions::ConfigValuesStructure *FileActions::check_config_dir(){
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     if (!QDir(configValues->base_directory).exists()){
@@ -25,7 +25,7 @@ FileActions::ConfigValuesStructure *FileActions::checkConfigDir(){
         foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
             QFile().copy("config/" + entry.fileName(), configValues->config_base_directory + "/" + entry.fileName());
         }
-        saveConfigFile();
+        save_config_file();
     }
     if (!QDir(configValues->definition_files_base_directory).exists()){
         QDir().mkdir(configValues->definition_files_base_directory);
@@ -49,13 +49,13 @@ FileActions::ConfigValuesStructure *FileActions::checkConfigDir(){
 }
 
 
-FileActions::ConfigValuesStructure *FileActions::readConfigFile()
+FileActions::ConfigValuesStructure *FileActions::read_config_file()
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QDomDocument xmlBOM;
     //QFile file(configValues->config_base_directory + "/fastecu.cfg");
-    QFile file(configValues->fastecu_config_file);
+    QFile file(configValues->config_file);
     if (!file.open(QIODevice::ReadOnly ))
     {
         QMessageBox::warning(this, tr("Config file"), "Unable to open application config file for reading");
@@ -96,6 +96,20 @@ FileActions::ConfigValuesStructure *FileActions::readConfigFile()
                                 if (reader.name() == "value")
                                 {
                                     configValues->flash_method = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "flash_protocol")
+                        {
+                            qDebug() << "Flash protocol";
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->flash_protocol = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -206,14 +220,16 @@ FileActions::ConfigValuesStructure *FileActions::readConfigFile()
     }
     file.close();
 
+    save_config_file();
+
     return configValues;
 }
 
-FileActions::ConfigValuesStructure *FileActions::saveConfigFile(){
+FileActions::ConfigValuesStructure *FileActions::save_config_file(){
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     //QFile file(configValues->config_base_directory + "/fastecu.cfg");
-    QFile file(configValues->fastecu_config_file);
+    QFile file(configValues->config_file);
     if (!file.open(QIODevice::ReadWrite)) {
         QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
         return 0;
@@ -240,6 +256,13 @@ FileActions::ConfigValuesStructure *FileActions::saveConfigFile(){
     stream.writeAttribute("name", "flash_method");
     stream.writeStartElement("value");
     stream.writeAttribute("data", configValues->flash_method);
+    stream.writeEndElement();
+    stream.writeEndElement();
+
+    stream.writeStartElement("setting");
+    stream.writeAttribute("name", "flash_protocol");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->flash_protocol);
     stream.writeEndElement();
     stream.writeEndElement();
 
@@ -571,7 +594,7 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
     stream.writeEndElement();
 }
 
-FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
+FileActions::LogValuesStructure *FileActions::read_logger_definition_file()
 {
     LogValuesStructure *logValues = &LogValuesStruct;
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -770,7 +793,7 @@ FileActions::LogValuesStructure *FileActions::readLoggerDefinitionFile()
     return logValues;
 }
 
-QSignalMapper *FileActions::readMenuFile(QMenuBar *menubar, QToolBar *toolBar)
+QSignalMapper *FileActions::read_menu_file(QMenuBar *menubar, QToolBar *toolBar)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
@@ -1106,7 +1129,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecu_definition_file(EcuCalDef
                         {
                             qDebug() << "Check inherits_another_def" << inherits_another_def;
                             qDebug() << "ECU ID" << ecuCalDef->RomInfo.at(EcuId) << "found and def read, move to ECU BASE def" << ecuCalDef->RomBase;
-                            readEcuBaseDef(ecuCalDef);
+                            read_romraider_ecu_base_def(ecuCalDef);
                         }
                         ecuid_def_found = false;
 
@@ -1189,7 +1212,7 @@ FileActions::EcuCalDefStructure *FileActions::add_def_list_item(EcuCalDefStructu
     return ecuCalDef;
 }
 
-FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure *ecuCalDef)
+FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCalDefStructure *ecuCalDef)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
@@ -1473,7 +1496,7 @@ FileActions::EcuCalDefStructure *FileActions::readEcuBaseDef(EcuCalDefStructure 
     return ecuCalDef;
 }
 
-FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecuCalDef, QString ecuId)
+FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefStructure *ecuCalDef, QString ecuId)
 {
     //qDebug() << "Read OEM ECU definition file";
 
@@ -1691,7 +1714,7 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
     //dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
     //qDebug() << dateTimeString << "Read ECU base def";
 
-    readEcuBaseDef(ecuCalDef);
+    read_romraider_ecu_base_def(ecuCalDef);
 
     //dateTime = dateTime.currentDateTime();
     //dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
@@ -1701,7 +1724,7 @@ FileActions::EcuCalDefStructure *FileActions::readEcuDef(EcuCalDefStructure *ecu
 
 }
 
-FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
+FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
@@ -1964,7 +1987,7 @@ FileActions::EcuCalDefStructure *FileActions::openRomFile(FileActions::EcuCalDef
 
 }
 
-FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
+FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     QFile file(filename);
     QFileInfo fileInfo(file.fileName());
@@ -1977,7 +2000,7 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
         return NULL;
     }
 
-    ecuCalDef = apply_cal_changes_to_rom_data(ecuCalDef);
+    ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
     file.write(ecuCalDef->FullRomData);
     file.close();
 
@@ -1987,7 +2010,7 @@ FileActions::EcuCalDefStructure *FileActions::saveRomFile(FileActions::EcuCalDef
     return 0;
 }
 
-FileActions::EcuCalDefStructure *FileActions::apply_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef)
+FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     int storagesize = 0;
     QString mapData;

@@ -35,11 +35,12 @@ public:
     uint8_t float_precision = 15;
 
     struct ConfigValuesStructure {
-        QString serial_port;
-        QString baudrate;
-        QString flash_method;
-        QString car_model;
-        QString log_protocol;
+        QString serial_port = "ttyUSB0";
+        QString baudrate = "4800";
+        QString flash_method = "wrx02";
+        QString flash_protocol = "K-Line";
+        QString car_model = "Subaru";
+        QString log_protocol = "K-Line";
 
         QString base_directory = QDir::homePath() + "/FastECU_OEM";
         QString calibration_files_base_directory = base_directory + "/calibrations";
@@ -48,7 +49,7 @@ public:
         QString kernel_files_base_directory = base_directory + "/kernels";
         QString log_files_base_directory = base_directory + "/logs";
 
-        QString fastecu_config_file = config_base_directory + "/fastecu.cfg";
+        QString config_file = config_base_directory + "/fastecu.cfg";
         QString menu_config_file = config_base_directory + "/menu.cfg";
         QString logger_config_file = config_base_directory + "/logger.cfg";
 
@@ -241,22 +242,22 @@ public:
      * Check if FastECU dir exists in users home folder
      * If not, create one with appropriate files
      ***************************************************/
-    ConfigValuesStructure *checkConfigDir();
+    ConfigValuesStructure *check_config_dir();
 
     /****************************
      * Open FastECU config file
      ***************************/
-    ConfigValuesStructure *readConfigFile();
+    ConfigValuesStructure *read_config_file();
 
     /****************************
      * Open FastECU config file
      ***************************/
-    ConfigValuesStructure *saveConfigFile();
+    ConfigValuesStructure *save_config_file();
 
     /************************
      * Read logger def file
      ***********************/
-    LogValuesStructure *readLoggerDefinitionFile();
+    LogValuesStructure *read_logger_definition_file();
 
     /*************************
      * Read logger conf file
@@ -277,36 +278,36 @@ public:
     /***************************
      * Read ECU base definition
      ***************************/
-    EcuCalDefStructure *readEcuBaseDef(FileActions::EcuCalDefStructure *ecuCalDef);
+    EcuCalDefStructure *read_romraider_ecu_base_def(FileActions::EcuCalDefStructure *ecuCalDef);
 
     /**********************
      * Read ECU definition
      **********************/
-    EcuCalDefStructure *readEcuDef(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);
+    EcuCalDefStructure *read_romraider_ecu_def(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);
 
     /***********************************************
      * Open ECU ROM file, including possible
      * checksum calculations and value conversions
      **********************************************/
-    EcuCalDefStructure *openRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
+    EcuCalDefStructure *open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
 
     /***********************************************
      * Save ECU ROM file, including possible
      * checksum calculations and value conversions
      **********************************************/
-    EcuCalDefStructure *saveRomFile(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
+    EcuCalDefStructure *save_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
 
     /***********************************************
      * Apply changes made to calibration
      * to rom data array
      **********************************************/
-    EcuCalDefStructure *apply_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef);
+    EcuCalDefStructure *apply_subaru_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef);
 
     /***************************
      * Read software menu file
      * for menu creation
      **************************/
-    QSignalMapper *readMenuFile(QMenuBar *menubar, QToolBar *toolBar);
+    QSignalMapper *read_menu_file(QMenuBar *menubar, QToolBar *toolBar);
 
     /***************************
      * Calculate Subaru 32-bit

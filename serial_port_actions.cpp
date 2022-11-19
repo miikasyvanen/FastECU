@@ -413,6 +413,9 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
         {
             msg[0] = output.at(i);
             serial->write(msg, 1);
+            // Add serial echo read during transmit to speed up a little
+            if (serial->bytesAvailable())
+                received.append(serial->read(1));
         }
         QTime dieTime = QTime::currentTime().addMSecs(200);
         while (received.length() < output.length() && (QTime::currentTime() < dieTime))
@@ -459,7 +462,7 @@ int SerialPortActions::write_j2534_data(QByteArray output)
     unsigned long numMsgs;
     PASSTHRU_MSG rxmsg;
     unsigned long numRxMsg;
-    unsigned long txMsgLen;
+    long txMsgLen;
 
     txMsgLen = output.length();
     if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
@@ -472,11 +475,13 @@ int SerialPortActions::write_j2534_data(QByteArray output)
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         txmsg.TxFlags = 0;
+        if (is_can_connection)
+            txmsg.TxFlags = CAN_29BIT_ID;
         txmsg.Timestamp = 0;
         txmsg.DataSize = txMsgLen;
         txmsg.ExtraDataIndex = 0;
 
-        for (unsigned long i = 0; i < txMsgLen; i++)
+        for (long i = 0; i < txMsgLen; i++)
         {
             txmsg.Data[i] = (uint8_t)output.at(i);
         }
@@ -509,27 +514,25 @@ QByteArray SerialPortActions::read_j2534_data(unsigned long timeout)
     j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
     if (numRxMsg)
     {
-        //qDebug() << "RX STATUS:" << rxmsg.RxStatus;
-        //qDebug() << "MSG COUNT:" << numRxMsg;
-        if (rxmsg.RxStatus & START_OF_MESSAGE)
-            j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+        //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
         //dump_msg(&rxmsg);
         msgCnt++;
         byteCnt += rxmsg.DataSize;
-        //qDebug() << "Message size:" << rxmsg.DataSize;
-        /*
-        if (time(NULL) - last_status_update > 0)
+
+        if (is_can_connection)
         {
-            last_status_update = time(NULL);
-            //printf("messages received: %d total bytes: %d\r",msgCnt,byteCnt);
+            for (unsigned long i = 4; i < rxmsg.DataSize; i++)
+                received.append((uint8_t)rxmsg.Data[i]);
         }
-        */
-        //qDebug() << "Read msg: Message count" << numRxMsg << "datasize" << rxmsg.DataSize;
-        for (unsigned long i = 0; i < rxmsg.DataSize; i++)
+        else
         {
-            received.append((uint8_t)rxmsg.Data[i]);
+            if (rxmsg.RxStatus & START_OF_MESSAGE){
+                j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+                //qDebug() << "START_OF_MESSAGE, read actual message";
+            }
+            for (unsigned long i = 0; i < rxmsg.DataSize; i++)
+                received.append((uint8_t)rxmsg.Data[i]);
         }
-        //qDebug() << "Message:" << received;
     }
     return received;
 }
@@ -660,14 +663,37 @@ int SerialPortActions::init_j2534_connection()
     return STATUS_SUCCESS;
 }
 
+int SerialPortActions::set_j2534_can_bl_connection()
+{
+    QByteArray output;
+
+    output = "\n\nati\n";
+
+    output = "ata\n";                   // open
+    output = "ato5 256 500000 0\n";     // connect
+    output = "atf5 1 256 4 4\n";        // filters FF FF FF FF 00 00 00 00
+    output = "atf5 1 256 4 5\n";        // filters FF FF FF FF 00 00 00 21
+    output = "atr 16\n";                // ???
+    output = "att5 12 256 2000000\n";   // send 00 0F FF FE FF 86 00 00 00 00 00 00
+
+    output = "att5 12 256 2000000\n";   // send 00 0F FF FE 7A 9C FF FF 60 00 00 00
+                                        // rsp  00 00 00 21 7A 9C FF FF 60 00 41 42
+
+    output = "att5 12 256 2000000\n";   // send 00 0F FF FE 7A AE ?? ?? ?? ?? ?? ??
+}
+
 int SerialPortActions::set_j2534_can_connection()
 {
     if (is_can_connection)
+    {
         protocol = CAN;
+        flags = CAN_29BIT_ID;
+    }
     else
+    {
         protocol = ISO15765;
-    //flags = 0;
-    flags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
+        flags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
+    }
     baudrate = 500000;
 
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages
@@ -724,21 +750,31 @@ int SerialPortActions::set_j2534_can_connection_filters()
         qDebug() << "Set CAN filters";
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
-        //txmsg.TxFlags = 0;
-        txmsg.TxFlags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
+        txmsg.TxFlags = CAN_29BIT_ID;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
 
         msgMask = msgPattern = txmsg;
-        memset(msgMask.Data, 0, txmsg.DataSize); // mask the first 4 byte to 0
-        memset(msgPattern.Data, 0, txmsg.DataSize);// match it with 0 (i.e. pass everything)
+        memset(msgMask.Data, 0xFF, txmsg.DataSize); // mask the first 4 byte to 0
+        memset(msgPattern.Data, 0x00, txmsg.DataSize);// match it with 0 (i.e. pass everything)
 
         if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
         {
             reportJ2534Error();
             return STATUS_ERROR;
         }
+
+        //msgPattern.DataSize = 5;
+        msgPattern.Data[3] = 0x21;
+        //msgPattern.Data[4] = 0x00;
+
+        if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+
     }
     else if (protocol == ISO15765)
     {
@@ -789,7 +825,7 @@ int SerialPortActions::set_j2534_can_connection_filters()
     else
         return STATUS_ERROR;
 
-    qDebug() << "Set filters OK";
+    qDebug() << "Set CAN filters OK";
 
     return STATUS_SUCCESS;
 }
@@ -958,11 +994,11 @@ int SerialPortActions::set_j2534_iso9141_connection_filters()
     txmsg.RxStatus = 0;
     txmsg.TxFlags = 0;
     txmsg.Timestamp = 0;
-    txmsg.DataSize = 5;
+    txmsg.DataSize = 4;
     txmsg.ExtraDataIndex = 0;
     msgMask = msgPattern = txmsg;
-    memset(msgMask.Data, 0, 5); // mask the first 4 byte to 0
-    memset(msgPattern.Data, 0, 5);// match it with 0 (i.e. pass everything)
+    memset(msgMask.Data, 0, 4); // mask the first 4 byte to 0
+    memset(msgPattern.Data, 0, 4);// match it with 0 (i.e. pass everything)
     if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
     {
         reportJ2534Error();
@@ -976,7 +1012,30 @@ int SerialPortActions::set_j2534_iso9141_connection_filters()
 
     return STATUS_SUCCESS;
 }
-//#endif
+
+int SerialPortActions::clear_rx_buffer()
+{
+    if (j2534->PassThruIoctl(chanID,CLEAR_RX_BUFFER,NULL,NULL))
+    {
+        reportJ2534Error();
+        return STATUS_ERROR;
+    }
+    else
+    {
+        qDebug() << "RX flush OK";
+    }
+    if (j2534->PassThruIoctl(chanID,CLEAR_TX_BUFFER,NULL,NULL))
+    {
+        reportJ2534Error();
+        return STATUS_ERROR;
+    }
+    else
+    {
+        qDebug() << "TX flush OK";
+    }
+
+    return STATUS_SUCCESS;
+}
 
 void SerialPortActions::reportJ2534Error()
 {

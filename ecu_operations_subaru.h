@@ -79,31 +79,32 @@ private:
 
     void check_mcu_type(QString mcu_type_string);
 
-    int connect_bootloader_subaru_kline_16bit();
+    int connect_bootloader_subaru_kline_02_16bit();
     int connect_bootloader_subaru_kline_04_16bit();
-    //int connect_bootloader_subaru_can_05_32bit();
     int connect_bootloader_subaru_kline_02_32bit();
-    int connect_bootloader_subaru_kline_32bit();
+    int connect_bootloader_subaru_kline_04_32bit();
     int connect_bootloader_subaru_can_32bit();
+    //int connect_bootloader_subaru_can_05_32bit();
 
     int upload_kernel_subaru_kline_02_16bit(QString kernel);
     int upload_kernel_subaru_kline_04_16bit(QString kernel);
     int upload_kernel_subaru_kline_02_32bit(QString kernel);
-    int upload_kernel_subaru_can_05_32bit(QString kernel);
-    int upload_kernel_subaru_kline_32bit(QString kernel);
+    int upload_kernel_subaru_kline_04_32bit(QString kernel);
     int upload_kernel_subaru_can_32bit(QString kernel);
+    //int upload_kernel_subaru_can_05_32bit(QString kernel);
 
     int read_rom_subaru_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    //int read_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    //int read_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
 
     int write_rom_subaru_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    //int write_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_rom_subaru_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
 
     QByteArray sub_sid_a8_read_mem();
     QByteArray sub_sid_bf_ssm_init();

@@ -90,7 +90,7 @@ QByteArray EcuOperations::request_kernel_id()
     return received;
 }
 
-int EcuOperations::read_mem_16bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -104,6 +104,10 @@ int EcuOperations::read_mem_16bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
     uint32_t cplen = 0;
 
     uint8_t chk_sum = 0;
+
+    serial->change_port_speed("39473");
+    received = request_kernel_id();
+    qDebug() << "read_mem_16bit_kline" << parse_message_to_hex(received);
 
     datalen = 0x06;
     pagesize = 0x0400;
@@ -172,10 +176,12 @@ int EcuOperations::read_mem_16bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
             mapdata.append(received);
-            qDebug() << "DATA:" << addr << parse_message_to_hex(received);
+            //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
         }
         else
-            qDebug() << "ERROR IN DATA RECEIVE!";
+        {
+            //qDebug() << "ERROR IN DATA RECEIVE!";
+        }
 
         cplen = (numblocks * pagesize);
 
@@ -209,7 +215,7 @@ int EcuOperations::read_mem_16bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
     return STATUS_SUCCESS;
 }
 
-int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -217,12 +223,6 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
     QByteArray msg;
     QByteArray mapdata;
     uint32_t cplen = 0;
-
-    if (start_addr == 0 && length == 0)
-    {
-        start_addr = 0;
-        length = 0x080000;
-    }
 
     uint32_t skip_start = start_addr & (32 - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
@@ -239,6 +239,7 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
     output.append((uint8_t)0x00);
 
     timer.start();
+    set_progressbar_value(0);
 
     mapdata.clear();
     while (willget)
@@ -254,10 +255,8 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
         //delay(1);
         numblocks = willget / 32;
 
-        if (numblocks > NP10_MAXBLKS) {
-            numblocks = NP10_MAXBLKS;                           //ceil
-
-        }
+        if (numblocks > NP10_MAXBLKS)
+            numblocks = NP10_MAXBLKS;
 
         uint32_t curblock = (addr / 32);
 
@@ -275,7 +274,7 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
         received = serial->write_serial_data_echo_check(output);
         //delay(10);
         // Receive map data, check and remove header // ADJUST THIS LATER //
-        received.clear();
+        //received.clear();
         received = serial->read_serial_data(numblocks * (32 + 3), serial_read_short_timeout);
         if (!received.length())
             return STATUS_ERROR;
@@ -328,9 +327,143 @@ int EcuOperations::read_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, ui
     return STATUS_SUCCESS;
 }
 
-int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
-    //QString filename;
+    QElapsedTimer timer;
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    QByteArray pagedata;
+    QByteArray mapdata;
+    uint32_t cplen = 0;
+    uint32_t timeout = 0;
+
+    uint32_t pagesize = 0x400;
+
+    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
+    uint32_t addr = start_addr - skip_start;
+    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
+    uint32_t len_done = 0;  //total data written to file
+
+    // send 0xD8 command to kernel to dump the chunk from ROM
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)SID_START_COMM_CAN);
+    output.append((uint8_t)(SID_DUMP_CAN + 0x06));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+
+    set_progressbar_value(0);
+
+    mapdata.clear();
+
+    while (willget)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        uint32_t numblocks = length / pagesize;
+        unsigned curspeed = 0, tleft;
+        float pleft = 0;
+        unsigned long chrono;
+
+        //delay(1);
+        numblocks = willget / pagesize;
+
+        if (numblocks > NP10_MAXBLKS)
+            numblocks = NP10_MAXBLKS;
+
+        numblocks = 1;
+
+        uint32_t curblock = (addr / pagesize);
+
+
+        pleft = (float)addr / (float)length * 100.0f;
+        set_progressbar_value(pleft);
+
+        //length = 256;
+
+        output[6] = (uint8_t)((pagesize >> 24) & 0xFF);
+        output[7] = (uint8_t)((pagesize >> 16) & 0xFF);
+        output[8] = (uint8_t)((pagesize >> 8) & 0xFF);
+        output[9] = (uint8_t)((addr >> 24) & 0xFF);
+        output[10] = (uint8_t)((addr >> 16) & 0xFF);
+        output[11] = (uint8_t)((addr >> 8) & 0xFF);
+        serial->write_serial_data_echo_check(output);
+        //qDebug() << "0xD8 message sent to kernel initiate dump";
+        //delay(100);
+        received = serial->read_serial_data(1, 10);
+        qDebug() << "Response to 0xD8 (dump mem) message:";
+        qDebug() << parse_message_to_hex(received);
+
+        timeout = 0;
+        pagedata.clear();
+
+        while ((uint32_t)pagedata.length() < pagesize && timeout < 1000)
+        {
+            received = serial->read_serial_data(1, 10);
+            //received.remove(0, 4);
+            pagedata.append(received, 8);
+            //received.remove(0, 8);
+            timeout++;
+            //qDebug() << parse_message_to_hex(received);
+        }
+        if (timeout >= 1000)
+            return STATUS_ERROR;
+
+        mapdata.append(pagedata);
+
+        // don't count skipped first bytes //
+        cplen = (numblocks * pagesize) - skip_start; //this is the actual # of valid bytes in buf[]
+        skip_start = 0;
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (cplen > 0 && chrono > 0)
+            curspeed = cplen * (1000.0f / chrono);
+
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = (willget / curspeed) % 9999;
+        tleft++;
+
+        QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
+        QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        send_log_window_message(msg, true, true);
+        delay(1);
+
+        // and drop extra bytes at the end //
+        uint32_t extrabytes = (cplen + len_done);   //hypothetical new length
+        if (extrabytes > length) {
+            cplen -= (extrabytes - length);
+            //thus, (len_done + cplen) will not exceed len
+        }
+
+        // increment addr, len, etc //
+        len_done += cplen;
+        addr += (numblocks * pagesize);
+        willget -= (numblocks * pagesize);
+    }
+
+    ecuCalDef->FullRomData = mapdata;
+    set_progressbar_value(100);
+
+    return STATUS_SUCCESS;
+}
+
+int EcuOperations::write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+{
     QByteArray filedata;
 
     filedata = ecuCalDef->FullRomData;
@@ -352,7 +485,7 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
     send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-    if (get_changed_blocks(data_array, NULL, block_modified))
+    if (get_changed_blocks_kline(data_array, NULL, block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -386,7 +519,7 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
         {
             if (block_modified[blockno])
             {
-                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block_kline(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
                 {
                     send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -402,7 +535,7 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-        if (get_changed_blocks(data_array, NULL, block_modified))
+        if (get_changed_blocks_kline(data_array, NULL, block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -435,12 +568,124 @@ int EcuOperations::write_mem_32bit(FileActions::EcuCalDefStructure *ecuCalDef, b
     }
 
     return STATUS_SUCCESS;
-
 }
 
-int EcuOperations::get_changed_blocks(const uint8_t *src, const uint8_t *orig, int *modified)
+int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
+    QByteArray filedata;
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    uint32_t start_addr = 0;
+    uint32_t length = 0;
+    uint32_t pagesize = 0x400;
 
+    filedata = ecuCalDef->FullRomData;
+
+    uint8_t data_array[filedata.length()];
+
+    //qDebug() << filename << origfilename;
+
+    int block_modified[16] = {0};
+
+    unsigned bcnt = 0;
+    unsigned blockno;
+
+    for (int i = 0; i < filedata.length(); i++)
+    {
+        data_array[i] = filedata.at(i);
+    }
+
+    send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
+    send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+
+    if (get_changed_blocks_can(data_array, NULL, block_modified))
+    {
+        send_log_window_message("Error in ROM compare", true, true);
+        return STATUS_ERROR;
+    }
+
+    bcnt = 0;
+    send_log_window_message("Different blocks : ", true, false);
+    for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
+        if (block_modified[blockno]) {
+            send_log_window_message(QString::number(blockno) + ", ", false, false);
+            bcnt += 1;
+        }
+    }
+    send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
+
+    if (bcnt)
+    {
+        flashbytescount = 0;
+        flashbytesindex = 0;
+
+        for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)
+        {
+            if (block_modified[blockno])
+            {
+                flashbytescount += flashdevices[mcu_type_index].fblocks[blockno].len;
+            }
+        }
+
+        send_log_window_message("--- start writing ROM file to ECU flash memory ---", true, true);
+        for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)
+        {
+            if (block_modified[blockno])
+            {
+                if (reflash_block_can(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                {
+                    send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
+                    return STATUS_ERROR;
+                }
+                else
+                {
+                    flashbytesindex += flashdevices[mcu_type_index].fblocks[blockno].len;
+                    send_log_window_message("Block " + QString::number(blockno) + " reflash complete.", true, true);
+                }
+            }
+        }
+
+        send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
+        send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+
+        if (get_changed_blocks_can(data_array, NULL, block_modified))
+        {
+            send_log_window_message("Error in ROM compare", true, true);
+            return STATUS_ERROR;
+        }
+
+        bcnt = 0;
+        send_log_window_message("Different blocks : ", true, false);
+        for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
+            if (block_modified[blockno])
+            {
+                send_log_window_message(QString::number(blockno) + ", ", false, false);
+                bcnt += 1;
+            }
+        }
+        send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
+        if (!test_write)
+        {
+            if (bcnt)
+            {
+                send_log_window_message("*** ERROR IN FLASH PROCESS ***", true, true);
+                send_log_window_message("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+            }
+        }
+        else
+            send_log_window_message("*** Test write PASS, it's ok to perform actual write! ***", true, true);
+    }
+    else
+    {
+        send_log_window_message("*** Compare results no difference between ROM and ECU data, no flashing needed! ***", true, true);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int EcuOperations::get_changed_blocks_can(const uint8_t *src, const uint8_t *orig, int *modified)
+{
     unsigned blockno;
     QByteArray msg;
     for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
@@ -459,18 +704,128 @@ int EcuOperations::get_changed_blocks(const uint8_t *src, const uint8_t *orig, i
         qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
-        if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
+        if (check_romcrc_can(&src[bs], bs, blen, &modified[blockno])) {
             return -1;
         }
     }
     return 0;
 }
 
-#define ROMCRC_NUMCHUNKS 4
-#define ROMCRC_CHUNKSIZE 256
-#define ROMCRC_ITERSIZE (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
-#define ROMCRC_LENMASK ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
-int EcuOperations::check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
+//#define ROMCRC_NUMCHUNKS 4
+//#define ROMCRC_CHUNKSIZE 256
+//#define ROMCRC_ITERSIZE (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
+//#define ROMCRC_LENMASK ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
+int EcuOperations::check_romcrc_can(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    QByteArray pagedata;
+    uint16_t chunko;
+    uint32_t pagesize = ROMCRC_ITERSIZE_CAN;
+    uint32_t byte_index = 0;
+
+    len = (len + ROMCRC_LENMASK_CAN) & ~ROMCRC_LENMASK_CAN;
+
+    chunko = start_addr / ROMCRC_CHUNKSIZE_CAN;
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)SID_START_COMM_CAN);
+    output.append((uint8_t)(SID_CONF_CKS1_CAN + 0x06));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+
+    //request format : <SID_CONF> <SID_CONF_CKS1> <CNH> <CNL> <CRC0H> <CRC0L> ...<CRC3H> <CRC3L>
+    //verify if <CRCH:CRCL> hash is valid for n*256B chunk of the ROM (starting at <CNH:CNL> * 256)
+    for (; len > 0; len -= ROMCRC_ITERSIZE_CAN, chunko += ROMCRC_NUMCHUNKS_CAN) {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        output[6] = (uint8_t)((pagesize >> 24) & 0xFF);
+        output[7] = (uint8_t)((pagesize >> 16) & 0xFF);
+        output[8] = (uint8_t)((pagesize >> 8) & 0xFF);
+        output[9] = (uint8_t)((start_addr >> 24) & 0xFF);
+        output[10] = (uint8_t)((start_addr >> 16) & 0xFF);
+        output[11] = (uint8_t)((start_addr >> 8) & 0xFF);
+        //qDebug() << "Send req:" << parse_message_to_hex(output);
+        start_addr += pagesize;
+
+        received = serial->write_serial_data_echo_check(output);
+        //delay(100);
+        received = serial->read_serial_data(1, serial_read_short_timeout);
+        //received.remove(0, 4);
+        //qDebug() << "Received:" << parse_message_to_hex(received);
+
+        uint16_t chk_sum = 0;
+        for (uint32_t j = 0; j < pagesize; j++) {
+            pagedata[j] = src[(byte_index * pagesize) + j];
+            chk_sum += (pagedata[j] & 0xFF);
+            chk_sum = ((chk_sum >> 8) & 0xFF) + (chk_sum & 0xFF);
+        }
+        byte_index++;
+
+        //qDebug() << "Checksums: File =" << hex << chk_sum << "ROM =" << hex << (uint8_t)received.at(2);
+        if (chk_sum == (uint8_t)received.at(2))
+            continue;
+
+        send_log_window_message("\tNO", false, true);
+
+        //confirmed bad CRC, we can exit
+        *modified = 1;
+
+        return 0;
+    }   //for
+
+    send_log_window_message("\tYES", false, true);
+    *modified = 0;
+    serial->read_serial_data(100, serial_read_short_timeout);
+    return 0;
+
+badexit:
+    serial->read_serial_data(100, serial_read_short_timeout);
+    return -1;
+}
+
+int EcuOperations::get_changed_blocks_kline(const uint8_t *src, const uint8_t *orig, int *modified)
+{
+    unsigned blockno;
+    QByteArray msg;
+    for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        uint32_t bs, blen;
+        bs = flashdevices[mcu_type_index].fblocks[blockno].start;
+        blen = flashdevices[mcu_type_index].fblocks[blockno].len;
+
+        QString block_no = QString("%1").arg((uint8_t)blockno,2,10,QLatin1Char('0')).toUpper();
+        QString block_start = QString("%1").arg((uint32_t)bs,8,16,QLatin1Char('0')).toUpper();
+        QString block_length = QString("%1").arg((uint32_t)blen,8,16,QLatin1Char('0')).toUpper();
+
+        msg = QString("FB" + block_no + "\t0x" + block_start + "\t0x" + block_length).toUtf8();
+        qDebug() << msg;
+        send_log_window_message(msg, true, false);
+        // do CRC comparison with ECU //
+        if (check_romcrc_kline(&src[bs], bs, blen, &modified[blockno])) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+//#define ROMCRC_NUMCHUNKS 4
+//#define ROMCRC_CHUNKSIZE 256
+//#define ROMCRC_ITERSIZE (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
+//#define ROMCRC_LENMASK ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
+int EcuOperations::check_romcrc_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
 {
     QByteArray output;
     QByteArray received;
@@ -540,12 +895,124 @@ badexit:
     return -1;
 }
 
+
 /* ret 0 if ok. For use by reflash_block(),
  * assumes parameters have been validated,
  * and appropriate block has been erased
  */
+int EcuOperations::npk_raw_flashblock_can(const uint8_t *src, uint32_t start, uint32_t len)
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
 
-int EcuOperations::npk_raw_flashblock(const uint8_t *src, uint32_t start, uint32_t len) {
+    uint32_t remain = len;
+    uint32_t block_start = start;
+    uint32_t block_len = len;
+    uint32_t byteindex = flashbytesindex;
+    uint8_t blocksize = 128;
+    uint16_t chk_sum;
+
+    QElapsedTimer timer;
+
+    unsigned long chrono;
+    unsigned curspeed, tleft;
+
+    int num_128_byte_blocks = (block_len >> 7) & 0xFFFFFFFF;
+    int byte_index = block_start & 0xFFFFFFFF;
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+
+    for (int i = 0; i < num_128_byte_blocks; i++)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        chk_sum = 0;
+        for (int j = 0; j < 16; j++)
+        {
+            // send 16 lots of 8 byte pure data messages to load and flash the new block (16 x 8 bytes = 128 bytes)
+            for (int k = 0; k < 8; k++){
+                output[k + 4] = (uint8_t)(src[byte_index + k] & 0xFF);
+                chk_sum += (output[k + 4] & 0xFF);
+                chk_sum = ((chk_sum >> 8) & 0xFF) + (chk_sum & 0xFF);
+            }
+            byte_index += 8;
+            received = serial->write_serial_data_echo_check(output);
+            //qDebug() << "Flash data message sent to kernel for block (128 byte block, 8 byte block): " + QString::number(i) + "/" + QString::number(num_128_byte_blocks) + ", " + QString::number(j);
+            //qDebug() << parse_message_to_hex(output);
+            //delay(5);
+        }
+
+        // send 0xF8 command to check and flash 128 bytes
+        output[4] = (uint8_t)SID_START_COMM_CAN;
+        output[5] = (uint8_t)(SIDFL_WB_CAN + 0x03);
+        output[6] = (uint8_t)((i >> 8) & 0xFF);
+        output[7] = (uint8_t)(i & 0xFF);
+        output[8] = (uint8_t)(chk_sum & 0xFF);
+        received = serial->write_serial_data_echo_check(output);
+        qDebug() << "0xF8 command sent to kernel to check and flash 128 byte block";
+        qDebug() << parse_message_to_hex(output);
+        //delay(10);
+
+        // check for flash success or not
+        received = serial->read_serial_data(3, serial_read_short_timeout);
+        qDebug() << parse_message_to_hex(received);
+        if(((uint8_t)received.at(1) & 0xF8) != SIDFL_WB_CAN)
+        {
+            qDebug() << "Flashing of 128 byte block unsuccessful, proceeding to next 128 byte block";
+            return STATUS_ERROR;
+        }
+        else
+            qDebug() << "Flashing of 128 byte block successful, proceeding to next 128 byte block";
+
+        remain -= blocksize;
+        start += blocksize;
+        byteindex += blocksize;
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (!chrono) {
+            chrono += 1;
+        }
+        curspeed = blocksize * (1000.0f / chrono);  //avg B/s
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = remain / curspeed;  //s
+        if (tleft > 9999) {
+            tleft = 9999;
+        }
+        tleft++;
+
+        float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
+        set_progressbar_value(pleft);
+
+        QString start_address = QString("0x%1").arg(start,8,16,QLatin1Char('0'));
+        msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        send_log_window_message(msg, true, true);
+
+    }
+
+    return 0;
+}
+
+int EcuOperations::npk_raw_flashblock_kline(const uint8_t *src, uint32_t start, uint32_t len)
+{
 
     // program 128-byte chunks //
     uint32_t remain = len;
@@ -559,6 +1026,7 @@ int EcuOperations::npk_raw_flashblock(const uint8_t *src, uint32_t start, uint32
     QByteArray chksum_data;
 
     unsigned long chrono;
+    unsigned curspeed, tleft;
 
     if ((len & (blocksize - 1)) ||
         (start & (blocksize - 1))) {
@@ -571,8 +1039,6 @@ int EcuOperations::npk_raw_flashblock(const uint8_t *src, uint32_t start, uint32
     while (remain) {
         if (kill_process)
             return STATUS_ERROR;
-
-        unsigned curspeed, tleft;
 
         //delay(1);
         chksum_data.clear();
@@ -644,6 +1110,7 @@ int EcuOperations::npk_raw_flashblock(const uint8_t *src, uint32_t start, uint32
         send_log_window_message(msg, true, true);
 
     }   //while len
+
     send_log_window_message("npk_raw_flashblock: write complete.", true, true);
 
     received = serial->read_serial_data(100, serial_read_short_timeout);
@@ -651,7 +1118,95 @@ int EcuOperations::npk_raw_flashblock(const uint8_t *src, uint32_t start, uint32
     return 0;
 }
 
-int EcuOperations::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write) {
+int EcuOperations::reflash_block_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+{
+    int errval;
+
+    uint32_t block_start;
+    uint32_t block_len;
+
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    if (blockno >= fdt->numblocks) {
+        send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
+        return -1;
+    }
+
+    block_start = fdt->fblocks[blockno].start;
+    block_len = fdt->fblocks[blockno].len;
+
+    QString start_addr = QString("%1").arg((uint32_t)block_start,8,16,QLatin1Char('0')).toUpper();
+    QString length = QString("%1").arg((uint32_t)block_len,8,16,QLatin1Char('0')).toUpper();
+    msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
+    send_log_window_message(msg, true, true);
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)SID_START_COMM_CAN);
+    output.append((uint8_t)(SID_FLASH_CAN + 0x01));
+    if (test_write)
+        output.append((uint8_t)SIDFL_PROTECT_CAN);
+    else
+        output.append((uint8_t)SIDFL_UNPROTECT_CAN);
+    output.append((uint8_t)(0x00));
+    output.append((uint8_t)(0x00));
+    output.append((uint8_t)(0x00));
+    output.append((uint8_t)(0x00));
+    output.append((uint8_t)(0x00));
+    received = serial->write_serial_data_echo_check(output);
+    qDebug() << parse_message_to_hex(output);
+    qDebug() << "0xE0 message sent to kernel to initialize erasing / flashing microcodes";
+    delay(200);
+    received = serial->read_serial_data(3, serial_read_short_timeout);
+    qDebug() << parse_message_to_hex(received);
+
+    if(((uint8_t)received.at(1) & 0xF8) != SID_FLASH_CAN)
+    {
+        qDebug() << "Initialize of erasing / flashing microcodes failed!";
+        return STATUS_ERROR;
+    }
+
+
+    int num_128_byte_blocks = (block_len >> 7) & 0xFFFFFFFF;
+
+    qDebug() << "Proceeding to attempt erase and flash of block number: " << blockno;
+    output[5] = (uint8_t)(SIDFL_EB_CAN + 0x06);
+    output[6] = (uint8_t)(blockno & 0xFF);
+    output[7] = (uint8_t)((block_start >> 24) & 0xFF);
+    output[8] = (uint8_t)((block_start >> 16) & 0xFF);
+    output[9] = (uint8_t)((block_start >> 8) & 0xFF);
+    output[10] = (uint8_t)((num_128_byte_blocks >> 8) & 0xFF);
+    output[11] = (uint8_t)(num_128_byte_blocks & 0xFF);
+    received = serial->write_serial_data_echo_check(output);
+    qDebug() << parse_message_to_hex(output);
+    qDebug() << "0xF0 message sent to kernel to erase block number: " << blockno;
+    delay(500);
+    received = serial->read_serial_data(3, serial_read_extra_long_timeout);
+    qDebug() << parse_message_to_hex(received);
+
+    if(((uint8_t)received.at(1) & 0xF8) != SIDFL_EB_CAN)
+    {
+        qDebug() << "Not ready for 128byte block writing";
+        return STATUS_ERROR;
+    }
+
+    errval = npk_raw_flashblock_can(newdata, block_start, block_len);
+    if (errval) {
+        send_log_window_message("Reflash error! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands!", true, true);
+        return STATUS_ERROR;
+    }
+
+
+    return STATUS_SUCCESS;
+}
+
+int EcuOperations::reflash_block_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+{
     int errval;
 
     uint32_t start;
@@ -761,9 +1316,9 @@ int EcuOperations::reflash_block(const uint8_t *newdata, const struct flashdev_t
     }
 
     // 4- write //
-    errval = npk_raw_flashblock(newdata, start, len);
+    errval = npk_raw_flashblock_kline(newdata, start, len);
     if (errval) {
-        send_log_window_message("Reflash error ! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands !", true, true);
+        send_log_window_message("Reflash error! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands!", true, true);
         return STATUS_ERROR;
     }
 
