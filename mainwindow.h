@@ -98,7 +98,6 @@ private:
     QStringList log_protocols = {
         "K-Line",
         "CAN",
-        "ISO15765",
     };
 
     QStringList flash_methods = {
@@ -108,7 +107,11 @@ private:
         "sti04",
         "sti05",
         "subarucan",
-        "subarucan_iso",
+    };
+
+    QStringList flash_protocols = {
+        "K-Line",
+        "CAN",
     };
 
     enum RomInfoEnum {
@@ -157,6 +160,7 @@ private:
 
     QComboBox *serial_port_list;
     QComboBox *flash_method_list;
+    QComboBox *flash_protocol_list;
     QComboBox *car_model_list;
     QComboBox *log_protocol_list;
 
@@ -191,6 +195,7 @@ private:
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
     QStringList create_car_models_list();
     QStringList create_flash_methods_list();
+    QStringList create_flash_protocols_list();
     QStringList create_log_protocols_list();
     QString check_kernel(QString flash_method);
 
@@ -234,10 +239,11 @@ private slots:
     void log_protocol_changed();
     void car_model_changed();
     void flash_method_changed();
+    void flash_protocol_changed();
     void check_serial_ports();
     void open_serial_port();
-    void start_ecu_operations(QString cmd_type);
-    void start_manual_ecu_operations();
+    int start_ecu_operations(QString cmd_type);
+    int start_manual_ecu_operations();
     void close_calibration();
     void close_calibration_map(QObject* obj);
     void change_gauge_values();

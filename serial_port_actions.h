@@ -105,6 +105,7 @@ public:
     long PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const void *pInput, void *pOutput);
 
     int init_j2534_connection();
+    int set_j2534_can_bl_connection();
     int set_j2534_can_connection();
     int set_j2534_can_connection_filters();
     int set_j2534_can_timings();
@@ -112,8 +113,20 @@ public:
     int set_j2534_iso9141_connection();
     int set_j2534_iso9141_connection_filters();
     int set_j2534_iso9141_timings();
+    int clear_rx_buffer();
 
 private:
+    enum rx_msg_type {
+        NORM_MSG,
+        TX_DONE_ = 0x10,
+        TX_LB_MSG = 0x20,
+        RX_MSG_END_IND = 0x40,
+        EXT_ADDR_MSG_END_IND = 0x44,
+        LB_MSG_END_IND = 0x60,
+        NORM_MSG_START_IND = 0x80,
+        TX_LB_START_IND = 0xA0,
+    };
+
     #define STATUS_SUCCESS							0x00
     #define STATUS_ERROR							0x01
 

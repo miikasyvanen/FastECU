@@ -42,8 +42,8 @@ MainWindow::MainWindow(QWidget *parent)
     //FileActions::ConfigValuesStructure *configValues = &fileActions->ConfigValuesStruct;
     configValues = &fileActions->ConfigValuesStruct;
 
-    fileActions->checkConfigDir();
-    configValues = fileActions->readConfigFile();
+    fileActions->check_config_dir();
+    configValues = fileActions->read_config_file();
 
     if (!configValues->ecu_definition_files.length())
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << txtFilesAndDirectories;
     }
 
-    QSignalMapper *mapper = fileActions->readMenuFile(ui->menubar, ui->toolBar);
+    QSignalMapper *mapper = fileActions->read_menu_file(ui->menubar, ui->toolBar);
     connect(mapper, SIGNAL(mapped   (QString)), this, SLOT(menu_action_triggered(QString)));
 /*
     for (int i = 0; i < configValues->calibration_files.count(); i++)
@@ -149,6 +149,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(flash_method_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_method_changed()));
     ui->toolBar->addWidget(flash_method_list);
 
+    flash_protocol_list = new QComboBox();
+    flash_protocol_list->setObjectName("flash_protocol_list");
+    QStringList flash_protocols = create_flash_protocols_list();
+    for (int i = 0; i < flash_protocols.length(); i++){
+        flash_protocol_list->addItem(flash_protocols.at(i));
+        if (configValues->flash_protocol == flash_protocols.at(i))
+            flash_protocol_list->setCurrentIndex(i);
+    }
+    connect(flash_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_protocol_changed()));
+    ui->toolBar->addWidget(flash_protocol_list);
+
     ui->toolBar->addSeparator();
 
     QLabel *log_protocol = new QLabel("Log protocol:");
@@ -205,7 +216,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBar->addWidget(refresh_serial_list);
 
     logValues = &fileActions->LogValuesStruct;
-    logValues = fileActions->readLoggerDefinitionFile();
+    logValues = fileActions->read_logger_definition_file();
     logBoxes = new LogBox();
 
     if (logValues != NULL)
@@ -248,7 +259,7 @@ MainWindow::MainWindow(QWidget *parent)
         emit ui->calibrationFilesTreeWidget->clicked(index);
     }
 
-    emit flash_method_list->currentIndexChanged(flash_method_list->currentIndex());
+    emit log_protocol_list->currentIndexChanged(log_protocol_list->currentIndex());
 }
 
 MainWindow::~MainWindow()
@@ -290,6 +301,11 @@ QStringList MainWindow::create_flash_methods_list()
     return flash_methods;
 }
 
+QStringList MainWindow::create_flash_protocols_list()
+{
+    return flash_protocols;
+}
+
 QStringList MainWindow::create_log_protocols_list()
 {
     return log_protocols;
@@ -306,13 +322,28 @@ QString MainWindow::check_kernel(QString flash_method)
     if (flash_method == "wrx02")
         kernel = prefix + "ssmk_HC16.bin";
     if (flash_method == "fxt02")
-        kernel = prefix + "ssmk_SH7055.bin";
+    {
+        if (serial->is_can_connection)
+            kernel = prefix + "ssmk_CAN_SH7055.bin";
+        else
+            kernel = prefix + "ssmk_SH7055.bin";
+    }
     if (flash_method == "sti04")
-        kernel = prefix + "ssmk_SH7055.bin";
+    {
+        if (serial->is_can_connection)
+            kernel = prefix + "ssmk_CAN_SH7055.bin";
+        else
+            kernel = prefix + "ssmk_SH7055.bin";
+    }
     if (flash_method == "sti05")
-        kernel = prefix + "ssmk_SH7058.bin";
+    {
+        if (serial->is_can_connection)
+            kernel = prefix + "ssmk_CAN_SH7058.bin";
+        else
+            kernel = prefix + "ssmk_SH7058.bin";
+    }
     if (flash_method == "subarucan")
-        kernel = prefix + "ssmk_SH7058.bin";
+        kernel = prefix + "ssmk_CAN_SH7058.bin";
 
     return kernel;
 }
@@ -325,14 +356,14 @@ void MainWindow::log_protocol_changed()
     serial->is_iso15765_connection = false;
     if (log_protocol_list->currentText() == "CAN")
         serial->is_can_connection = true;
-    else if (log_protocol_list->currentText() == "ISO15765")
-        serial->is_iso15765_connection = true;
+    //else if (log_protocol_list->currentText() == "ISO15765")
+        //serial->is_iso15765_connection = true;
 
     qDebug() << "CAN:" << serial->is_can_connection;
     qDebug() << "iso15765:" << serial->is_iso15765_connection;
 
     configValues->log_protocol = log_protocol_list->currentText();
-    fileActions->saveConfigFile();
+    fileActions->save_config_file();
 
     serial->reset_connection();
     ecuid.clear();
@@ -350,11 +381,18 @@ void MainWindow::car_model_changed()
 
 void MainWindow::flash_method_changed()
 {
-    //ssm_init_poll_timer->stop();
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
 
     configValues->flash_method = flash_method_list->currentText();
-    fileActions->saveConfigFile();
+    fileActions->save_config_file();
+}
+
+void MainWindow::flash_protocol_changed()
+{
+    QComboBox *flash_protocol_list = ui->toolBar->findChild<QComboBox*>("flash_protocol_list");
+
+    configValues->flash_protocol = flash_protocol_list->currentText();
+    fileActions->save_config_file();
 }
 
 void MainWindow::check_serial_ports()
@@ -407,25 +445,47 @@ void MainWindow::open_serial_port()
     }
 }
 
-void MainWindow::start_ecu_operations(QString cmd_type)
+int MainWindow::start_ecu_operations(QString cmd_type)
 {
+    int romNumber = 0;
+
+    QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
+    if (!selectedItem && cmd_type != "read")
+    {
+        qDebug() << "No ROM to write, exiting!";
+        return 0;
+    }
+    romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
+
     serial_poll_timer->stop();
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
-    int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
+    serial->is_can_connection = false;
+    serial->is_iso15765_connection = false;
+
+    if (flash_method_list->currentText() == "subarucan" || flash_protocol_list->currentText() == "CAN")
+        serial->is_can_connection = true;
 
     if (cmd_type == "test_write" || cmd_type == "write")
     {
-        ecuCalDef[romNumber] = fileActions->apply_cal_changes_to_rom_data(ecuCalDef[romNumber]);
+        serial->reset_connection();
+        ecuid.clear();
+        ecu_init_complete = false;
+        open_serial_port();
+
+        ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
         ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
-        //ecuCalDef[romNumber]->Kernel = check_kernel(flash_method_list->currentText());
         qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
         ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
     }
     else
     {
+        serial->reset_connection();
+        ecuid.clear();
+        ecu_init_complete = false;
+        open_serial_port();
+
         ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
         while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
             ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
@@ -436,7 +496,7 @@ void MainWindow::start_ecu_operations(QString cmd_type)
 
         if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
         {
-            fileActions->openRomFile(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
+            fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
             if(ecuCalDef[ecuCalDefIndex] != NULL)
             {
                 calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
@@ -449,13 +509,16 @@ void MainWindow::start_ecu_operations(QString cmd_type)
     }
 
     serial->serialport_protocol_14230 = false;
-    if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial->change_port_speed("4800");
+    emit log_protocol_list->currentIndexChanged(log_protocol_list->currentIndex());
+    //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
+
+    return 0;
 }
 
-void MainWindow::start_manual_ecu_operations()
+int MainWindow::start_manual_ecu_operations()
 {
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
@@ -463,6 +526,8 @@ void MainWindow::start_manual_ecu_operations()
     EcuManualOperations *ecuManualOperations = new EcuManualOperations(serial, ecuCalDef[romNumber]);
 
     serial->change_port_speed("4800");
+
+    return 0;
 }
 
 void MainWindow::custom_menu_requested(QPoint pos)
@@ -480,7 +545,7 @@ void MainWindow::custom_menu_requested(QPoint pos)
 bool MainWindow::open_calibration_file(QString filename)
 {
     ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
-    ecuCalDef[ecuCalDefIndex] = fileActions->openRomFile(ecuCalDef[ecuCalDefIndex], filename);
+    ecuCalDef[ecuCalDefIndex] = fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], filename);
     //qDebug() << ecuCalDef[ecuCalDefIndex];
     if(ecuCalDef[ecuCalDefIndex] != NULL)
     {
@@ -515,7 +580,7 @@ void MainWindow::save_calibration_file()
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
-    fileActions->saveRomFile(ecuCalDef[romNumber], ecuCalDef[romNumber]->FullFileName);
+    fileActions->save_subaru_rom_file(ecuCalDef[romNumber], ecuCalDef[romNumber]->FullFileName);
 
 }
 
@@ -549,7 +614,7 @@ void MainWindow::save_calibration_file_as()
     if(!filename.endsWith(QString(".bin")))
          filename.append(QString(".bin"));
 
-    fileActions->saveRomFile(ecuCalDef[romNumber], filename);
+    fileActions->save_subaru_rom_file(ecuCalDef[romNumber], filename);
     ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
 }
 
@@ -814,7 +879,7 @@ void MainWindow::close_calibration()
         }
     }
     configValues->calibration_files.removeAt(romNumber);
-    fileActions->saveConfigFile();
+    fileActions->save_config_file();
 }
 
 void MainWindow::close_calibration_map(QObject* obj)
@@ -1034,7 +1099,7 @@ void MainWindow::add_new_ecu_definition_file()
     {
         definition_files->addItem(filename);
         configValues->ecu_definition_files.append(filename);
-        fileActions->saveConfigFile();
+        fileActions->save_config_file();
     }
 
 }
@@ -1053,7 +1118,7 @@ void MainWindow::remove_ecu_definition_file()
         configValues->ecu_definition_files.removeAt(row);
     }
     if (index.length() > 0)
-        fileActions->saveConfigFile();
+        fileActions->save_config_file();
 }
 
 void MainWindow::add_new_logger_definition_file()
