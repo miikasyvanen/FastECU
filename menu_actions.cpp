@@ -93,6 +93,7 @@ void MainWindow::inc_dec_value(QString action)
     QString mapType = "";
     bool bStatus;
 
+    qDebug() << "Inc/dec value";
     QMdiSubWindow* w = ui->mdiArea->activeSubWindow();
     if (w)
     {
@@ -105,155 +106,156 @@ void MainWindow::inc_dec_value(QString action)
         QTableWidget* mapTableWidget = w->findChild<QTableWidget*>(w->objectName());
         if (mapTableWidget)
         {
-            if (mapTableWidget)
+            float map_coarse_inc_value = ecuCalDef[mapRomNumber]->CoarseIncList[mapNumber].toFloat();
+            float map_fine_inc_value = ecuCalDef[mapRomNumber]->FineIncList[mapNumber].toFloat();
+            QStringList map_data_cell_text = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
+            QString map_format = ecuCalDef[mapRomNumber]->FormatList[mapNumber];
+            QString map_value_to_byte = ecuCalDef[mapRomNumber]->ToByteList[mapNumber];
+            QString map_value_from_byte = ecuCalDef[mapRomNumber]->FromByteList[mapNumber];
+            QString map_value_storagetype = ecuCalDef[mapRomNumber]->StorageTypeList[mapNumber];
+            QString map_value_endian = ecuCalDef[mapRomNumber]->EndianList[mapNumber];
+            uint32_t map_data_address = ecuCalDef[mapRomNumber]->AddressList[mapNumber].toUInt(&bStatus, 16);
+            int mapXSize = ecuCalDef[mapRomNumber]->XSizeList[mapNumber].toInt();
+            int mapYSize = ecuCalDef[mapRomNumber]->YSizeList[mapNumber].toInt();
+
+            if (!mapTableWidget->selectedRanges().isEmpty())
             {
-                float map_coarse_inc_value = ecuCalDef[mapRomNumber]->CoarseIncList[mapNumber].toFloat();
-                float map_fine_inc_value = ecuCalDef[mapRomNumber]->FineIncList[mapNumber].toFloat();
-                QStringList map_data_cell_text = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
-                QString map_format = ecuCalDef[mapRomNumber]->FormatList[mapNumber];
-                QString map_value_to_byte = ecuCalDef[mapRomNumber]->ToByteList[mapNumber];
-                QString map_value_from_byte = ecuCalDef[mapRomNumber]->FromByteList[mapNumber];
-                QString map_value_storagetype = ecuCalDef[mapRomNumber]->StorageTypeList[mapNumber];
-                QString map_value_endian = ecuCalDef[mapRomNumber]->EndianList[mapNumber];
-                uint32_t map_data_address = ecuCalDef[mapRomNumber]->AddressList[mapNumber].toUInt(&bStatus, 16);
-                int mapXSize = ecuCalDef[mapRomNumber]->XSizeList[mapNumber].toInt();
-                int mapYSize = ecuCalDef[mapRomNumber]->YSizeList[mapNumber].toInt();
+                QList<QTableWidgetSelectionRange> selected_range = mapTableWidget->selectedRanges();
+                int firstCol = selected_range.begin()->leftColumn() - 1;
+                int firstRow = selected_range.begin()->topRow() - 1;
+                int lastCol = selected_range.begin()->rightColumn() - 1;
+                int lastRow = selected_range.begin()->bottomRow() - 1;
 
-                if (!mapTableWidget->selectedRanges().isEmpty())
-                {
-                    QList<QTableWidgetSelectionRange> selected_range = mapTableWidget->selectedRanges();
-                    int firstCol = selected_range.begin()->leftColumn() - 1;
-                    int firstRow = selected_range.begin()->topRow() - 1;
-                    int lastCol = selected_range.begin()->rightColumn() - 1;
-                    int lastRow = selected_range.begin()->bottomRow() - 1;
-
-                    if (selected_range.begin()->leftColumn() == 0 && mapYSize > 1){
-                        map_data_cell_text = ecuCalDef[mapRomNumber]->YScaleData.at(mapNumber).split(",");
-                        map_coarse_inc_value = ecuCalDef[mapRomNumber]->YScaleCoarseIncList[mapNumber].toFloat();
-                        map_fine_inc_value = ecuCalDef[mapRomNumber]->YScaleFineIncList[mapNumber].toFloat();
-                        map_format = ecuCalDef[mapRomNumber]->YScaleFormatList[mapNumber];
-                        map_value_to_byte = ecuCalDef[mapRomNumber]->YScaleToByteList[mapNumber];
-                        map_value_from_byte = ecuCalDef[mapRomNumber]->YScaleFromByteList[mapNumber];
-                        map_value_storagetype = ecuCalDef[mapRomNumber]->YScaleStorageTypeList[mapNumber];
-                        map_value_endian = ecuCalDef[mapRomNumber]->YScaleEndianList[mapNumber];
-                        map_data_address = ecuCalDef[mapRomNumber]->YScaleAddressList[mapNumber].toUInt(&bStatus, 16);
-                        firstCol++;
-                        lastCol++;
-                        mapXSize = 1;
-                    }
-                    else if (selected_range.begin()->topRow() == 0 && mapXSize > 1){
-                        map_data_cell_text = ecuCalDef[mapRomNumber]->XScaleData.at(mapNumber).split(",");
-                        map_coarse_inc_value = ecuCalDef[mapRomNumber]->XScaleCoarseIncList[mapNumber].toFloat();
-                        map_fine_inc_value = ecuCalDef[mapRomNumber]->XScaleFineIncList[mapNumber].toFloat();
-                        map_format = ecuCalDef[mapRomNumber]->XScaleFormatList[mapNumber];
-                        map_value_to_byte = ecuCalDef[mapRomNumber]->XScaleToByteList[mapNumber];
-                        map_value_from_byte = ecuCalDef[mapRomNumber]->XScaleFromByteList[mapNumber];
-                        map_value_storagetype = ecuCalDef[mapRomNumber]->XScaleStorageTypeList[mapNumber];
-                        map_value_endian = ecuCalDef[mapRomNumber]->XScaleEndianList[mapNumber];
-                        map_data_address = ecuCalDef[mapRomNumber]->XScaleAddressList[mapNumber].toUInt(&bStatus, 16);
+                if (selected_range.begin()->leftColumn() == 0 && mapYSize > 1){
+                    map_data_cell_text = ecuCalDef[mapRomNumber]->YScaleData.at(mapNumber).split(",");
+                    map_coarse_inc_value = ecuCalDef[mapRomNumber]->YScaleCoarseIncList[mapNumber].toFloat();
+                    map_fine_inc_value = ecuCalDef[mapRomNumber]->YScaleFineIncList[mapNumber].toFloat();
+                    map_format = ecuCalDef[mapRomNumber]->YScaleFormatList[mapNumber];
+                    map_value_to_byte = ecuCalDef[mapRomNumber]->YScaleToByteList[mapNumber];
+                    map_value_from_byte = ecuCalDef[mapRomNumber]->YScaleFromByteList[mapNumber];
+                    map_value_storagetype = ecuCalDef[mapRomNumber]->YScaleStorageTypeList[mapNumber];
+                    map_value_endian = ecuCalDef[mapRomNumber]->YScaleEndianList[mapNumber];
+                    map_data_address = ecuCalDef[mapRomNumber]->YScaleAddressList[mapNumber].toUInt(&bStatus, 16);
+                    firstCol++;
+                    lastCol++;
+                    mapXSize = 1;
+                }
+                else if (selected_range.begin()->topRow() == 0 && mapXSize > 1){
+                    map_data_cell_text = ecuCalDef[mapRomNumber]->XScaleData.at(mapNumber).split(",");
+                    map_coarse_inc_value = ecuCalDef[mapRomNumber]->XScaleCoarseIncList[mapNumber].toFloat();
+                    map_fine_inc_value = ecuCalDef[mapRomNumber]->XScaleFineIncList[mapNumber].toFloat();
+                    map_format = ecuCalDef[mapRomNumber]->XScaleFormatList[mapNumber];
+                    map_value_to_byte = ecuCalDef[mapRomNumber]->XScaleToByteList[mapNumber];
+                    map_value_from_byte = ecuCalDef[mapRomNumber]->XScaleFromByteList[mapNumber];
+                    map_value_storagetype = ecuCalDef[mapRomNumber]->XScaleStorageTypeList[mapNumber];
+                    map_value_endian = ecuCalDef[mapRomNumber]->XScaleEndianList[mapNumber];
+                    map_data_address = ecuCalDef[mapRomNumber]->XScaleAddressList[mapNumber].toUInt(&bStatus, 16);
+                    firstRow++;
+                    lastRow++;
+                }
+                else{
+                    if (mapXSize == 1) {
                         firstRow++;
                         lastRow++;
                     }
-                    else{
-                        if (mapXSize == 1) {
-                            firstRow++;
-                            lastRow++;
-                        }
-                        if (mapYSize == 1) {
-                            firstCol++;
-                            lastCol++;
-                        }
+                    if (mapYSize == 1) {
+                        firstCol++;
+                        lastCol++;
                     }
+                }
 
-                    double map_max_value;
-                    if (map_value_storagetype == "uint8")
-                        map_max_value = 0xff;
-                    if (map_value_storagetype == "uint16")
-                        map_max_value = 0xffff;
-                    if (map_value_storagetype == "uint24")
-                        map_max_value = 0xffffff;
-                    if (map_value_storagetype == "float")
-                        map_max_value = 0xfffffff;
-                    if (map_value_storagetype == "uint32")
-                        map_max_value = 0xffffffff;
+                double map_max_value;
+                if (map_value_storagetype == "uint8")
+                    map_max_value = 0xff;
+                if (map_value_storagetype == "uint16")
+                    map_max_value = 0xffff;
+                if (map_value_storagetype == "uint24")
+                    map_max_value = 0xffffff;
+                if (map_value_storagetype == "float")
+                    map_max_value = 0xfffffff;
+                if (map_value_storagetype == "uint32")
+                    map_max_value = 0xffffffff;
 
-                    for (int j = firstRow; j <= lastRow; j++)
+                for (int j = firstRow; j <= lastRow; j++)
+                {
+                    for (int i = firstCol; i <= lastCol; i++)
                     {
-                        for (int i = firstCol; i <= lastCol; i++)
-                        {
-                            float map_item_value = map_data_cell_text.at(j * mapXSize + i).toFloat();
+                        float map_item_value = map_data_cell_text.at(j * mapXSize + i).toFloat();
 
-                            uint16_t map_value_index = j * mapXSize + i;
-                            QString rom_data_value = get_rom_data_value(mapRomNumber, map_data_address, map_value_index, map_value_storagetype, map_value_endian);
+                        uint16_t map_value_index = j * mapXSize + i;
+                        QString rom_data_value = get_rom_data_value(mapRomNumber, map_data_address, map_value_index, map_value_storagetype, map_value_endian);
+
+                        map_data_value.float_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value)));
+                        //qDebug() << map_item_value << rom_data_value.toFloat() << map_data_value.float_value;
+
+                        if (map_value_storagetype.startsWith("uint"))
+                            map_data_value.four_byte_value = (uint32_t)(qRound(map_data_value.float_value));
+
+                        qDebug() << "action" << action;
+                        qDebug() << map_item_value << rom_data_value << QString::number(map_data_value.float_value);
+                        qDebug() << map_item_value << rom_data_value.toFloat() << map_data_value.float_value;
+                        while (rom_data_value == QString::number(map_data_value.float_value))
+                        {
+                            qDebug() << "rom_data_value.toFloat() != map_data_value.float_value";
+
+                            if (action == "coarse_inc")
+                                map_item_value += map_coarse_inc_value;
+                            if (action == "fine_inc")
+                                map_item_value += map_fine_inc_value;
+                            if (action == "coarse_dec")
+                                map_item_value -= map_coarse_inc_value;
+                            if (action == "fine_dec")
+                                map_item_value -= map_fine_inc_value;
 
                             map_data_value.float_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value)));
-                            //qDebug() << map_item_value << rom_data_value.toFloat() << map_data_value.float_value;
-
                             if (map_value_storagetype.startsWith("uint"))
                                 map_data_value.four_byte_value = (uint32_t)(qRound(map_data_value.float_value));
 
-                            //qDebug() << map_item_value << rom_data_value.toFloat() << map_data_value.float_value;
-                            while (rom_data_value.toFloat() == map_data_value.float_value)
-                            {
-                                if (action == "coarse_inc")
-                                    map_item_value += map_coarse_inc_value;
-                                if (action == "fine_inc")
-                                    map_item_value += map_fine_inc_value;
-                                if (action == "coarse_dec")
-                                    map_item_value -= map_coarse_inc_value;
-                                if (action == "fine_dec")
-                                    map_item_value -= map_fine_inc_value;
-
-                                map_data_value.float_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value)));
+                            if ((int)map_data_value.four_byte_value < 0) {
+                                map_data_value.four_byte_value = 0;
                                 if (map_value_storagetype.startsWith("uint"))
-                                    map_data_value.four_byte_value = (uint32_t)(qRound(map_data_value.float_value));
+                                    map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.four_byte_value)));
+                                else
+                                    map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.float_value)));
+                                break;
+                            }
 
-                                if ((int)map_data_value.four_byte_value < 0) {
-                                    map_data_value.four_byte_value = 0;
-                                    if (map_value_storagetype.startsWith("uint"))
-                                        map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.four_byte_value)));
-                                    else
-                                        map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.float_value)));
+                            if (map_value_storagetype.startsWith("uint")) {
+                                if (map_data_value.four_byte_value >= map_max_value) {
+                                    map_data_value.four_byte_value = map_max_value;
+                                    map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.four_byte_value)));
                                     break;
                                 }
-
-                                if (map_value_storagetype.startsWith("uint")) {
-                                    if (map_data_value.four_byte_value >= map_max_value) {
-                                        map_data_value.four_byte_value = map_max_value;
-                                        map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.four_byte_value)));
-                                        break;
-                                    }
-                                }
-                                else {
-                                    if (map_data_value.float_value >= (float)map_max_value) {
-                                        map_data_value.float_value = (float)map_max_value;
-                                        map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.float_value)));
-                                        break;
-                                    }
+                            }
+                            else {
+                                if (map_data_value.float_value >= (float)map_max_value) {
+                                    map_data_value.float_value = (float)map_max_value;
+                                    map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.float_value)));
+                                    break;
                                 }
                             }
-                            if (map_value_storagetype.startsWith("uint"))
-                                map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number((float)map_data_value.four_byte_value)));
-                            else
-                                map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.float_value)));
-
-                            map_data_cell_text.replace(j * mapXSize + i, QString::number(map_item_value));
-
-                            if (map_data_value.float_value == 0)
-                                map_data_value.float_value = 0.0f;
-
-                            set_rom_data_value(mapRomNumber, map_data_address, map_value_index, map_value_storagetype, map_value_endian, map_data_value.float_value);
                         }
-                    }
-                    if (selected_range.begin()->leftColumn() == 0 && mapYSize > 1)
-                        ecuCalDef[mapRomNumber]->YScaleData.replace(mapNumber, map_data_cell_text.join(","));
-                    else if (selected_range.begin()->topRow() == 0 && mapXSize > 1)
-                        ecuCalDef[mapRomNumber]->XScaleData.replace(mapNumber, map_data_cell_text.join(","));
-                    else
-                        ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, map_data_cell_text.join(","));
+                        if (map_value_storagetype.startsWith("uint"))
+                            map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number((float)map_data_value.four_byte_value)));
+                        else
+                            map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number(map_data_value.float_value)));
 
-                    set_maptablewidget_items();
+                        map_data_cell_text.replace(j * mapXSize + i, QString::number(map_item_value));
+
+                        if (map_data_value.float_value == 0)
+                            map_data_value.float_value = 0.0f;
+
+                        set_rom_data_value(mapRomNumber, map_data_address, map_value_index, map_value_storagetype, map_value_endian, map_data_value.float_value);
+                    }
                 }
+                if (selected_range.begin()->leftColumn() == 0 && mapYSize > 1)
+                    ecuCalDef[mapRomNumber]->YScaleData.replace(mapNumber, map_data_cell_text.join(","));
+                else if (selected_range.begin()->topRow() == 0 && mapXSize > 1)
+                    ecuCalDef[mapRomNumber]->XScaleData.replace(mapNumber, map_data_cell_text.join(","));
+                else
+                    ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, map_data_cell_text.join(","));
+
+                set_maptablewidget_items();
             }
         }
     }
@@ -367,7 +369,7 @@ void MainWindow::set_value()
                             if (map_value_storagetype.startsWith("uint"))
                                 map_data_value.four_byte_value = (uint32_t)(qRound(map_data_value.float_value));
 
-                            while (rom_data_value.toFloat() == map_data_value.float_value)
+                            while (rom_data_value == QString::number(map_data_value.float_value))
                             {
                                 if (text.at(0) == '+'){
                                     QStringList mapItemText = text.split("+");
@@ -380,6 +382,10 @@ void MainWindow::set_value()
                                 else if (text.at(0) == '*'){
                                     QStringList mapItemText = text.split("*");
                                     mapItemValue = mapItemValue * mapItemText[1].toFloat();
+                                }
+                                else if (text.at(0) == '/'){
+                                    QStringList mapItemText = text.split("/");
+                                    mapItemValue = mapItemValue / mapItemText[1].toFloat();
                                 }
                                 else
                                     mapItemValue = text.toFloat();
@@ -592,7 +598,7 @@ void MainWindow::interpolate_value(QString action)
                 for (int j = 0; j < interpolateRowCount; j++){
                     for (int i = 0; i < interpolateColCount; i++){
                         uint16_t map_value_index = j * map_x_size + i;
-                        QString rom_data_value = get_rom_data_value(mapRomNumber, map_data_address, map_value_index, map_value_storagetype, map_value_endian);
+                        //QString rom_data_value = get_rom_data_value(mapRomNumber, map_data_address, map_value_index, map_value_storagetype, map_value_endian);
 
                         map_data_value.float_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(cellValue[i][j])));
 
@@ -633,9 +639,9 @@ void MainWindow::interpolate_value(QString action)
                         set_rom_data_value(mapRomNumber, map_data_address, map_value_index, map_value_storagetype, map_value_endian, map_data_value.float_value);
                     }
                 }
-                if (mapTableWidget->selectedRanges().front().leftColumn() == 0)
+                if (selected_range.begin()->leftColumn() == 0)
                     ecuCalDef[mapRomNumber]->YScaleData.replace(mapNumber, map_data_cell_text.join(","));
-                else if (mapTableWidget->selectedRanges().front().topRow() == 0)
+                else if (selected_range.begin()->topRow() == 0)
                     ecuCalDef[mapRomNumber]->XScaleData.replace(mapNumber, map_data_cell_text.join(","));
                 else
                     ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, map_data_cell_text.join(","));
@@ -695,24 +701,28 @@ void MainWindow::paste_value()
                 QStringList mapDataCellText = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
                 QString pasteString = QApplication::clipboard()->text();
                 QStringList rows = pasteString.split('\n');
-                QString mapFormat = ecuCalDef[mapRomNumber]->FormatList[mapNumber];
+                //QString mapFormat = ecuCalDef[mapRomNumber]->FormatList[mapNumber];
                 int mapXSize = ecuCalDef[mapRomNumber]->XSizeList[mapNumber].toInt();
                 int mapYSize = ecuCalDef[mapRomNumber]->YSizeList[mapNumber].toInt();
 
-                int firstCol = mapTableWidget->selectedRanges().front().leftColumn() - 1;
-                int firstRow = mapTableWidget->selectedRanges().front().topRow() - 1;
-                int numRows = rows.count();
-                int numColumns = rows.first().count('\t') + 1;
+                if (!mapTableWidget->selectedRanges().isEmpty()){
+                    QList<QTableWidgetSelectionRange> selected_range = mapTableWidget->selectedRanges();
+                    int firstCol = selected_range.begin()->leftColumn() - 1;
+                    int firstRow = selected_range.begin()->topRow() - 1;
 
-                for (int i = 0; i < numRows; ++i) {
-                    QStringList columns = rows[i].split('\t');
-                    for (int j = 0; j < numColumns; ++j) {
-                            if ((i + firstRow) < mapYSize && (j + firstCol) < mapXSize)
-                                mapDataCellText.replace((i + firstRow) * mapXSize + (j + firstCol), columns[j]);
+                    int numRows = rows.count();
+                    int numColumns = rows.first().count('\t') + 1;
+
+                    for (int i = 0; i < numRows; ++i) {
+                        QStringList columns = rows[i].split('\t');
+                        for (int j = 0; j < numColumns; ++j) {
+                                if ((i + firstRow) < mapYSize && (j + firstCol) < mapXSize)
+                                    mapDataCellText.replace((i + firstRow) * mapXSize + (j + firstCol), columns[j]);
+                        }
                     }
+                    ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, mapDataCellText.join(","));
+                    set_maptablewidget_items();
                 }
-                ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, mapDataCellText.join(","));
-                set_maptablewidget_items();
             }
         }
     }
@@ -848,10 +858,17 @@ void MainWindow::set_maptablewidget_items()
         QTableWidget* mapTableWidget = w->findChild<QTableWidget*>(w->objectName());
         if (mapTableWidget)
         {
-
             int xSize = ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toInt();
             int ySize = ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toInt();
             int mapSize = xSize * ySize;
+
+            int xSizeOffset = 0;
+            int ySizeOffset = 0;
+
+            if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toInt() > 1 || ecuCalDef[mapRomNumber]->YScaleTypeList.at(mapNumber) == "Static Y Axis")
+                xSizeOffset = 1;
+            if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toInt() > 1)
+                ySizeOffset = 1;
 
             QFont cellFont = mapTableWidget->font();
             cellFont.setPointSize(cellFontSize);
@@ -904,14 +921,17 @@ void MainWindow::set_maptablewidget_items()
 
                 if (i < mapDataCellText.count())
                     cellItem->setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
-                int yPos = i / xSize + 1;
-                int xPos = i - (yPos - 1) * xSize + 1;
-                if (xSize == 1) {
-                    yPos--;
-                }
-                if (ySize == 1) {
-                    xPos--;
-                }
+                int yPos = 0;
+                int xPos = 0;
+                if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber) > 1)
+                    yPos = i / xSize + ySizeOffset;
+                else
+                    yPos = i / xSize;
+                if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber) > 1)
+                    xPos = i - (yPos - ySizeOffset) * xSize + xSizeOffset;
+                else
+                    xPos = i - (yPos - ySizeOffset) * xSize;
+
                 mapTableWidget->setItem(yPos, xPos, cellItem);
             }
         }

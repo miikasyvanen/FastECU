@@ -403,15 +403,19 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
         qDebug() << "Response to 0xD8 (dump mem) message:";
         qDebug() << parse_message_to_hex(received);
 
+        if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_DUMP_CAN)
+        {
+            send_log_window_message("Page data request failed!", true, true);
+            return STATUS_ERROR;
+        }
+
         timeout = 0;
         pagedata.clear();
 
         while ((uint32_t)pagedata.length() < pagesize && timeout < 1000)
         {
             received = serial->read_serial_data(1, 10);
-            //received.remove(0, 4);
             pagedata.append(received, 8);
-            //received.remove(0, 8);
             timeout++;
             //qDebug() << parse_message_to_hex(received);
         }
@@ -711,10 +715,6 @@ int EcuOperations::get_changed_blocks_can(const uint8_t *src, const uint8_t *ori
     return 0;
 }
 
-//#define ROMCRC_NUMCHUNKS 4
-//#define ROMCRC_CHUNKSIZE 256
-//#define ROMCRC_ITERSIZE (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
-//#define ROMCRC_LENMASK ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
 int EcuOperations::check_romcrc_can(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
 {
     QByteArray output;
@@ -772,8 +772,8 @@ int EcuOperations::check_romcrc_can(const uint8_t *src, uint32_t start_addr, uin
         }
         byte_index++;
 
-        //qDebug() << "Checksums: File =" << hex << chk_sum << "ROM =" << hex << (uint8_t)received.at(2);
-        if (chk_sum == (uint8_t)received.at(2))
+        qDebug() << "Checksums: File =" << hex << chk_sum << "ROM =" << hex << (uint8_t)received.at(2);
+        if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_CONF_CKS1_CAN || chk_sum == (uint8_t)received.at(2))
             continue;
 
         send_log_window_message("\tNO", false, true);
@@ -821,10 +821,6 @@ int EcuOperations::get_changed_blocks_kline(const uint8_t *src, const uint8_t *o
     return 0;
 }
 
-//#define ROMCRC_NUMCHUNKS 4
-//#define ROMCRC_CHUNKSIZE 256
-//#define ROMCRC_ITERSIZE (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
-//#define ROMCRC_LENMASK ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
 int EcuOperations::check_romcrc_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
 {
     QByteArray output;
@@ -964,15 +960,15 @@ int EcuOperations::npk_raw_flashblock_can(const uint8_t *src, uint32_t start, ui
         output[8] = (uint8_t)(chk_sum & 0xFF);
         received = serial->write_serial_data_echo_check(output);
         qDebug() << "0xF8 command sent to kernel to check and flash 128 byte block";
-        qDebug() << parse_message_to_hex(output);
+        //qDebug() << parse_message_to_hex(output);
         //delay(10);
 
         // check for flash success or not
         received = serial->read_serial_data(3, serial_read_short_timeout);
-        qDebug() << parse_message_to_hex(received);
-        if(((uint8_t)received.at(1) & 0xF8) != SIDFL_WB_CAN)
+        //qDebug() << parse_message_to_hex(received);
+        if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_WB_CAN)
         {
-            qDebug() << "Flashing of 128 byte block unsuccessful, proceeding to next 128 byte block";
+            qDebug() << "Flashing of 128 byte block unsuccessful, stopping";
             return STATUS_ERROR;
         }
         else
@@ -1165,7 +1161,7 @@ int EcuOperations::reflash_block_can(const uint8_t *newdata, const struct flashd
     received = serial->read_serial_data(3, serial_read_short_timeout);
     qDebug() << parse_message_to_hex(received);
 
-    if(((uint8_t)received.at(1) & 0xF8) != SID_FLASH_CAN)
+    if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_FLASH_CAN)
     {
         qDebug() << "Initialize of erasing / flashing microcodes failed!";
         return STATUS_ERROR;
@@ -1189,7 +1185,7 @@ int EcuOperations::reflash_block_can(const uint8_t *newdata, const struct flashd
     received = serial->read_serial_data(3, serial_read_extra_long_timeout);
     qDebug() << parse_message_to_hex(received);
 
-    if(((uint8_t)received.at(1) & 0xF8) != SIDFL_EB_CAN)
+    if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_EB_CAN)
     {
         qDebug() << "Not ready for 128byte block writing";
         return STATUS_ERROR;
@@ -1356,7 +1352,7 @@ void EcuOperations::send_log_window_message(QString message, bool timestamp, boo
         textedit->insertPlainText(message);
         textedit->ensureCursorVisible();
     }
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 }
 
 void EcuOperations::set_progressbar_value(int value)
