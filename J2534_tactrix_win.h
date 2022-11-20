@@ -316,8 +316,7 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 // Message struct
 /////////////////
 
-#define PASSTHRU_MSG_DATA_SIZE 4096
-//#define PASSTHRU_MSG_DATA_SIZE 4128
+#define PASSTHRU_MSG_DATA_SIZE 4128
 
 typedef struct
 {
