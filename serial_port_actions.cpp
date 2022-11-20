@@ -463,6 +463,7 @@ int SerialPortActions::write_j2534_data(QByteArray output)
     PASSTHRU_MSG rxmsg;
     unsigned long numRxMsg;
     long txMsgLen;
+    int PASSTHRU_MSG_MAX_DATA_SIZE = 256;
 
     txMsgLen = output.length();
     if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
@@ -673,7 +674,7 @@ int SerialPortActions::set_j2534_can_bl_connection()
     output = "ato5 256 500000 0\n";     // connect
     output = "atf5 1 256 4 4\n";        // filters FF FF FF FF 00 00 00 00
     output = "atf5 1 256 4 5\n";        // filters FF FF FF FF 00 00 00 21
-    output = "atr 16\n";                // ???
+    output = "atr 16\n";                // 'read battery voltage'
     output = "att5 12 256 2000000\n";   // send 00 0F FF FE FF 86 00 00 00 00 00 00
 
     output = "att5 12 256 2000000\n";   // send 00 0F FF FE 7A 9C FF FF 60 00 00 00

@@ -869,7 +869,15 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
     output.append(pl_encr);
     chk_sum = calculate_checksum(output, true);
     output.append((uint8_t) chk_sum);
-
+/*
+    for (int i = 0; i < (output.length() / 16); i++)
+    {
+        msg.clear();
+        for (int j = 0; j < 16; j++)
+            msg.append(output.at(i * 16 + j));
+        send_log_window_message(parse_message_to_hex(msg), false, true);
+    }
+*/
     send_log_window_message("Start sending kernel... please wait...", true, true);
     serial->write_serial_data_echo_check(output);
     received = serial->read_serial_data(100, serial_read_short_timeout);
