@@ -706,8 +706,11 @@ int EcuOperationsSubaru::connect_bootloader_subaru_can_32bit()
     delay(200);
     received = serial->read_serial_data(20, 10);
     qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
-    if ((uint8_t)(received.at(5) & 0xF8) != 0x90)
+    if ((uint8_t)(received.at(1) & 0xF8) == 0x90)
+    {
+        send_log_window_message("Connected to bootloader, start kernel upload", true, true);
         return STATUS_SUCCESS;
+    }
 
     return STATUS_ERROR;
 }

@@ -750,27 +750,37 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
         {
             if (ecuCalDef[romNumber]->NameList.at(i) == selectedText)//itemText)
             {
+                qDebug() << "Map found:" << ecuCalDef[romNumber]->NameList.at(i) << selectedText;
                 if (ecuCalDef[romNumber]->VisibleList.at(i) == "1")
                 {
-                    QWidget* w = ui->mdiArea->findChild<QWidget*>(QString::number(romIndex) + "," + QString::number(i) + "," + ecuCalDef[romNumber]->NameList.at(i) + "," + ecuCalDef[romNumber]->TypeList.at(i));
-                    if (w)
+                    qDebug() << "Map already visible. If in top, close it. If not, bring to top.";
+                    int map_index = 0;
+                    QList<QMdiSubWindow *> list = ui->mdiArea->findChildren<QMdiSubWindow *>();
+                    qDebug() << "Widget list" << list;
+                    foreach(QMdiSubWindow *w, list)
                     {
-                        if (w->objectName() == ui->mdiArea->activeSubWindow()->objectName())
+                        qDebug() << map_index << w->objectName();
+                        map_index++;
+                        if (w->objectName().startsWith(QString::number(romIndex) + "," + QString::number(i) + "," + ecuCalDef[romNumber]->NameList.at(i)))
                         {
-                            ui->mdiArea->removeSubWindow(w);
-                            ecuCalDef[romNumber]->VisibleList.replace(i, "0");
-                            item->setCheckState(0, Qt::Unchecked);
-                        }
-                        else
-                        {
-                            w->setFocus();
-                            item->setCheckState(0, Qt::Checked);
+                            if (w->objectName() == ui->mdiArea->activeSubWindow()->objectName())
+                            {
+                                ui->mdiArea->removeSubWindow(w);
+                                ecuCalDef[romNumber]->VisibleList.replace(i, "0");
+                                item->setCheckState(0, Qt::Unchecked);
+                            }
+                            else
+                            {
+                                w->setFocus();
+                                item->setCheckState(0, Qt::Checked);
 
+                            }
                         }
                     }
                 }
                 else
                 {
+                    qDebug() << "Map NOT visible, open map.";
                     ecuCalDef[romNumber]->VisibleList.replace(i, "1");
                     item->setCheckState(0, Qt::Checked);
 
