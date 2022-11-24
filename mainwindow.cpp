@@ -45,8 +45,11 @@ MainWindow::MainWindow(QWidget *parent)
     fileActions->check_config_dir();
     configValues = fileActions->read_config_file();
 
-    if (!configValues->ecu_definition_files.length())
+    if (!configValues->romraider_definition_files.length())
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
+
+    if (configValues->definition_types.contains("ecuflash"))
+        fileActions->create_ecuflash_def_id_list(configValues);
 
     if (QDir(configValues->kernel_files_directory).exists()){
         QDir dir(configValues->kernel_files_directory);
@@ -1108,7 +1111,7 @@ void MainWindow::add_new_ecu_definition_file()
     else
     {
         definition_files->addItem(filename);
-        configValues->ecu_definition_files.append(filename);
+        configValues->romraider_definition_files.append(filename);
         fileActions->save_config_file();
     }
 
@@ -1125,7 +1128,7 @@ void MainWindow::remove_ecu_definition_file()
     {
         row = index.at(i).row();
         definition_files->model()->removeRow(row);
-        configValues->ecu_definition_files.removeAt(row);
+        configValues->romraider_definition_files.removeAt(row);
     }
     if (index.length() > 0)
         fileActions->save_config_file();
