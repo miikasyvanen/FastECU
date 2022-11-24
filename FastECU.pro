@@ -41,6 +41,8 @@ SOURCES += \
     ecu_operations_nissan.cpp \
     ecu_operations_subaru.cpp \
     file_actions.cpp \
+    file_defs_ecuflash.cpp \
+    file_defs_romraider.cpp \
     log_operations_ssm.cpp \
     logbox.cpp \
     logvalues.cpp \

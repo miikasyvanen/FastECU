@@ -13,6 +13,7 @@
 #include <QToolBar>
 #include <QElapsedTimer>
 #include <QDateTime>
+#include <QDirIterator>
 
 #include <string.h>
 #include <iostream>
@@ -33,6 +34,8 @@ public:
     FileActions();
 
     uint8_t float_precision = 15;
+    int def_map_index = 0;
+
 
     struct ConfigValuesStructure {
         QString serial_port = "ttyUSB0";
@@ -55,12 +58,17 @@ public:
 
         QStringList calibration_files;
         QString calibration_files_directory = calibration_files_base_directory;
-        QStringList ecu_definition_files;
+        QStringList romraider_definition_files;
+        QString ecuflash_definition_files_directory = definition_files_base_directory + "/ecuflash";
         QString logger_definition_file = definition_files_base_directory + "/logger_METRIC_EN_v370.xml";
         QString definition_files_directory = definition_files_base_directory;
         QString kernel_files_directory = kernel_files_base_directory;
         QString kernel_files;
         QString log_files_directory = log_files_base_directory;
+
+        QStringList definition_types;
+        QStringList ecuflash_def_ecu_id;
+        QStringList ecuflash_def_filename;
     } ConfigValuesStruct;
 
     struct protocolsStructure {
@@ -153,11 +161,14 @@ public:
         QStringList SelectionsListSorted;
         QStringList DescriptionList;
         QStringList StateList;
+        QStringList MapScalingNameList;
         QStringList MapData;
 
         QStringList XScaleTypeList;
         QStringList XScaleNameList;
         QStringList XScaleAddressList;
+        QStringList XScaleMinValueList;
+        QStringList XScaleMaxValueList;
         QStringList XScaleUnitsList;
         QStringList XScaleFormatList;
         QStringList XScaleFineIncList;
@@ -168,11 +179,14 @@ public:
         QStringList XScaleFromByteList;
         QStringList XScaleToByteList;
         QStringList XScaleStaticDataList;
+        QStringList XScaleScalingNameList;
         QStringList XScaleData;
 
         QStringList YScaleTypeList;
         QStringList YScaleNameList;
         QStringList YScaleAddressList;
+        QStringList YScaleMinValueList;
+        QStringList YScaleMaxValueList;
         QStringList YScaleUnitsList;
         QStringList YScaleFormatList;
         QStringList YScaleFineIncList;
@@ -182,7 +196,19 @@ public:
         QStringList YScaleLogParamList;
         QStringList YScaleFromByteList;
         QStringList YScaleToByteList;
+        QStringList YScaleScalingNameList;
         QStringList YScaleData;
+
+        QStringList ScalingNameList;
+        QStringList ScalingUnitsList;
+        QStringList ScalingFromByteList;
+        QStringList ScalingToByteList;
+        QStringList ScalingFormatList;
+        QStringList ScalingMinValueList;
+        QStringList ScalingMaxValueList;
+        QStringList ScalingIncList;
+        QStringList ScalingStorageTypeList;
+        QStringList ScalingEndianList;
 
         QStringList RomInfo;
         QString RomInfoExpanded;
@@ -199,6 +225,8 @@ public:
         QByteArray FullRomData;
         bool OemEcuFile;
         bool SyncedWithEcu;
+        bool use_romraider_definition;
+        bool use_ecuflash_definition;
 
     } EcuCalDefStruct;
 
@@ -269,21 +297,22 @@ public:
      ************************/
     void *save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id);
 
-    /*******************************************
-     * Search and read ECU definition from file
-     *******************************************/
-    EcuCalDefStructure *read_ecu_definition_file(EcuCalDefStructure *ecuCalDef, QString ecuId);
-    EcuCalDefStructure *add_def_list_item(EcuCalDefStructure *ecuCalDef);
-
-    /***************************
-     * Read ECU base definition
-     ***************************/
+    /*****************************************************
+     * Search and read RomRaider ECU definition from file
+     *****************************************************/
+    //EcuCalDefStructure *read_ecu_definition_file(EcuCalDefStructure *ecuCalDef, QString ecuId);
     EcuCalDefStructure *read_romraider_ecu_base_def(FileActions::EcuCalDefStructure *ecuCalDef);
-
-    /**********************
-     * Read ECU definition
-     **********************/
     EcuCalDefStructure *read_romraider_ecu_def(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);
+    EcuCalDefStructure *add_romraider_def_list_item(EcuCalDefStructure *ecuCalDef);
+
+    /*****************************************************
+     * Search and read RomRaider ECU definition from file
+     *****************************************************/
+    QString convert_value_format(QString value_format);
+    ConfigValuesStructure *create_ecuflash_def_id_list(ConfigValuesStructure *configValues);
+    EcuCalDefStructure *read_ecuflash_ecu_base_def(FileActions::EcuCalDefStructure *ecuCalDef);
+    EcuCalDefStructure *read_ecuflash_ecu_def(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);
+    EcuCalDefStructure *add_ecuflash_def_list_item(EcuCalDefStructure *ecuCalDef);
 
     /***********************************************
      * Open ECU ROM file, including possible
