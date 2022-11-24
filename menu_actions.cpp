@@ -75,6 +75,7 @@ void MainWindow::menu_action_triggered(QString action)
                                                             "\n"
                                                             "fenugrec - author of nisprog software\n"
                                                             "rimwall - modifier of nisprog kernels for Subaru use\n"
+                                                            "SergArb - testing and support of software development"
                                                             "");
 }
 
@@ -154,7 +155,7 @@ void MainWindow::inc_dec_value(QString action)
                     lastRow++;
                 }
                 else{
-                    if (mapXSize == 1) {
+                    if (mapXSize == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis") {
                         firstRow++;
                         lastRow++;
                     }
@@ -193,7 +194,7 @@ void MainWindow::inc_dec_value(QString action)
 
                         qDebug() << "action" << action;
                         qDebug() << map_item_value << rom_data_value << QString::number(map_data_value.float_value);
-                        qDebug() << map_item_value << rom_data_value.toFloat() << map_data_value.float_value;
+                        //while (rom_data_value.toFloat() == map_data_value.float_value)
                         while (rom_data_value == QString::number(map_data_value.float_value))
                         {
                             qDebug() << "rom_data_value.toFloat() != map_data_value.float_value";
@@ -335,7 +336,7 @@ void MainWindow::set_value()
                         lastRow += 1;
                     }
                     else{
-                        if (map_x_size == 1) {
+                        if (map_x_size == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis") {
                             firstRow++;
                             lastRow++;
                         }
@@ -512,7 +513,7 @@ void MainWindow::interpolate_value(QString action)
                     lastRow += 1;
                 }
                 else{
-                    if (map_x_size == 1) {
+                    if (map_x_size == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis") {
                         firstRow++;
                         lastRow++;
                     }
@@ -745,9 +746,9 @@ void MainWindow::ecu_definition_manager()
     QListWidget *definition_files = new QListWidget;
     definition_files->setObjectName("ecu_definition_files_list");
     definition_files->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    for (int i = 0; i < configValues->ecu_definition_files.length(); i++)
+    for (int i = 0; i < configValues->romraider_definition_files.length(); i++)
     {
-        new QListWidgetItem(configValues->ecu_definition_files.at(i), definition_files);
+        new QListWidgetItem(configValues->romraider_definition_files.at(i), definition_files);
     }
     definitions_manager_layout->addWidget(definition_files);
 
@@ -865,9 +866,9 @@ void MainWindow::set_maptablewidget_items()
             int xSizeOffset = 0;
             int ySizeOffset = 0;
 
-            if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toInt() > 1 || ecuCalDef[mapRomNumber]->YScaleTypeList.at(mapNumber) == "Static Y Axis")
+            if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toInt() > 1)
                 xSizeOffset = 1;
-            if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toInt() > 1)
+            if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toInt() > 1 || ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) == "Static Y Axis")
                 ySizeOffset = 1;
 
             QFont cellFont = mapTableWidget->font();
@@ -964,12 +965,12 @@ QString MainWindow::get_rom_data_value(uint8_t map_rom_number, uint32_t map_data
 
     uint32_t data_byte = 0;
     uint32_t byte_address = map_data_address + (map_value_index * map_value_storagesize);
-    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < (170 * 1024) && byte_address > 0x27FFF)
+    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < byte_address)
         byte_address -= 0x8000;
 
     for (int k = 0; k < map_value_storagesize; k++)
     {
-        if (map_value_endian == "little" || map_value_endian == "float")
+        if (map_value_endian == "little" || map_value_storagetype == "float")
         {
             data_byte = (data_byte << 8) + (uint8_t)ecuCalDef[map_rom_number]->FullRomData.at(byte_address + map_value_storagesize - 1 - k);
             mapDataValue.one_byte_value[k] = (uint8_t)ecuCalDef[map_rom_number]->FullRomData.at(byte_address + map_value_storagesize - 1 - k);
