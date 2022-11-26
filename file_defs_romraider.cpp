@@ -8,11 +8,9 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
 
     QString rombase;
     QString xmlid;
+    QString description;
 
-    //The QDomDocument class represents an XML document.
     QDomDocument xmlBOM;
-    // Load xml file as raw data
-    //QString filename = configValues->definitionsDir + "/" + ecuCalDef->RomBase + ".xml";
     QString filename = configValues->romraider_definition_files.at(0);
 
     QFile file(filename);
@@ -24,19 +22,13 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
         return NULL;
     }
 
-    // Set data into the QDomDocument before processing
     xmlBOM.setContent(&file);
     file.close();
 
-    //qDebug() << "Reading XML BASE def file" << filename;
-
-    // Extract the root markup
     QDomElement root = xmlBOM.documentElement();
 
-    // Get root names and attributes
     QString Type = root.tagName();
     QString Name = root.attribute("name"," ");
-    //qDebug() << Type;
     QDomElement TagType = root.firstChild().toElement();
 
     uint16_t index = 0;
@@ -48,22 +40,14 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
             continue;
 
         QDomElement TagType = items.at(x).toElement();
-
-        //while (!TagType.isNull())
-        //{
-
         if (TagType.tagName() == "rom")
         {
-            //qDebug() << "BASE" << ecuCalDef->RomInfo[RomBase];
-            //qDebug() << "Found <rom> section";
             rombase = TagType.attribute("base","No base");
             if (rombase == "No base")
             {
-                //qDebug() << "Rom base is" << rombase;
                 QDomElement RomId = TagType.firstChild().toElement();
                 if (RomId.tagName() == "romid")
                 {
-                    //qDebug() << "Found ROM ID section";
                     QDomElement RomInfo = RomId.firstChild().toElement();
                     while (!RomInfo.tagName().isNull())
                     {
@@ -71,38 +55,30 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                         if (RomInfo.tagName() == "xmlid")
                             xmlid = RomInfo.text();
 
-                        //qDebug() << "xmlid" << xmlid;
-
-                        //if (xmlid == ecuCalDef->RomInfo[RomBase])
-                            //continue;
-
                         RomInfo = RomInfo.nextSibling().toElement();
                     }
                 }
                 if (xmlid == ecuCalDef->RomInfo[RomBase])
                 {
-                    qDebug() << "Reading BASE" << ecuCalDef->RomInfo[RomBase];
-
                     OemEcuDefBaseFileFound = true;
-                    //qDebug() << "Found ROM BASE section" << xmlid << "for ECUID" << ecuCalDef->RomInfo[XmlId];
                     QDomElement Table = TagType.firstChild().toElement();
-                    //qDebug() << "Check if tables" << Table.tagName();
                     while(!Table.isNull())
                     {
-                        //qDebug() << "Table.TagName" << Table.tagName();
-                        // Check if the child tag name is table
                         if (Table.tagName() == "table")
                         {
-                            //qDebug() << "Check tables";
                             for (int i = 0; i < ecuCalDef->NameList.length(); i++)
                             {
                                 if (Table.attribute("name","No name") == ecuCalDef->NameList.at(i))
                                 {
-                                    //qDebug() << ecuCalDef->NameList.at(i) << "/" << Table.attribute("name"," ");
-                                    ecuCalDef->TypeList.replace(i, Table.attribute("type"," "));
+                                    QString type = Table.attribute("type"," ");
+                                    QString storage_type = Table.attribute("storagetype"," ");
+                                    if (type == "Switch")
+                                    {
+                                        type = "Selectable";
+                                        storage_type = "bloblist";
+                                    }
+                                    ecuCalDef->TypeList.replace(i, type);
                                     ecuCalDef->CategoryList.replace(i, Table.attribute("category"," "));
-
-                                    //qDebug() << ecuCalDef->NameList.at(i) << ecuCalDef->CategoryList.at(i);
 
                                     if (ecuCalDef->XSizeList.at(i) == "" || ecuCalDef->XSizeList.at(i) == " ")
                                         ecuCalDef->XSizeList.replace(i, Table.attribute("sizex", "1"));
@@ -111,23 +87,21 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                     ecuCalDef->MinValueList.replace(i, Table.attribute("minvalue","0"));
                                     ecuCalDef->MaxValueList.replace(i, Table.attribute("maxvalue","0"));
 
-                                    ecuCalDef->StorageTypeList.replace(i, Table.attribute("storagetype"," "));
+                                    ecuCalDef->StorageTypeList.replace(i, storage_type);
                                     ecuCalDef->EndianList.replace(i, Table.attribute("endian"," "));
                                     ecuCalDef->LogParamList.replace(i, Table.attribute("logparam"," "));
 
                                     ecuCalDef->SyncedWithEcu = true;
 
-                                    // Get the first child of the Table
                                     QDomElement TableChild = Table.firstChild().toElement();
-                                    QString TableSelections;
-                                    QString TableSelectionsSorted;
-                                    QString TableDescription;
-                                    QString TableStates;
 
-                                    // Read each child of the Table node
+                                    QString selection_name;
+                                    QString selection_value;
+
                                     while (!TableChild.isNull())
                                     {
-                                        if (TableChild.tagName() == "scaling"){
+                                        if (TableChild.tagName() == "scaling")
+                                        {
                                             ecuCalDef->UnitsList.replace(i, TableChild.attribute("units"," "));
                                             ecuCalDef->FormatList.replace(i, TableChild.attribute("format"," "));
                                             ecuCalDef->FineIncList.replace(i, TableChild.attribute("fineincrement"," "));
@@ -140,7 +114,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                         else if (TableChild.tagName() == "table")
                                         {
                                             QString ScaleType = TableChild.attribute("type"," ");
-                                            if (ScaleType == "X Axis"){
+                                            if (ScaleType == "X Axis")
+                                            {
                                                 ecuCalDef->XScaleNameList.replace(i, TableChild.attribute("name"," "));
                                                 ecuCalDef->XScaleTypeList.replace(i, ScaleType);
                                                 ecuCalDef->XScaleStorageTypeList.replace(i, TableChild.attribute("storagetype"," "));
@@ -150,15 +125,14 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                                 QDomElement SubChild = TableChild.firstChild().toElement();
                                                 while (!SubChild.isNull())
                                                 {
-                                                    if (SubChild.tagName() == "scaling"){
+                                                    if (SubChild.tagName() == "scaling")
+                                                    {
                                                         ecuCalDef->XScaleUnitsList.replace(i, SubChild.attribute("units"," "));
                                                         ecuCalDef->XScaleFormatList.replace(i, SubChild.attribute("format"," "));
                                                         ecuCalDef->XScaleFineIncList.replace(i, SubChild.attribute("fineincrement"," "));
                                                         ecuCalDef->XScaleCoarseIncList.replace(i, SubChild.attribute("coarseincrement"," "));
-
                                                         ecuCalDef->XScaleFromByteList.replace(i, SubChild.attribute("expression","x"));
                                                         ecuCalDef->XScaleToByteList.replace(i, SubChild.attribute("to_byte","x"));
-
                                                         SubChild = SubChild.nextSibling().toElement();
                                                     }
                                                 }
@@ -174,7 +148,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                                 QDomElement SubChild = TableChild.firstChild().toElement();
                                                 while (!SubChild.isNull())
                                                 {
-                                                    if (SubChild.tagName() == "scaling"){
+                                                    if (SubChild.tagName() == "scaling")
+                                                    {
                                                         ecuCalDef->YScaleUnitsList.replace(i, SubChild.attribute("units"," "));
                                                         ecuCalDef->YScaleFormatList.replace(i, SubChild.attribute("format"," "));
                                                         ecuCalDef->YScaleFineIncList.replace(i, SubChild.attribute("fineincrement"," "));
@@ -233,17 +208,19 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                                 ecuCalDef->YScaleAddressList[i] = " ";
                                             }
                                         }
-                                        else if (TableChild.tagName() == "description"){
-                                            TableDescription = TableChild.text();
-                                            if (!TableDescription.isEmpty())
-                                                ecuCalDef->DescriptionList.replace(i, "\n\n" + TableDescription);
+                                        else if (TableChild.tagName() == "state")
+                                        {
+                                            selection_name.append(TableChild.attribute("name"," ") + ",");
+                                            selection_value.append(TableChild.attribute("data"," ") + ",");
+                                            selection_value.remove(' ');
+                                        }
+                                        else if (TableChild.tagName() == "description")
+                                        {
+                                            description = TableChild.text();
+                                            if (!description.isEmpty())
+                                                ecuCalDef->DescriptionList.replace(i, "\n\n" + description);
                                             else
                                                 ecuCalDef->DescriptionList.replace(i, " ");
-                                        }
-                                        else if (TableChild.tagName() == "state"){
-                                            TableStates.append(TableChild.attribute("name"," ") + ",");
-                                            TableStates.append(TableChild.attribute("data"," ") + ",");
-
                                         }
                                         else
                                         {
@@ -255,15 +232,13 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                             ecuCalDef->FromByteList.replace(i, TableChild.attribute("expression","x"));
                                             ecuCalDef->ToByteList.replace(i, TableChild.attribute("to_byte","x"));
                                         }
-                                        // Next child
                                         TableChild = TableChild.nextSibling().toElement();
                                     }
-                                    ecuCalDef->StateList.replace(i, TableStates);
-
+                                    ecuCalDef->SelectionsNameList.replace(i, selection_name);
+                                    ecuCalDef->SelectionsValueList.replace(i, selection_value);
                                 }
                             }
                         }
-                        // Next component
                         Table = Table.nextSibling().toElement();
                     }
                 }
@@ -275,7 +250,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
     if (!OemEcuDefBaseFileFound)
         return NULL;
 
-    //qDebug() << "ECU rom base file read";
     return ecuCalDef;
 }
 
@@ -285,8 +259,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
 
     bool inherits_another_def = false;
     bool ecuid_def_found = false;
-    bool contains_x_scale = false;
-    bool contains_y_scale = false;
 
     QString rombase;
     QString xmlid;
@@ -303,10 +275,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
     QString checksummodule;
     QString flashmethod;
     QString filesize;
-
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
-    qDebug() << dateTimeString << "Start looking ECU ID";
 
     // Check if any ECU definition file is selected
     if (!configValues->romraider_definition_files.length() && !configValues->ecuflash_definition_files_directory.length()) {
@@ -327,9 +295,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
 
         if (!file.open(QIODevice::ReadOnly ))
         {
-            ecuCalDef = NULL;
-            //qDebug() << "Unable to open ECU definition file " + filename + " for reading");
             QMessageBox::warning(this, tr("Ecu definitions file"), "Unable to open ECU definition file " + filename + " for reading");
+            ecuCalDef = NULL;
             return NULL;
         }
 
@@ -342,7 +309,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
         {
             if (reader.name() == "roms")
             {
-                //qDebug() << "<roms> TAG";
                 while (reader.readNextStartElement())
                 {
                     if (reader.name() == "rom")
@@ -353,14 +319,11 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                             inherits_another_def = false;
                         else
                             inherits_another_def = true;
-                        //qDebug() << "Is NOT BASE def" << inherits_another_def << rombase;
 
-                        //qDebug() << "<rom> TAG";
                         while (reader.readNextStartElement())
                         {
                             if (reader.name() == "romid" && rombase != "")
                             {
-                                //qDebug() << "<romid> TAG";
                                 while (reader.readNextStartElement())
                                 {
                                     if (reader.name() == "xmlid")
@@ -394,12 +357,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                                     else
                                         reader.skipCurrentElement();
                                 }
-                                /*
-                                if (xmlid == ecuId)
-                                    qDebug() << "ECU ID" << xmlid << "found";
-                                if (inherits_another_def)
-                                    qDebug() << xmlid << "inherits from definition" << rombase;
-                                    */
                                 if (xmlid == ecuId)
                                 {
                                     if (ecuCalDef->RomInfo.at(XmlId) == " ")
@@ -420,10 +377,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                                         ecuCalDef->RomInfo.replace(FileSize, filesize);
                                     }
 
-                                    qDebug() << "inherits_another_def" << inherits_another_def << rombase;
                                     if (inherits_another_def)
                                         read_romraider_ecu_def(ecuCalDef, rombase);
-                                        //read_romraider_ecu_definition_file(ecuCalDef, rombase);
 
                                     if (!inherits_another_def)
                                     {
@@ -434,10 +389,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                             }
                             else if (reader.name() == "table" && xmlid == ecuId)
                             {
-                                //qDebug() << "ECU ID" << ecuId << "found";
                                 ecuid_def_found = true;
-
-                                //qDebug() << reader.attributes().value("name").toString() << reader.attributes().value("storageaddress").toString();
 
                                 add_romraider_def_list_item(ecuCalDef);
 
@@ -450,25 +402,19 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                                 {
                                     if (reader.name() == "table")
                                     {
-                                        //qDebug() << reader.attributes().value("type").toString() << reader.attributes().value("storageaddress").toString();
                                         if (reader.attributes().value("type").toString() == "X Axis")
                                         {
-                                            //contains_x_scale = true;
                                             ecuCalDef->XScaleAddressList.replace(index, reader.attributes().value("storageaddress").toString());
-                                            qDebug() << "Table:" << ecuCalDef->NameList.at(index) << "X Axis address:" << ecuCalDef->XScaleAddressList.at(index);
                                         }
                                         if (reader.attributes().value("type").toString() == "Y Axis")
                                         {
-                                            //contains_y_scale = true;
                                             ecuCalDef->YScaleAddressList.replace(index, reader.attributes().value("storageaddress").toString());
-                                            qDebug() << "Table:" << ecuCalDef->NameList.at(index) << "Y Axis address:" << ecuCalDef->YScaleAddressList.at(index);
                                         }
                                         if (reader.attributes().value("type").toString() == "Static Y Axis")
                                         {
 
                                         }
-                                        //else
-                                            reader.skipCurrentElement();
+                                        reader.skipCurrentElement();
                                     }
                                     else
                                         reader.skipCurrentElement();
@@ -480,8 +426,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                         }
                         if (!inherits_another_def && ecuid_def_found)
                         {
-                            qDebug() << "Check inherits_another_def" << inherits_another_def;
-                            qDebug() << "ECU ID" << ecuCalDef->RomInfo.at(EcuId) << "found and def read, move to ECU BASE def" << ecuCalDef->RomBase;
                             read_romraider_ecu_base_def(ecuCalDef);
                         }
                         ecuid_def_found = false;
@@ -496,10 +440,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
 
         ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
     }
-
-    dateTime = dateTime.currentDateTime();
-    dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']");
-    qDebug() << dateTimeString << "Read ECU base def";
 
     ecuCalDef->use_romraider_definition = true;
 
@@ -527,6 +467,7 @@ FileActions::EcuCalDefStructure *FileActions::add_romraider_def_list_item(EcuCal
     ecuCalDef->SelectionsValueList.append(" ");
     ecuCalDef->DescriptionList.append(" ");
     ecuCalDef->StateList.append(" ");
+    ecuCalDef->MapScalingNameList.append(" ");
     ecuCalDef->MapData.append(" ");
 
     ecuCalDef->XScaleTypeList.append(" ");
@@ -544,6 +485,7 @@ FileActions::EcuCalDefStructure *FileActions::add_romraider_def_list_item(EcuCal
     ecuCalDef->XScaleFromByteList.append(" ");
     ecuCalDef->XScaleToByteList.append(" ");
     ecuCalDef->XScaleStaticDataList.append(" ");
+    ecuCalDef->XScaleScalingNameList.append(" ");
     ecuCalDef->XScaleData.append(" ");
 
     ecuCalDef->YScaleTypeList.append(" ");
@@ -560,6 +502,7 @@ FileActions::EcuCalDefStructure *FileActions::add_romraider_def_list_item(EcuCal
     ecuCalDef->YScaleLogParamList.append(" ");
     ecuCalDef->YScaleFromByteList.append(" ");
     ecuCalDef->YScaleToByteList.append(" ");
+    ecuCalDef->YScaleScalingNameList.append(" ");
     ecuCalDef->YScaleData.append(" ");
 
     ecuCalDef->StorageTypeList.append(" ");

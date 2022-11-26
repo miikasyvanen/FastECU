@@ -1018,7 +1018,6 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     //for (unsigned j = 0; j < 2; j++)
     for (unsigned j = 0; j < sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
     {
-        qDebug() << "ECU ID addr 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
         ecuIdConfirmed = true;
         ecuId.clear();
         for (int i = ecuIdAddr[j]; i < ecuIdAddr[j] + 8; i++)
@@ -1032,6 +1031,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 ecuId.append((uint8_t)ecuCalDef->FullRomData.at(i));
             }
         }
+        qDebug() << "ECU ID addr 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8() + ": " + ecuId;
         if (ecuIdConfirmed)
             break;
     }
@@ -1046,7 +1046,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     if (!file_name_str.length())
         file_name_str = ecuId;// + ".bin";
 
-    configValues->definition_types[0] = "ecuflash";
+    //configValues->definition_types[0] = "ecuflash";
     //configValues->definition_types[0] = "romraider";
 
     def_map_index = 0;
@@ -1099,9 +1099,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
-        //qDebug() << "Map number " + QString::number(i) + " and name " + ecuCalDef->NameList.at(i);
-        if (ecuCalDef->StorageTypeList.at(i) == "uint8")
-            storagesize = 1;
+        storagesize = 1;
         if (ecuCalDef->StorageTypeList.at(i) == "uint16")
             storagesize = 2;
         if (ecuCalDef->StorageTypeList.at(i) == "uint24")
@@ -1117,12 +1115,9 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             for (int k = 0; k < storagesize; k++)
             {
                 dataByte = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                //qDebug() << hex << k << "/" << storagesize << dataByte;
-                qDebug() << k << "/" << storagesize << QString("%1").arg(dataByte,2,16,QLatin1Char('0'));
                 mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
             ecuCalDef->MapData.replace(i, mapData);
-
         }
         else
         {
@@ -1147,7 +1142,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 }
 
                 double value = 0;
-                if (ecuCalDef->TypeList.at(i) != "Switch")
+                if (ecuCalDef->TypeList.at(i) != "Selectable")
                 {
                     if (ecuCalDef->StorageTypeList.at(i) == "float"){
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
@@ -1168,8 +1163,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             }
             else if (ecuCalDef->XScaleTypeList.at(i) == "X Axis" || (ecuCalDef->XScaleTypeList.at(i) == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
             {
-                if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint8")
-                    storagesize = 1;
+                storagesize = 1;
                 if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint16")
                     storagesize = 2;
                 if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint24")
@@ -1198,7 +1192,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                         }
                     }
                     double value = 0;
-                    if (ecuCalDef->XScaleTypeList.at(i) != "Switch")
+                    if (ecuCalDef->XScaleTypeList.at(i) != "Selectable")
                     {
                         if (ecuCalDef->XScaleStorageTypeList.at(i) == "float")
                             value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
@@ -1214,8 +1208,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             ecuCalDef->XScaleData.replace(i, " ");
         if (ecuCalDef->YSizeList.at(i).toUInt() > 1)
         {
-            if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint8")
-                storagesize = 1;
+            storagesize = 1;
             if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint16")
                 storagesize = 2;
             if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint24")
@@ -1243,7 +1236,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     }
                 }
                 double value = 0;
-                if (ecuCalDef->YScaleTypeList.at(i) != "Switch")
+                if (ecuCalDef->YScaleTypeList.at(i) != "Selectable")
                 {
                     if (ecuCalDef->YScaleStorageTypeList.at(i) == "float")
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
@@ -1330,7 +1323,6 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
             for (int k = 0; k < storagesize; k++)
             {
                 dataByte = ecuCalDef->MapData.at(i).mid(0, 2).toUInt(&bStatus, 16);
-                qDebug() << QString("%1").arg(dataByte,2,16,QLatin1Char('0'));
                 ecuCalDef->FullRomData[byteAddress] = dataByte;
             }
         }
@@ -1475,9 +1467,8 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
     return ecuCalDef;
 }
 
-QByteArray FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_length)
+FileActions::EcuCalDefStructure *FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_length)
 {
-    //qDebug() << "Checking 32-bit checksum, filesize = " << ecuCalDef->FileSize << ecuCalDef->RomInfo[FileSize];
     QByteArray checksum_array;
 
     uint32_t checksum_area_end = checksum_area_start + checksum_area_length;
@@ -1514,8 +1505,6 @@ QByteArray FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructur
         if (checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
         {
             //QMessageBox::information(this, tr("32-bit checksum"), "Checksums disabled");
-            //qDebug() << "Checksum block " + QString::number(checksum_block) + " DISABLED!";
-            //checksum = 0;
         }
         if (checksum_dword_addr_lo != 0 && checksum_dword_addr_hi != 0 && checksum_diff != 0x5aa5a55a)
         {
@@ -1556,16 +1545,13 @@ QByteArray FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructur
         checksum_block++;
     }
 
-    //qDebug() << "checksum area:" << checksum_area_length;
-    //qDebug() << "checksum_array:" << checksum_array.length() << checksum_array;
-
     if (!checksum_ok)
     {
         ecuCalDef->FullRomData.replace(checksum_area_start, checksum_area_length, checksum_array);
         QMessageBox::information(this, tr("32-bit checksum"), "Checksums corrected");
     }
 
-    return 0;
+    return ecuCalDef;
 }
 
 QStringList FileActions::parse_stringlist_from_expression_string(QString expression, QString x)
@@ -1577,7 +1563,7 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
     bool isOperator = true;
 
     int i = 0;
-    //qDebug() << expression;
+
     while (i < expression.length())
     {
         QString number;
@@ -1646,14 +1632,12 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             isOperator = true;
             if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == "/" || operators.at(stack - 1) == "*"))
             {
-                //qDebug() << "Check expression +: / or * found";
                 numbers.append(operators.at(stack - 1));
                 output++;
                 operators.replace(stack - 1, expression.at(i));
             }
             else
             {
-                //qDebug() << "Check expression +: / or * NOT found";
                 operators.append(expression.at(i));
                 stack++;
             }
@@ -1663,14 +1647,12 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             isOperator = true;
             if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == "/" || operators.at(stack - 1) == "*"))
             {
-                //qDebug() << "Check expression -: / or * found";
                 numbers.append(operators.at(stack - 1));
                 output++;
                 operators.replace(stack - 1, expression.at(i));
             }
             else
             {
-                //qDebug() << "Check expression -: / or * NOT found";
                 operators.append(expression.at(i));
                 stack++;
             }
@@ -1684,11 +1666,6 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
         numbers.append(operators.at(stack));
         operators.removeAt(stack);
     }
-
-    //if (numbers.length() > 0 && numbers.at(0) == "14.7")
-    //    qDebug() << numbers;
-    //if (numbers.length() > 1 && numbers.at(1) == "14.7")
-    //    qDebug() << numbers;
 
     return numbers;
 }

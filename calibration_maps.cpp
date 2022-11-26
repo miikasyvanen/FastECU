@@ -334,14 +334,13 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         QComboBox *selectableComboBox = new QComboBox();
         selectableComboBox->setFont(cellFont);
         selectableComboBox->setFixedWidth(mapCellWidthSelectable);
-        for (int j = 0; j < selectionNameList.length(); j++){
+        for (int j = 0; j < selectionNameList.length() - 1; j++){
             if (selectionNameList.at(j) != "")
                 selectableComboBox->addItem(selectionNameList.at(j));
         }
         selectableComboBox->setObjectName("selectableComboBox");
-        for (int i = 0; i < selectionNameList.length(); i++)
+        for (int i = 0; i < selectionNameList.length() - 1; i++)
         {
-            qDebug() << mapDataCellText;
             if (selectionValueList.at(i) == mapDataCellText)
             {
                 currentIndex = i;

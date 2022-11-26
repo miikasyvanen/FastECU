@@ -62,6 +62,7 @@ private:
     bool log_params_request_started = false;
     bool ecu_init_started = false;
     bool ecu_init_complete = false;
+    bool haltech_ic7_display_on = false;
 
     int ecuCalDefIndex = 0;
     struct FileActions::EcuCalDefStructure *ecuCalDef[100];
@@ -209,11 +210,13 @@ private:
     void logger_definition_manager();
     void toggle_realtime();
     void toggle_log_to_file();
+    void toggle_haltech_ic7_display();
     void set_maptablewidget_items();
     QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian);
     void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, float map_value);
     int get_mapvalue_decimal_count(QString valueFormat);
     int get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, float mapDataValue, int mapIndex);
+    int test_haltech_ic7_display();
 
 protected:
 
@@ -232,7 +235,7 @@ private slots:
     void log_ssm_values();
     void read_log_serial_data();
 
-    // menuactions.c
+    // menu_actions.c
     void menu_action_triggered(QString action);
 
     // mainwindow.c

@@ -42,6 +42,7 @@ public:
     bool setDataTerminalReady = true;
     bool is_can_connection = false;
     bool is_iso15765_connection = false;
+    bool is_29_bit_id = false;
 
     bool use_openport2_adapter = false;
 
@@ -66,6 +67,8 @@ public:
     QString subaru_02_32bit_kernel_baudrate = "62500";
     QString subaru_04_32bit_kernel_baudrate = "62500";
     QString subaru_05_32bit_kernel_baudrate = "62500";
+
+    QString can_speed = "500000";
 
     QString serial_port_baudrate = "4800";
     QString serial_port_linux = "/dev/ttyUSB0";
