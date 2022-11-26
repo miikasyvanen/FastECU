@@ -157,8 +157,8 @@ public:
         QStringList FineIncList;
         QStringList CoarseIncList;
         QStringList VisibleList;
-        QStringList SelectionsList;
-        QStringList SelectionsListSorted;
+        QStringList SelectionsNameList;
+        QStringList SelectionsValueList;
         QStringList DescriptionList;
         QStringList StateList;
         QStringList MapScalingNameList;
@@ -209,6 +209,9 @@ public:
         QStringList ScalingIncList;
         QStringList ScalingStorageTypeList;
         QStringList ScalingEndianList;
+        //QStringList ScalingBloblistList;
+        QStringList ScalingSelectionsNameList;
+        QStringList ScalingSelectionsValueList;
 
         QStringList RomInfo;
         QString RomInfoExpanded;
@@ -312,6 +315,7 @@ public:
     ConfigValuesStructure *create_ecuflash_def_id_list(ConfigValuesStructure *configValues);
     EcuCalDefStructure *read_ecuflash_ecu_base_def(FileActions::EcuCalDefStructure *ecuCalDef);
     EcuCalDefStructure *read_ecuflash_ecu_def(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);
+    EcuCalDefStructure *parse_ecuflash_def_scalings(EcuCalDefStructure *ecuCalDef);
     EcuCalDefStructure *add_ecuflash_def_list_item(EcuCalDefStructure *ecuCalDef);
 
     /***********************************************

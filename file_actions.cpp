@@ -1053,7 +1053,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     for (int i = 0; i < configValues->definition_types.length(); i++)
     {
         if (configValues->definition_types.at(i) == "ecuflash")// && !ecuCalDef->use_romraider_definition)
+        {
             read_ecuflash_ecu_def(ecuCalDef, ecuId);
+            parse_ecuflash_def_scalings(ecuCalDef);
+        }
         if (configValues->definition_types.at(i) == "romraider")// && !ecuCalDef->use_ecuflash_definition)
             read_romraider_ecu_def(ecuCalDef, ecuId);
     }
@@ -1106,39 +1109,57 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         if (ecuCalDef->StorageTypeList.at(i) == "uint32" || ecuCalDef->StorageTypeList.at(i) == "float")
             storagesize = 4;
         mapData.clear();
-        for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
+        if (ecuCalDef->StorageTypeList.at(i) == "bloblist")
         {
-            uint32_t dataByte = 0;
-            uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
-                byteAddress -= 0x8000;
+            storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
+            uint8_t dataByte = 0;
+            uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16);
             for (int k = 0; k < storagesize; k++)
             {
-                if (ecuCalDef->EndianList.at(i) == "little" || ecuCalDef->StorageTypeList.at(i) == "float")
-                {
-                    dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                    mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                }
-                else
-                {
-                    dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                    mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                }
+                dataByte = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                //qDebug() << hex << k << "/" << storagesize << dataByte;
+                qDebug() << k << "/" << storagesize << QString("%1").arg(dataByte,2,16,QLatin1Char('0'));
+                mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
+            ecuCalDef->MapData.replace(i, mapData);
 
-            double value = 0;
-            if (ecuCalDef->TypeList.at(i) != "Switch")
-            {
-                if (ecuCalDef->StorageTypeList.at(i) == "float"){
-                    value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
-                }
-                else{
-                    value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
-                }
-            }
-            mapData.append(QString::number(value, 'g', float_precision) + ",");
         }
-        ecuCalDef->MapData.insert(i, mapData);
+        else
+        {
+            for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
+            {
+                uint32_t dataByte = 0;
+                uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                    byteAddress -= 0x8000;
+                for (int k = 0; k < storagesize; k++)
+                {
+                    if (ecuCalDef->EndianList.at(i) == "little" || ecuCalDef->StorageTypeList.at(i) == "float")
+                    {
+                        dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
+                        mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
+                    }
+                    else
+                    {
+                        dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                        mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                    }
+                }
+
+                double value = 0;
+                if (ecuCalDef->TypeList.at(i) != "Switch")
+                {
+                    if (ecuCalDef->StorageTypeList.at(i) == "float"){
+                        value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
+                    }
+                    else{
+                        value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
+                    }
+                }
+                mapData.append(QString::number(value, 'g', float_precision) + ",");
+            }
+            ecuCalDef->MapData.replace(i, mapData);
+        }
         if (ecuCalDef->XSizeList.at(i).toUInt() > 1)
         {
             if (ecuCalDef->XScaleTypeList.at(i) == "Static Y Axis")
@@ -1186,11 +1207,11 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     }
                     mapData.append(QString::number(value, 'g', float_precision) + ",");
                 }
-                ecuCalDef->XScaleData.insert(i, mapData);
+                ecuCalDef->XScaleData.replace(i, mapData);
             }
         }
         else
-            ecuCalDef->XScaleData.insert(i, " ");
+            ecuCalDef->XScaleData.replace(i, " ");
         if (ecuCalDef->YSizeList.at(i).toUInt() > 1)
         {
             if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint8")
@@ -1231,10 +1252,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 }
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
             }
-            ecuCalDef->YScaleData.insert(i, mapData);
+            ecuCalDef->YScaleData.replace(i, mapData);
         }
         else
-            ecuCalDef->YScaleData.insert(i, " ");
+            ecuCalDef->YScaleData.replace(i, " ");
 
     }
 
@@ -1301,36 +1322,51 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
             storagesize = 4;
         mapData.clear();
         QStringList mapDataList = ecuCalDef->MapData.at(i).split(",");
-        for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
+        if (ecuCalDef->StorageTypeList.at(i) == "bloblist")
         {
-            uint32_t dataByte = 0;
-            uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
-                byteAddress -= 0x8000;
-
-            if (ecuCalDef->TypeList.at(i) != "Switch")
+            storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
+            uint8_t dataByte = 0;
+            uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16);
+            for (int k = 0; k < storagesize; k++)
             {
-                if (ecuCalDef->StorageTypeList.at(i) == "float"){
-                    mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
-                }
-                else
-                {
-                    mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
-                    mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
-                }
+                dataByte = ecuCalDef->MapData.at(i).mid(0, 2).toUInt(&bStatus, 16);
+                qDebug() << QString("%1").arg(dataByte,2,16,QLatin1Char('0'));
+                ecuCalDef->FullRomData[byteAddress] = dataByte;
+            }
+        }
+        else
+        {
+            for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
+            {
+                uint32_t dataByte = 0;
+                uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                    byteAddress -= 0x8000;
 
-                if (mapDataValue.floatValue == 0)
-                    mapDataValue.floatValue = 0.0f;
-
-                for (int k = 0; k < storagesize; k++)
+                if (ecuCalDef->TypeList.at(i) != "Switch")
                 {
-                    if (ecuCalDef->EndianList.at(i) == "little")
-                    {
-                        ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
+                    if (ecuCalDef->StorageTypeList.at(i) == "float"){
+                        mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
                     }
                     else
                     {
-                        ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
+                        mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
+                        mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
+                    }
+
+                    if (mapDataValue.floatValue == 0)
+                        mapDataValue.floatValue = 0.0f;
+
+                    for (int k = 0; k < storagesize; k++)
+                    {
+                        if (ecuCalDef->EndianList.at(i) == "little")
+                        {
+                            ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
+                        }
+                        else
+                        {
+                            ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
+                        }
                     }
                 }
             }

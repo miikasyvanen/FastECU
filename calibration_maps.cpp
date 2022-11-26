@@ -39,6 +39,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
     {
+        qDebug() << "MultiSelectable map";
         mapWindowObjectName = mapWindowObjectName + "," + "MultiSelectable";
         mapCellWidth = mapCellWidthSelectable;
         xSize = 1;
@@ -47,6 +48,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "Selectable")
     {
+        qDebug() << "Selectable map";
         mapWindowObjectName = mapWindowObjectName + "," + "Selectable";
         mapCellWidth = mapCellWidthSelectable;
         xSize = 1;
@@ -299,7 +301,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
     {
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
-        QStringList selectionsList = ecuCalDef->SelectionsList.at(mapIndex).split(",");
+        QStringList selectionsList = ecuCalDef->SelectionsNameList.at(mapIndex).split(",");
         QStringList yScaleCellText = ecuCalDef->YScaleUnitsList.at(mapIndex).split(",");
 
         for (int i = 0; i < yScaleCellText.length(); i++)
@@ -319,34 +321,35 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             selectableComboBox->setObjectName("selectableComboBox");
             selectableComboBox->setCurrentIndex(mapDataCellText.at(0).toInt());
             ui->mapDataTableWidget->setCellWidget(i, 1, selectableComboBox);
-            connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectableComboBoxItemChanged(QString)));
+            connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectable_combobox_item_changed(QString)));
         }
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "Selectable")
     {
-        QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
-        QStringList selectionsList = ecuCalDef->SelectionsList.at(mapIndex).split(",");
-        QStringList selectionsListSorted = ecuCalDef->SelectionsListSorted.at(mapIndex).split(",");
+        QString mapDataCellText = ecuCalDef->MapData.at(mapIndex);//.split(",");
+        QStringList selectionNameList = ecuCalDef->SelectionsNameList.at(mapIndex).split(",");
+        QStringList selectionValueList = ecuCalDef->SelectionsValueList.at(mapIndex).split(",");
         int currentIndex = 0;
 
         QComboBox *selectableComboBox = new QComboBox();
         selectableComboBox->setFont(cellFont);
         selectableComboBox->setFixedWidth(mapCellWidthSelectable);
-        for (int j = 0; j < selectionsListSorted.length(); j++){
-            if (selectionsListSorted.at(j) != "")
-                selectableComboBox->addItem(selectionsListSorted.at(j));
+        for (int j = 0; j < selectionNameList.length(); j++){
+            if (selectionNameList.at(j) != "")
+                selectableComboBox->addItem(selectionNameList.at(j));
         }
         selectableComboBox->setObjectName("selectableComboBox");
-        for (int i = 0; i < selectionsListSorted.length(); i++)
+        for (int i = 0; i < selectionNameList.length(); i++)
         {
-            if (selectionsListSorted.at(i) == selectionsList.at(mapDataCellText.at(0).toInt()))
+            qDebug() << mapDataCellText;
+            if (selectionValueList.at(i) == mapDataCellText)
             {
                 currentIndex = i;
             }
         }
         selectableComboBox->setCurrentIndex(currentIndex);
         ui->mapDataTableWidget->setCellWidget(0, 0, selectableComboBox);
-        connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectableComboBoxItemChanged(QString)));
+        connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectable_combobox_item_changed(QString)));
     }
 
     if (ecuCalDef->TypeList.at(mapIndex) == "1D")
