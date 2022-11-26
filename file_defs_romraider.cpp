@@ -258,11 +258,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                         // Next child
                                         TableChild = TableChild.nextSibling().toElement();
                                     }
-                                    if (!TableSelections.isEmpty())
-                                    {
-                                        ecuCalDef->SelectionsList.replace(i, TableSelections);
-                                        ecuCalDef->SelectionsListSorted.replace(i, TableSelectionsSorted);
-                                    }
                                     ecuCalDef->StateList.replace(i, TableStates);
 
                                 }
@@ -528,8 +523,8 @@ FileActions::EcuCalDefStructure *FileActions::add_romraider_def_list_item(EcuCal
     ecuCalDef->FineIncList.append(" ");
     ecuCalDef->CoarseIncList.append(" ");
     ecuCalDef->VisibleList.append(" ");
-    ecuCalDef->SelectionsList.append(" ");
-    ecuCalDef->SelectionsListSorted.append(" ");
+    ecuCalDef->SelectionsNameList.append(" ");
+    ecuCalDef->SelectionsValueList.append(" ");
     ecuCalDef->DescriptionList.append(" ");
     ecuCalDef->StateList.append(" ");
     ecuCalDef->MapData.append(" ");

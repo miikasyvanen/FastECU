@@ -626,6 +626,8 @@ void MainWindow::selectable_combobox_item_changed(QString item)
     int mapRomNumber = 0;
     int mapNumber = 0;
 
+    //bool ok = false;
+
     QMdiSubWindow* w = ui->mdiArea->activeSubWindow();
     if (w)
     {
@@ -636,12 +638,14 @@ void MainWindow::selectable_combobox_item_changed(QString item)
         QTableWidget* mapTableWidget = w->findChild<QTableWidget*>(w->objectName());
         if (mapTableWidget)
         {
-            QStringList selectionsList = ecuCalDef[mapRomNumber]->SelectionsList.at(mapNumber).split(",");
-            QStringList selectionsListSorted = ecuCalDef[mapRomNumber]->SelectionsListSorted.at(mapNumber).split(",");
+            QStringList selectionsNameList = ecuCalDef[mapRomNumber]->SelectionsNameList.at(mapNumber).split(",");
+            QStringList selectionsValueList = ecuCalDef[mapRomNumber]->SelectionsValueList.at(mapNumber).split(",");
 
-            for (int j = 0; j < selectionsList.length(); j++){
-                if (selectionsList[j] == item){
-                    ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, QString::number(j));
+            for (int j = 0; j < selectionsNameList.length(); j++){
+                if (selectionsNameList.at(j) == item)
+                {
+                    ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, selectionsValueList.at(j));
+                    qDebug() << "Selection:" << selectionsValueList.at(j);
                 }
             }
         }
@@ -674,14 +678,14 @@ void MainWindow::checkbox_state_changed(int state)
                 uint32_t byte_address = ecuCalDef[map_rom_number]->AddressList.at(map_number).toUInt(&bStatus, 16);
                 if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < (170 * 1024) && byte_address > 0x27FFF)
                     byte_address -= 0x8000;
-                if (switch_states.at(i) == "off" && state == 0)
+                if ((switch_states.at(i) == "off" || switch_states.at(i) == "disabled") && state == 0)
                 {
                     for (int j = 0; j < switch_data.length(); j++)
                     {
                         ecuCalDef[map_rom_number]->FullRomData[byte_address + j] = (uint8_t)switch_data.at(j).toUInt();
                     }
                 }
-                if (switch_states.at(i) == "on" && state == 2)
+                if ((switch_states.at(i) == "on" || switch_states.at(i) == "enabled") && state == 2)
                 {
                     for (int j = 0; j < switch_data.length(); j++)
                     {
