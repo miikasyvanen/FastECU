@@ -55,6 +55,12 @@ void MainWindow::menu_action_triggered(QString action)
     if (action == "setlogviews")
         change_gauge_values();
 
+    // TESTING MENU
+    if (action == "haltech_ic7")
+    {
+        toggle_haltech_ic7_display();
+    }
+
     // HELP MENU
     if (action == "about")
         QMessageBox::information(this, tr("FastECU v0.1b"), "FastECU is open source tuning software for Subaru ECUs.\n"
@@ -841,6 +847,24 @@ void MainWindow::toggle_log_to_file()
     }
 }
 
+void MainWindow::toggle_haltech_ic7_display()
+{
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    foreach (QMenu *menu, menus) {
+        foreach (QAction *action, menu->actions()) {
+            if (action->isSeparator()) {
+
+            } else if (action->menu()) {
+
+            } else {
+                if (action->text() == "Haltech IC-7")
+                    haltech_ic7_display_on = action->isChecked();
+            }
+        }
+    }
+    if (haltech_ic7_display_on)
+        test_haltech_ic7_display();
+}
 
 void MainWindow::set_maptablewidget_items()
 {
@@ -1074,4 +1098,184 @@ int MainWindow::get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, 
 
     mapCellColors = (mapCellColorRed << 16) + (mapCellColorGreen << 8) + (mapCellColorBlue);
     return mapCellColors;
+}
+
+int MainWindow::test_haltech_ic7_display()
+{
+    QByteArray output;
+    QByteArray received;
+
+    uint16_t temp_base = 2300;
+
+    uint16_t RPM = 0;
+    uint16_t MAP = 0;
+    uint16_t TPS = 0;
+
+    uint16_t IDC = 0;
+    uint16_t IGN = 0;
+
+    uint16_t SPD = 0;
+    uint16_t GEAR = 0;
+
+    uint16_t BATT = 0;
+
+    uint16_t CLT = 0;
+    uint16_t IAT = 0;
+    uint16_t FLT = 0;
+    uint16_t OLT = 0;
+
+    int i = 0;
+
+    serial_poll_timer->stop();
+    ssm_init_poll_timer->stop();
+    logging_poll_timer->stop();
+
+    serial->is_iso15765_connection = true;
+    //serial->is_can_connection = true;
+    serial->is_29_bit_id = true;
+    serial->can_speed = "1000000";
+
+    serial->reset_connection();
+    ecuid.clear();
+    ecu_init_complete = false;
+    open_serial_port();
+
+    qDebug() << "Send data to Haltech IC-7 display";
+
+    while (haltech_ic7_display_on)
+    {
+        i = 0;
+        while (i < 101)
+        {
+            RPM = i * 60;
+            MAP = i * 10;
+            TPS = i * 10;
+
+            IDC = i * 10;
+            IGN = i * 5;
+
+            SPD = i * 10;
+            GEAR = i / 20 + 1;
+            BATT = i / 2 + 100;
+
+            CLT = temp_base + i * 10;
+            IAT = temp_base + i * 10;
+            FLT = temp_base + i * 10;
+            OLT = temp_base + i * 10;
+
+            qDebug() << "MAP:" << MAP << "TPS:" << TPS;
+
+            output.clear();
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x03);
+            output.append((uint8_t)0x60);
+            //output.append((uint8_t)0x00 & 0xFF);
+            //output.append((uint8_t)0x00 & 0xFF);
+            output.append((uint8_t)(RPM >> 8) & 0xFF);
+            output.append((uint8_t)RPM & 0xFF);
+            output.append((uint8_t)(MAP >> 8) & 0xFF);
+            output.append((uint8_t)MAP & 0xFF);
+            output.append((uint8_t)(TPS >> 8) & 0xFF);
+            output.append((uint8_t)TPS & 0xFF);
+
+            received = serial->write_serial_data_echo_check(output);
+
+            output.clear();
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x03);
+            output.append((uint8_t)0xE0);
+            output.append((uint8_t)(CLT >> 8) & 0xFF);
+            output.append((uint8_t)CLT & 0xFF);
+            output.append((uint8_t)(IAT >> 8) & 0xFF);
+            output.append((uint8_t)IAT & 0xFF);
+            output.append((uint8_t)(FLT >> 8) & 0xFF);
+            output.append((uint8_t)FLT & 0xFF);
+            output.append((uint8_t)(OLT >> 8) & 0xFF);
+            output.append((uint8_t)OLT & 0xFF);
+
+            received = serial->write_serial_data_echo_check(output);
+
+            output.clear();
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x03);
+            output.append((uint8_t)0x62);
+            output.append((uint8_t)(IDC >> 8) & 0xFF);
+            output.append((uint8_t)IDC & 0xFF);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)(IGN >> 8) & 0xFF);
+            output.append((uint8_t)IGN & 0xFF);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+
+            received = serial->write_serial_data_echo_check(output);
+
+            output.clear();
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x03);
+            output.append((uint8_t)0x70);
+            output.append((uint8_t)(SPD >> 8) & 0xFF);
+            output.append((uint8_t)SPD & 0xFF);
+            output.append((uint8_t)(GEAR >> 8) & 0xFF);
+            output.append((uint8_t)GEAR & 0xFF);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+
+            received = serial->write_serial_data_echo_check(output);
+
+            output.clear();
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x03);
+            output.append((uint8_t)0x72);
+            output.append((uint8_t)(BATT >> 8) & 0xFF);
+            output.append((uint8_t)BATT & 0xFF);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x00);
+
+            received = serial->write_serial_data_echo_check(output);
+
+            i++;
+
+            delay(20);
+        }
+    }
+
+    /*
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x60);
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x61);
+
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x68);
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x69);
+
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x73);
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x74);
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x75);
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0xE2);
+*/
+    serial->can_speed = "500000";
+    serial_poll_timer->start();
+    ssm_init_poll_timer->start();
+
+    return 0;
 }

@@ -358,7 +358,11 @@ void MainWindow::log_protocol_changed()
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
     if (log_protocol_list->currentText() == "CAN")
+    {
         serial->is_can_connection = true;
+        serial->is_29_bit_id = false;
+        serial->can_speed = "500000";
+    }
     //else if (log_protocol_list->currentText() == "ISO15765")
         //serial->is_iso15765_connection = true;
 
@@ -470,6 +474,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     if (flash_method_list->currentText() == "subarucan" || flash_protocol_list->currentText() == "CAN")
         serial->is_can_connection = true;
 
+    serial->is_29_bit_id = true;
+    serial->can_speed = "500000";
+
     if (cmd_type == "test_write" || cmd_type == "write")
     {
         serial->reset_connection();
@@ -517,6 +524,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
+    serial->is_29_bit_id = false;
 
     return 0;
 }
@@ -549,7 +557,6 @@ bool MainWindow::open_calibration_file(QString filename)
 {
     ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
     ecuCalDef[ecuCalDefIndex] = fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], filename);
-    //qDebug() << ecuCalDef[ecuCalDefIndex];
     if(ecuCalDef[ecuCalDefIndex] != NULL)
     {
         calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
@@ -645,7 +652,6 @@ void MainWindow::selectable_combobox_item_changed(QString item)
                 if (selectionsNameList.at(j) == item)
                 {
                     ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, selectionsValueList.at(j));
-                    qDebug() << "Selection:" << selectionsValueList.at(j);
                 }
             }
         }
@@ -757,13 +763,10 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
         {
             if (ecuCalDef[romNumber]->NameList.at(i) == selectedText)//itemText)
             {
-                qDebug() << "Map found:" << ecuCalDef[romNumber]->NameList.at(i) << selectedText;
                 if (ecuCalDef[romNumber]->VisibleList.at(i) == "1")
                 {
-                    qDebug() << "Map already visible. If in top, close it. If not, bring to top.";
                     int map_index = 0;
                     QList<QMdiSubWindow *> list = ui->mdiArea->findChildren<QMdiSubWindow *>();
-                    qDebug() << "Widget list" << list;
                     foreach(QMdiSubWindow *w, list)
                     {
                         qDebug() << map_index << w->objectName();
@@ -787,7 +790,6 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
                 }
                 else
                 {
-                    qDebug() << "Map NOT visible, open map.";
                     ecuCalDef[romNumber]->VisibleList.replace(i, "1");
                     item->setCheckState(0, Qt::Checked);
 

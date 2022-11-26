@@ -346,7 +346,7 @@ public:
      * Calculate Subaru 32-bit
      * checksums
      **************************/
-    QByteArray checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_end);
+    EcuCalDefStructure *checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_end);
 
     /*************************************
      * Parse expression strings for used

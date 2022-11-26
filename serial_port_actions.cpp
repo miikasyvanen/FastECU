@@ -476,8 +476,10 @@ int SerialPortActions::write_j2534_data(QByteArray output)
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         txmsg.TxFlags = 0;
-        if (is_can_connection)
+        if (is_29_bit_id)
             txmsg.TxFlags = CAN_29BIT_ID;
+        else
+            txmsg.TxFlags = 0;
         txmsg.Timestamp = 0;
         txmsg.DataSize = txMsgLen;
         txmsg.ExtraDataIndex = 0;
@@ -688,14 +690,17 @@ int SerialPortActions::set_j2534_can_connection()
     if (is_can_connection)
     {
         protocol = CAN;
-        flags = CAN_29BIT_ID;
+        if (is_29_bit_id)
+            flags = CAN_29BIT_ID;
+        else
+            flags = 0;
     }
     else
     {
         protocol = ISO15765;
         flags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
     }
-    baudrate = 500000;
+    baudrate = can_speed.toUInt();
 
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages
     if (j2534->PassThruConnect(devID, protocol, flags, baudrate, &chanID))
@@ -751,7 +756,10 @@ int SerialPortActions::set_j2534_can_connection_filters()
         qDebug() << "Set CAN filters";
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
-        txmsg.TxFlags = CAN_29BIT_ID;
+        if (is_29_bit_id)
+            flags = CAN_29BIT_ID;
+        else
+            flags = 0;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
