@@ -646,27 +646,27 @@ int SerialPortActions::init_j2534_connection()
     if (is_iso15765_connection)
     {
         //set_j2534_can_filters();
-        set_j2534_can_connection();
+        set_j2534_can();
         set_j2534_can_timings();
-        set_j2534_can_connection_filters();
+        set_j2534_can_filters();
     }
     else if (is_can_connection)
     {
-        set_j2534_can_connection();
+        set_j2534_can();
         set_j2534_can_timings();
-        set_j2534_can_connection_filters();
+        set_j2534_can_filters();
     }
     else
     {
-        set_j2534_iso9141_connection();
+        set_j2534_iso9141();
         set_j2534_iso9141_timings();
-        set_j2534_iso9141_connection_filters();
+        set_j2534_iso9141_filters();
     }
 
     return STATUS_SUCCESS;
 }
-
-int SerialPortActions::set_j2534_can_bl_connection()
+/*
+int SerialPortActions::set_j2534_can()
 {
     QByteArray output;
 
@@ -684,8 +684,8 @@ int SerialPortActions::set_j2534_can_bl_connection()
 
     output = "att5 12 256 2000000\n";   // send 00 0F FF FE 7A AE ?? ?? ?? ?? ?? ??
 }
-
-int SerialPortActions::set_j2534_can_connection()
+*/
+int SerialPortActions::set_j2534_can()
 {
     if (is_can_connection)
     {
@@ -740,7 +740,7 @@ int SerialPortActions::set_j2534_can_timings()
     return STATUS_SUCCESS;
 }
 
-int SerialPortActions::set_j2534_can_connection_filters()
+int SerialPortActions::set_j2534_can_filters()
 {
     // now setup the filter(s)
     PASSTHRU_MSG rxmsg, txmsg;
@@ -756,10 +756,9 @@ int SerialPortActions::set_j2534_can_connection_filters()
         qDebug() << "Set CAN filters";
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
+        txmsg.TxFlags = 0;
         if (is_29_bit_id)
-            flags = CAN_29BIT_ID;
-        else
-            flags = 0;
+            txmsg.TxFlags |= CAN_29BIT_ID;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
@@ -774,9 +773,7 @@ int SerialPortActions::set_j2534_can_connection_filters()
             return STATUS_ERROR;
         }
 
-        //msgPattern.DataSize = 5;
         msgPattern.Data[3] = 0x21;
-        //msgPattern.Data[4] = 0x00;
 
         if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
         {
@@ -790,6 +787,8 @@ int SerialPortActions::set_j2534_can_connection_filters()
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         txmsg.TxFlags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
+        if (is_29_bit_id)
+            txmsg.TxFlags |= CAN_29BIT_ID;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
@@ -813,6 +812,16 @@ int SerialPortActions::set_j2534_can_connection_filters()
             reportJ2534Error();
             return STATUS_ERROR;
         }
+/*
+        msgPattern.Data[3] = 0x21;
+
+        if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
+        //if (j2534->PassThruStartMsgFilter(chanID, FLOW_CONTROL_FILTER, &msgMask, &msgPattern, &msgFlow, &msgId))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+*/
 /*
         msgPattern.Data[0] = 0x00;
         msgPattern.Data[1] = 0x00;
@@ -838,7 +847,7 @@ int SerialPortActions::set_j2534_can_connection_filters()
 
     return STATUS_SUCCESS;
 }
-
+/*
 int SerialPortActions::set_j2534_can_filters()
 {
     baudrate = 500000;
@@ -940,8 +949,8 @@ int SerialPortActions::set_j2534_can_filters()
     }
     return STATUS_SUCCESS;
 }
-
-int SerialPortActions::set_j2534_iso9141_connection()
+*/
+int SerialPortActions::set_j2534_iso9141()
 {
     protocol = ISO9141;
     flags = ISO9141_NO_CHECKSUM;
@@ -988,7 +997,7 @@ int SerialPortActions::set_j2534_iso9141_timings()
     return STATUS_SUCCESS;
 }
 
-int SerialPortActions::set_j2534_iso9141_connection_filters()
+int SerialPortActions::set_j2534_iso9141_filters()
 {
     // now setup the filter(s)
     PASSTHRU_MSG rxmsg,txmsg;

@@ -39,16 +39,15 @@ MainWindow::MainWindow(QWidget *parent)
     ui->calibrationDataTreeWidget->setHeaderLabel("Calibration Data");
 
     fileActions = new FileActions();
-    //FileActions::ConfigValuesStructure *configValues = &fileActions->ConfigValuesStruct;
     configValues = &fileActions->ConfigValuesStruct;
 
     fileActions->check_config_dir();
     configValues = fileActions->read_config_file();
 
-    if (!configValues->romraider_definition_files.length())
+    if (!configValues->romraider_definition_files.length() && !configValues->primary_definition_base.contains("ecuflash"))
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
 
-    if (configValues->definition_types.contains("ecuflash"))
+    if (configValues->primary_definition_base.contains("ecuflash"))
         fileActions->create_ecuflash_def_id_list(configValues);
 
     if (QDir(configValues->kernel_files_directory).exists()){
@@ -370,7 +369,7 @@ void MainWindow::log_protocol_changed()
     qDebug() << "iso15765:" << serial->is_iso15765_connection;
 
     configValues->log_protocol = log_protocol_list->currentText();
-    fileActions->save_config_file();
+    fileActions->save_config_file(configValues);
 
     serial->reset_connection();
     ecuid.clear();
@@ -391,7 +390,7 @@ void MainWindow::flash_method_changed()
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
 
     configValues->flash_method = flash_method_list->currentText();
-    fileActions->save_config_file();
+    fileActions->save_config_file(configValues);
 }
 
 void MainWindow::flash_protocol_changed()
@@ -399,7 +398,7 @@ void MainWindow::flash_protocol_changed()
     QComboBox *flash_protocol_list = ui->toolBar->findChild<QComboBox*>("flash_protocol_list");
 
     configValues->flash_protocol = flash_protocol_list->currentText();
-    fileActions->save_config_file();
+    fileActions->save_config_file(configValues);
 }
 
 void MainWindow::check_serial_ports()
@@ -471,8 +470,10 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
 
-    if (flash_method_list->currentText() == "subarucan" || flash_protocol_list->currentText() == "CAN")
+    if (flash_protocol_list->currentText() == "CAN")
         serial->is_can_connection = true;
+    if (flash_method_list->currentText() == "subarucan")
+        serial->is_iso15765_connection = true;
 
     serial->is_29_bit_id = true;
     serial->can_speed = "500000";
@@ -898,7 +899,7 @@ void MainWindow::close_calibration()
         }
     }
     configValues->calibration_files.removeAt(romNumber);
-    fileActions->save_config_file();
+    fileActions->save_config_file(configValues);
 }
 
 void MainWindow::close_calibration_map(QObject* obj)
@@ -1118,7 +1119,7 @@ void MainWindow::add_new_ecu_definition_file()
     {
         definition_files->addItem(filename);
         configValues->romraider_definition_files.append(filename);
-        fileActions->save_config_file();
+        fileActions->save_config_file(configValues);
     }
 
 }
@@ -1137,7 +1138,7 @@ void MainWindow::remove_ecu_definition_file()
         configValues->romraider_definition_files.removeAt(row);
     }
     if (index.length() > 0)
-        fileActions->save_config_file();
+        fileActions->save_config_file(configValues);
 }
 
 void MainWindow::add_new_logger_definition_file()

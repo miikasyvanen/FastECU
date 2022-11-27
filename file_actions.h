@@ -60,13 +60,13 @@ public:
         QString calibration_files_directory = calibration_files_base_directory;
         QStringList romraider_definition_files;
         QString ecuflash_definition_files_directory = definition_files_base_directory + "/ecuflash";
-        QString logger_definition_file = definition_files_base_directory + "/logger_METRIC_EN_v370.xml";
+        QString romraider_logger_definition_file = definition_files_base_directory + "/romraider/logger_METRIC_EN_v370.xml";
         QString definition_files_directory = definition_files_base_directory;
         QString kernel_files_directory = kernel_files_base_directory;
         QString kernel_files;
         QString log_files_directory = log_files_base_directory;
 
-        QStringList definition_types;
+        QString primary_definition_base = "ecuflash";
         QStringList ecuflash_def_ecu_id;
         QStringList ecuflash_def_filename;
     } ConfigValuesStruct;
@@ -283,7 +283,7 @@ public:
     /****************************
      * Open FastECU config file
      ***************************/
-    ConfigValuesStructure *save_config_file();
+    ConfigValuesStructure *save_config_file(FileActions::ConfigValuesStructure *configValues);
 
     /************************
      * Read logger def file

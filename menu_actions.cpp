@@ -26,10 +26,8 @@ void MainWindow::menu_action_triggered(QString action)
         copy_value();
     if (action == "paste")
         paste_value();
-    if (action == "ecu_definition_manager")
-        ecu_definition_manager();
-    if (action == "logger_definition_manager")
-        logger_definition_manager();
+    if (action == "settings")
+        show_preferences_window();
 
     // TUNE MENU
     if (action == "fine_inc" || action == "fine_dec" || action == "coarse_inc" || action == "coarse_dec")
@@ -866,6 +864,14 @@ void MainWindow::toggle_haltech_ic7_display()
         test_haltech_ic7_display();
 }
 
+void MainWindow::show_preferences_window()
+{
+    Settings *settings = new Settings(configValues);
+    settings->show();
+    //fileActions->save_config_file();
+
+}
+
 void MainWindow::set_maptablewidget_items()
 {
     int mapRomNumber = 0;
@@ -1132,7 +1138,7 @@ int MainWindow::test_haltech_ic7_display()
 
     serial->is_iso15765_connection = true;
     //serial->is_can_connection = true;
-    serial->is_29_bit_id = true;
+    serial->is_29_bit_id = false;
     serial->can_speed = "1000000";
 
     serial->reset_connection();
