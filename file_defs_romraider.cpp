@@ -290,7 +290,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
 
     for (int i = 0; i < configValues->romraider_definition_files.length(); i++)
     {
-        QString filename = configValues->romraider_definition_files.at(0);
+        QString filename = configValues->romraider_definition_files.at(i);
         QFile file(filename);
 
         if (!file.open(QIODevice::ReadOnly ))
@@ -428,6 +428,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                         {
                             read_romraider_ecu_base_def(ecuCalDef);
                         }
+                        if (ecuid_def_found)
+                            ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
                         ecuid_def_found = false;
 
                     }
@@ -438,7 +440,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
         }
         file.close();
 
-        ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
     }
 
     ecuCalDef->use_romraider_definition = true;

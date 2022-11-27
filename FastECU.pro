@@ -49,8 +49,8 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
-    preferences.cpp \
     serial_port_actions.cpp \
+    settings.cpp \
     verticallabel.cpp
 
 HEADERS += \
@@ -66,8 +66,8 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
-    preferences.h \
     serial_port_actions.h \
+    settings.h \
     verticallabel.h
 
 FORMS += \
@@ -76,7 +76,7 @@ FORMS += \
     ecuoperationswindow.ui \
     logvalues.ui \
     mainwindow.ui \
-    preferences.ui
+    settings.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

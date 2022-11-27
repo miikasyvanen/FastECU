@@ -29,9 +29,11 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
 
     while (it.hasNext())
     {
-        while (it.filePath() == "")
-            it.next();
-        filename = it.filePath();
+        //while (filename == "")
+            //filename = it.next();
+
+        filename = it.next();
+        //qDebug() << filename;
 
         QFile file(filename);
         if (!file.open(QIODevice::ReadOnly ))
@@ -73,9 +75,11 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
             }
             root = root.nextSibling().toElement();
         }
-        it.next();
+        //it.next();
         file_count++;
     }
+
+    qDebug() << file_count << "ecuflash files found";
 
     return configValues;
 }

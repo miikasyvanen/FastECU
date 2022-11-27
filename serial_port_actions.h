@@ -108,13 +108,13 @@ public:
     long PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const void *pInput, void *pOutput);
 
     int init_j2534_connection();
-    int set_j2534_can_bl_connection();
-    int set_j2534_can_connection();
-    int set_j2534_can_connection_filters();
-    int set_j2534_can_timings();
+    //int set_j2534_can_bl_connection();
+    int set_j2534_can();
     int set_j2534_can_filters();
-    int set_j2534_iso9141_connection();
-    int set_j2534_iso9141_connection_filters();
+    int set_j2534_can_timings();
+    //int set_j2534_can_filters();
+    int set_j2534_iso9141();
+    int set_j2534_iso9141_filters();
     int set_j2534_iso9141_timings();
     int clear_rx_buffer();
 

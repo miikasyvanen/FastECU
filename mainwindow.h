@@ -21,6 +21,7 @@
 #include <QListWidget>
 #include <QCheckBox>
 #include <QStandardItemModel>
+#include <QStackedWidget>
 
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
@@ -29,7 +30,7 @@
 #include <ecu_operations_manual.h>
 #include <file_actions.h>
 #include <logbox.h>
-#include <preferences.h>
+#include <settings.h>
 #include <serial_port_actions.h>
 
 
@@ -171,6 +172,10 @@ private:
     bool log_file_open = false;
     QElapsedTimer *log_file_timer;
 
+    QDialog *settings_dialog;
+    QListWidget *contents_widget;
+    QStackedWidget *pages_widget;
+
     Ui::MainWindow *ui;
 
     // fileactions.c
@@ -217,6 +222,7 @@ private:
     int get_mapvalue_decimal_count(QString valueFormat);
     int get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, float mapDataValue, int mapIndex);
     int test_haltech_ic7_display();
+    void show_preferences_window();
 
 protected:
 

@@ -25,7 +25,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(){
         foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
             QFile().copy("config/" + entry.fileName(), configValues->config_base_directory + "/" + entry.fileName());
         }
-        save_config_file();
+        save_config_file(configValues);
     }
     if (!QDir(configValues->definition_files_base_directory).exists()){
         QDir().mkdir(configValues->definition_files_base_directory);
@@ -130,13 +130,13 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
                                     reader.skipCurrentElement();
                             }
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "definition_types")
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "primary_definition_base")
                         {
                             while(reader.readNextStartElement())
                             {
                                 if (reader.name() == "value")
                                 {
-                                    configValues->definition_types.append(reader.attributes().value("data").toString());
+                                    configValues->primary_definition_base = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -202,13 +202,13 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
                             {
                                 if (reader.name() == "value")
                                 {
-                                    configValues->logger_definition_file = reader.attributes().value("data").toString();
+                                    configValues->romraider_logger_definition_file = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
                                 }
                                 else
                                     reader.skipCurrentElement();
                             }
-                            qDebug() << "Logger def file:" << configValues->logger_definition_file;
+                            qDebug() << "Logger def file:" << configValues->romraider_logger_definition_file;
                         }
                         else if (reader.name() == "setting" && reader.attributes().value("name") == "kernel_files_directory")
                         {
@@ -229,7 +229,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
                             {
                                 if (reader.name() == "value")
                                 {
-                                    configValues->log_files_base_directory = reader.attributes().value("data").toString();
+                                    configValues->log_files_directory = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -246,15 +246,15 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
     }
     file.close();
 
-    save_config_file();
+    save_config_file(configValues);
 
     return configValues;
 }
 
-FileActions::ConfigValuesStructure *FileActions::save_config_file(){
-    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::ConfigValuesStructure *configValues)
+{
+    //ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
-    //QFile file(configValues->config_base_directory + "/fastecu.cfg");
     QFile file(configValues->config_file);
     if (!file.open(QIODevice::ReadWrite)) {
         QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
@@ -300,13 +300,10 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(){
     stream.writeEndElement();
 
     stream.writeStartElement("setting");
-    stream.writeAttribute("name", "definition_types");
-    for (int i = 0; i < configValues->definition_types.length(); i++)
-    {
-        stream.writeStartElement("value");
-        stream.writeAttribute("data", configValues->definition_types.at(i));
-        stream.writeEndElement();
-    }
+    stream.writeAttribute("name", "primary_definition_base");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->primary_definition_base);
+    stream.writeEndElement();
     stream.writeEndElement();
 
     stream.writeStartElement("setting");
@@ -346,7 +343,7 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(){
     stream.writeStartElement("setting");
     stream.writeAttribute("name", "logger_definition_file");
     stream.writeStartElement("value");
-    stream.writeAttribute("data", configValues->logger_definition_file);
+    stream.writeAttribute("data", configValues->romraider_logger_definition_file);
     stream.writeEndElement();
     stream.writeEndElement();
 
@@ -645,7 +642,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_definition_file()
     //The QDomDocument class represents an XML document.
     QDomDocument xmlBOM;
 
-    QString filename = configValues->logger_definition_file;
+    QString filename = configValues->romraider_logger_definition_file;
     qDebug() << "Logger filename =" << filename;
     QFile file(filename);
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
@@ -1050,14 +1047,14 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     //configValues->definition_types[0] = "romraider";
 
     def_map_index = 0;
-    for (int i = 0; i < configValues->definition_types.length(); i++)
+    for (int i = 0; i < configValues->primary_definition_base.length(); i++)
     {
-        if (configValues->definition_types.at(i) == "ecuflash")// && !ecuCalDef->use_romraider_definition)
+        if (configValues->primary_definition_base.at(i) == "ecuflash")// && !ecuCalDef->use_romraider_definition)
         {
             read_ecuflash_ecu_def(ecuCalDef, ecuId);
             parse_ecuflash_def_scalings(ecuCalDef);
         }
-        if (configValues->definition_types.at(i) == "romraider")// && !ecuCalDef->use_ecuflash_definition)
+        if (configValues->primary_definition_base.at(i) == "romraider")// && !ecuCalDef->use_ecuflash_definition)
             read_romraider_ecu_def(ecuCalDef, ecuId);
     }
     /*
