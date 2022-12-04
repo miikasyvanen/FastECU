@@ -1012,9 +1012,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
 
     ecuIdConfirmed = true;
-    //for (unsigned j = 0; j < 2; j++)
+
     for (unsigned j = 0; j < sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
     {
+        qDebug() << "Looking for ECU ID from address: 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
         ecuIdConfirmed = true;
         ecuId.clear();
         for (int i = ecuIdAddr[j]; i < ecuIdAddr[j] + 8; i++)
@@ -1022,13 +1023,14 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             if ((uint8_t)ecuCalDef->FullRomData.at(i) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i) > 0x5A)
             {
                 ecuIdConfirmed = false;
+                qDebug() << "ECU ID not found, looking from next address";
+                break;
             }
             else
             {
                 ecuId.append((uint8_t)ecuCalDef->FullRomData.at(i));
             }
         }
-        qDebug() << "ECU ID addr 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8() + ": " + ecuId;
         if (ecuIdConfirmed)
             break;
     }
@@ -1043,32 +1045,33 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     if (!file_name_str.length())
         file_name_str = ecuId;// + ".bin";
 
-    //configValues->definition_types[0] = "ecuflash";
-    //configValues->definition_types[0] = "romraider";
-
     def_map_index = 0;
-    for (int i = 0; i < configValues->primary_definition_base.length(); i++)
+
+    if (configValues->primary_definition_base == "ecuflash")
     {
-        if (configValues->primary_definition_base.at(i) == "ecuflash")// && !ecuCalDef->use_romraider_definition)
+        read_ecuflash_ecu_def(ecuCalDef, ecuId);
+        parse_ecuflash_def_scalings(ecuCalDef);
+        if (!ecuCalDef->use_ecuflash_definition)
+        {
+            read_romraider_ecu_def(ecuCalDef, ecuId);
+        }
+    }
+    if (configValues->primary_definition_base == "romraider")
+    {
+        read_romraider_ecu_def(ecuCalDef, ecuId);
+        if(!ecuCalDef->use_romraider_definition)
         {
             read_ecuflash_ecu_def(ecuCalDef, ecuId);
             parse_ecuflash_def_scalings(ecuCalDef);
         }
-        if (configValues->primary_definition_base.at(i) == "romraider")// && !ecuCalDef->use_ecuflash_definition)
-            read_romraider_ecu_def(ecuCalDef, ecuId);
     }
-    /*
-    if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
-        read_romraider_ecu_def(ecuCalDef, ecuId); // Fallback
-        */
+
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
         QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file with ECU ID: " + ecuId);
         ecuCalDef = NULL;
         return NULL;
     }
-
-    //read_ecu_definition_file(ecuCalDef, ecuId);
 
     if (ecuCalDef == NULL)
     {

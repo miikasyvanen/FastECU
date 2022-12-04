@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
     if (!configValues->romraider_definition_files.length() && !configValues->primary_definition_base.contains("ecuflash"))
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
 
-    if (configValues->primary_definition_base.contains("ecuflash"))
+    if (QDir(configValues->ecuflash_definition_files_directory).exists())
         fileActions->create_ecuflash_def_id_list(configValues);
 
     if (QDir(configValues->kernel_files_directory).exists()){
