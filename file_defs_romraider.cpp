@@ -390,6 +390,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                             else if (reader.name() == "table" && xmlid == ecuId)
                             {
                                 ecuid_def_found = true;
+                                ecuCalDef->use_romraider_definition = true;
 
                                 add_romraider_def_list_item(ecuCalDef);
 
@@ -441,8 +442,6 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
         file.close();
 
     }
-
-    ecuCalDef->use_romraider_definition = true;
 
     return ecuCalDef;
 }

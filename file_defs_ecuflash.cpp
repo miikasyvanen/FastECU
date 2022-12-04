@@ -29,11 +29,7 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
 
     while (it.hasNext())
     {
-        //while (filename == "")
-            //filename = it.next();
-
         filename = it.next();
-        //qDebug() << filename;
 
         QFile file(filename);
         if (!file.open(QIODevice::ReadOnly ))
@@ -75,7 +71,6 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
             }
             root = root.nextSibling().toElement();
         }
-        //it.next();
         file_count++;
     }
 
@@ -379,6 +374,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     QString filename;
 
     int file_index = 0;
+    if (!configValues->ecuflash_def_ecu_id.length())
+        return NULL;
+
     for (int index = 0; index < configValues->ecuflash_def_ecu_id.length(); index++)
     {
         if (configValues->ecuflash_def_ecu_id.at(index) == ecuId)
@@ -537,6 +535,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             else if (child.tagName() == "table" && xmlid == ecuId)
             {
                 ecuid_def_found = true;
+                ecuCalDef->use_ecuflash_definition = true;
 
                 QString name = child.attribute("name"," ");
                 for (int i = 0; i < ecuCalDef->NameList.length(); i++)
@@ -664,8 +663,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         ecuid_def_found = false;
     }
     ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
-
-    ecuCalDef->use_ecuflash_definition = true;
 
     return ecuCalDef;
 }
