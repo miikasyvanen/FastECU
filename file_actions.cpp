@@ -1087,6 +1087,15 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->RomId = ecuId;
     qDebug() << "File size =" << ecuCalDef->FileSize;
 
+    QByteArray padding;// = QByteArray("\x00", 0x8000);
+    padding.clear();
+    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < 190 * 1024)
+    {
+        for (int i = 0; i < 0x8000; i++)
+            ecuCalDef->FullRomData.insert(0x20000, (uint8_t)0x00);
+    }
+    qDebug() << "QByteArray size =" << ecuCalDef->FullRomData.length();
+
     int storagesize = 0;
     QString mapData;
 
@@ -1125,7 +1134,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                     byteAddress -= 0x8000;
                 for (int k = 0; k < storagesize; k++)
                 {
@@ -1175,7 +1184,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 {
                     uint32_t dataByte = 0;
                     uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                         byteAddress -= 0x8000;
 
                     for (int k = 0; k < storagesize; k++)
@@ -1220,7 +1229,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                     byteAddress -= 0x8000;
                 for (int k = 0; k < storagesize; k++)
                 {
@@ -1332,7 +1341,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                     byteAddress -= 0x8000;
 
                 if (ecuCalDef->TypeList.at(i) != "Switch")
@@ -1379,7 +1388,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                     byteAddress -= 0x8000;
 
                 if (ecuCalDef->XScaleTypeList.at(i) != "Switch")
@@ -1426,7 +1435,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
             {
                 uint32_t dataByte = 0;
                 uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < byteAddress)
+                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                     byteAddress -= 0x8000;
 
                 if (ecuCalDef->YScaleTypeList.at(i) != "Switch")

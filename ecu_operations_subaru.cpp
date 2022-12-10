@@ -304,7 +304,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
             {
                 if (serial->is_can_connection)
                 {
-                    send_log_window_message("Reading ROM from Subaru 02 32-bit using CAN", true, true);
+                    send_log_window_message("Reading ROM from Subaru 05 32-bit using CAN", true, true);
                     result = read_rom_subaru_can_32bit(ecuCalDef);
                 }
                 else
@@ -572,10 +572,10 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_32bit()
     //send_log_window_message("SID BF = " + parse_message_to_hex(received), true, true);
     if (received == "")
         return STATUS_ERROR;
-    qDebug() << "SID_BF received:" << parse_message_to_hex(received);
+    //qDebug() << "SID_BF received:" << parse_message_to_hex(received);
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
-    qDebug() << "Received length:" << received.length();
+    //qDebug() << "Received length:" << received.length();
     for (int i = 0; i < received.length(); i++)
     {
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
@@ -614,7 +614,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_32bit()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    seed_key = sub_generate_seed_key(seed);
+    seed_key = sub_generate_kline_seed_key(seed);
     msg = parse_message_to_hex(seed_key);
     //qDebug() << "Calculated seed key: " + msg + ", sending to ECU";
     //send_log_window_message("Calculated seed key: " + msg + ", sending to ECU", true, true);
@@ -734,6 +734,8 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
         return STATUS_ERROR;
     }
 
+    //serial->change_port_speed("9600");
+
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
     {
@@ -754,6 +756,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
     output.append((uint8_t)(len >> 8) & 0xFF);
     output.append((uint8_t)len & 0xFF);
 
+    //pl_encr = sub_transform_wrx02_kernel_block();
     output.append(pl_encr);
     chk_sum = calculate_checksum(output, true);
     output.append((uint8_t)chk_sum);
@@ -775,7 +778,17 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
     else
         send_log_window_message("Kernel uploaded succesfully", true, true);
 
-    //serial->change_port_speed("39473");
+    serial->change_port_speed("39473");
+    delay(200);
+    received.clear();
+    while (received == "")
+    {
+        qDebug() << "Request kernel ID";
+        received = ecuOperations->request_kernel_id();
+        delay(500);
+    }
+    qDebug() << received;
+    //    return STATUS_ERROR;
 
     delay(200);
 
@@ -815,6 +828,8 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
         return STATUS_ERROR;
     }
 
+    //serial->change_port_speed("9600");
+
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
     {
@@ -846,6 +861,8 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_32bit(QString kernel)
         send_log_window_message("File size error (" + QString::number(file_len) + "/" + QString::number(pl_encr.size()) + ")", true, true);
         return STATUS_ERROR;
     }
+
+    //pl_encr = sub_transform_denso_02_32bit_kernel(pl_encr, (uint32_t) pl_len);
 
     for (uint32_t i = 0; i < len; i++) {
         pl_encr[i] = (uint8_t) (pl_encr[i] ^ 0x55) + 0x10;
@@ -953,7 +970,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     QString mcu_name;
 
     //qDebug() << "MCU name:" << flashdevices[mcu_type_index].name;
-
+/*
     mcu_name = "SH7055";
     if (flashdevices[mcu_type_index].name == mcu_name)
         start_address = flashdevices[mcu_type_index].rblocks->start + 4;
@@ -962,6 +979,9 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
         start_address = flashdevices[mcu_type_index].rblocks->start;
 
     //qDebug() << "Start address to upload kernel:" << hex << start_address;
+*/
+    start_address = flashdevices[mcu_type_index].rblocks->start;
+
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -1004,7 +1024,8 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
 
     send_log_window_message("Kernel upload request ok, uploading now, please wait...", true, true);
 
-    pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
+    //pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
+    pl_encr = sub_transform_denso_04_32bit_kernel(pl_encr, (uint32_t) pl_len);
 
     received = sub_sid_36_transferdata(start_address, pl_encr, len);
     if (received == "" || (uint8_t)received.at(4) != 0x76)
@@ -1024,7 +1045,10 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     cks_bypass.append((uint8_t)0x5A);
     cks_bypass.append((uint8_t)0xA5);
 
-    cks_bypass = sub_encrypt_buf(cks_bypass, (uint32_t) 4);
+    //qDebug() << parse_message_to_hex(sub_transform_denso_04_32bit_kernel(cks_bypass, (uint32_t) 4));
+    //qDebug() << parse_message_to_hex(sub_encrypt_buf(cks_bypass, (uint32_t) 4));
+    //cks_bypass = sub_encrypt_buf(cks_bypass, (uint32_t) 4);
+    cks_bypass = sub_transform_denso_04_32bit_kernel(cks_bypass, (uint32_t) 4);
 
     /* sid36 transferData for checksum bypass */
     received = sub_sid_36_transferdata(start_address + len, cks_bypass, 4);
@@ -1100,15 +1124,16 @@ int EcuOperationsSubaru::upload_kernel_subaru_can_32bit(QString kernel)
     int byte_counter = 0;
 
     QString mcu_name;
-
+/*
     mcu_name = "SH7055";
     if (flashdevices[mcu_type_index].name == mcu_name)
         start_address = flashdevices[mcu_type_index].rblocks->start + 4;
     mcu_name = "SH7058";
     if (flashdevices[mcu_type_index].name == mcu_name)
         start_address = flashdevices[mcu_type_index].rblocks->start;
+*/
 
-    start_address = 0xFFFF6004;
+    start_address = flashdevices[mcu_type_index].rblocks->start;
 
     if (!serial->is_serial_port_open())
     {
@@ -1274,9 +1299,16 @@ int EcuOperationsSubaru::read_rom_subaru_can_32bit(FileActions::EcuCalDefStructu
 
 int EcuOperationsSubaru::write_rom_subaru_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
-    send_log_window_message("Writing ROM to Subaru K-Line 02 16-bit", true, true);
+    //send_log_window_message("Writing ROM to Subaru K-Line 02 16-bit", true, true);
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
 
-    return STATUS_ERROR;
+    bool success = ecuOperations->write_mem_16bit_kline(ecuCalDef, test_write);
+
+    return success;
 }
 
 int EcuOperationsSubaru::write_rom_subaru_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
@@ -1841,11 +1873,209 @@ void EcuOperationsSubaru::delay(int n)
 }
 
 /*
- * Generate seed key from received seed bytes
+ * Transform denso 32bit kernel block
  *
  * @return seed key (4 bytes)
  */
-QByteArray EcuOperationsSubaru::sub_generate_seed_key(QByteArray requested_seed)
+QByteArray EcuOperationsSubaru::sub_transform_wrx02_kernel(unsigned char *data, int length, bool doencrypt)
+{
+    int decrypt[16] =
+    {
+        0xA, 0x5, 0x4, 0x7,
+        0x6, 0x1, 0x0, 0x3,
+        0x2, 0xD, 0xC, 0xF,
+        0xE, 0x9, 0x8, 0xB
+    };
+    int encrypt[16] =
+    {
+        0x6, 0x5, 0x8, 0x7,
+        0x2, 0x1, 0x4, 0x3,
+        0xE, 0xD, 0x0, 0xF,
+        0xA, 0x9, 0xC, 0xB
+    };
+
+    int offset = 0;
+    int n;
+
+    for (int i = 0; i < length; i++, data++)
+    {
+        if (i+offset == 2 || i+offset == 3)
+            continue; // don't transform these two bytes
+
+        n = (*data & 0x0F) ^ 0x05; // lower nybble is XORed with 0x05
+
+        // upper nybble is transformed using above maps
+        if (doencrypt)
+            n += encrypt[*data >> 4] << 4;
+        else
+            n += decrypt[*data >> 4] << 4;
+
+        *data = n;
+    }
+}
+
+QByteArray EcuOperationsSubaru::sub_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt)
+{
+    unsigned short crypto_tableA[4] =
+    {
+        0x7856, 0xCE22, 0xF513, 0x6E86
+    };
+
+    unsigned char crypto_tableB[32] =
+    {
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8,
+    };
+
+    int i,j;
+    unsigned short word1,word2,idx2,temp,key16;
+
+    for (i = 0; i < length; i += 4)
+    {
+
+        if (doencrypt)
+        {
+            word2 = (*(data+0) << 8) + *(data+1);
+            word1 = (*(data+2) << 8) + *(data+3);
+            for (j = 1; j <= 4; j++)
+            {
+                idx2 = word1 ^ crypto_tableA[j-1];
+                key16 =
+                        crypto_tableB[(idx2 >> 0) & 0x1F]
+                    + (crypto_tableB[(idx2 >> 4) & 0x1F] << 4)
+                    + (crypto_tableB[(idx2 >> 8) & 0x1F] << 8)
+                    + (crypto_tableB[(((idx2 & 0x1) << 4) + (idx2 >> 12)) & 0x1F] << 12);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+
+                temp = word1;
+                word1 = key16 ^ word2;
+                word2 = temp;
+
+            }
+            *(data+0) = word1 >> 8;
+            *(data+1) = word1 & 0xFF;
+            *(data+2) = word2 >> 8;
+            *(data+3) = word2 & 0xFF;
+        }
+        else
+        {
+            word1 = (*(data+0) << 8) + *(data+1);
+            word2 = (*(data+2) << 8) + *(data+3);
+            for (j = 4; j > 0; j--)
+            {
+                idx2 = word2 ^ crypto_tableA[j-1];
+                key16 =
+                        crypto_tableB[(idx2 >> 0) & 0x1F]
+                    + (crypto_tableB[(idx2 >> 4) & 0x1F] << 4)
+                    + (crypto_tableB[(idx2 >> 8) & 0x1F] << 8)
+                    + (crypto_tableB[(((idx2 & 0x1) << 4) + (idx2 >> 12)) & 0x1F] << 12);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+                temp = word2;
+                word2 = key16 ^ word1;
+                word1 = temp;
+            }
+            *(data+0) = word2 >> 8;
+            *(data+1) = word2 & 0xFF;
+            *(data+2) = word1 >> 8;
+            *(data+3) = word1 & 0xFF;
+        }
+
+        data += 4;
+    }
+}
+
+QByteArray EcuOperationsSubaru::sub_transform_denso_02_32bit_kernel(QByteArray buf, uint32_t len)
+{
+    for (uint32_t i = 0; i < len; i++) {
+        buf[i] = (uint8_t) (buf[i] ^ 0x55) + 0x10;
+    }
+
+    return buf;
+}
+
+QByteArray EcuOperationsSubaru::sub_transform_denso_04_32bit_kernel(QByteArray buf, uint32_t len)
+{
+    const uint16_t keytogenerateindex[]={
+        0x7856, 0xCE22, 0xF513, 0x6E86
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    QByteArray encrypted;
+    uint32_t datatoencrypt32, index;
+    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
+    int ki, n;
+
+    if (!buf.length() || !len) {
+        return NULL;
+    }
+
+    encrypted.clear();
+
+    len &= ~3;
+    for (uint32_t i = 0; i < len; i += 4) {
+        /*
+        uint8_t tempbuf[4];
+        tempbuf[0] = buf.at(i);
+        tempbuf[1] = buf.at(i + 1);
+        tempbuf[2] = buf.at(i + 2);
+        tempbuf[3] = buf.at(i + 3);
+        datatoencrypt32 = tempbuf[i] << 24 | tempbuf[1] << 16 | tempbuf[2] << 8 | tempbuf[3];
+*/
+        datatoencrypt32 = ((buf.at(i) << 24) & 0xFF000000) | ((buf.at(i + 1) << 16) & 0xFF0000) | ((buf.at(i + 2) << 8) & 0xFF00) | (buf.at(i + 3) & 0xFF);
+
+        for (ki = 0; ki < 4; ki++) {
+
+            wordtogenerateindex = datatoencrypt32;
+            wordtobeencrypted = datatoencrypt32 >> 16;
+            index = wordtogenerateindex ^ keytogenerateindex[ki];
+            index += index << 16;
+            encryptionkey = 0;
+
+            for (n = 0; n < 4; n++) {
+                encryptionkey += indextransformation[(index >> (n * 4)) & 0x1F] << (n * 4);
+            }
+
+            encryptionkey = (encryptionkey >> 3) + (encryptionkey << 13);
+            datatoencrypt32 = (encryptionkey ^ wordtobeencrypted) + (wordtogenerateindex << 16);
+        }
+
+        datatoencrypt32 = (datatoencrypt32 >> 16) + (datatoencrypt32 << 16);
+
+        encrypted.append((datatoencrypt32 >> 24) & 0xFF);
+        encrypted.append((datatoencrypt32 >> 16) & 0xFF);
+        encrypted.append((datatoencrypt32 >> 8) & 0xFF);
+        encrypted.append(datatoencrypt32 & 0xFF);
+        //encrypted.append(sub_encrypt(tempbuf));
+    }
+    return encrypted;
+}
+
+void EcuOperationsSubaru::barrel_shift_16_right(unsigned short *barrel)
+{
+    if (*barrel & 1)
+        *barrel = (*barrel >> 1) + 0x8000;
+    else
+        *barrel = *barrel >> 1;
+}
+
+/*
+ * Generate seed keys from received seed bytes
+ *
+ * @return seed key (4 bytes)
+ */
+QByteArray EcuOperationsSubaru::sub_generate_kline_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1858,6 +2088,13 @@ QByteArray EcuOperationsSubaru::sub_generate_seed_key(QByteArray requested_seed)
         0x7CA3, 0x3382, 0x834F, 0x3608,
         0xAFB8, 0x503D, 0xDBA3, 0x9D34,
         0x3563, 0x6B70, 0x6E74, 0x88F0
+    };
+
+    const uint16_t keytogenerateindex_2[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
     };
 
     const uint8_t indextransformation[]={
@@ -1900,6 +2137,67 @@ QByteArray EcuOperationsSubaru::sub_generate_seed_key(QByteArray requested_seed)
     //write_32b(seed, key);
 
     return key;
+}
+
+QByteArray EcuOperationsSubaru::sub_generate_can_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    uint32_t seed, index;
+    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
+    int ki, n;
+
+    const uint16_t keytogenerateindex[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint16_t keytogenerateindex_2[]={
+        0x90A1, 0x2F92, 0xDE3C, 0xCDC0,
+        0x1A99, 0x437C, 0xF91B, 0xDB57,
+        0x96BA, 0xDE10, 0xFCAF, 0x3F31,
+        0xF47F, 0x0BB6, 0x16E9, 0x4645
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+
+    return key;
+
+}
+
+QByteArray EcuOperationsSubaru::sub_generate_ecutek_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    uint32_t seed, index;
+    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
+    int ki, n;
+
+    const uint16_t keytogenerateindex[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint8_t indextransformation[]={
+        0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+
+    return key;
+
 }
 
 uint8_t EcuOperationsSubaru::calculate_checksum(QByteArray output, bool dec_0x100)
