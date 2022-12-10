@@ -27,6 +27,7 @@ public:
     int read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int compare_mem_32bit_kline(QString mcu_type_string);
@@ -61,14 +62,18 @@ private:
     QWidget *flash_window;
     //QProgressBar *progressbar;
 
-    int get_changed_blocks_kline(const uint8_t *src, const uint8_t *orig_data, int *modified);
-    int get_changed_blocks_can(const uint8_t *src, const uint8_t *orig_data, int *modified);
-    int check_romcrc_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int check_romcrc_can(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int npk_raw_flashblock_kline(const uint8_t *src, uint32_t start, uint32_t len);
-    int npk_raw_flashblock_can(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool practice);
-    int reflash_block_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool practice);
+    int get_changed_blocks_16bit_kline(const uint8_t *src, int *modified);
+    int get_changed_blocks_32bit_kline(const uint8_t *src, int *modified);
+    int get_changed_blocks_32bit_can(const uint8_t *src, int *modified);
+    int check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    int check_romcrc_32bit_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    int check_romcrc_32bit_can(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    int npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t start, uint32_t len);
+    int npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t start, uint32_t len);
+    int npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t start, uint32_t len);
+    int reflash_block_16bit_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool practice);
+    int reflash_block_32bit_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool practice);
+    int reflash_block_32bit_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool practice);
 
     QString parse_message_to_hex(QByteArray received);
     void send_log_window_message(QString message, bool timestamp, bool linefeed);
@@ -78,6 +83,7 @@ private:
     void init_crc16_tab(void);
     uint16_t crc16(const uint8_t *data, uint32_t siz);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
+    unsigned int crc32(const unsigned char *buf, unsigned int len);
 
 signals:
 

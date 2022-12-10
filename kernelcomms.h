@@ -6,9 +6,11 @@
  * ********************************/
 #define SID_OE_UPLOAD_KERNEL        0x53
 
-#define SID_OE_START_COMM           0xBEEF
-#define SID_OE_RECUID               0x01
+#define SID_OE_KERNEL_START_COMM    0xBEEF
+#define SID_OE_KERNEL_ID            0x01
+#define SID_OE_KERNEL_CRC           0x02
 #define SID_OE_KERNEL_READ_AREA     0x03
+#define SID_OE_KERNEL_PROG_VOLT     0x04
 
 /****************************************
  * NisProg based kernels k-line commands
@@ -43,18 +45,24 @@
     #define SID_CONF_SETEEPR        0x02	/* set eeprom_read() function address <SID_CONF> <SID_CONF_SETEEPR> <AH> <AM> <AL> */
     #define SID_CONF_CKS1           0x03	//verify if 4*<CRCH:CRCL> hash is valid for 4*256B chunks of the ROM (starting at <CNH:CNL> * 1024)
                                             //<SID_CONF> <SID_CONF_CKS1> <CNH> <CNL> <CRC0H> <CRC0L> ...<CRC3H> <CRC3L>
-        #define ROMCRC_NUMCHUNKS        4
-        #define ROMCRC_CHUNKSIZE        256
-        #define ROMCRC_ITERSIZE         (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
-        #define ROMCRC_LENMASK          ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
-
-        #define ROMCRC_NUMCHUNKS_CAN    1
-        #define ROMCRC_CHUNKSIZE_CAN    256
-        #define ROMCRC_ITERSIZE_CAN     (ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE)
-        #define ROMCRC_LENMASK_CAN      ((ROMCRC_NUMCHUNKS * ROMCRC_CHUNKSIZE) - 1)  //should look like 0x3FF
-
     #define SID_CONF_R16            0x04    /* for debugging : do a 16bit access read at given adress in RAM (top byte 0xFF)
                                              * <SID_CONF> <SID_CONF_R16> <A2> <A1> <A0> */
+
+#define ROMCRC_NUMCHUNKS_16BIT      1
+#define ROMCRC_CHUNKSIZE_16BIT      16384
+#define ROMCRC_ITERSIZE_16BIT       (ROMCRC_NUMCHUNKS_16BIT * ROMCRC_CHUNKSIZE_16BIT)
+#define ROMCRC_LENMASK_16BIT        ((ROMCRC_NUMCHUNKS_16BIT * ROMCRC_CHUNKSIZE_16BIT) - 1)  //should look like 0x3FF
+
+#define ROMCRC_NUMCHUNKS_32BIT      4
+#define ROMCRC_CHUNKSIZE_32BIT      256
+#define ROMCRC_ITERSIZE_32BIT       (ROMCRC_NUMCHUNKS_32BIT * ROMCRC_CHUNKSIZE_32BIT)
+#define ROMCRC_LENMASK_32BIT        ((ROMCRC_NUMCHUNKS_32BIT * ROMCRC_CHUNKSIZE_32BIT) - 1)  //should look like 0x3FF
+
+#define ROMCRC_NUMCHUNKS_CAN        1
+#define ROMCRC_CHUNKSIZE_CAN        256
+#define ROMCRC_ITERSIZE_CAN         (ROMCRC_NUMCHUNKS_CAN * ROMCRC_CHUNKSIZE_CAN)
+#define ROMCRC_LENMASK_CAN          ((ROMCRC_NUMCHUNKS_CAN * ROMCRC_CHUNKSIZE_CAN) - 1)  //should look like 0x3FF
+
 
 #define SID_FLREQ                   0x34	/* RequestDownload */
 #define SID_STARTCOMM               0x81    /* startCommunication */

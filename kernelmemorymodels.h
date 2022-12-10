@@ -79,7 +79,7 @@ const struct flashblock fblocks_SH7055[] = {
 };
 
 const struct ramblock rblocks_SH7055[] = {
-    {0xFFFF6000,    0x00006000},//0xFFFFBFFF // 24k
+    {0xFFFF6004,    0x00006000},//0xFFFFBFFF // 24k
 };
 
 const struct flashblock fblocks_SH7051[] = {

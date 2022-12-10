@@ -140,7 +140,14 @@ private:
     QString parse_message_to_hex(QByteArray received);
     int check_received_message(QByteArray msg, QByteArray received);
     int connect_bootloader_start_countdown(int timeout);
-    QByteArray sub_generate_seed_key(QByteArray seed);
+    QByteArray sub_transform_wrx02_kernel(unsigned char *data, int length, bool doencrypt);
+    QByteArray sub_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt);
+    QByteArray sub_transform_denso_02_32bit_kernel(QByteArray buf, uint32_t len);
+    QByteArray sub_transform_denso_04_32bit_kernel(QByteArray buf, uint32_t len);
+    void barrel_shift_16_right(unsigned short *barrel);
+    QByteArray sub_generate_kline_seed_key(QByteArray seed);
+    QByteArray sub_generate_can_seed_key(QByteArray requested_seed);
+    QByteArray sub_generate_ecutek_seed_key(QByteArray requested_seed);
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     void init_crc16_tab(void);
     uint16_t crc16(const uint8_t *data, uint32_t siz);
