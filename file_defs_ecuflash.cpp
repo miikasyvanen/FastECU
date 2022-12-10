@@ -639,11 +639,13 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         }
                         sub_child = sub_child.nextSibling().toElement();
                     }
+                    /*
                     if (ecuCalDef->YSizeList[def_map_index] == " ")
                     {
                         ecuCalDef->YSizeList[def_map_index] = "1";
                         ecuCalDef->YScaleAddressList[def_map_index] = " ";
                     }
+                    */
                     def_map_index++;
                 }
                 map_defined = false;

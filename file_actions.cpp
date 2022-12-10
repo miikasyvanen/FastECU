@@ -975,7 +975,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     QString ecuId;
     bool ecuIdConfirmed = true;
     bool bStatus = false;
-    uint16_t ecuIdAddr[] = { 0x0200, 0x2000 };
+    uint16_t ecuIdAddr[] = { 0x0200, 0x2000, 0x2004 };
 
     if (!ecuCalDef->FullRomData.length())
     {
@@ -1047,7 +1047,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     def_map_index = 0;
 
-    if (configValues->primary_definition_base == "ecuflash")
+    if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
     {
         read_ecuflash_ecu_def(ecuCalDef, ecuId);
         parse_ecuflash_def_scalings(ecuCalDef);
@@ -1056,7 +1056,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             read_romraider_ecu_def(ecuCalDef, ecuId);
         }
     }
-    if (configValues->primary_definition_base == "romraider")
+    if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
     {
         read_romraider_ecu_def(ecuCalDef, ecuId);
         if(!ecuCalDef->use_romraider_definition)

@@ -403,7 +403,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
         if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_DUMP_CAN)
         {
             send_log_window_message("Page data request failed!", true, true);
-            send_log_window_message(parse_message_to_hex(received), true, true);
+            send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
 
@@ -422,7 +422,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
             send_log_window_message("Page data timeout!", true, true);
             return STATUS_ERROR;
         }
-
+        qDebug() << timeout << pagedata.length();
         mapdata.append(pagedata);
 
         // don't count skipped first bytes //
