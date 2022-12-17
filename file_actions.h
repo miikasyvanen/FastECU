@@ -44,6 +44,9 @@ public:
         QString flash_protocol = "K-Line";
         QString car_model = "Subaru";
         QString log_protocol = "K-Line";
+        QString window_size = "default";
+        QString window_width = "default";
+        QString window_height = "default";
 
         QString base_directory = QDir::homePath() + "/FastECU_OEM";
         QString calibration_files_base_directory = base_directory + "/calibrations";
@@ -274,6 +277,7 @@ public:
      * If not, create one with appropriate files
      ***************************************************/
     ConfigValuesStructure *check_config_dir();
+    bool copy_directory_files(const QString &source_dir, const QString &target_dir, bool cover_file_if_exist);
 
     /****************************
      * Open FastECU config file

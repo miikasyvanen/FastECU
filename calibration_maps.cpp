@@ -30,7 +30,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
 
     if (ecuCalDef->TypeList.at(mapIndex) == "Switch")
     {
-        qDebug() << "Switchable map";
+        //qDebug() << "Switchable map";
         mapWindowObjectName = mapWindowObjectName + "," + "Switch";
         mapCellWidth = mapCellWidthSelectable;
         xSize = 1;
@@ -39,7 +39,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
     {
-        qDebug() << "MultiSelectable map";
+        //qDebug() << "MultiSelectable map";
         mapWindowObjectName = mapWindowObjectName + "," + "MultiSelectable";
         mapCellWidth = mapCellWidthSelectable;
         xSize = 1;
@@ -48,7 +48,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "Selectable")
     {
-        qDebug() << "Selectable map";
+        //qDebug() << "Selectable map";
         mapWindowObjectName = mapWindowObjectName + "," + "Selectable";
         mapCellWidth = mapCellWidthSelectable;
         xSize = 1;
@@ -57,7 +57,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "1D")
     {
-        qDebug() << "1D map";
+        //qDebug() << "1D map";
         mapWindowObjectName = mapWindowObjectName + "," + "1D";
         mapCellWidth = mapCellWidth1D;
         xSize = 1;
@@ -66,7 +66,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "2D")
     {
-        qDebug() << "2D map";
+        //qDebug() << "2D map";
         if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
             this->setWindowIcon(QIcon(":/icons/2D-64-W.png"));
         else
@@ -88,7 +88,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
-        qDebug() << "3D map";
+        //qDebug() << "3D map";
         this->setWindowIcon(QIcon(":/icons/3D-64-W.png"));
         mapWindowObjectName = mapWindowObjectName + "," + "3D";
         xSizeOffset = 0;
@@ -195,10 +195,12 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
     if (xSize > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
     {
+        /*
         if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
             qDebug() << "static Y: xSize" << xSize;
         else
             qDebug() << "Y: xSize" << xSize;
+            */
 
         QStringList xScaleCellText;
         if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
@@ -260,7 +262,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "Switch")
     {
-        qDebug() << "Map type 'switch'";
+        //qDebug() << "Map type 'switch'";
         bool checked = false;
         bool bStatus = false;
         QString state;
@@ -268,7 +270,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         QCheckBox *checkbox = new QCheckBox("On/Off");
 
         QStringList switch_states = ecuCalDef->StateList.at(mapIndex).split(",");
-        qDebug() << "Switch state list:" << switch_states;
+        //qDebug() << "Switch state list:" << switch_states;
         int switch_states_length = (switch_states.length() - 1);
         for (int i = 0; i < switch_states_length; i += 2)
         {
@@ -283,11 +285,11 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
                 map_data.append(QString("%1 ").arg(ecuCalDef->FullRomData.at(byte_address + j) & 0xFF,2,16,QLatin1Char('0')));
             }
             map_data.remove(map_data.length() - 1, 1);
-            qDebug() << map_data;
+            //qDebug() << map_data;
             if (switch_data == map_data)
                 state = switch_states.at(i);
         }
-        qDebug() << "Switch state:" << state;
+        //qDebug() << "Switch state:" << state;
 
         if (state == "on")
             checked = true;
@@ -377,7 +379,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             if (mapDataCellText.at(i).toFloat() > ecuCalDef->MaxValueList.at(mapIndex).toFloat())
                 ecuCalDef->MaxValueList[mapIndex] = QString::number(mapDataCellText.at(i).toFloat() * 2);
         }
-        qDebug() << "Y: ySize" << ySize;
+        //qDebug() << "Y: ySize" << ySize;
 
         for (int i = 0; i < xSize; i++)
         {

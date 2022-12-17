@@ -28,10 +28,10 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
 
 #if Q_PROCESSOR_WORDSIZE == 4
-    qDebug() << "32-bit executable";
+    //qDebug() << "32-bit executable";
     //send_log_window_message("32-bit executable", false, true);
 #elif Q_PROCESSOR_WORDSIZE == 8
-    qDebug() << "64-bit executable";
+    //qDebug() << "64-bit executable";
     //send_log_window_message("64-bit executable", false, true);
 #endif
 
@@ -44,6 +44,13 @@ MainWindow::MainWindow(QWidget *parent)
     fileActions->check_config_dir();
     configValues = fileActions->read_config_file();
 
+    QRect qrect = MainWindow::geometry();
+
+    if (configValues->window_width != "maximized" && configValues->window_height != "maximized")
+        this->setGeometry(qrect.x(), qrect.y(), configValues->window_width.toInt(), configValues->window_height.toInt());
+    else
+        this->setWindowState(Qt::WindowMaximized);
+
     if (!configValues->romraider_definition_files.length() && !configValues->primary_definition_base.contains("ecuflash"))
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
 
@@ -54,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
         QDir dir(configValues->kernel_files_directory);
         QStringList nameFilter("*.bin");
         QStringList txtFilesAndDirectories = dir.entryList(nameFilter);
-        qDebug() << txtFilesAndDirectories;
+        //qDebug() << txtFilesAndDirectories;
     }
 
     QSignalMapper *mapper = fileActions->read_menu_file(ui->menubar, ui->toolBar);
@@ -365,8 +372,8 @@ void MainWindow::log_protocol_changed()
     //else if (log_protocol_list->currentText() == "ISO15765")
         //serial->is_iso15765_connection = true;
 
-    qDebug() << "CAN:" << serial->is_can_connection;
-    qDebug() << "iso15765:" << serial->is_iso15765_connection;
+    //qDebug() << "CAN:" << serial->is_can_connection;
+    //qDebug() << "iso15765:" << serial->is_iso15765_connection;
 
     configValues->log_protocol = log_protocol_list->currentText();
     fileActions->save_config_file(configValues);
@@ -379,7 +386,7 @@ void MainWindow::log_protocol_changed()
 
 void MainWindow::car_model_changed()
 {
-    qDebug() << "Change car model";
+    //qDebug() << "Change car model";
     QComboBox *car_model_list = ui->toolBar->findChild<QComboBox*>("car_model_list");
     if (car_model_list->currentText() == "Subaru")
         protocol = "SSM";
@@ -458,7 +465,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
     if (!selectedItem && cmd_type != "read")
     {
-        qDebug() << "No ROM to write, exiting!";
+        //qDebug() << "No ROM to write, exiting!";
         return 0;
     }
     romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
@@ -487,7 +494,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
         ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
-        qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
+        //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
         ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
     }
     else
@@ -502,7 +509,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
         ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, flash_method_list->currentText());
         ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(flash_method_list->currentText());
-        qDebug() << ecuCalDef[ecuCalDefIndex]->Kernel;
+        //qDebug() << ecuCalDef[ecuCalDefIndex]->Kernel;
         ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
 
         if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
@@ -770,7 +777,7 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
                     QList<QMdiSubWindow *> list = ui->mdiArea->findChildren<QMdiSubWindow *>();
                     foreach(QMdiSubWindow *w, list)
                     {
-                        qDebug() << map_index << w->objectName();
+                        //qDebug() << map_index << w->objectName();
                         map_index++;
                         if (w->objectName().startsWith(QString::number(romIndex) + "," + QString::number(i) + "," + ecuCalDef[romNumber]->NameList.at(i)))
                         {
@@ -1062,10 +1069,59 @@ void MainWindow::update_logbox_values(QString protocol)
     delay(1);
 }
 
-
-void MainWindow::resizeEvent( QResizeEvent * event)
+bool MainWindow::event(QEvent *event)
 {
+    if (event->type() == QEvent::WindowStateChange)
+    {
+        if (this->isMaximized())
+        {
+            //qDebug() << "Maximize event";
+            configValues->window_width = "maximized";
+            configValues->window_height = "maximized";
+        }
+        else
+        {
+            //qDebug() << "Maximize event off";
+        }
+        fileActions->save_config_file(configValues);
+    }
+    else if (event->type() == QEvent::Resize)
+    {
+        //qDebug() << "Screen resize event";
+
+        if (isMaximized())
+        {
+            //qDebug() << "Window is maximized";
+            configValues->window_width = "maximized";
+            configValues->window_height = "maximized";
+        }
+        else
+        {
+            QString window_width = QString::number(MainWindow::size().width());
+            QString window_height = QString::number(MainWindow::size().height());
+
+            configValues->window_width = window_width;
+            configValues->window_height = window_height;
+        }
+
+        fileActions->save_config_file(configValues);
+    }
+
+
+    return QWidget::event(event);
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    //QScreen *screen = QGuiApplication::primaryScreen();
+    //QRect size = screen->geometry();
     QWidget::resizeEvent(event);
+
+    //QString window_width = QString::number(MainWindow::size().width());
+    //QString window_height = QString::number(MainWindow::size().height());
+
+    //qDebug() << "Screen resize event 2";
+
     QWidget* w = ui->mdiArea->findChild<QWidget*>("gaugeWindow");
     if (w){
         delete w;

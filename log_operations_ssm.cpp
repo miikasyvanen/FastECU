@@ -101,7 +101,7 @@ void MainWindow::log_ssm_values()
         }
         else
         {
-            qDebug() << "Send log request";
+            //qDebug() << "Send log request";
             output.append((uint8_t)0xA8);
             output.append((uint8_t)0x01);
             for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
@@ -177,7 +177,9 @@ void MainWindow::read_log_serial_data()
             //qDebug() << "Log params data:" << parse_message_to_hex(received);
         }
         else
-            qDebug() << "Log params get failed:" << parse_message_to_hex(received);
+        {
+            //qDebug() << "Log params get failed:" << parse_message_to_hex(received);
+        }
 
         logparams_read_active = false;
     }

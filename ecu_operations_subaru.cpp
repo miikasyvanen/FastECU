@@ -718,6 +718,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_can_32bit()
 int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
 {
     QFile file(kernel);
+    QFile encrypted_kernel(kernel);
 
     QByteArray output;
     QByteArray received;
@@ -728,6 +729,28 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
     uint32_t len = 0;
     uint8_t chk_sum = 0;
 
+/*
+    if (!encrypted_kernel.open(QIODevice::ReadOnly ))
+    {
+        send_log_window_message("Unable to open encrypted_kernel file for reading", true, true);
+        return -1;
+    }
+
+    QByteArray encrypted_kernel_data = encrypted_kernel.readAll();
+    unsigned char *data = (unsigned char*) encrypted_kernel_data.data();
+    int kernel_length = encrypted_kernel_data.size();
+
+    sub_transform_wrx02_kernel(data, kernel_length, false);
+    for (int i = 0; i < (kernel_length / 16); i++)
+    {
+        QByteArray output;
+        for (int j = 0; j < 16; j++)
+        {
+            output.append(data[i * 16 + j]);
+        }
+        qDebug() << parse_message_to_hex(output);
+    }
+*/
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -981,6 +1004,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     //qDebug() << "Start address to upload kernel:" << hex << start_address;
 */
     start_address = flashdevices[mcu_type_index].rblocks->start;
+    qDebug() << "Start address to upload kernel:" << hex << start_address;
 
     if (!serial->is_serial_port_open())
     {
@@ -1014,19 +1038,23 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     }
 
     // Change port speed to upload kernel
+    qDebug() << "Change port speed to 15625";
     if (serial->change_port_speed("15625"))
         return STATUS_ERROR;
 
     // Request upload
+    qDebug() << "Send 'sid34_request upload'";
     received = sub_sid_34_request_upload(start_address, len);
     if (received == "" || (uint8_t)received.at(4) != 0x74)
         return STATUS_ERROR;
 
     send_log_window_message("Kernel upload request ok, uploading now, please wait...", true, true);
 
+    qDebug() << "Encrypt kernel data before upload";
     //pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
     pl_encr = sub_transform_denso_04_32bit_kernel(pl_encr, (uint32_t) pl_len);
 
+    qDebug() << "Send 'sid36_transfer_data'";
     received = sub_sid_36_transferdata(start_address, pl_encr, len);
     if (received == "" || (uint8_t)received.at(4) != 0x76)
         return STATUS_ERROR;
@@ -1034,6 +1062,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     send_log_window_message("Kernel uploaded", true, true);
 
     /* sid34 requestDownload - checksum bypass put just after payload */
+    qDebug() << "Send 'sid34_transfer_data' for chksum bypass";
     received = sub_sid_34_request_upload(start_address + len, 4);
     if (received == "" || (uint8_t)received.at(4) != 0x74)
         return STATUS_ERROR;
@@ -1051,6 +1080,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     cks_bypass = sub_transform_denso_04_32bit_kernel(cks_bypass, (uint32_t) 4);
 
     /* sid36 transferData for checksum bypass */
+    qDebug() << "Send 'sid36_transfer_data' for chksum bypass";
     received = sub_sid_36_transferdata(start_address + len, cks_bypass, 4);
     if (received == "" || (uint8_t)received.at(4) != 0x76)
         return STATUS_ERROR;
@@ -1060,6 +1090,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     /* SID 37 TransferExit does not exist on all Subaru ROMs */
 
     /* RAMjump ! */
+    qDebug() << "Send 'sid31_transfer_data' to jump to kernel";
     received = sub_sid_31_start_routine();
     if (received == "" || (uint8_t)received.at(4) != 0x71)
         return STATUS_ERROR;
@@ -1074,14 +1105,14 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     received = ecuOperations->request_kernel_init();
     if (received == "")
     {
-        qDebug() << "Kernel init NOK! No response from kernel. " + parse_message_to_hex(received);
-        send_log_window_message("Kernel init NOK! No response from kernel. " + parse_message_to_hex(received), true, true);
+        qDebug() << "Kernel init NOK! No response from kernel" + parse_message_to_hex(received);
+        send_log_window_message("Kernel init NOK! No response from kernel" + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     if ((uint8_t)received.at(1) != SID_KERNEL_INIT + 0x40)
     {
-        qDebug() << "Kernel init NOK! Got bad startcomm response from kernel. " + parse_message_to_hex(received);
-        send_log_window_message("Kernel init NOK! Got bad startcomm response from kernel. " + parse_message_to_hex(received), true, true);
+        qDebug() << "Kernel init NOK! Got bad startcomm response from kernel" + parse_message_to_hex(received);
+        send_log_window_message("Kernel init NOK! Got bad startcomm response from kernel" + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     else
@@ -1097,8 +1128,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     if (received == "")
         return STATUS_ERROR;
 
-    received.remove(0, 2);
-    send_log_window_message("Request kernel ID OK" + received, true, true);
+    send_log_window_message("Request kernel ID OK: " + received, true, true);
 
     return STATUS_SUCCESS;
 }
@@ -1228,6 +1258,13 @@ int EcuOperationsSubaru::upload_kernel_subaru_can_32bit(QString kernel)
     qDebug() << "0xA0 message sent to bootloader to jump into kernel";
 
     qDebug() << "ECU should now be running from kernel";
+
+    received = ecuOperations->request_kernel_id();
+    if (received == "")
+        return STATUS_ERROR;
+
+    qDebug() << parse_message_to_hex(received);
+    send_log_window_message("Request kernel ID OK: " + received, true, true);
 
     return STATUS_SUCCESS;
 }
@@ -1879,6 +1916,8 @@ void EcuOperationsSubaru::delay(int n)
  */
 QByteArray EcuOperationsSubaru::sub_transform_wrx02_kernel(unsigned char *data, int length, bool doencrypt)
 {
+    QByteArray encrypted;
+
     int decrypt[16] =
     {
         0xA, 0x5, 0x4, 0x7,
@@ -1912,6 +1951,7 @@ QByteArray EcuOperationsSubaru::sub_transform_wrx02_kernel(unsigned char *data, 
 
         *data = n;
     }
+    return encrypted;
 }
 
 QByteArray EcuOperationsSubaru::sub_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt)

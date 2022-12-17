@@ -98,7 +98,7 @@ void MainWindow::inc_dec_value(QString action)
     QString mapType = "";
     bool bStatus;
 
-    qDebug() << "Inc/dec value";
+    //qDebug() << "Inc/dec value";
     QMdiSubWindow* w = ui->mdiArea->activeSubWindow();
     if (w)
     {
@@ -196,12 +196,12 @@ void MainWindow::inc_dec_value(QString action)
                         if (map_value_storagetype.startsWith("uint"))
                             map_data_value.four_byte_value = (uint32_t)(qRound(map_data_value.float_value));
 
-                        qDebug() << "action" << action;
-                        qDebug() << map_item_value << rom_data_value << QString::number(map_data_value.float_value);
+                        //qDebug() << "action" << action;
+                        //qDebug() << map_item_value << rom_data_value << QString::number(map_data_value.float_value);
                         //while (rom_data_value.toFloat() == map_data_value.float_value)
                         while (rom_data_value == QString::number(map_data_value.float_value))
                         {
-                            qDebug() << "rom_data_value.toFloat() != map_data_value.float_value";
+                            //qDebug() << "rom_data_value.toFloat() != map_data_value.float_value";
 
                             if (action == "coarse_inc")
                                 map_item_value += map_coarse_inc_value;

@@ -17,7 +17,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
     if (!file.open(QIODevice::ReadOnly ))
     {
         ecuCalDef = NULL;
-        qDebug() << "Unable to open OEM ecu base definitions file " + filename + " for reading";
+        //qDebug() << "Unable to open OEM ecu base definitions file " + filename + " for reading";
         QMessageBox::warning(this, tr("Ecu definitions file"), "Unable to open OEM ecu base definitions file " + filename + " for reading");
         return NULL;
     }

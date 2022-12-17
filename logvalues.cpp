@@ -225,16 +225,16 @@ void MainWindow::change_log_digital_value(int index)
             {
                 if (logValues->log_value_name.at(i) == log_digital_box->currentText())
                 {
-                    qDebug() << "Change value at" << comboIndex.at(2) << "to" << logValues->log_value_id.at(i);
+                    //qDebug() << "Change value at" << comboIndex.at(2) << "to" << logValues->log_value_id.at(i);
                     logValues->lower_panel_log_value_id.replace(comboIndex.at(2).toUInt(), logValues->log_value_id.at(i));
                 }
             }
         }
-        qDebug() << "Update logboxes";
+        //qDebug() << "Update logboxes";
         update_logboxes(protocol);
-        qDebug() << "Update logfile";
+        //qDebug() << "Update logfile";
         fileActions->read_logger_conf(logValues, ecuid, true);
-        qDebug() << "Done";
+        //qDebug() << "Done";
     }
 }
 

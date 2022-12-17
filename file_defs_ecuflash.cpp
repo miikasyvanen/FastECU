@@ -74,7 +74,7 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
         file_count++;
     }
 
-    qDebug() << file_count << "ecuflash files found";
+    //qDebug() << file_count << "ecuflash files found";
 
     return configValues;
 }
