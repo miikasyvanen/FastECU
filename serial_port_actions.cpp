@@ -40,7 +40,7 @@ int SerialPortActions::change_port_speed(QString portSpeed)
             }
             else
             {
-                qDebug() << "Set baudrate ERROR!";
+                //qDebug() << "Set baudrate ERROR!";
                 return STATUS_ERROR;
             }
         }
@@ -187,7 +187,7 @@ QStringList SerialPortActions::check_serial_ports()
     for (const QSerialPortInfo &serialPortInfo : serialPortsInfo){
         //ui->serial_ports->addItem(serialPortPrefix + serialPortInfo.portName());
         serial_ports.append(serialPortInfo.portName() + " - " + serialPortInfo.description());
-        qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
+        //qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
     #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
         if (j2534->init())
@@ -270,13 +270,13 @@ QString SerialPortActions::open_serial_port(QStringList serial_port_list)
                 connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
                 //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
-                qDebug() << "Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
+                //qDebug() << "Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
                 return openedSerialPort;
             }
             else
             {
                 //SendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
-                qDebug() << "Couldn't open serial port '" + serial_port + "'";
+                //qDebug() << "Couldn't open serial port '" + serial_port + "'";
                 return NULL;
             }
 
@@ -512,6 +512,8 @@ QByteArray SerialPortActions::read_j2534_data(unsigned long timeout)
     time_t last_status_update = time(NULL);
     QByteArray received;
 
+    received.clear();
+
     rxmsg.DataSize = 0;
     numRxMsg = 1;
     j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
@@ -553,7 +555,7 @@ void SerialPortActions::dump_msg(PASSTHRU_MSG* msg)
     {
         datamsg.append(QString("%1 ").arg(msg->Data[i],2,16,QLatin1Char('0')).toUtf8());
     }
-    qDebug() << "Timestamp:" << msg->Timestamp << "msg length:" << msg->DataSize << "msg:" << datamsg;
+    //qDebug() << "Timestamp:" << msg->Timestamp << "msg length:" << msg->DataSize << "msg:" << datamsg;
 }
 
 bool SerialPortActions::get_serial_num(char* serial)
@@ -600,12 +602,12 @@ int SerialPortActions::init_j2534_connection()
     // Init J2534 connection (in windows, load DLL etc.)
     if (!j2534->init())
     {
-        qDebug() << "Can't connect to J2534 DLL.";
+        //qDebug() << "Can't connect to J2534 DLL.";
         return STATUS_ERROR;
     }
     else
     {
-        qDebug() << "J2534 DLL connected.";
+        //qDebug() << "J2534 DLL connected.";
     }
 
     // Open J2534 connection
@@ -616,7 +618,7 @@ int SerialPortActions::init_j2534_connection()
     }
     else
     {
-        qDebug() << "J2534 opened, devID" << devID;
+        //qDebug() << "J2534 opened, devID" << devID;
     }
 
     // Get J2534 adapter and driver version numbers
@@ -637,10 +639,10 @@ int SerialPortActions::init_j2534_connection()
         return STATUS_ERROR;
     }
 
-    qDebug() << "J2534 API Version:" << strApiVersion;
-    qDebug() << "J2534 DLL Version:" << strDllVersion;
-    qDebug() << "Device Firmware Version:" << strFirmwareVersion;
-    qDebug() << "Device Serial Number:" << strSerial;
+    //qDebug() << "J2534 API Version:" << strApiVersion;
+    //qDebug() << "J2534 DLL Version:" << strDllVersion;
+    //qDebug() << "Device Firmware Version:" << strFirmwareVersion;
+    //qDebug() << "Device Serial Number:" << strSerial;
 
     // Create J2534 to device connections
     if (is_iso15765_connection)
@@ -713,7 +715,7 @@ int SerialPortActions::set_j2534_can()
         #ifdef Q_OS_LINUX
             chanID = protocol;
         #endif
-        qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
+        //qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
     }
 
     return STATUS_SUCCESS;
@@ -734,7 +736,7 @@ int SerialPortActions::set_j2534_can_timings()
     }
     else
     {
-        qDebug() << "Set timings OK";
+        //qDebug() << "Set timings OK";
     }
 
     return STATUS_SUCCESS;
@@ -753,7 +755,7 @@ int SerialPortActions::set_j2534_can_filters()
 
     if (protocol == CAN)
     {
-        qDebug() << "Set CAN filters";
+        //qDebug() << "Set CAN filters";
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         txmsg.TxFlags = 0;
@@ -843,7 +845,7 @@ int SerialPortActions::set_j2534_can_filters()
     else
         return STATUS_ERROR;
 
-    qDebug() << "Set CAN filters OK";
+    //qDebug() << "Set CAN filters OK";
 
     return STATUS_SUCCESS;
 }
@@ -853,12 +855,12 @@ int SerialPortActions::set_j2534_can_filters()
     baudrate = 500000;
 
     if (!j2534->init()) {
-        qDebug() << "failed to connect to J2534 DLL.";
+        //qDebug() << "failed to connect to J2534 DLL.";
         return STATUS_ERROR;
     }
 
     if (j2534->PassThruOpen(NULL, &devID)) {
-        qDebug() << "failed to PassThruOpen()";
+        //qDebug() << "failed to PassThruOpen()";
         return STATUS_ERROR;
     }
 
@@ -931,19 +933,19 @@ int SerialPortActions::set_j2534_can_filters()
     maskPattern.DataSize = 4;
 
     if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &maskMSG, &maskPattern, NULL, &filterID)) {
-        qDebug() << "Failed to set message filter";
+        //qDebug() << "Failed to set message filter";
         reportJ2534Error();
         return STATUS_ERROR;
     }
 
     if (j2534->PassThruIoctl(chanID, CLEAR_TX_BUFFER, NULL, NULL)) {
-        qDebug() << "Failed to clear j2534 TX buffer";
+        //qDebug() << "Failed to clear j2534 TX buffer";
         reportJ2534Error();
         return STATUS_ERROR;
     }
 
     if (j2534->PassThruIoctl(chanID, CLEAR_RX_BUFFER, NULL, NULL)) {
-        qDebug() << "Failed to clear j2534 RX buffer";
+        //qDebug() << "Failed to clear j2534 RX buffer";
         reportJ2534Error();
         return STATUS_ERROR;
     }
@@ -965,7 +967,7 @@ int SerialPortActions::set_j2534_iso9141()
     else
     {
         chanID = protocol;
-        qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
+        //qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
         //qDebug() << "J2534 connected";
     }
 
@@ -991,7 +993,7 @@ int SerialPortActions::set_j2534_iso9141_timings()
     }
     else
     {
-        qDebug() << "Set timings OK";
+        //qDebug() << "Set timings OK";
     }
 
     return STATUS_SUCCESS;
@@ -1024,7 +1026,7 @@ int SerialPortActions::set_j2534_iso9141_filters()
     }
     else
     {
-        qDebug() << "Set filters OK";
+        //qDebug() << "Set filters OK";
     }
     //j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
 
@@ -1040,7 +1042,7 @@ int SerialPortActions::clear_rx_buffer()
     }
     else
     {
-        qDebug() << "RX flush OK";
+        //qDebug() << "RX flush OK";
     }
     if (j2534->PassThruIoctl(chanID,CLEAR_TX_BUFFER,NULL,NULL))
     {
@@ -1049,7 +1051,7 @@ int SerialPortActions::clear_rx_buffer()
     }
     else
     {
-        qDebug() << "TX flush OK";
+        //qDebug() << "TX flush OK";
     }
 
     return STATUS_SUCCESS;
@@ -1059,7 +1061,7 @@ void SerialPortActions::reportJ2534Error()
 {
     char err[512];
     j2534->PassThruGetLastError(err);
-    qDebug() << "J2534 error:" << err;
+    //qDebug() << "J2534 error:" << err;
 }
 
 void SerialPortActions::handle_error(QSerialPort::SerialPortError error)

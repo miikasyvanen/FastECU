@@ -33,20 +33,20 @@ QString J2534::open_serial_port(QString serial_port)
                 connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
                 //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
-                qDebug() << "Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
+                //qDebug() << "Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
                 return opened_serial_port;
             }
             else
             {
                 //SendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
-                qDebug() << "Couldn't open serial port '" + serial_port + "'";
+                //qDebug() << "Couldn't open serial port '" + serial_port + "'";
                 return NULL;
             }
 
         }
         else{
             //SendLogWindowMessage("Serial port '" + serialPort + "' is already opened", true, true);
-            qDebug() << "Serial port '" + serial_port + "' is already opened";
+            //qDebug() << "Serial port '" + serial_port + "' is already opened";
             return opened_serial_port;
         }
     }
@@ -162,7 +162,7 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     long result = STATUS_NOERROR;
 
     pDeviceID = 0;
-    qDebug() << "Open J2534 device" << pName << "with ID:" << pDeviceID;
+    //qDebug() << "Open J2534 device" << pName << "with ID:" << pDeviceID;
 
     output = "ata\r\n";
     //qDebug() << "Send data:" << output;
@@ -179,7 +179,7 @@ long J2534::PassThruClose(unsigned long DeviceID)
     QByteArray received;
     long result = STATUS_NOERROR;
 
-    qDebug() << "Close J2534 device ID:" << DeviceID;
+    //qDebug() << "Close J2534 device ID:" << DeviceID;
 
     output = "atz\r\n";
     //qDebug() << "Send data:" << output;
@@ -218,14 +218,14 @@ long J2534::PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, un
     }
 
     //Flags = 4608;
-    qDebug() << "Connect J2534 device ID:" << DeviceID << "channel:" << pChannelID;
+    //qDebug() << "Connect J2534 device ID:" << DeviceID << "channel:" << pChannelID;
 
     output.clear();
     output.append("ato" + QString::number(ProtocolID) + " " + QString::number(Flags) + " " + QString::number(Baudrate) + " 0\r\n");
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
     received = read_serial_data(100, 50);
-    qDebug() << "Received:" << parseMessageToHex(received);
+    //qDebug() << "Received:" << parseMessageToHex(received);
 
 
     return result;
@@ -237,7 +237,7 @@ long J2534::PassThruDisconnect(unsigned long ChannelID)
     QByteArray received;
     long result = STATUS_NOERROR;
 
-    qDebug() << "Disconnect J2534 device in channel:" << ChannelID;
+    //qDebug() << "Disconnect J2534 device in channel:" << ChannelID;
 
     output.clear();
     output.append("atc" + QString::number(ChannelID) + "\r\n");
@@ -292,7 +292,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 //received.append(read_serial_data(4, Timeout));
                 while ((uint8_t)received.at(received.length() - 1) == 0x0d)
                     received.append(read_serial_data(1, Timeout));
-                qDebug() << "Error sending message: " + received + " | " + parseMessageToHex(received);
+                //qDebug() << "Error sending message: " + received + " | " + parseMessageToHex(received);
                 received.clear();
             }
             else if (received.at(2) == '3' || received.at(2) == '5' || received.at(2) == '6')
@@ -589,7 +589,7 @@ int J2534::is_valid_sconfig_param(SCONFIG s)
 
 void J2534::dump_sbyte_array(const SBYTE_ARRAY* s)
 {
-    qDebug() << "SBYTE_ARRAY size =" << s->NumOfBytes;
+    //qDebug() << "SBYTE_ARRAY size =" << s->NumOfBytes;
     //DBGPRINT(("SBYTE_ARRAY size=%u\n",s->NumOfBytes));
     //DBGDUMP((s->BytePtr,s->NumOfBytes,0));
 }
@@ -753,7 +753,7 @@ void J2534::dump_sconfig_param(SCONFIG s)
     }
 
     //DBGPRINT(("    %s : %u",paramName,s.Value));
-    qDebug() << "    " << paramName << s.Value;
+    //qDebug() << "    " << paramName << s.Value;
 }
 
 
@@ -836,7 +836,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         for (i = 0; i < scl->NumOfParams; i++)
             if (!is_valid_sconfig_param((scl->ConfigPtr)[i]))
             {
-                qDebug() << "param not allowed - not passing through and instead faking success" << result;
+                //qDebug() << "param not allowed - not passing through and instead faking success" << result;
                 return STATUS_NOERROR;
             }
 
@@ -858,7 +858,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
 
     if (input_as_sa)
     {
-        qDebug() << "Input";
+        //qDebug() << "Input";
         dump_sbyte_array((SBYTE_ARRAY*)pInput);
     }
 
@@ -867,7 +867,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
 
     if (output_as_sa)
     {
-        qDebug() << "Output";
+        //qDebug() << "Output";
         dump_sbyte_array((SBYTE_ARRAY*)pOutput);
     }
 

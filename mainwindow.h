@@ -227,6 +227,7 @@ private:
 protected:
 
     void closeEvent(QCloseEvent *event);
+    bool event(QEvent *event);
     void resizeEvent( QResizeEvent * event);
 
 private slots:

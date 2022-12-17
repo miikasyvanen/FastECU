@@ -52,6 +52,7 @@ QByteArray EcuOperations::request_kernel_id()
     QByteArray output;
     QByteArray received;
     QByteArray msg;
+    QByteArray kernelid;
 
     uint8_t chk_sum = 0;
 
@@ -72,6 +73,7 @@ QByteArray EcuOperations::request_kernel_id()
         received = serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(100, serial_read_short_timeout);
+        kernelid = received;
 
         request_denso_kernel_id = false;
     }
@@ -80,15 +82,38 @@ QByteArray EcuOperations::request_kernel_id()
         request_denso_kernel_id = true;
 
         output.clear();
-        output.append(SID_RECUID);
+        if (serial->is_can_connection || serial->is_iso15765_connection)
+        {
+            output.append((uint8_t)0x00);
+            output.append((uint8_t)0x0F);
+            output.append((uint8_t)0xFF);
+            output.append((uint8_t)0xFE);
+            output.append((uint8_t)SID_START_COMM_CAN);
+            output.append((uint8_t)0xA0);
+        }
+        else
+            output.append(SID_RECUID);
         serial->write_serial_data_echo_check(output);
         delay(100);
         received = serial->read_serial_data(100, serial_read_short_timeout);
 
+        received.remove(0, 1);
+        if (serial->is_can_connection || serial->is_iso15765_connection)
+            received.remove(0, 1);
+        kernelid = received;
+        while (received != "")
+        {
+            received = serial->read_serial_data(100, serial_read_short_timeout);
+            received.remove(0, 1);
+            if (serial->is_can_connection || serial->is_iso15765_connection)
+                received.remove(0, 1);
+            kernelid.append(received);
+        }
+
         request_denso_kernel_id = false;
     }
 
-    return received;
+    return kernelid;
 }
 
 int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
@@ -1253,7 +1278,7 @@ int EcuOperations::npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t s
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
 
-        QString start_address = QString("0x%1").arg(start,8,16,QLatin1Char('0')).toUpper();
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
         msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         send_log_window_message(msg, true, true);
 
@@ -1360,7 +1385,7 @@ int EcuOperations::npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t s
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
 
-        QString start_address = QString("0x%1").arg(start,8,16,QLatin1Char('0')).toUpper();
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
         msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         send_log_window_message(msg, true, true);
 
@@ -1437,19 +1462,23 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
         output[8] = (uint8_t)(chk_sum & 0xFF);
         received = serial->write_serial_data_echo_check(output);
         qDebug() << "0xF8 command sent to kernel to check and flash 128 byte block";
-        //qDebug() << parse_message_to_hex(output);
-        //delay(10);
+        qDebug() << parse_message_to_hex(output) << chk_sum;
+        //delay(50);
 
         // check for flash success or not
-        received = serial->read_serial_data(3, serial_read_short_timeout);
-        //qDebug() << parse_message_to_hex(received);
+        received = serial->read_serial_data(3, serial_read_long_timeout);
+        qDebug() << parse_message_to_hex(received);
         if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_WB_CAN)
         {
             qDebug() << "Flashing of 128 byte block unsuccessful, stopping";
+            qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
             return STATUS_ERROR;
         }
         else
-            qDebug() << "Flashing of 128 byte block successful, proceeding to next 128 byte block";
+        {
+            //qDebug() << "Flashing of 128 byte block successful, proceeding to next 128 byte block";
+            qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
+        }
 
         remain -= blocksize;
         start += blocksize;
@@ -1475,7 +1504,7 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
 
-        QString start_address = QString("0x%1").arg(start,8,16,QLatin1Char('0'));
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
         msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         send_log_window_message(msg, true, true);
 
