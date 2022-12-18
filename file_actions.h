@@ -42,11 +42,12 @@ public:
         QString baudrate = "4800";
         QString flash_method = "wrx02";
         QString flash_protocol = "K-Line";
-        QString car_model = "Subaru";
+        QString car_make = "Subaru";
         QString log_protocol = "K-Line";
         QString window_size = "default";
         QString window_width = "default";
         QString window_height = "default";
+        QString toolbar_iconsize = "32";
 
         QString base_directory = QDir::homePath() + "/FastECU_OEM";
         QString calibration_files_base_directory = base_directory + "/calibrations";

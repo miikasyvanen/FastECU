@@ -163,7 +163,7 @@ private:
     QComboBox *serial_port_list;
     QComboBox *flash_method_list;
     QComboBox *flash_protocol_list;
-    QComboBox *car_model_list;
+    QComboBox *car_make_list;
     QComboBox *log_protocol_list;
 
     QFile log_file;
@@ -175,6 +175,8 @@ private:
     QDialog *settings_dialog;
     QListWidget *contents_widget;
     QStackedWidget *pages_widget;
+
+    QSize toolbar_item_size = QSize(24, 24);
 
     Ui::MainWindow *ui;
 

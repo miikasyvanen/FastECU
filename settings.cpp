@@ -10,12 +10,14 @@ Settings::Settings(FileActions::ConfigValuesStructure *configValues, QWidget *pa
     this->configValues = configValues;
 
     ui->list_widget->setViewMode(QListView::IconMode);
-    ui->list_widget->setIconSize(QSize(96, 84));
+    //ui->list_widget->setIconSize(QSize(96, 84));
     ui->list_widget->setMovement(QListView::Static);
-    ui->list_widget->setFixedWidth(160);
-    ui->list_widget->setSpacing(0);
+    ui->list_widget->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    //ui->list_widget->setFixedWidth(160);
+    ui->list_widget->setSpacing(10);
 
     ui->dir_page->setLayout(create_files_config_page(configValues));
+    ui->ui_page->setLayout(create_ui_config_page(configValues));
 
     connect(ui->save_button, SIGNAL (clicked()), this, SLOT (save_config_file()));
 
@@ -48,12 +50,12 @@ int Settings::save_config_file()
 QVBoxLayout *Settings::create_files_config_page(FileActions::ConfigValuesStructure *configValues)
 {
     QGroupBox *romraider_definitions_group = new QGroupBox(tr("RomRaider Definition Files"));
-
+/*
     qDebug() << "Calibration path:" << configValues->calibration_files_directory;
     qDebug() << "Romraider definition files:" << configValues->romraider_definition_files;
     qDebug() << "EcuFlash definition path:" << configValues->ecuflash_definition_files_directory;
     qDebug() << "Log files path:" << configValues->log_files_directory;
-
+*/
 
     romraider_definition_files_list = new QListWidget;
 
@@ -168,13 +170,42 @@ QVBoxLayout *Settings::create_files_config_page(FileActions::ConfigValuesStructu
     return directory_layout;
 }
 
+QVBoxLayout *Settings::create_ui_config_page(FileActions::ConfigValuesStructure *configValues)
+{
+    QGroupBox *toolbar_group = new QGroupBox(tr("Toolbar settings"));
+    QLabel *toolbar_iconsize_label = new QLabel("Toolbar icon size:");
+    toolbar_iconsize_spinbox = new QSpinBox();
+    toolbar_iconsize_spinbox->setValue(configValues->toolbar_iconsize.toInt());
+    connect(toolbar_iconsize_spinbox, SIGNAL(valueChanged(int)), this, SLOT(toolbar_iconsize_value_changed(int)));
+
+    QHBoxLayout *toolbar_layout = new QHBoxLayout;
+    toolbar_layout->setAlignment(Qt::AlignLeft);
+    toolbar_layout->addWidget(toolbar_iconsize_label);
+    toolbar_layout->addWidget(toolbar_iconsize_spinbox);
+    toolbar_group->setLayout(toolbar_layout);
+
+    QVBoxLayout *ui_config_layout = new QVBoxLayout;
+    ui_config_layout->addWidget(toolbar_group);
+    ui_config_layout->addStretch(1);
+
+    return ui_config_layout;
+}
+
 void Settings::create_list_icons()
 {
-    QListWidgetItem *fileConfigButton = new QListWidgetItem(ui->list_widget);
-    fileConfigButton->setIcon(QIcon(":/icons/icons/config.png"));
-    fileConfigButton->setText(tr("Files paths"));
-    fileConfigButton->setTextAlignment(Qt::AlignHCenter);
-    fileConfigButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    QListWidgetItem *file_config_item = new QListWidgetItem(ui->list_widget);
+    file_config_item->setIcon(QIcon(":/icons/document-open.png"));
+    file_config_item->setText(tr("Files"));
+    file_config_item->setSizeHint(QSize(64, 64));
+    //fileConfigButton->setTextAlignment(Qt::AlignHCenter);
+    file_config_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+    QListWidgetItem *ui_config_item = new QListWidgetItem(ui->list_widget);
+    ui_config_item->setIcon(QIcon(":/icons/preferences-system.png"));
+    ui_config_item->setText(tr("Ui config"));
+    ui_config_item->setSizeHint(QSize(64, 64));
+    //uiConfigButton->setTextAlignment(Qt::AlignHCenter);
+    ui_config_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
     connect(ui->list_widget, &QListWidget::currentItemChanged, this, &Settings::change_page);
 }
@@ -193,6 +224,11 @@ void Settings::romraider_as_primary_def_base_checkbox(int state)
         configValues->primary_definition_base = "romraider";
     else
         configValues->primary_definition_base = "ecuflash";
+}
+
+void Settings::toolbar_iconsize_value_changed(int value)
+{
+    configValues->toolbar_iconsize = QString::number(value);
 }
 
 void Settings::set_ecuflash_def_dir()

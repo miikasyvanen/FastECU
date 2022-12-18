@@ -131,6 +131,20 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
                             }
                             qDebug() << "Width:" << configValues->window_width << "Height:" << configValues->window_height;
                         }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "toolbar_iconsize")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->toolbar_iconsize = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                            qDebug() << "Serial port:" << configValues->serial_port;
+                        }
                         else if (reader.name() == "setting" && reader.attributes().value("name") == "serial_port")
                         {
                             while(reader.readNextStartElement())
@@ -340,6 +354,13 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeEndElement();
     stream.writeStartElement("value");
     stream.writeAttribute("height", configValues->window_height);
+    stream.writeEndElement();
+    stream.writeEndElement();
+
+    stream.writeStartElement("setting");
+    stream.writeAttribute("name", "toolbar_iconsize");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->toolbar_iconsize);
     stream.writeEndElement();
     stream.writeEndElement();
 
