@@ -46,6 +46,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     QRect qrect = MainWindow::geometry();
 
+    toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
+    toolbar_item_size.setHeight(configValues->toolbar_iconsize.toInt());
+    ui->toolBar->setIconSize(toolbar_item_size);
+
     if (configValues->window_width != "maximized" && configValues->window_height != "maximized")
         this->setGeometry(qrect.x(), qrect.y(), configValues->window_width.toInt(), configValues->window_height.toInt());
     else
@@ -125,29 +129,30 @@ MainWindow::MainWindow(QWidget *parent)
 
     QLabel *car_make = new QLabel("Car make:");
     car_make->setMargin(10);
+    car_make->setFixedHeight(toolbar_item_size.height());
     ui->toolBar->addWidget(car_make);
 
-    car_model_list = new QComboBox();
-    //car_model_list->setFixedWidth(100);
-    car_model_list->setObjectName("car_model_list");
-    QStringList car_models = create_car_models_list();
+    car_make_list = new QComboBox();
+    car_make_list->setFixedHeight(toolbar_item_size.height());
+    car_make_list->setObjectName("car_model_list");
+    QStringList car_makes = create_car_models_list();
     int car_model_index = 0;
-    foreach (QString car_model, car_models){
-        car_model_list->addItem(car_model);
-        if (configValues->car_model == car_model)
-            car_model_list->setCurrentIndex(car_model_index);
+    foreach (QString car_make, car_makes){
+        car_make_list->addItem(car_make);
+        if (configValues->car_make == car_make)
+            car_make_list->setCurrentIndex(car_model_index);
         car_model_index++;
     }
-    connect(car_model_list, SIGNAL(currentIndexChanged(int)), this, SLOT(car_model_changed()));
-    ui->toolBar->addWidget(car_model_list);
-    emit car_model_list->currentIndexChanged(car_model_index - 1);
+    connect(car_make_list, SIGNAL(currentIndexChanged(int)), this, SLOT(car_model_changed()));
+    ui->toolBar->addWidget(car_make_list);
+    emit car_make_list->currentIndexChanged(car_model_index - 1);
 
     QLabel *flash_method = new QLabel("Flash method:");
     flash_method->setMargin(10);
     ui->toolBar->addWidget(flash_method);
 
     flash_method_list = new QComboBox();
-    //flash_method_list->setFixedWidth(100);
+    flash_method_list->setFixedHeight(toolbar_item_size.height());
     flash_method_list->setObjectName("flash_method_list");
     QStringList flash_methods = create_flash_methods_list();
     for (int i = 0; i < flash_methods.length(); i++){
@@ -159,6 +164,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBar->addWidget(flash_method_list);
 
     flash_protocol_list = new QComboBox();
+    flash_protocol_list->setFixedHeight(toolbar_item_size.height());
     flash_protocol_list->setObjectName("flash_protocol_list");
     QStringList flash_protocols = create_flash_protocols_list();
     for (int i = 0; i < flash_protocols.length(); i++){
@@ -176,7 +182,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBar->addWidget(log_protocol);
 
     log_protocol_list = new QComboBox();
-
+    log_protocol_list->setFixedHeight(toolbar_item_size.height());
     log_protocol_list->setObjectName("log_protocol_list");
     QStringList log_protocols = create_log_protocols_list();
     for (int i = 0; i < log_protocols.length(); i++){
@@ -208,7 +214,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBar->addWidget(serial_port_select);
 
     serial_port_list = new QComboBox();
-    serial_port_list->setFixedWidth(80);
+    serial_port_list->setFixedHeight(toolbar_item_size.height());
+    serial_port_list->setFixedWidth(180);
     serial_port_list->setObjectName("serial_port_list");
     serial_ports = serial->check_serial_ports();
     for (int i = 0; i < serial_ports.length(); i++)
@@ -221,6 +228,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QPushButton *refresh_serial_list = new QPushButton();
     refresh_serial_list->setIcon(QIcon(":/icons/view-refresh.png"));
+    refresh_serial_list->setIconSize(toolbar_item_size);
     connect(refresh_serial_list, SIGNAL(clicked(bool)), this, SLOT(check_serial_ports()));
     ui->toolBar->addWidget(refresh_serial_list);
 
