@@ -25,6 +25,7 @@
 
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
+#include <definition_file_convert.h>
 #include <ecu_operations_nissan.h>
 #include <ecu_operations_subaru.h>
 #include <ecu_operations_manual.h>
@@ -215,6 +216,7 @@ private:
     void paste_value();
     void ecu_definition_manager();
     void logger_definition_manager();
+    void winols_csv_to_romraider_xml();
     void toggle_realtime();
     void toggle_log_to_file();
     void toggle_haltech_ic7_display();

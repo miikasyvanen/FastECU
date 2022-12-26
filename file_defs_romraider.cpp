@@ -11,7 +11,9 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
     QString description;
 
     QDomDocument xmlBOM;
-    QString filename = configValues->romraider_definition_files.at(0);
+
+    QString filename = ecuCalDef->DefinitionFileName;
+    //QString filename = configValues->romraider_definition_files.at(0);
 
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly ))
@@ -137,7 +139,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                                     }
                                                 }
                                             }
-                                            else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "3D"){
+                                            else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "3D")
+                                            {
                                                 ecuCalDef->YScaleNameList.replace(i, TableChild.attribute("name"," "));
                                                 ecuCalDef->YScaleTypeList.replace(i, ScaleType);
                                                 ecuCalDef->YScaleStorageTypeList.replace(i, TableChild.attribute("storagetype"," "));
@@ -299,6 +302,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
             ecuCalDef = NULL;
             return NULL;
         }
+
+        ecuCalDef->DefinitionFileName = filename;
 
         QXmlStreamReader reader;
         reader.setDevice(&file);
