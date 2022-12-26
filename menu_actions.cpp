@@ -26,6 +26,8 @@ void MainWindow::menu_action_triggered(QString action)
         copy_value();
     if (action == "paste")
         paste_value();
+    if (action == "winols_csv_to_romraider_xml")
+        winols_csv_to_romraider_xml();
     if (action == "settings")
         show_preferences_window();
 
@@ -295,6 +297,8 @@ void MainWindow::set_value()
             QString text = QInputDialog::getText(this, tr("QInputDialog::getText()"),
                                                        tr("Set value: (ie: x20/+20/-20/20"),
                                                        QLineEdit::Normal, "", &bStatus);
+
+            text.replace(",", ".");
 
             if (bStatus && !text.isEmpty()){
                 QStringList map_data_cell_text = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
@@ -870,6 +874,12 @@ void MainWindow::show_preferences_window()
     settings->show();
     //fileActions->save_config_file();
 
+}
+
+void MainWindow::winols_csv_to_romraider_xml()
+{
+    DefinitionFileConvert *definitionFileMaker = new DefinitionFileConvert();
+    definitionFileMaker->show();
 }
 
 void MainWindow::set_maptablewidget_items()

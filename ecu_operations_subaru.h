@@ -143,11 +143,18 @@ private:
     QByteArray sub_transform_wrx02_kernel(unsigned char *data, int length, bool doencrypt);
     QByteArray sub_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt);
     QByteArray sub_transform_denso_02_32bit_kernel(QByteArray buf, uint32_t len);
-    QByteArray sub_transform_denso_04_32bit_kernel(QByteArray buf, uint32_t len);
+
+    QByteArray sub_transform_denso_32bit_payload(QByteArray buf, uint32_t len);
+    QByteArray sub_transform_hitachi_32bit_payload(QByteArray buf, uint32_t len);
+    QByteArray sub_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
     void barrel_shift_16_right(unsigned short *barrel);
-    QByteArray sub_generate_kline_seed_key(QByteArray seed);
-    QByteArray sub_generate_can_seed_key(QByteArray requested_seed);
-    QByteArray sub_generate_ecutek_seed_key(QByteArray requested_seed);
+    QByteArray sub_generate_denso_kline_seed_key(QByteArray seed);
+    QByteArray sub_generate_denso_can_seed_key(QByteArray requested_seed);
+    QByteArray sub_generate_hitachi_kline_seed_key(QByteArray seed);
+    QByteArray sub_generate_hitachi_can_seed_key(QByteArray requested_seed);
+    QByteArray sub_generate_ecutek_kline_seed_key(QByteArray requested_seed);
+    QByteArray sub_generate_ecutek_can_seed_key(QByteArray requested_seed);
+    QByteArray sub_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     void init_crc16_tab(void);
     uint16_t crc16(const uint8_t *data, uint32_t siz);

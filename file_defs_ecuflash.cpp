@@ -534,6 +534,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             }
             else if (child.tagName() == "table" && xmlid == ecuId)
             {
+                //qDebug() << "ECU ID found" << xmlid << ecuid;
                 ecuid_def_found = true;
                 ecuCalDef->use_ecuflash_definition = true;
 

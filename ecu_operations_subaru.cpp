@@ -614,7 +614,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_kline_04_32bit()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    seed_key = sub_generate_kline_seed_key(seed);
+    seed_key = sub_generate_denso_kline_seed_key(seed);
     msg = parse_message_to_hex(seed_key);
     //qDebug() << "Calculated seed key: " + msg + ", sending to ECU";
     //send_log_window_message("Calculated seed key: " + msg + ", sending to ECU", true, true);
@@ -806,7 +806,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_02_16bit(QString kernel)
     received.clear();
     while (received == "")
     {
-        qDebug() << "Request kernel ID";
+        //qDebug() << "Request kernel ID";
         received = ecuOperations->request_kernel_id();
         delay(500);
     }
@@ -1052,7 +1052,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
 
     qDebug() << "Encrypt kernel data before upload";
     //pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
-    pl_encr = sub_transform_denso_04_32bit_kernel(pl_encr, (uint32_t) pl_len);
+    pl_encr = sub_transform_denso_32bit_payload(pl_encr, (uint32_t) pl_len);
 
     qDebug() << "Send 'sid36_transfer_data'";
     received = sub_sid_36_transferdata(start_address, pl_encr, len);
@@ -1077,7 +1077,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_kline_04_32bit(QString kernel)
     //qDebug() << parse_message_to_hex(sub_transform_denso_04_32bit_kernel(cks_bypass, (uint32_t) 4));
     //qDebug() << parse_message_to_hex(sub_encrypt_buf(cks_bypass, (uint32_t) 4));
     //cks_bypass = sub_encrypt_buf(cks_bypass, (uint32_t) 4);
-    cks_bypass = sub_transform_denso_04_32bit_kernel(cks_bypass, (uint32_t) 4);
+    cks_bypass = sub_transform_denso_32bit_payload(cks_bypass, (uint32_t) 4);
 
     /* sid36 transferData for checksum bypass */
     qDebug() << "Send 'sid36_transfer_data' for chksum bypass";
@@ -2039,8 +2039,10 @@ QByteArray EcuOperationsSubaru::sub_transform_denso_02_32bit_kernel(QByteArray b
     return buf;
 }
 
-QByteArray EcuOperationsSubaru::sub_transform_denso_04_32bit_kernel(QByteArray buf, uint32_t len)
+QByteArray EcuOperationsSubaru::sub_transform_denso_32bit_payload(QByteArray buf, uint32_t len)
 {
+    QByteArray encrypted;
+
     const uint16_t keytogenerateindex[]={
         0x7856, 0xCE22, 0xF513, 0x6E86
     };
@@ -2052,6 +2054,33 @@ QByteArray EcuOperationsSubaru::sub_transform_denso_04_32bit_kernel(QByteArray b
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
+    encrypted = sub_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+
+    return encrypted;
+}
+
+QByteArray EcuOperationsSubaru::sub_transform_hitachi_32bit_payload(QByteArray buf, uint32_t len)
+{
+    QByteArray encrypted;
+
+    const uint16_t keytogenerateindex[]={
+        0xF50E, 0x973C, 0x77F4, 0x14CA
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    encrypted = sub_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+
+    return encrypted;
+}
+
+QByteArray EcuOperationsSubaru::sub_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+{
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
     uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
@@ -2115,15 +2144,14 @@ void EcuOperationsSubaru::barrel_shift_16_right(unsigned short *barrel)
  *
  * @return seed key (4 bytes)
  */
-QByteArray EcuOperationsSubaru::sub_generate_kline_seed_key(QByteArray requested_seed)
+/*********************************
+ * This is for Denso K-Line ECUs
+ ********************************/
+QByteArray EcuOperationsSubaru::sub_generate_denso_kline_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
-    uint32_t seed, index;
-    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
-    int ki, n;
-
-    const uint16_t keytogenerateindex[]={
+    const uint16_t keytogenerateindex_1[]={
         0x53DA, 0x33BC, 0x72EB, 0x437D,
         0x7CA3, 0x3382, 0x834F, 0x3608,
         0xAFB8, 0x503D, 0xDBA3, 0x9D34,
@@ -2143,6 +2171,170 @@ QByteArray EcuOperationsSubaru::sub_generate_kline_seed_key(QByteArray requested
         0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
+
+    key = sub_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+/******************************
+ * This is for Denso CAN ECUs
+ *****************************/
+QByteArray EcuOperationsSubaru::sub_generate_denso_can_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = sub_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+/***********************************
+ * This is for Hitachi K-Line ECUs
+ **********************************/
+QByteArray EcuOperationsSubaru::sub_generate_hitachi_kline_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint16_t keytogenerateindex_2[]={
+        0x3275, 0x6AD8, 0x1062, 0x512B,
+        0xD695, 0x7640, 0x25F6, 0xAC45,
+        0x6803, 0xE5DA, 0xC821, 0x36BF,
+        0xA433, 0x3F41, 0x842C, 0x05D9
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = sub_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+/********************************
+ * This is for Hitachi CAN ECUs
+ *******************************/
+QByteArray EcuOperationsSubaru::sub_generate_hitachi_can_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={ // Hitachi/Denso CAN and K-Line ECU byte_1
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint16_t keytogenerateindex_2[]={ // Hitachi/Denso CAN ECU byte_2
+        0x90A1, 0x2F92, 0xDE3C, 0xCDC0,
+        0x1A99, 0x437C, 0xF91B, 0xDB57,
+        0x96BA, 0xDE10, 0xFCAF, 0x3F31,
+        0xF47F, 0x0BB6, 0x16E9, 0x4645
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = sub_calculate_seed_key(requested_seed, keytogenerateindex_2, indextransformation);
+
+    return key;
+}
+
+/**************************************
+ * This is EcuTek'd Denso K-Line ECUs
+ *************************************/
+QByteArray EcuOperationsSubaru::sub_generate_ecutek_kline_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x53DA, 0x33BC, 0x72EB, 0x437D,
+        0x7CA3, 0x3382, 0x834F, 0x3608,
+        0xAFB8, 0x503D, 0xDBA3, 0x9D34,
+        0x3563, 0x6B70, 0x6E74, 0x88F0
+    };
+
+    const uint16_t keytogenerateindex_2[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint8_t indextransformation[]={
+        0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = sub_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+/***********************************
+ * This is EcuTek'd Denso CAN ECUs
+ **********************************/
+QByteArray EcuOperationsSubaru::sub_generate_ecutek_can_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint8_t indextransformation[]={
+        0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = sub_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+QByteArray EcuOperationsSubaru::sub_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+{
+    QByteArray key;
+
+    uint32_t seed, index;
+    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
+    int ki, n;
 
     seed = (requested_seed.at(0) << 24) & 0xFF000000;
     seed += (requested_seed.at(1) << 16) & 0x00FF0000;
@@ -2177,67 +2369,6 @@ QByteArray EcuOperationsSubaru::sub_generate_kline_seed_key(QByteArray requested
     //write_32b(seed, key);
 
     return key;
-}
-
-QByteArray EcuOperationsSubaru::sub_generate_can_seed_key(QByteArray requested_seed)
-{
-    QByteArray key;
-
-    uint32_t seed, index;
-    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
-    int ki, n;
-
-    const uint16_t keytogenerateindex[]={
-        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
-        0x15BB, 0xF998, 0x8723, 0x9E05,
-        0x7092, 0xD683, 0xBA03, 0x59E1,
-        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
-    };
-
-    const uint16_t keytogenerateindex_2[]={
-        0x90A1, 0x2F92, 0xDE3C, 0xCDC0,
-        0x1A99, 0x437C, 0xF91B, 0xDB57,
-        0x96BA, 0xDE10, 0xFCAF, 0x3F31,
-        0xF47F, 0x0BB6, 0x16E9, 0x4645
-    };
-
-    const uint8_t indextransformation[]={
-        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
-        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
-        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
-        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
-    };
-
-
-    return key;
-
-}
-
-QByteArray EcuOperationsSubaru::sub_generate_ecutek_seed_key(QByteArray requested_seed)
-{
-    QByteArray key;
-
-    uint32_t seed, index;
-    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
-    int ki, n;
-
-    const uint16_t keytogenerateindex[]={
-        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
-        0x15BB, 0xF998, 0x8723, 0x9E05,
-        0x7092, 0xD683, 0xBA03, 0x59E1,
-        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
-    };
-
-    const uint8_t indextransformation[]={
-        0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,
-        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
-        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
-        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
-    };
-
-
-    return key;
-
 }
 
 uint8_t EcuOperationsSubaru::calculate_checksum(QByteArray output, bool dec_0x100)

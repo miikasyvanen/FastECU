@@ -514,39 +514,7 @@ int EcuOperations::write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCal
     {
         data_array[i] = filedata.at(i);
     }
-/*
-    output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
-    output.append((uint8_t)0x00 & 0xFF);
-    output.append((uint8_t)0x01 & 0xFF);
-    output.append((uint8_t)0x05 & 0xFF);
 
-    chksum = calculate_checksum(output, false);
-    output.append((uint8_t)chksum & 0xFF);
-
-    received = serial->write_serial_data_echo_check(output);
-    qDebug() << parse_message_to_hex(output);
-    delay(50);
-    received = serial->read_serial_data(50, serial_read_short_timeout);
-    qDebug() << parse_message_to_hex(received);
-
-    output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
-    output.append((uint8_t)0x00 & 0xFF);
-    output.append((uint8_t)0x01 & 0xFF);
-    output.append((uint8_t)0x06 & 0xFF);
-
-    chksum = calculate_checksum(output, false);
-    output.append((uint8_t)chksum & 0xFF);
-
-    received = serial->write_serial_data_echo_check(output);
-    qDebug() << parse_message_to_hex(output);
-    delay(50);
-    received = serial->read_serial_data(50, serial_read_short_timeout);
-    qDebug() << parse_message_to_hex(received);
-*/
     send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
@@ -600,7 +568,7 @@ int EcuOperations::write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCal
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-        if (get_changed_blocks_32bit_kline(data_array, block_modified))
+        if (get_changed_blocks_16bit_kline(data_array, block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -881,6 +849,8 @@ int EcuOperations::get_changed_blocks_16bit_kline(const uint8_t *src, int *modif
             return -1;
         }
     }
+    qDebug() << "ROM CRC check ready";
+
     return 0;
 }
 
@@ -947,7 +917,8 @@ int EcuOperations::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, 
     uint16_t chksum;
     uint16_t chunko;
     uint16_t pagesize = ROMCRC_CHUNKSIZE_16BIT;
-    unsigned int imgcrc;
+    uint32_t imgcrc;
+    uint32_t romcrc;
 
     len = (len + ROMCRC_LENMASK_16BIT) & ~ROMCRC_LENMASK_16BIT;
 
@@ -981,7 +952,7 @@ int EcuOperations::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, 
             output.append((uint8_t)chksum & 0xFF);
 
             received = serial->write_serial_data_echo_check(output);
-            qDebug() << hex << chunk_cnt << output.length() << start << pagesize << parse_message_to_hex(output);
+            //qDebug() << hex << chunk_cnt << output.length() << start << pagesize << parse_message_to_hex(output);
 
             delay(50);
             received = serial->read_serial_data(50, serial_read_long_timeout);
@@ -989,36 +960,24 @@ int EcuOperations::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, 
             received = serial->read_serial_data(50, serial_read_long_timeout);
 
             imgcrc = crc32(src + start, pagesize);
-            qDebug() << hex << chunk_cnt << received.length() << parse_message_to_hex(received) << "->" << hex << imgcrc;
+            //romcrc = byte_to_int32(received);
+            romcrc = ((received.at(0) & 0xFF) << 24) + ((received.at(1) & 0xFF) << 16) + ((received.at(2) & 0xFF) << 8) + (received.at(3) & 0xFF);
+
+            //qDebug() << hex << chunk_cnt << received.length() << parse_message_to_hex(received) << "->" << hex << imgcrc;
+            qDebug() << hex << chunk_cnt << received.length() << parse_message_to_hex(received) << romcrc << "->" << hex << imgcrc;
 
             start += ROMCRC_CHUNKSIZE_16BIT;
         }
 
-        //responses :	01 <SID_CONF+0x40> <cks> for good CRC
-        //				03 7F <SID_CONF> <SID_CONF_CKS1_BADCKS> <cks> for bad CRC
-        // anything else is an error that causes abort
-        /*
-        received = serial->read_serial_data(3, serial_read_short_timeout);
-
-        if (received.at(1) == (char)(SID_CONF + 0x40))
-        {
+        if (imgcrc == romcrc)
             continue;
-        }
 
-        received.append(serial->read_serial_data(2, serial_read_short_timeout));
         send_log_window_message("\tNO", false, true);
-
-        if (received.at(2) != (char)(SID_CONF) && received.at(3) != (char)(SID_CONF_CKS1_BADCKS))
-        {
-            send_log_window_message(" ", false, true);
-            send_log_window_message("got bad SID_FLASH_CKS1 response : ", true, true);
-            goto badexit;
-        }
 
         //confirmed bad CRC, we can exit
         *modified = 1;
 
-        return 0;*/
+        return 0;
     }   //for
 
     send_log_window_message("\tYES", false, true);
@@ -2050,5 +2009,41 @@ unsigned int EcuOperations::crc32(const unsigned char *buf, unsigned int len)
         crc = crc_table[((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8);
 
     return crc ^ 0xFFFFFFFF;
+}
+
+int EcuOperations::byte_to_int32(unsigned char *data)
+{
+    return (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
+}
+
+int EcuOperations::byte_to_int24(unsigned char *data)
+{
+    return (data[0] << 16) + (data[1] << 8) + data[2];
+}
+
+int EcuOperations::byte_to_int16(unsigned char *data)
+{
+    return (data[0] << 8) + data[1];
+}
+
+void EcuOperations::int16_to_byte(unsigned char *data,int i)
+{
+    data[0] = i >> 8;
+    data[1] = i & 0xFF;
+}
+
+void EcuOperations::int24_to_byte(unsigned char *data,int i)
+{
+    data[0] = i >> 16;
+    data[1] = (i >> 8) & 0xFF;
+    data[2] = i & 0xFF;
+}
+
+void EcuOperations::int32_to_byte(unsigned char *data,int i)
+{
+    data[0] = i >> 24;
+    data[1] = (i >> 16) & 0xFF;
+    data[2] = (i >> 8) & 0xFF;
+    data[3] = i & 0xFF;
 }
 

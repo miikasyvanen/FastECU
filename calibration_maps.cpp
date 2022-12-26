@@ -66,7 +66,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "2D")
     {
-        //qDebug() << "2D map";
+        //qDebug() << "2D map" << ecuCalDef->NameList.at(mapIndex) << ecuCalDef->XSizeList.at(mapIndex).toInt() << ecuCalDef->YSizeList.at(mapIndex).toInt();
         if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
             this->setWindowIcon(QIcon(":/icons/2D-64-W.png"));
         else
@@ -368,6 +368,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
     if (ecuCalDef->TypeList.at(mapIndex) == "2D" || ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
+        //qDebug() << "2D map" << ecuCalDef->NameList.at(mapIndex);
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         ecuCalDef->MaxValueList[mapIndex] = "-1000";
         ecuCalDef->MinValueList[mapIndex] = "1000";

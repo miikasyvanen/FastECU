@@ -931,6 +931,7 @@ QSignalMapper *FileActions::read_menu_file(QMenuBar *menubar, QToolBar *toolBar)
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QMenu *mainWindowMenu;
+    QMenu *subMenu;
 
     QSignalMapper *mapper = new QSignalMapper(this);
     bool toolBarIconSet = false;
@@ -972,25 +973,72 @@ QSignalMapper *FileActions::read_menu_file(QMenuBar *menubar, QToolBar *toolBar)
                     mainWindowMenu = menubar->addMenu(menuName);
                     //qDebug() << "Menu: " << menuName;
 
-                    QDomElement Child = Component.firstChild().toElement();
-                    while(!Child.isNull())
+                    QDomElement menu_item = Component.firstChild().toElement();
+                    while(!menu_item.isNull())
                     {
                         // Check if the child tag name is table
-                        if (Child.tagName() == "menuitem")
+                        if (menu_item.tagName() == "menu")
                         {
+                            QString subMenuName = menu_item.attribute("name","No name");
+                            subMenu = mainWindowMenu->addMenu(subMenuName);
+                            QDomElement sub_menu_item = menu_item.firstChild().toElement();
+                            while(!sub_menu_item.isNull())
+                            {
+                                if (sub_menu_item.tagName() == "menuitem")
+                                {
+                                    QString menuItemName = sub_menu_item.attribute("name","No name");
+                                    if (menuItemName == "Separator"){
+                                        subMenu->addSeparator();
+                                    }
+                                    else{
+                                        QAction* action = new QAction(menuItemName, this);
+                                        QString menuItemActionName = sub_menu_item.attribute("id","No id");;
+                                        QString menuItemCheckable = sub_menu_item.attribute("checkable","No checkable");;
+                                        QString menuItemShortcut = sub_menu_item.attribute("shortcut","No shortcut");;
+                                        QString menuItemToolbar = sub_menu_item.attribute("toolbar","No toolbar");;
+                                        QString menuItemIcon = sub_menu_item.attribute("icon","No icon");;
+                                        QString menuItemTooltip = sub_menu_item.attribute("tooltip","No tooltip");;
 
-                            QString menuItemName = Child.attribute("name","No name");
+                                        action->setObjectName(menuItemActionName);
+                                        //qDebug() << menuItemShortcut;
+                                        action->setShortcut(menuItemShortcut);
+                                        action->setIcon(QIcon(menuItemIcon));
+                                        action->setIconVisibleInMenu(true);
+                                        action->setToolTip(subMenuName + "\n\n" + menuItemTooltip);
+                                        if (menuItemCheckable == "true")
+                                            action->setCheckable(true);
+                                        else
+                                            action->setCheckable(false);
+                                        if (menuItemToolbar == "true"){
+                                            toolBar->addAction(action);
+                                            toolBarIconSet = true;
+                                        }
+
+                                        subMenu->addAction(action);
+                                        mapper->setMapping(action, action->objectName());
+                                        connect(action, SIGNAL(triggered(bool)), mapper, SLOT(map()));
+
+                                    }
+
+                                }
+
+                                sub_menu_item = sub_menu_item.nextSibling().toElement();
+                            }
+                        }
+                        if (menu_item.tagName() == "menuitem")
+                        {
+                            QString menuItemName = menu_item.attribute("name","No name");
                             if (menuItemName == "Separator"){
                                 mainWindowMenu->addSeparator();
                             }
                             else{
                                 QAction* action = new QAction(menuItemName, this);
-                                QString menuItemActionName = Child.attribute("id","No id");;
-                                QString menuItemCheckable = Child.attribute("checkable","No checkable");;
-                                QString menuItemShortcut = Child.attribute("shortcut","No shortcut");;
-                                QString menuItemToolbar = Child.attribute("toolbar","No toolbar");;
-                                QString menuItemIcon = Child.attribute("icon","No icon");;
-                                QString menuItemTooltip = Child.attribute("tooltip","No tooltip");;
+                                QString menuItemActionName = menu_item.attribute("id","No id");;
+                                QString menuItemCheckable = menu_item.attribute("checkable","No checkable");;
+                                QString menuItemShortcut = menu_item.attribute("shortcut","No shortcut");;
+                                QString menuItemToolbar = menu_item.attribute("toolbar","No toolbar");;
+                                QString menuItemIcon = menu_item.attribute("icon","No icon");;
+                                QString menuItemTooltip = menu_item.attribute("tooltip","No tooltip");;
 
                                 action->setObjectName(menuItemActionName);
                                 //qDebug() << menuItemShortcut;
@@ -1013,7 +1061,7 @@ QSignalMapper *FileActions::read_menu_file(QMenuBar *menubar, QToolBar *toolBar)
 
                             }
                         }
-                        Child = Child.nextSibling().toElement();
+                        menu_item = menu_item.nextSibling().toElement();
                     }
                     if (toolBarIconSet)
                         toolBar->addSeparator();
@@ -1068,7 +1116,12 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     QString ecuId;
     bool ecuIdConfirmed = true;
     bool bStatus = false;
-    uint16_t ecuIdAddr[] = { 0x0200, 0x2000, 0x2004 };
+    uint16_t ecuIdAddr[] = { 0x0054, 0x0200, 0x2000, 0x2004 };
+    int ecu_id_length = 0;
+    if (ecu_protocol == "Subaru")
+        ecu_id_length = 8;
+    if (ecu_protocol == "EDC16")
+        ecu_id_length = 6;
 
     if (!ecuCalDef->FullRomData.length())
     {
@@ -1111,7 +1164,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         //qDebug() << "Looking for ECU ID from address: 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
         ecuIdConfirmed = true;
         ecuId.clear();
-        for (int i = ecuIdAddr[j]; i < ecuIdAddr[j] + 8; i++)
+        for (int i = ecuIdAddr[j]; i < ecuIdAddr[j] + ecu_id_length; i++)
         {
             if ((uint8_t)ecuCalDef->FullRomData.at(i) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i) > 0x5A)
             {
@@ -1128,8 +1181,6 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             break;
     }
 
-    //qDebug() << "ECU ID:" << ecuId;
-
     if (!ecuIdConfirmed)
     {
         QMessageBox::warning(this, tr("Calibration file"), "Unable to find ID from selected ROM file, file might be from unsupported model!");
@@ -1140,10 +1191,14 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     def_map_index = 0;
 
+    ecuCalDef->use_ecuflash_definition = false;
+    ecuCalDef->use_romraider_definition = false;
+
     if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
     {
         read_ecuflash_ecu_def(ecuCalDef, ecuId);
         parse_ecuflash_def_scalings(ecuCalDef);
+
         if (!ecuCalDef->use_ecuflash_definition)
         {
             read_romraider_ecu_def(ecuCalDef, ecuId);
@@ -1360,10 +1415,13 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         return NULL;
     }
 
-    if (ecuCalDef->RomInfo[MemModel] == "SH7055")
-        checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
-    if (ecuCalDef->RomInfo[MemModel] == "SH7058")
-        checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
+    if (ecu_protocol == "Subaru")
+    {
+        if (ecuCalDef->RomInfo[MemModel] == "SH7055")
+            checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
+        if (ecuCalDef->RomInfo[MemModel] == "SH7058")
+            checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
+    }
 
     return ecuCalDef;
 
@@ -1561,10 +1619,13 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
         }
     }
 
-    if (ecuCalDef->RomInfo[MemModel] == "SH7055")
-        checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
-    if (ecuCalDef->RomInfo[MemModel] == "SH7058")
-        checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
+    if (ecu_protocol == "Subaru")
+    {
+        if (ecuCalDef->RomInfo[MemModel] == "SH7055")
+            checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
+        if (ecuCalDef->RomInfo[MemModel] == "SH7058")
+            checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
+    }
 
     return ecuCalDef;
 }

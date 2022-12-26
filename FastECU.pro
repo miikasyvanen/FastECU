@@ -36,6 +36,7 @@ linux {
 SOURCES += \
     calibration_maps.cpp \
     calibration_treewidget.cpp \
+    definition_file_convert.cpp \
     ecu_operations.cpp \
     ecu_operations_manual.cpp \
     ecu_operations_nissan.cpp \
@@ -56,6 +57,7 @@ SOURCES += \
 HEADERS += \
     calibration_maps.h \
     calibration_treewidget.h \
+    definition_file_convert.h \
     ecu_operations.h \
     ecu_operations_manual.h \
     ecu_operations_manual.h \
@@ -72,6 +74,7 @@ HEADERS += \
 
 FORMS += \
     calibrationmaptable.ui \
+    definitionfileconvertwindow.ui \
     ecumanualoperationswindow.ui \
     ecuoperationswindow.ui \
     logvalues.ui \

@@ -309,6 +309,7 @@ QStringList MainWindow::create_car_models_list()
 {
     QStringList car_models;
     car_models.append("Subaru");
+    car_models.append("EDC16");
 
     return car_models;
 }
@@ -398,6 +399,9 @@ void MainWindow::car_model_changed()
     QComboBox *car_model_list = ui->toolBar->findChild<QComboBox*>("car_model_list");
     if (car_model_list->currentText() == "Subaru")
         protocol = "SSM";
+
+    fileActions->ecu_protocol = car_model_list->currentText();
+
 }
 
 void MainWindow::flash_method_changed()
@@ -772,12 +776,14 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
         hierarchyLevel = 2;
 
         QTreeWidgetItem *selectedFilesTreeItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
+        QTreeWidgetItem *selectedDataTreeItem = ui->calibrationDataTreeWidget->selectedItems().at(0);
         int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedFilesTreeItem);
+        int mapIndex = selectedDataTreeItem->text(1).toInt();
         int romIndex = selectedFilesTreeItem->text(2).toInt();
 
         for (int i = 0; i < ecuCalDef[romNumber]->NameList.count(); i++)
         {
-            if (ecuCalDef[romNumber]->NameList.at(i) == selectedText)//itemText)
+            if (ecuCalDef[romNumber]->NameList.at(i) == selectedText && i == mapIndex)//itemText)
             {
                 if (ecuCalDef[romNumber]->VisibleList.at(i) == "1")
                 {
@@ -811,17 +817,20 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
 
                     CalibrationMaps *calibrationMaps = new CalibrationMaps(ecuCalDef[romNumber], romIndex, i, ui->mdiArea->contentsRect());
                     QMdiSubWindow *subWindow = ui->mdiArea->addSubWindow(calibrationMaps);
-                    subWindow->setAttribute(Qt::WA_DeleteOnClose, true);
-                    subWindow->setObjectName(calibrationMaps->objectName());
-                    subWindow->show();
-                    subWindow->adjustSize();
-                    subWindow->move(0,0);
-                    subWindow->setFixedWidth(subWindow->width());
-                    subWindow->setFixedHeight(subWindow->height());
+                    if (subWindow)
+                    {
+                        subWindow->setAttribute(Qt::WA_DeleteOnClose, true);
+                        subWindow->setObjectName(calibrationMaps->objectName());
+                        subWindow->show();
+                        subWindow->adjustSize();
+                        subWindow->move(0,0);
+                        //subWindow->setFixedWidth(subWindow->width());
+                        //subWindow->setFixedHeight(subWindow->height());
 
-                    connect(calibrationMaps, SIGNAL(selectable_combobox_item_changed(QString)), this, SLOT(selectable_combobox_item_changed(QString)));
-                    connect(calibrationMaps, SIGNAL(checkbox_state_changed(int)), this, SLOT(checkbox_state_changed(int)));
-                    connect(subWindow, SIGNAL(destroyed(QObject*)), this, SLOT(close_calibration_map(QObject*)));
+                        connect(calibrationMaps, SIGNAL(selectable_combobox_item_changed(QString)), this, SLOT(selectable_combobox_item_changed(QString)));
+                        connect(calibrationMaps, SIGNAL(checkbox_state_changed(int)), this, SLOT(checkbox_state_changed(int)));
+                        connect(subWindow, SIGNAL(destroyed(QObject*)), this, SLOT(close_calibration_map(QObject*)));
+                    }
                 }
             }
         }

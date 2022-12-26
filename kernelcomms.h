@@ -4,13 +4,20 @@
 /***********************************
  * OpenECU (HC16) kernel commands
  * ********************************/
-#define SID_OE_UPLOAD_KERNEL        0x53
+#define SID_OE_UPLOAD_KERNEL                    0x53
 
-#define SID_OE_KERNEL_START_COMM    0xBEEF
-#define SID_OE_KERNEL_ID            0x01
-#define SID_OE_KERNEL_CRC           0x02
-#define SID_OE_KERNEL_READ_AREA     0x03
-#define SID_OE_KERNEL_PROG_VOLT     0x04
+#define SID_OE_KERNEL_START_COMM                0xBEEF
+#define SID_OE_KERNEL_ID                        0x01
+#define SID_OE_KERNEL_CRC                       0x02
+#define SID_OE_KERNEL_READ_AREA                 0x03
+#define SID_OE_KERNEL_PROG_VOLT                 0x04
+
+#define SID_OE_KERNEL_FLASH_ENABLE				0x20;
+#define SID_OE_KERNEL_FLASH_DISABLE				0x21;
+#define SID_OE_KERNEL_WRITE_FLASH_BUFFER		0x22;
+#define SID_OE_KERNEL_VALIDATE_FLASH_BUFFER		0x23;
+#define SID_OE_KERNEL_COMMIT_FLASH_BUFFER       0x24;
+#define SID_OE_KERNEL_BLANK_16K_PAGE            0x25;
 
 /****************************************
  * NisProg based kernels k-line commands
