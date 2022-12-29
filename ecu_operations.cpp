@@ -842,7 +842,7 @@ int EcuOperations::get_changed_blocks_16bit_kline(const uint8_t *src, int *modif
         QString block_length = QString("%1").arg((uint32_t)blen,8,16,QLatin1Char('0')).toUpper();
 
         msg = QString("FB" + block_no + "\t0x" + block_start + "\t0x" + block_length).toUtf8();
-        qDebug() << msg;
+        //qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc_16bit_kline(&src[0], bs, blen, &modified[blockno])) {
@@ -871,7 +871,7 @@ int EcuOperations::get_changed_blocks_32bit_kline(const uint8_t *src, int *modif
         QString block_length = QString("%1").arg((uint32_t)blen,8,16,QLatin1Char('0')).toUpper();
 
         msg = QString("FB" + block_no + "\t0x" + block_start + "\t0x" + block_length).toUtf8();
-        qDebug() << msg;
+        //qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc_32bit_kline(&src[bs], bs, blen, &modified[blockno])) {
@@ -898,7 +898,7 @@ int EcuOperations::get_changed_blocks_32bit_can(const uint8_t *src, int *modifie
         QString block_length = QString("%1").arg((uint32_t)blen,8,16,QLatin1Char('0')).toUpper();
 
         msg = QString("FB" + block_no + "\t0x" + block_start + "\t0x" + block_length).toUtf8();
-        qDebug() << msg;
+        //qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc_32bit_can(&src[bs], bs, blen, &modified[blockno])) {
@@ -1117,7 +1117,7 @@ int EcuOperations::check_romcrc_32bit_can(const uint8_t *src, uint32_t start_add
         }
         byte_index++;
 
-        qDebug() << "Checksums: File =" << hex << chk_sum << "ROM =" << hex << (uint8_t)received.at(2);
+        //qDebug() << "Checksums: File =" << hex << chk_sum << "ROM =" << hex << (uint8_t)received.at(2);
         if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_CONF_CKS1_CAN || chk_sum == (uint8_t)received.at(2))
             continue;
 
@@ -1420,23 +1420,23 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
         output[7] = (uint8_t)(i & 0xFF);
         output[8] = (uint8_t)(chk_sum & 0xFF);
         received = serial->write_serial_data_echo_check(output);
-        qDebug() << "0xF8 command sent to kernel to check and flash 128 byte block";
-        qDebug() << parse_message_to_hex(output) << chk_sum;
-        //delay(50);
+        //qDebug() << "0xF8 command sent to kernel to check and flash 128 byte block";
+        //qDebug() << parse_message_to_hex(output) << chk_sum;
+        ////delay(50);
 
         // check for flash success or not
         received = serial->read_serial_data(3, serial_read_long_timeout);
-        qDebug() << parse_message_to_hex(received);
+        //qDebug() << parse_message_to_hex(received);
         if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_WB_CAN)
         {
             qDebug() << "Flashing of 128 byte block unsuccessful, stopping";
             qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
-            return STATUS_ERROR;
+            //return STATUS_ERROR;
         }
         else
         {
             //qDebug() << "Flashing of 128 byte block successful, proceeding to next 128 byte block";
-            qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
+            //qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
         }
 
         remain -= blocksize;
@@ -1784,9 +1784,19 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     output[11] = (uint8_t)(num_128_byte_blocks & 0xFF);
     received = serial->write_serial_data_echo_check(output);
     qDebug() << parse_message_to_hex(output);
+    //send_log_window_message("0xF0 message sent to kernel to erase block number: " + QString::number(blockno), true, true);
     qDebug() << "0xF0 message sent to kernel to erase block number: " << blockno;
     delay(500);
-    received = serial->read_serial_data(3, serial_read_extra_long_timeout);
+    for (int i = 0; i < 5; i++)
+    {
+        received = serial->read_serial_data(3, serial_read_extra_long_timeout);
+        if (received != "")
+        {
+            qDebug() << "Got page erase response in loop" << i;
+            break;
+        }
+    }
+    //send_log_window_message(parse_message_to_hex(received), true, true);
     qDebug() << parse_message_to_hex(received);
 
     if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_EB_CAN)
