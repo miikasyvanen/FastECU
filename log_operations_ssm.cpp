@@ -1,6 +1,33 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+void MainWindow::kline_listener()
+{
+    QByteArray received;
+
+    //serial->change_port_speed("10400");
+    serial->change_port_speed("125000");
+
+    while (haltech_ic7_display_on)
+    {
+        received = serial->read_serial_data(100, 500);
+        //qDebug() << parse_message_to_hex(received);
+        //delay(5);
+    }
+}
+
+void MainWindow::canbus_listener()
+{
+    QByteArray received;
+
+    while (haltech_ic7_display_on)
+    {
+        received = serial->read_serial_data(100, 500);
+        //qDebug() << parse_message_to_hex(received);
+        //delay(5);
+    }
+}
+
 bool MainWindow::ecu_init()
 {
     QString car_model;

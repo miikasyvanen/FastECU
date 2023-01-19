@@ -27,6 +27,7 @@
 #include <calibration_treewidget.h>
 #include <definition_file_convert.h>
 #include <ecu_operations_nissan.h>
+#include <ecu_operations_mercedes.h>
 #include <ecu_operations_subaru.h>
 #include <ecu_operations_manual.h>
 #include <file_actions.h>
@@ -85,6 +86,7 @@ private:
     FileActions::LogValuesStructure *logValues;
     FileActions::ConfigValuesStructure *configValues;
     EcuOperationsSubaru *ecuOperationsSubaru;
+    EcuOperationsMercedes *ecuOperationsRenault;
 
     SerialPortActions *serial;
     QTimer *serial_poll_timer;
@@ -98,11 +100,28 @@ private:
     QString serial_port_prefix;
     QStringList serial_ports;
 
+    QStringList ecu_protocols = {
+        // Car make, flash method, flash protocol, log protocol
+        "Subaru", "wrx02", "K-Line", "K-Line",
+        "Subaru", "fxt02", "K-Line,CAN", "K-Line,CAN",
+        "Subaru", "sti04", "K-Line,CAN", "K-Line,CAN",
+        "Subaru", "sti05", "K-Line,CAN", "K-Line,CAN",
+        "Subaru", "subarucan", "K-Line,ISO15764", "K-Line,ISO15764",
+
+        //"Mercedes-Benz", "EDC16C31", "K-Line", "K-Line",
+    };
+
     QStringList log_protocols = {
         "K-Line",
         "CAN",
+        "ISO15765",
     };
-
+/*
+    QStringList car_models = {
+        "Subaru",
+        "Renault"
+    };
+*/
     QStringList flash_methods = {
         "wrx02",
         "wrx04",
@@ -115,6 +134,7 @@ private:
     QStringList flash_protocols = {
         "K-Line",
         "CAN",
+        "ISO15765",
     };
 
     enum RomInfoEnum {
@@ -164,7 +184,7 @@ private:
     QComboBox *serial_port_list;
     QComboBox *flash_method_list;
     QComboBox *flash_protocol_list;
-    QComboBox *car_make_list;
+    QComboBox *car_model_list;
     QComboBox *log_protocol_list;
 
     QFile log_file;
@@ -189,6 +209,8 @@ private:
     float calculate_value_from_expression(QStringList expression);
 
     // log_operations
+    void kline_listener();
+    void canbus_listener();
     void ssm_kline_init();
     void ssm_can_init();
     QString parse_log_params(QByteArray received, QString protocol);

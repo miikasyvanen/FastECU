@@ -132,20 +132,10 @@ MainWindow::MainWindow(QWidget *parent)
     car_make->setFixedHeight(toolbar_item_size.height());
     ui->toolBar->addWidget(car_make);
 
-    car_make_list = new QComboBox();
-    car_make_list->setFixedHeight(toolbar_item_size.height());
-    car_make_list->setObjectName("car_model_list");
-    QStringList car_makes = create_car_models_list();
-    int car_model_index = 0;
-    foreach (QString car_make, car_makes){
-        car_make_list->addItem(car_make);
-        if (configValues->car_make == car_make)
-            car_make_list->setCurrentIndex(car_model_index);
-        car_model_index++;
-    }
-    connect(car_make_list, SIGNAL(currentIndexChanged(int)), this, SLOT(car_model_changed()));
-    ui->toolBar->addWidget(car_make_list);
-    emit car_make_list->currentIndexChanged(car_model_index - 1);
+    car_model_list = new QComboBox();
+    car_model_list->setFixedHeight(toolbar_item_size.height());
+    car_model_list->setObjectName("car_model_list");
+    ui->toolBar->addWidget(car_model_list);
 
     QLabel *flash_method = new QLabel("Flash method:");
     flash_method->setMargin(10);
@@ -154,25 +144,11 @@ MainWindow::MainWindow(QWidget *parent)
     flash_method_list = new QComboBox();
     flash_method_list->setFixedHeight(toolbar_item_size.height());
     flash_method_list->setObjectName("flash_method_list");
-    QStringList flash_methods = create_flash_methods_list();
-    for (int i = 0; i < flash_methods.length(); i++){
-        flash_method_list->addItem(flash_methods.at(i));
-        if (configValues->flash_method == flash_methods.at(i))
-            flash_method_list->setCurrentIndex(i);
-    }
-    connect(flash_method_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_method_changed()));
     ui->toolBar->addWidget(flash_method_list);
 
     flash_protocol_list = new QComboBox();
     flash_protocol_list->setFixedHeight(toolbar_item_size.height());
     flash_protocol_list->setObjectName("flash_protocol_list");
-    QStringList flash_protocols = create_flash_protocols_list();
-    for (int i = 0; i < flash_protocols.length(); i++){
-        flash_protocol_list->addItem(flash_protocols.at(i));
-        if (configValues->flash_protocol == flash_protocols.at(i))
-            flash_protocol_list->setCurrentIndex(i);
-    }
-    connect(flash_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_protocol_changed()));
     ui->toolBar->addWidget(flash_protocol_list);
 
     ui->toolBar->addSeparator();
@@ -184,18 +160,16 @@ MainWindow::MainWindow(QWidget *parent)
     log_protocol_list = new QComboBox();
     log_protocol_list->setFixedHeight(toolbar_item_size.height());
     log_protocol_list->setObjectName("log_protocol_list");
-    QStringList log_protocols = create_log_protocols_list();
-    for (int i = 0; i < log_protocols.length(); i++){
-        log_protocol_list->addItem(log_protocols.at(i));
-        if (configValues->log_protocol == log_protocols.at(i))
-            log_protocol_list->setCurrentIndex(i);
-    }
-    //SetComboBoxItemEnabled(log_protocol_list, 1, false);
-    //SetComboBoxItemEnabled(log_protocol_list, 2, false);
-    connect(log_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(log_protocol_changed()));
     ui->toolBar->addWidget(log_protocol_list);
 
     ui->toolBar->addSeparator();
+
+    //QStringList car_makes = create_car_models_list();
+    create_car_models_list();
+    connect(car_model_list, SIGNAL(currentIndexChanged(int)), this, SLOT(car_model_changed()));
+    connect(flash_method_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_method_changed()));
+    connect(flash_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_protocol_changed()));
+    connect(log_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(log_protocol_changed()));
 
     QLabel *log_select = new QLabel("Log:");
     log_select->setMargin(10);
@@ -277,6 +251,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     emit log_protocol_list->currentIndexChanged(log_protocol_list->currentIndex());
+
 }
 
 MainWindow::~MainWindow()
@@ -308,24 +283,84 @@ void MainWindow::SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool en
 QStringList MainWindow::create_car_models_list()
 {
     QStringList car_models;
-    car_models.append("Subaru");
-    car_models.append("EDC16");
+    bool car_model_found = false;
 
+    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    {
+        if (!car_models.contains(ecu_protocols.at(i)))
+            car_models.append(ecu_protocols.at(i));
+    }
+    car_model_list->clear();
+    for (int i = 0; i < car_models.length(); i++){
+        car_model_list->addItem(car_models.at(i));
+        if (configValues->car_make == car_models.at(i))
+        {
+            car_model_found = true;
+            car_model_list->setCurrentIndex(i);
+        }
+    }
+    if (!car_model_found)
+    {
+        configValues->car_make = car_model_list->currentText();
+        fileActions->save_config_file(configValues);
+    }
+    flash_methods = create_flash_methods_list();
+    flash_protocols = create_flash_protocols_list();
+    log_protocols = create_log_protocols_list();
     return car_models;
 }
 
 QStringList MainWindow::create_flash_methods_list()
 {
+    QStringList flash_methods;
+
+    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    {
+        if (ecu_protocols.at(i) == car_model_list->currentText())
+            flash_methods.append(ecu_protocols.at(i + 1));
+    }
+    flash_method_list->clear();
+    for (int i = 0; i < flash_methods.length(); i++){
+        flash_method_list->addItem(flash_methods.at(i));
+        if (configValues->flash_method == flash_methods.at(i))
+            flash_method_list->setCurrentIndex(i);
+    }
     return flash_methods;
 }
 
 QStringList MainWindow::create_flash_protocols_list()
 {
+    QStringList flash_protocols;
+
+    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    {
+        if (flash_method_list->currentText() == ecu_protocols.at(i + 1))
+            flash_protocols.append(ecu_protocols.at(i + 2).split(","));
+    }
+    flash_protocol_list->clear();
+    for (int i = 0; i < flash_protocols.length(); i++){
+        flash_protocol_list->addItem(flash_protocols.at(i));
+        if (configValues->flash_protocol == flash_protocols.at(i))
+            flash_protocol_list->setCurrentIndex(i);
+    }
     return flash_protocols;
 }
 
 QStringList MainWindow::create_log_protocols_list()
 {
+    QStringList log_protocols;
+
+    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    {
+        if (flash_method_list->currentText() == ecu_protocols.at(i + 1))
+            log_protocols.append(ecu_protocols.at(i + 3).split(","));
+    }
+    log_protocol_list->clear();
+    for (int i = 0; i < log_protocols.length(); i++){
+        log_protocol_list->addItem(log_protocols.at(i));
+        if (configValues->log_protocol == log_protocols.at(i))
+            log_protocol_list->setCurrentIndex(i);
+    }
     return log_protocols;
 }
 
@@ -368,6 +403,7 @@ QString MainWindow::check_kernel(QString flash_method)
 
 void MainWindow::log_protocol_changed()
 {
+    qDebug() << "Change log protocol";
     QComboBox *log_protocol_list = ui->toolBar->findChild<QComboBox*>("log_protocol_list");
 
     serial->is_can_connection = false;
@@ -375,14 +411,17 @@ void MainWindow::log_protocol_changed()
     if (log_protocol_list->currentText() == "CAN")
     {
         serial->is_can_connection = true;
+        serial->is_iso15765_connection = false;
         serial->is_29_bit_id = false;
         serial->can_speed = "500000";
     }
-    //else if (log_protocol_list->currentText() == "ISO15765")
-        //serial->is_iso15765_connection = true;
-
-    //qDebug() << "CAN:" << serial->is_can_connection;
-    //qDebug() << "iso15765:" << serial->is_iso15765_connection;
+    else if (log_protocol_list->currentText() == "ISO15765")
+    {
+        serial->is_can_connection = false;
+        serial->is_iso15765_connection = true;
+        serial->is_29_bit_id = true;
+        serial->can_speed = "500000";
+    }
 
     configValues->log_protocol = log_protocol_list->currentText();
     fileActions->save_config_file(configValues);
@@ -395,17 +434,24 @@ void MainWindow::log_protocol_changed()
 
 void MainWindow::car_model_changed()
 {
-    //qDebug() << "Change car model";
+    qDebug() << "Change car model";
     QComboBox *car_model_list = ui->toolBar->findChild<QComboBox*>("car_model_list");
+
     if (car_model_list->currentText() == "Subaru")
         protocol = "SSM";
 
-    fileActions->ecu_protocol = car_model_list->currentText();
+    configValues->car_make = car_model_list->currentText();
+    fileActions->save_config_file(configValues);
+
+    flash_methods = create_flash_methods_list();
+    flash_protocols = create_flash_protocols_list();
+    log_protocols = create_log_protocols_list();
 
 }
 
 void MainWindow::flash_method_changed()
 {
+    qDebug() << "Change flash method";
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
 
     configValues->flash_method = flash_method_list->currentText();
@@ -414,6 +460,7 @@ void MainWindow::flash_method_changed()
 
 void MainWindow::flash_protocol_changed()
 {
+    qDebug() << "Change flash protocol";
     QComboBox *flash_protocol_list = ui->toolBar->findChild<QComboBox*>("flash_protocol_list");
 
     configValues->flash_protocol = flash_protocol_list->currentText();
@@ -489,53 +536,87 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
 
-    if (flash_protocol_list->currentText() == "CAN")
-        serial->is_can_connection = true;
-    if (flash_method_list->currentText() == "subarucan")
-        serial->is_iso15765_connection = true;
-
-    serial->is_29_bit_id = true;
-    serial->can_speed = "500000";
-
-    if (cmd_type == "test_write" || cmd_type == "write")
+    if (configValues->car_make == "Subaru")
     {
-        serial->reset_connection();
-        ecuid.clear();
-        ecu_init_complete = false;
-        open_serial_port();
+        if (flash_protocol_list->currentText() == "CAN")
+            serial->is_can_connection = true;
+        if (flash_method_list->currentText() == "subarucan")
+            serial->is_iso15765_connection = true;
 
-        ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
-        ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
-        //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
-        ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
-    }
-    else
-    {
-        serial->reset_connection();
-        ecuid.clear();
-        ecu_init_complete = false;
-        open_serial_port();
+        serial->is_29_bit_id = true;
+        serial->can_speed = "500000";
 
-        ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
-        while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
-            ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
-        ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, flash_method_list->currentText());
-        ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(flash_method_list->currentText());
-        //qDebug() << ecuCalDef[ecuCalDefIndex]->Kernel;
-        ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
-
-        if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
+        if (cmd_type == "test_write" || cmd_type == "write")
         {
-            fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
-            if(ecuCalDef[ecuCalDefIndex] != NULL)
-            {
-                calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
-                calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
+            serial->reset_connection();
+            ecuid.clear();
+            ecu_init_complete = false;
+            open_serial_port();
 
-                ecuCalDefIndex++;
-            }
-            save_calibration_file_as();
+            ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
+            ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
+            //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
+            ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
         }
+        else
+        {
+            serial->reset_connection();
+            ecuid.clear();
+            ecu_init_complete = false;
+            open_serial_port();
+
+            ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
+            while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
+                ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
+            ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, flash_method_list->currentText());
+            ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(flash_method_list->currentText());
+            //qDebug() << ecuCalDef[ecuCalDefIndex]->Kernel;
+            ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
+
+            if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
+            {
+                fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
+                if(ecuCalDef[ecuCalDefIndex] != NULL)
+                {
+                    calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
+                    calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
+
+                    ecuCalDefIndex++;
+                }
+                save_calibration_file_as();
+            }
+        }
+    }
+    else if (configValues->car_make == "Mercedes-Benz")
+    {
+        qDebug() << "Testing MB EDC16 ECU";
+
+        // Reset all comms
+        serial->reset_connection();
+        ecuid.clear();
+        ecu_init_complete = false;
+
+        // For CAN comms
+        if (flash_protocol_list->currentText() == "CAN")
+            serial->is_can_connection = true;
+        if (flash_protocol_list->currentText() == "ISO15765")
+            serial->is_iso15765_connection = true;
+
+        if (serial->is_can_connection || serial->is_iso15765_connection)
+        {
+            serial->is_29_bit_id = false;
+            serial->can_speed = "500000";
+            open_serial_port();
+        }
+        // For K-Line comms
+        else
+        {
+            serial->serialport_protocol_14230 = true;
+            open_serial_port();
+            serial->change_port_speed("10400");
+        }
+
+        ecuOperationsRenault = new EcuOperationsMercedes(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
     }
 
     serial->serialport_protocol_14230 = false;
@@ -742,7 +823,7 @@ void MainWindow::calibration_files_treewidget_item_selected(QTreeWidgetItem* ite
     QString romId = selectedItem->text(1);
 
     calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[romNumber]);
-
+/*
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
     for (int i = 0; i < flash_method_list->count(); i++)
     {
@@ -751,6 +832,7 @@ void MainWindow::calibration_files_treewidget_item_selected(QTreeWidgetItem* ite
             flash_method_list->setCurrentIndex(i);
         }
     }
+    */
 }
 
 void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item)
@@ -922,8 +1004,8 @@ void MainWindow::close_calibration()
             delete ui->calibrationDataTreeWidget->takeTopLevelItem(0);
         }
     }
-    configValues->calibration_files.removeAt(romNumber);
-    fileActions->save_config_file(configValues);
+    //configValues->calibration_files.removeAt(romNumber);
+    //fileActions->save_config_file(configValues);
 }
 
 void MainWindow::close_calibration_map(QObject* obj)

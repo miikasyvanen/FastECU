@@ -865,7 +865,9 @@ void MainWindow::toggle_haltech_ic7_display()
         }
     }
     if (haltech_ic7_display_on)
-        test_haltech_ic7_display();
+        kline_listener();
+        //canbus_listener();
+        //test_haltech_ic7_display();
 }
 
 void MainWindow::show_preferences_window()
