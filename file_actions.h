@@ -35,14 +35,14 @@ public:
 
     uint8_t float_precision = 15;
     int def_map_index = 0;
-    QString ecu_protocol;
+    //QString ecu_protocol;
 
     struct ConfigValuesStructure {
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
+        QString car_make = "Subaru";
         QString flash_method = "wrx02";
         QString flash_protocol = "K-Line";
-        QString car_make = "Subaru";
         QString log_protocol = "K-Line";
         QString window_size = "default";
         QString window_width = "default";

@@ -58,9 +58,7 @@ private:
 
     SerialPortActions *serial;
     FileActions *fileActions;
-
     QWidget *flash_window;
-    //QProgressBar *progressbar;
 
     int get_changed_blocks_16bit_kline(const uint8_t *src, int *modified);
     int get_changed_blocks_32bit_kline(const uint8_t *src, int *modified);
@@ -95,7 +93,7 @@ private:
 signals:
 
 private slots:
-    void delay(int n);
+    void delay(int timeout);
 
 };
 

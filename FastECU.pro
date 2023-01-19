@@ -38,7 +38,9 @@ SOURCES += \
     calibration_treewidget.cpp \
     definition_file_convert.cpp \
     ecu_operations.cpp \
+    ecu_operations_iso14230.cpp \
     ecu_operations_manual.cpp \
+    ecu_operations_mercedes.cpp \
     ecu_operations_nissan.cpp \
     ecu_operations_subaru.cpp \
     file_actions.cpp \
@@ -59,8 +61,10 @@ HEADERS += \
     calibration_treewidget.h \
     definition_file_convert.h \
     ecu_operations.h \
+    ecu_operations_iso14230.h \
     ecu_operations_manual.h \
     ecu_operations_manual.h \
+    ecu_operations_mercedes.h \
     ecu_operations_nissan.h \
     ecu_operations_subaru.h \
     file_actions.h \

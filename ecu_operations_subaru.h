@@ -38,8 +38,8 @@ public:
     explicit EcuOperationsSubaru(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
     ~EcuOperationsSubaru();
 
-    int ecu_functions(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
 private:
+    int ecu_functions(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
     void closeEvent(QCloseEvent *bar);
 
     #define STATUS_SUCCESS							0x00

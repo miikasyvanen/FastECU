@@ -571,8 +571,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             QString ScaleType = sub_child.attribute("type"," ");
                             if (ScaleType == "X Axis")
                             {
-                                if (ecuCalDef->XSizeList.at(def_map_index) == " ")
-                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
+                                if (ecuCalDef->XSizeList.at(def_map_index) == "" || ecuCalDef->XSizeList.at(def_map_index) == " ")
+                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
                                 if (ecuCalDef->XScaleNameList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleNameList.replace(def_map_index, sub_child.attribute("name"," "));
                                 if (ecuCalDef->XScaleAddressList.at(def_map_index) == " ")
@@ -584,8 +584,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             }
                             else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "3D")
                             {
-                                if (ecuCalDef->YSizeList.at(def_map_index) == " ")
-                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
+                                if (ecuCalDef->YSizeList.at(def_map_index) == " " || ecuCalDef->YSizeList.at(def_map_index) == "")
+                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
                                 if (ecuCalDef->YScaleNameList.at(def_map_index) == " ")
                                     ecuCalDef->YScaleNameList.replace(def_map_index, sub_child.attribute("name"," "));
                                 if (ecuCalDef->YScaleAddressList.at(def_map_index) == " ")
@@ -597,8 +597,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             }
                             else if (ScaleType == "Static Y Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "2D"))
                             {
-                                if (ecuCalDef->XSizeList.at(def_map_index) == " ")
-                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
+                                if (ecuCalDef->XSizeList.at(def_map_index) == " " || ecuCalDef->XSizeList.at(def_map_index) == "")
+                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
                                 if (ecuCalDef->XScaleNameList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleNameList.replace(def_map_index, sub_child.attribute("name"," "));
                                 if (ecuCalDef->XScaleAddressList.at(def_map_index) == " ")
@@ -628,25 +628,25 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 if (i == 0)
                                 {
                                     ecuCalDef->XScaleAddressList.replace(def_map_index, sub_child.attribute("address", " "));
-                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
+                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
                                 }
                                 if (i == 1)
                                 {
                                     ecuCalDef->YScaleAddressList.replace(def_map_index, sub_child.attribute("address", " "));
-                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
+                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
                                 }
                                 i++;
                             }
                         }
                         sub_child = sub_child.nextSibling().toElement();
                     }
-                    /*
+
                     if (ecuCalDef->YSizeList[def_map_index] == " ")
                     {
                         ecuCalDef->YSizeList[def_map_index] = "1";
                         ecuCalDef->YScaleAddressList[def_map_index] = " ";
                     }
-                    */
+
                     def_map_index++;
                 }
                 map_defined = false;

@@ -57,7 +57,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "1D")
     {
-        //qDebug() << "1D map";
+        qDebug() << "1D map";
         mapWindowObjectName = mapWindowObjectName + "," + "1D";
         mapCellWidth = mapCellWidth1D;
         xSize = 1;
@@ -66,7 +66,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "2D")
     {
-        //qDebug() << "2D map" << ecuCalDef->NameList.at(mapIndex) << ecuCalDef->XSizeList.at(mapIndex).toInt() << ecuCalDef->YSizeList.at(mapIndex).toInt();
+        qDebug() << "2D map" << ecuCalDef->NameList.at(mapIndex) << ecuCalDef->XSizeList.at(mapIndex).toInt() << ecuCalDef->YSizeList.at(mapIndex).toInt();
         if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
             this->setWindowIcon(QIcon(":/icons/2D-64-W.png"));
         else

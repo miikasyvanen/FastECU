@@ -159,6 +159,20 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
                             }
                             qDebug() << "Serial port:" << configValues->serial_port;
                         }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "car_make")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->car_make = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                            qDebug() << "Flash method:" << configValues->flash_method;
+                        }
                         else if (reader.name() == "setting" && reader.attributes().value("name") == "flash_method")
                         {
                             while(reader.readNextStartElement())
@@ -368,6 +382,13 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeAttribute("name", "serial_port");
     stream.writeStartElement("value");
     stream.writeAttribute("data", configValues->serial_port);
+    stream.writeEndElement();
+    stream.writeEndElement();
+
+    stream.writeStartElement("setting");
+    stream.writeAttribute("name", "car_make");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->car_make);
     stream.writeEndElement();
     stream.writeEndElement();
 
@@ -1118,9 +1139,9 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     bool bStatus = false;
     uint16_t ecuIdAddr[] = { 0x0054, 0x0200, 0x2000, 0x2004 };
     int ecu_id_length = 0;
-    if (ecu_protocol == "Subaru")
+    if (configValues->car_make == "Subaru")
         ecu_id_length = 8;
-    if (ecu_protocol == "EDC16")
+    if (configValues->car_make == "Mercedes-Benz")
         ecu_id_length = 6;
 
     if (!ecuCalDef->FullRomData.length())
@@ -1415,7 +1436,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         return NULL;
     }
 
-    if (ecu_protocol == "Subaru")
+    if (configValues->car_make == "Subaru")
     {
         if (ecuCalDef->RomInfo[MemModel] == "SH7055")
             checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
@@ -1452,6 +1473,8 @@ FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::
 
 FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef)
 {
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
     int storagesize = 0;
     QString mapData;
     bool bStatus = false;
@@ -1619,7 +1642,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
         }
     }
 
-    if (ecu_protocol == "Subaru")
+    if (configValues->car_make == "Subaru")
     {
         if (ecuCalDef->RomInfo[MemModel] == "SH7055")
             checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
