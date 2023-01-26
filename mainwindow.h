@@ -102,11 +102,12 @@ private:
 
     QStringList ecu_protocols = {
         // Car make, flash method, flash protocol, log protocol
-        "Subaru", "wrx02", "K-Line", "K-Line",
-        "Subaru", "fxt02", "K-Line,CAN", "K-Line,CAN",
-        "Subaru", "sti04", "K-Line,CAN", "K-Line,CAN",
-        "Subaru", "sti05", "K-Line,CAN", "K-Line,CAN",
-        "Subaru", "subarucan", "K-Line,ISO15764", "K-Line,ISO15764",
+        "Subaru", "wrx02", "K-Line", "K-Line", "SSM",
+        "Subaru", "fxt02", "K-Line,CAN", "K-Line,CAN", "SSM",
+        "Subaru", "sti04", "K-Line,CAN", "K-Line,CAN", "SSM",
+        "Subaru", "sti05", "K-Line,CAN", "K-Line,CAN", "SSM",
+        "Subaru", "subarucan", "K-Line,ISO15764", "K-Line,ISO15764", "SSM",
+        "Subaru", "Hitachi UJ20", "K-Line", "K-Line", "SSM",
 
         //"Mercedes-Benz", "EDC16C31", "K-Line", "K-Line",
     };
@@ -157,6 +158,7 @@ private:
 
     QString ecuid = "";
     QString protocol = "";
+    QString log_protocol = "";
 
     QTimer *ssm_init_poll_timer;
     uint16_t ssm_init_poll_timer_timeout = 250;

@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 enum mcu_type {
+    M32R_UJ20,
+    M32R_UJ30,
     MC68HC16Y5,
     SH7051,
     SH7055,
@@ -118,7 +120,32 @@ const struct ramblock rblocks_MC68HC16Y5[] = {
     {0x00020000,    0x0008000},
 };
 
+const struct flashblock fblocks_M32R_UJ20[] = {
+    {0x00100000,    0x0010000},
+    {0x00200000,    0x0010000},
+};
+
+const struct ramblock rblocks_M32R_UJ20[] = {
+    {0x00801000,    0x0001800},
+};
+
+const struct flashblock fblocks_M32R_UJ30[] = {
+    {0x00000000,    0x0004000},
+    {0x00004000,    0x0002000},
+    {0x00006000,    0x0002000},
+    {0x00008000,    0x0008000},
+    {0x00010000,    0x0010000},
+    {0x00020000,    0x0010000},
+    {0x00030000,    0x0010000},
+};
+
+const struct ramblock rblocks_M32R_UJ30[] = {
+    {0x00804000,    0x0004000},
+};
+
 const struct flashdev_t flashdevices[] = {
+    { "M32R_UJ20", M32R_UJ20, 128 * 1024, 2, fblocks_M32R_UJ20, rblocks_M32R_UJ20 },
+    { "M32R_UJ30", M32R_UJ30, 256 * 1024, 7, fblocks_M32R_UJ20, rblocks_M32R_UJ20 },
     { "MC68HC16Y5", MC68HC16Y5, 160 * 1024, 10, fblocks_MC68HC16Y5, rblocks_MC68HC16Y5 },
     { "SH7051", SH7051, 256 * 1024, 12, fblocks_SH7051, rblocks_SH7051 },
     { "SH7055", SH7055, 512 * 1024, 16, fblocks_SH7055, rblocks_SH7055 },

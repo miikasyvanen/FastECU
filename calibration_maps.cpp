@@ -66,7 +66,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "2D")
     {
-        qDebug() << "2D map" << ecuCalDef->NameList.at(mapIndex) << ecuCalDef->XSizeList.at(mapIndex).toInt() << ecuCalDef->YSizeList.at(mapIndex).toInt();
+        //qDebug() << "2D map" << ecuCalDef->NameList.at(mapIndex) << ecuCalDef->XSizeList.at(mapIndex).toInt() << ecuCalDef->YSizeList.at(mapIndex).toInt();
         if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
             this->setWindowIcon(QIcon(":/icons/2D-64-W.png"));
         else
@@ -76,6 +76,8 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
         else if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1)
             mapWindowObjectName = mapWindowObjectName + "," + "Y Axis";
         else if (ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
+            mapWindowObjectName = mapWindowObjectName + "," + "X Axis";
+        else
             mapWindowObjectName = mapWindowObjectName + "," + "X Axis";
         xSizeOffset = 0;
         ySizeOffset = 0;
@@ -88,7 +90,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
     if (ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
-        //qDebug() << "3D map";
+        //qDebug() << "3D map" << ecuCalDef->NameList.at(mapIndex) << ecuCalDef->XSizeList.at(mapIndex).toInt() << ecuCalDef->YSizeList.at(mapIndex).toInt();
         this->setWindowIcon(QIcon(":/icons/3D-64-W.png"));
         mapWindowObjectName = mapWindowObjectName + "," + "3D";
         xSizeOffset = 0;

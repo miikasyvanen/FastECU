@@ -1137,12 +1137,23 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     QString ecuId;
     bool ecuIdConfirmed = true;
     bool bStatus = false;
-    uint16_t ecuIdAddr[] = { 0x0054, 0x0200, 0x2000, 0x2004 };
+    QStringList ecu_id_addr;
+    //uint16_t ecuIdAddr[] = { 0x0054, 0x01F8, 0x0200, 0x2000, 0x2004 };
     int ecu_id_length = 0;
+
     if (configValues->car_make == "Subaru")
+    {
+        ecu_id_addr.append("0x01F8");
+        ecu_id_addr.append("0x0200");
+        ecu_id_addr.append("0x2000");
+        ecu_id_addr.append("0x2004");
         ecu_id_length = 8;
+    }
     if (configValues->car_make == "Mercedes-Benz")
+    {
+        ecu_id_addr.append("0x0054");
         ecu_id_length = 6;
+    }
 
     if (!ecuCalDef->FullRomData.length())
     {
@@ -1180,17 +1191,18 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     ecuIdConfirmed = true;
 
-    for (unsigned j = 0; j < sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
+    //for (unsigned j = 0; j < sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
+    for (int j = 0; j < ecu_id_addr.length(); j++)
     {
         //qDebug() << "Looking for ECU ID from address: 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
         ecuIdConfirmed = true;
         ecuId.clear();
-        for (int i = ecuIdAddr[j]; i < ecuIdAddr[j] + ecu_id_length; i++)
+        for (unsigned int i = ecu_id_addr.at(j).toUInt(&bStatus, 16); i < (ecu_id_addr.at(j).toUInt(&bStatus, 16) + ecu_id_length); i++)
         {
             if ((uint8_t)ecuCalDef->FullRomData.at(i) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i) > 0x5A)
             {
                 ecuIdConfirmed = false;
-                //qDebug() << "ECU ID not found, looking from next address";
+                qDebug() << "ECU ID not found, looking from next address";
                 break;
             }
             else
@@ -1205,8 +1217,16 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     if (!ecuIdConfirmed)
     {
         QMessageBox::warning(this, tr("Calibration file"), "Unable to find ID from selected ROM file, file might be from unsupported model!");
-        return NULL;
+        ecuCalDef->FileName = "No name";
+        ecuCalDef->RomId = "No id";
+        ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
+        ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
+        qDebug() << ecuCalDef->RomInfo.at(FileSize);
+        return ecuCalDef;
     }
+    else
+        qDebug() << "ECU ID:" << ecuId;
+
     if (!file_name_str.length())
         file_name_str = ecuId;// + ".bin";
 
@@ -1436,6 +1456,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         return NULL;
     }
 
+    checksum_correction(ecuCalDef);
+    /*
     if (configValues->car_make == "Subaru")
     {
         if (ecuCalDef->RomInfo[MemModel] == "SH7055")
@@ -1443,9 +1465,9 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         if (ecuCalDef->RomInfo[MemModel] == "SH7058")
             checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
     }
+    */
 
     return ecuCalDef;
-
 }
 
 FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
@@ -1642,6 +1664,8 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
         }
     }
 
+    checksum_correction(ecuCalDef);
+    /*
     if (configValues->car_make == "Subaru")
     {
         if (ecuCalDef->RomInfo[MemModel] == "SH7055")
@@ -1649,7 +1673,23 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
         if (ecuCalDef->RomInfo[MemModel] == "SH7058")
             checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
     }
+    */
 
+    return ecuCalDef;
+}
+
+FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    if (configValues->car_make == "Subaru")
+    {
+        if (ecuCalDef->RomInfo[MemModel] == "SH7055")
+            checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
+        if (ecuCalDef->RomInfo[MemModel] == "SH7058")
+            checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
+
+    }
     return ecuCalDef;
 }
 
@@ -1734,7 +1774,8 @@ FileActions::EcuCalDefStructure *FileActions::checksum_module_subarudbw(FileActi
     if (!checksum_ok)
     {
         ecuCalDef->FullRomData.replace(checksum_area_start, checksum_area_length, checksum_array);
-        QMessageBox::information(this, tr("32-bit checksum"), "Checksums corrected");
+        //QMessageBox::information(this, tr("32-bit checksum"), "Checksums corrected");
+        //qDebug() << "Checksums corrected";
     }
 
     return ecuCalDef;

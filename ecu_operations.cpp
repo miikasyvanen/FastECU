@@ -22,6 +22,14 @@ void EcuOperations::closeEvent(QCloseEvent *bar)
 
 }
 
+/*******************************************************
+ *
+ *  Denso ECU operations, modded NisProg kernels
+ *
+ ******************************************************/
+/*******************************************************
+ *  Request kernel init
+ ******************************************************/
 QByteArray EcuOperations::request_kernel_init()
 {
     QByteArray output;
@@ -47,6 +55,9 @@ QByteArray EcuOperations::request_kernel_init()
     return received;
 }
 
+/*******************************************************
+ *  Request kernel id
+ ******************************************************/
 QByteArray EcuOperations::request_kernel_id()
 {
     QByteArray output;
@@ -116,6 +127,9 @@ QByteArray EcuOperations::request_kernel_id()
     return kernelid;
 }
 
+/*******************************************************
+ *  Read ROM 16bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
@@ -158,7 +172,7 @@ int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         float pleft = 0;
         unsigned long chrono;
 
-        pleft = (float)addr / (float)(length + 0x8000) * 100.0f;
+        pleft = (float)(addr - start_addr) / (float)(length + 0x8000) * 100.0f;
         set_progressbar_value(pleft);
 
         if (addr >= flashdevices[mcu_type_index].rblocks->start && addr < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len))
@@ -237,6 +251,9 @@ int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalD
     return STATUS_SUCCESS;
 }
 
+/*******************************************************
+ *  Read ROM 32bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
@@ -283,7 +300,7 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         uint32_t curblock = (addr / 32);
 
         uint32_t pagesize = numblocks * 32;
-        pleft = (float)addr / (float)length * 100.0f;
+        pleft = (float)(addr - start_addr) / (float)length * 100.0f;
         set_progressbar_value(pleft);
 
 
@@ -349,6 +366,9 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
     return STATUS_SUCCESS;
 }
 
+/*******************************************************
+ *  Read ROM 16bit CAN ECUs
+ ******************************************************/
 int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
@@ -407,7 +427,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
         uint32_t curblock = (addr / pagesize);
 
 
-        pleft = (float)addr / (float)length * 100.0f;
+        pleft = (float)(addr - start_addr) / (float)length * 100.0f;
         set_progressbar_value(pleft);
 
         //length = 256;
@@ -492,6 +512,9 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
     return STATUS_SUCCESS;
 }
 
+/*******************************************************
+ *  Write ROM 16bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
     QByteArray filedata;
@@ -603,6 +626,9 @@ int EcuOperations::write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCal
     return STATUS_SUCCESS;
 }
 
+/*******************************************************
+ *  Write ROM 32bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
     QByteArray filedata;
@@ -711,6 +737,9 @@ int EcuOperations::write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCal
     return STATUS_SUCCESS;
 }
 
+/*******************************************************
+ *  Write ROM 32bit CAN ECUs
+ ******************************************************/
 int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
     QByteArray filedata;
@@ -825,6 +854,9 @@ int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDe
     return STATUS_SUCCESS;
 }
 
+/*******************************************************
+ *  Compare ROM 16bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::get_changed_blocks_16bit_kline(const uint8_t *src, int *modified)
 {
     unsigned blockno;
@@ -854,6 +886,9 @@ int EcuOperations::get_changed_blocks_16bit_kline(const uint8_t *src, int *modif
     return 0;
 }
 
+/*******************************************************
+ *  Compare ROM 32bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::get_changed_blocks_32bit_kline(const uint8_t *src, int *modified)
 {
     unsigned blockno;
@@ -881,6 +916,9 @@ int EcuOperations::get_changed_blocks_32bit_kline(const uint8_t *src, int *modif
     return 0;
 }
 
+/*******************************************************
+ *  Compare ROM 32bit CAN ECUs
+ ******************************************************/
 int EcuOperations::get_changed_blocks_32bit_can(const uint8_t *src, int *modified)
 {
     unsigned blockno;
@@ -908,6 +946,9 @@ int EcuOperations::get_changed_blocks_32bit_can(const uint8_t *src, int *modifie
     return 0;
 }
 
+/*******************************************************
+ *  ROM CRC 16bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
 {
     QByteArray output;
@@ -990,6 +1031,9 @@ badexit:
     return -1;
 }
 
+/*******************************************************
+ *  ROM CRC 32bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::check_romcrc_32bit_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
 {
     QByteArray output;
@@ -1060,6 +1104,9 @@ badexit:
     return -1;
 }
 
+/*******************************************************
+ *  ROM CRC 32bit CAN ECUs
+ ******************************************************/
 int EcuOperations::check_romcrc_32bit_can(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
 {
     QByteArray output;
@@ -1139,10 +1186,9 @@ badexit:
     return -1;
 }
 
-/* ret 0 if ok. For use by reflash_block(),
- * assumes parameters have been validated,
- * and appropriate block has been erased
- */
+/*******************************************************
+ *  NPK Raw flash ROM 16bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t start, uint32_t len)
 {
 
@@ -1234,7 +1280,7 @@ int EcuOperations::npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t s
         }
         tleft++;
 
-        float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
+        float pleft = (float)(byteindex - start) / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
@@ -1250,6 +1296,9 @@ int EcuOperations::npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t s
     return 0;
 }
 
+/*******************************************************
+ *  NPK Raw flash ROM 32bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t start, uint32_t len)
 {
 
@@ -1341,7 +1390,7 @@ int EcuOperations::npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t s
         }
         tleft++;
 
-        float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
+        float pleft = (float)(byteindex - start) / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
@@ -1357,6 +1406,9 @@ int EcuOperations::npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t s
     return 0;
 }
 
+/*******************************************************
+ *  NPK Raw flash ROM 32bit CAN ECUs
+ ******************************************************/
 int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t start, uint32_t len)
 {
     QByteArray output;
@@ -1460,7 +1512,7 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
         }
         tleft++;
 
-        float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
+        float pleft = (float)(byteindex - start) / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
@@ -1472,6 +1524,9 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
     return 0;
 }
 
+/*******************************************************
+ *  Reflash ROM 16bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::reflash_block_16bit_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
     int errval;
@@ -1595,6 +1650,9 @@ int EcuOperations::reflash_block_16bit_kline(const uint8_t *newdata, const struc
 
 }
 
+/*******************************************************
+ *  Reflash ROM 32bit K-Line ECUs
+ ******************************************************/
 int EcuOperations::reflash_block_32bit_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
     int errval;
@@ -1718,6 +1776,9 @@ int EcuOperations::reflash_block_32bit_kline(const uint8_t *newdata, const struc
 
 }
 
+/*******************************************************
+ *  Reflash ROM 32bit CAN ECUs
+ ******************************************************/
 int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
     int errval;
@@ -1815,6 +1876,127 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     return STATUS_SUCCESS;
 }
 
+/*******************************************************
+ *
+ *  Hitachi ECU operations
+ *
+ ******************************************************/
+int EcuOperations::read_mem_hitachi_uj20(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+{
+    QElapsedTimer timer;
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    QByteArray mapdata;
+
+    uint32_t pagesize = 0;
+    uint32_t end_addr = 0;
+    uint32_t datalen = 0;
+    uint32_t cplen = 0;
+
+    uint8_t chk_sum = 0;
+
+    datalen = 6;
+    pagesize = 0x80;
+    if (start_addr == 0 && length == 0)
+    {
+        start_addr = 0;
+        length = 0x030000;
+    }
+    end_addr = start_addr + length;
+
+    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
+    uint32_t addr = start_addr - skip_start;
+    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
+    uint32_t len_done = 0;  //total data written to file
+
+    timer.start();
+
+    output.clear();
+    output.append((uint8_t)0x80);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0xF0);
+    output.append((uint8_t)0x06);
+    output.append((uint8_t)(SID_HITACHI_BLOCK_READ & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)(addr >> 16) & 0xFF);
+    output.append((uint8_t)(addr >> 8) & 0xFF);
+    output.append((uint8_t)addr & 0xFF);
+    output.append((uint8_t)(pagesize - 1) & 0xFF);
+
+    while (willget)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        uint32_t numblocks = 1;
+        unsigned curspeed = 0, tleft;
+        uint32_t curblock = (addr / pagesize);
+        float pleft = 0;
+        unsigned long chrono;
+
+        pleft = (float)(addr - start_addr) / (float)(length) * 100.0f;
+        set_progressbar_value(pleft);
+
+        output[6] = (uint8_t)(addr >> 16) & 0xFF;
+        output[7] = (uint8_t)(addr >> 8) & 0xFF;
+        output[8] = (uint8_t)addr & 0xFF;
+        output[9] = (uint8_t)(pagesize - 1) & 0xFF;
+
+        //chk_sum = calculate_checksum(output, false);
+        //output.append((uint8_t) chk_sum);
+        received = serial->write_serial_data_echo_check(output);
+        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+
+        if (received.startsWith("\x80\xf0"))
+        {
+            received.remove(0, 5);
+            //received.remove(received.length() - 1, 1);
+            mapdata.append(received);
+        }
+        else
+        {
+            //qDebug() << "ERROR IN DATA RECEIVE!";
+        }
+
+        cplen = (numblocks * pagesize);
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (cplen > 0 && chrono > 0)
+            curspeed = cplen * (1000.0f / chrono);
+
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = (willget / curspeed) % 9999;
+        tleft++;
+
+        QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
+        QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        send_log_window_message(msg, true, true);
+        delay(1);
+
+        len_done += cplen;
+        addr += (numblocks * pagesize);
+        willget -= pagesize;
+    }
+
+    ecuCalDef->FullRomData = mapdata;
+    set_progressbar_value(100);
+
+    return STATUS_SUCCESS;
+
+}
+
+/*******************************************************
+ *
+ *  Generic subroutines
+ *
+ ******************************************************/
 QString EcuOperations::parse_message_to_hex(QByteArray received)
 {
     QByteArray msg;

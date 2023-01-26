@@ -10,6 +10,8 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationFilesTree(int ecuCalDefIndex
     QString filename(ecuCalDef->FileName);
     //qDebug() << filename;
 
+    qDebug() << "buildCalibrationFilesTree: start";
+
     /**************************
      * Create files tree
      *************************/
@@ -28,7 +30,8 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationFilesTree(int ecuCalDefIndex
     calFilesTree->addTopLevelItem(topLevelFilesTreeItem);
 
     topLevelFilesTreeItem->setText(0, filename);
-    topLevelFilesTreeItem->setText(1, ecuCalDef->IdList.at(0));
+    if (ecuCalDef->IdList.length())
+        topLevelFilesTreeItem->setText(1, ecuCalDef->IdList.at(0));
     calFilesTree->expandItem(topLevelFilesTreeItem);
 
     for (int i = 0; i < calFilesTree->topLevelItemCount(); i++)
@@ -39,8 +42,6 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationFilesTree(int ecuCalDefIndex
     topLevelFilesTreeItem->setSelected(true);
     topLevelFilesTreeItem->setCheckState(0, Qt::Checked);
 
-    //qDebug() << "Calibration files tree widget item created";
-
     return calFilesTree;
 }
 
@@ -48,30 +49,22 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationDataTree(QTreeWidget *dataTr
 {
     bool treeChildCreated = false;
 
-    //qDebug() << "Create calibration data tree widget";
-
     /**************************
      * Create data tree
      *************************/
     dataTreeWidget->clear();
-    //qDebug() << "Calibration data tree widget cleared, create new";
 
     QTreeWidget *calDataTree = dataTreeWidget;
-    //calDataTree->setStyleSheet("QTreeWidget { padding-left: 10px;}");
 
     calDataTree->setAnimated(true);
-    //calDataTree->setSelectionMode(QAbstractItemView::NoSelection);
     calDataTree->setFocusPolicy(Qt::NoFocus);
-
-    //qDebug() << "Calibration data tree widget created";
-    //qDebug() << "Check definition data count:" << ecuCalDef->NameList.count();
 
     QFont dataItemFont;
     dataItemFont.setPixelSize(12);
     calDataTree->setFont(dataItemFont);
 
     // If OEM ecu file, add ROM info
-    if (ecuCalDef->OemEcuFile)
+    if (ecuCalDef->RomInfo.length())
     {
         QTreeWidgetItem * topLevelDataTreeItem = new QTreeWidgetItem();
         topLevelDataTreeItem->setText(0, "ROM Info");
@@ -141,8 +134,6 @@ void *CalibrationTreeWidget::calibrationDataTreeWidgetItemExpanded(FileActions::
     if (categoryName == "ROM Info")
         ecuCalDef->RomInfoExpanded = "1";
 
-    //qDebug() << "Item expanded" << categoryName;
-
     return NULL;
 }
 
@@ -155,8 +146,6 @@ void *CalibrationTreeWidget::calibrationDataTreeWidgetItemCollapsed(FileActions:
     }
     if (categoryName == "ROM Info")
         ecuCalDef->RomInfoExpanded = "0";
-
-    //qDebug() << "Item collapsed" << categoryName;
 
     return NULL;
 }
