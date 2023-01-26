@@ -2,6 +2,19 @@
 #define KERNELCOMMS_H
 
 /***********************************
+ * Hitachi (M32R) commands
+ * ********************************/
+#define SID_HITACHI_BLOCK_READ                  0xA0
+#define SID_HITACHI_ADDR_READ                   0xA8
+#define SID_HITACHI_BLOCK_WRITE                 0xB0
+#define SID_HITACHI_ADDR_WRITE                  0xB8
+#define SID_HITACHI_FLASH_READ                  0x00//???
+
+#define SID_HITACHI_FLASH_ERASE                 0x31//???
+#define SID_HITACHI_FLASH_WRITE                 0x61
+#define SID_HITACHI_FLASH_WRITE_END             0x69//???
+
+/***********************************
  * OpenECU (HC16) kernel commands
  * ********************************/
 #define SID_OE_UPLOAD_KERNEL                    0x53

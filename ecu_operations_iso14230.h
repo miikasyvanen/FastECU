@@ -31,7 +31,7 @@ public:
     QStringList request_cal_id();
     QString request_cvn();
     QString request_ecu_name();
-    QByteArray read_data(uint8_t start_id, uint8_t target, uint8_t source, QByteArray data);
+    QByteArray read_data(QByteArray header, QByteArray payload);
 
 private:
     SerialPortActions *serial;

@@ -79,44 +79,71 @@ private:
 
     void check_mcu_type(QString mcu_type_string);
 
-    int connect_bootloader_subaru_kline_02_16bit();
-    int connect_bootloader_subaru_kline_04_16bit();
-    int connect_bootloader_subaru_kline_02_32bit();
-    int connect_bootloader_subaru_kline_04_32bit();
-    int connect_bootloader_subaru_can_32bit();
-    //int connect_bootloader_subaru_can_05_32bit();
+    int connect_bootloader_subaru_denso_kline_02_16bit();
+    int connect_bootloader_subaru_denso_kline_04_16bit();
+    int connect_bootloader_subaru_denso_kline_02_32bit();
+    int connect_bootloader_subaru_denso_kline_04_32bit();
+    int connect_bootloader_subaru_denso_can_32bit();
 
-    int upload_kernel_subaru_kline_02_16bit(QString kernel);
-    int upload_kernel_subaru_kline_04_16bit(QString kernel);
-    int upload_kernel_subaru_kline_02_32bit(QString kernel);
-    int upload_kernel_subaru_kline_04_32bit(QString kernel);
-    int upload_kernel_subaru_can_32bit(QString kernel);
-    //int upload_kernel_subaru_can_05_32bit(QString kernel);
+    int initialize_read_mode_subaru_hitachi_uj20_kline();
+    int initialize_read_mode_subaru_hitachi_uj30_kline();
+    int initialize_read_mode_subaru_hitachi_uj40_kline();
+    int initialize_read_mode_subaru_hitachi_uj70_kline();
+    int initialize_read_mode_subaru_hitachi_uj70_can();
 
-    int read_rom_subaru_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    //int read_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    //int read_rom_subaru_can_05_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int uninitialize_read_mode_subaru_hitachi_uj20_kline();
 
-    int write_rom_subaru_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    //int write_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int initialize_flash_mode_subaru_hitachi_uj20_kline();
+    int initialize_flash_mode_subaru_hitachi_uj30_kline();
+    int initialize_flash_mode_subaru_hitachi_uj40_kline();
+    int initialize_flash_mode_subaru_hitachi_uj70_kline();
+    int initialize_flash_mode_subaru_hitachi_uj70_can();
 
-    QByteArray sub_sid_a8_read_mem();
-    QByteArray sub_sid_bf_ssm_init();
-    QByteArray sub_sid_81_start_communication();
-    QByteArray sub_sid_83_request_timings();
-    QByteArray sub_sid_27_request_seed();
-    QByteArray sub_sid_27_send_seed_key(QByteArray seed_key);
-    QByteArray sub_sid_10_start_diagnostic();
-    QByteArray sub_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
-    QByteArray sub_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    QByteArray sub_sid_53_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    QByteArray sub_sid_31_start_routine();
+    int upload_kernel_subaru_denso_kline_02_16bit(QString kernel);
+    int upload_kernel_subaru_denso_kline_04_16bit(QString kernel);
+    int upload_kernel_subaru_denso_kline_02_32bit(QString kernel);
+    int upload_kernel_subaru_denso_kline_04_32bit(QString kernel);
+    int upload_kernel_subaru_denso_can_32bit(QString kernel);
+
+    int read_rom_subaru_denso_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_uj20_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef);
+
+    int write_rom_subaru_denso_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_rom_subaru_hitachi_uj20_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_hitachi_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef);
+
+    QByteArray send_subaru_sid_a8_read_mem();
+    QByteArray send_subaru_sid_bf_ssm_init();
+    QByteArray send_subaru_denso_sid_81_start_communication();
+    QByteArray send_subaru_denso_sid_83_request_timings();
+    QByteArray send_subaru_denso_sid_27_request_seed();
+    QByteArray send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key);
+    QByteArray send_subaru_denso_sid_10_start_diagnostic();
+    QByteArray send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
+    QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
+    QByteArray send_subaru_denso_sid_53_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
+    QByteArray send_subaru_denso_sid_31_start_routine();
+
+    QByteArray send_subaru_hitachi_sid_b8_change_baudrate_4800();
+    QByteArray send_subaru_hitachi_sid_b8_change_baudrate_38400();
+    QByteArray send_subaru_hitachi_sid_af_enter_flash_mode(QByteArray ecu_id);
+    QByteArray send_subaru_hitachi_sid_af_erase_memory_block(uint32_t address);
+    QByteArray send_subaru_hitachi_sid_af_write_memory_block(uint32_t address, QByteArray payload);
+    QByteArray send_subaru_hitachi_sid_a0_read_memory_block(uint32_t block_address);
+    QByteArray send_subaru_hitachi_sid_a8_read_memory_address(uint32_t address);
 
     enum RomInfoEnum {
         XmlId,
@@ -136,31 +163,37 @@ private:
         FileSize,
     };
 
+    QByteArray subaru_denso_transform_wrx02_kernel(unsigned char *data, int length, bool doencrypt);
+    QByteArray subaru_denso_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt);
+    QByteArray subaru_denso_transform_denso_02_32bit_kernel(QByteArray buf, uint32_t len);
+
+    QByteArray subaru_denso_transform_denso_32bit_payload(QByteArray buf, uint32_t len);
+    QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
+    QByteArray subaru_denso_generate_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+
+    QByteArray subaru_hitachi_transform_32bit_payload(QByteArray buf, uint32_t len);
+    QByteArray subaru_hitachi_generate_kline_seed_key(QByteArray seed);
+    QByteArray subaru_hitachi_generate_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+
+    QByteArray subaru_denso_encrypt_buf(QByteArray buf, uint32_t pl_len);
+    QByteArray subaru_denso_encrypt(const uint8_t *datatoencrypt);
+
+
     QByteArray add_ssm_header(QByteArray output, bool dec_0x100);
-    QString parse_message_to_hex(QByteArray received);
     int check_received_message(QByteArray msg, QByteArray received);
     int connect_bootloader_start_countdown(int timeout);
-    QByteArray sub_transform_wrx02_kernel(unsigned char *data, int length, bool doencrypt);
-    QByteArray sub_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt);
-    QByteArray sub_transform_denso_02_32bit_kernel(QByteArray buf, uint32_t len);
-
-    QByteArray sub_transform_denso_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray sub_transform_hitachi_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray sub_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
     void barrel_shift_16_right(unsigned short *barrel);
-    QByteArray sub_generate_denso_kline_seed_key(QByteArray seed);
-    QByteArray sub_generate_denso_can_seed_key(QByteArray requested_seed);
-    QByteArray sub_generate_hitachi_kline_seed_key(QByteArray seed);
-    QByteArray sub_generate_hitachi_can_seed_key(QByteArray requested_seed);
-    QByteArray sub_generate_ecutek_kline_seed_key(QByteArray requested_seed);
-    QByteArray sub_generate_ecutek_can_seed_key(QByteArray requested_seed);
-    QByteArray sub_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
-    uint8_t cks_add8(QByteArray chksum_data, unsigned len);
-    void init_crc16_tab(void);
-    uint16_t crc16(const uint8_t *data, uint32_t siz);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
-    QByteArray sub_encrypt_buf(QByteArray buf, uint32_t pl_len);
-    QByteArray sub_encrypt(const uint8_t *datatoencrypt);
+    QString parse_message_to_hex(QByteArray received);
+
+    //uint8_t cks_add8(QByteArray chksum_data, unsigned len);
+    //void init_crc16_tab(void);
+    //uint16_t crc16(const uint8_t *data, uint32_t siz);
 
     EcuOperations *ecuOperations;
     Ui::EcuOperationsWindow *ui;

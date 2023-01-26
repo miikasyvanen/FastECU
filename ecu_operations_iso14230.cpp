@@ -319,19 +319,17 @@ QByteArray EcuOperationsIso14230::read_data_by_local_id()
 
 }
 */
-QByteArray EcuOperationsIso14230::read_data(uint8_t start_id, uint8_t target, uint8_t source, QByteArray data)
+QByteArray EcuOperationsIso14230::read_data(QByteArray header, QByteArray payload)
 {
     QByteArray output;
     QByteArray received;
 
     output.clear();
-    output.append((uint8_t)start_id);
-    output.append((uint8_t)target);
-    output.append((uint8_t)source);
-    output.append(data);
+    output.append(header);
+    output.append(payload);
 
     serial->write_serial_data(output);
-    delay(100);
+    delay(50);
     received = serial->read_serial_data(50, 50);
 
     return received;

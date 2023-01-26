@@ -15,23 +15,25 @@ start and stop logging.
 Green down-arrow will read ROM from ECU, green up-arrow will test write ROM to ECU and red up-arrow will
 write ROM to ECU. In toolbar dropbox car make and flash method should be selected prior that.
 
+For tuning, check 'Tune' -menu for possible options and shorcuts. Also copy&paste will work in maps.
+
 In lower log parameters area or in map view area, mouse right click opens window to change displayed log
 parameters. Saving parameters state and "gauge view" is not yet implemented in this version.
 
-Tested methods:
-- sti04 -> on bench
-- fxt02 -> in car
+Tested flash methods:
+- wrx02 method read and compare (K-Line)
+- fxt02 method read/write (K-Line / CAN)
+- sti04 method read/write (K-Line / CAN)
+- sti05 method read/write (K-Line / CAN)
+- Logging of basic ssm values
 
-Read and write succesfully tested - Open port 2.0 and generic OBD-cable (FTDI chip) in Windows 7 64-bit and Linux.
-
-- wrx02 -> on bench
-
-Read succesfully tested - Open port 2.0 and generic OBD-cable (FTDI chip) in Windows 7 64-bit and Linux.
+K-Line and CAN read and write succesfully tested - Open port 2.0 and generic OBD-cable (FTDI chip) in Windows 7 64-bit and Linux.
 
 This is basically test version for reading and writing ECUs. Many of the other options will NOT work yet. Development
 of these options is on the way but due to my limited time, it will not be fast. Be patient! :)
 
 Things that not yet work:
 
+- Undo / Redo
 - Logger definition file selection/changing from software
 - Many other things that just don't come to mind right now

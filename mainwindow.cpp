@@ -285,7 +285,7 @@ QStringList MainWindow::create_car_models_list()
     QStringList car_models;
     bool car_model_found = false;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    for (int i = 0; i < ecu_protocols.length(); i+=5)
     {
         if (!car_models.contains(ecu_protocols.at(i)))
             car_models.append(ecu_protocols.at(i));
@@ -314,7 +314,7 @@ QStringList MainWindow::create_flash_methods_list()
 {
     QStringList flash_methods;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    for (int i = 0; i < ecu_protocols.length(); i+=5)
     {
         if (ecu_protocols.at(i) == car_model_list->currentText())
             flash_methods.append(ecu_protocols.at(i + 1));
@@ -332,7 +332,7 @@ QStringList MainWindow::create_flash_protocols_list()
 {
     QStringList flash_protocols;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    for (int i = 0; i < ecu_protocols.length(); i+=5)
     {
         if (flash_method_list->currentText() == ecu_protocols.at(i + 1))
             flash_protocols.append(ecu_protocols.at(i + 2).split(","));
@@ -350,7 +350,7 @@ QStringList MainWindow::create_log_protocols_list()
 {
     QStringList log_protocols;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=4)
+    for (int i = 0; i < ecu_protocols.length(); i+=5)
     {
         if (flash_method_list->currentText() == ecu_protocols.at(i + 1))
             log_protocols.append(ecu_protocols.at(i + 3).split(","));
@@ -359,8 +359,15 @@ QStringList MainWindow::create_log_protocols_list()
     for (int i = 0; i < log_protocols.length(); i++){
         log_protocol_list->addItem(log_protocols.at(i));
         if (configValues->log_protocol == log_protocols.at(i))
+        {
             log_protocol_list->setCurrentIndex(i);
+            protocol = ecu_protocols.at(i + 4);
+        }
     }
+
+    //if (car_model_list->currentText() == "Subaru")
+        //protocol = "SSM";
+
     return log_protocols;
 }
 
@@ -543,8 +550,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         if (flash_method_list->currentText() == "subarucan")
             serial->is_iso15765_connection = true;
 
-        serial->is_29_bit_id = true;
-        serial->can_speed = "500000";
+        //serial->is_29_bit_id = true;
+        //serial->can_speed = "500000";
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
@@ -563,6 +570,10 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             serial->reset_connection();
             ecuid.clear();
             ecu_init_complete = false;
+
+            if (flash_method_list->currentText().startsWith("Hitachi"))
+                serial->serialport_protocol_14230 = true;
+
             open_serial_port();
 
             ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
@@ -575,14 +586,16 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
             if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
             {
+                qDebug() << "Checking definitions, please wait...";
                 fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
-                if(ecuCalDef[ecuCalDefIndex] != NULL)
-                {
+                //if(ecuCalDef[ecuCalDefIndex]->RomId != NULL)
+                //{
+                    qDebug() << "Building treewidget, please wait...";
                     calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
                     calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
 
-                    ecuCalDefIndex++;
-                }
+                //}
+                ecuCalDefIndex++;
                 save_calibration_file_as();
             }
         }
@@ -657,17 +670,17 @@ void MainWindow::custom_menu_requested(QPoint pos)
 bool MainWindow::open_calibration_file(QString filename)
 {
     ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
+
+    while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
+        ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
+
     ecuCalDef[ecuCalDefIndex] = fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], filename);
+
     if(ecuCalDef[ecuCalDefIndex] != NULL)
     {
         calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
         calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
 
-        if (filename == NULL)
-        {
-            //configValues->calibration_files.append(ecuCalDef[ecuCalDefIndex]->FullFileName);
-            //fileActions->saveConfigFile();
-        }
         ecuCalDefIndex++;
     }
     else
@@ -704,6 +717,7 @@ void MainWindow::save_calibration_file_as()
 
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
 
+    qDebug() << "Save as: Check selected ROM number";
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
@@ -711,6 +725,7 @@ void MainWindow::save_calibration_file_as()
 
     QFileDialog saveDialog;
     saveDialog.setDefaultSuffix("bin");
+    qDebug() << "Save as: Check if OEM ECU file";
     if (ecuCalDef[romNumber]->OemEcuFile)
     {
         filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_base_directory, tr("Calibration file (*.bin)"));

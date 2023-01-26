@@ -978,6 +978,9 @@ void MainWindow::set_maptablewidget_items()
                 mapTableWidget->setItem(yPos, xPos, cellItem);
             }
         }
+
+        fileActions->checksum_correction(ecuCalDef[mapRomNumber]);
+
     }
 }
 

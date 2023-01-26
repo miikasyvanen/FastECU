@@ -549,7 +549,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     add_ecuflash_def_list_item(ecuCalDef);
 
                     QString type = child.attribute("type"," ");
-                    if (type == "1D")
+                    if (type == "1D" || type == "X Axis" || type == "Y Axis")
                         type = "2D";
                     if (ecuCalDef->NameList.at(def_map_index) == " ")
                         ecuCalDef->NameList.replace(def_map_index, child.attribute("name", " "));
@@ -563,6 +563,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         ecuCalDef->MapScalingNameList.replace(def_map_index, child.attribute("scaling"," "));
 
                     QDomElement sub_child = child.firstChild().toElement();
+                    QString TableDescription;
                     int i = 0;
                     while (!sub_child.isNull())
                     {
@@ -572,7 +573,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             if (ScaleType == "X Axis")
                             {
                                 if (ecuCalDef->XSizeList.at(def_map_index) == "" || ecuCalDef->XSizeList.at(def_map_index) == " ")
-                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
+                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
                                 if (ecuCalDef->XScaleNameList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleNameList.replace(def_map_index, sub_child.attribute("name"," "));
                                 if (ecuCalDef->XScaleAddressList.at(def_map_index) == " ")
@@ -585,7 +586,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "3D")
                             {
                                 if (ecuCalDef->YSizeList.at(def_map_index) == " " || ecuCalDef->YSizeList.at(def_map_index) == "")
-                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
+                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
                                 if (ecuCalDef->YScaleNameList.at(def_map_index) == " ")
                                     ecuCalDef->YScaleNameList.replace(def_map_index, sub_child.attribute("name"," "));
                                 if (ecuCalDef->YScaleAddressList.at(def_map_index) == " ")
@@ -598,7 +599,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             else if (ScaleType == "Static Y Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "2D"))
                             {
                                 if (ecuCalDef->XSizeList.at(def_map_index) == " " || ecuCalDef->XSizeList.at(def_map_index) == "")
-                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
+                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
                                 if (ecuCalDef->XScaleNameList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleNameList.replace(def_map_index, sub_child.attribute("name"," "));
                                 if (ecuCalDef->XScaleAddressList.at(def_map_index) == " ")
@@ -628,25 +629,40 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 if (i == 0)
                                 {
                                     ecuCalDef->XScaleAddressList.replace(def_map_index, sub_child.attribute("address", " "));
-                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
+                                    //ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
                                 }
                                 if (i == 1)
                                 {
                                     ecuCalDef->YScaleAddressList.replace(def_map_index, sub_child.attribute("address", " "));
-                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
+                                    //ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
                                 }
                                 i++;
                             }
                         }
+                        else if (sub_child.tagName() == "description"){
+                            TableDescription = sub_child.text();
+                            if (!TableDescription.isEmpty())
+                                ecuCalDef->DescriptionList.replace(i, "\n\n" + TableDescription);
+                            else
+                                ecuCalDef->DescriptionList.replace(i, " ");
+                        }
                         sub_child = sub_child.nextSibling().toElement();
                     }
 
-                    if (ecuCalDef->YSizeList[def_map_index] == " ")
+                    if (!needs_base_def)
                     {
-                        ecuCalDef->YSizeList[def_map_index] = "1";
-                        ecuCalDef->YScaleAddressList[def_map_index] = " ";
+                        if (ecuCalDef->YSizeList[def_map_index] == " ")
+                        {
+                            ecuCalDef->YSizeList.replace(def_map_index, "1");
+                            ecuCalDef->YScaleAddressList.replace(def_map_index, " ");
+                        }
+                        if (ecuCalDef->XSizeList[def_map_index] == " ")
+                        {
+                            ecuCalDef->XSizeList.replace(def_map_index, "1");
+                            ecuCalDef->XScaleAddressList.replace(def_map_index, " ");
+                            ecuCalDef->XScaleTypeList.replace(def_map_index, " ");
+                        }
                     }
-
                     def_map_index++;
                 }
                 map_defined = false;
