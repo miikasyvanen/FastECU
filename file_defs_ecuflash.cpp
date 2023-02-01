@@ -90,6 +90,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalD
 
     QString filename;
 
+    int scaling_index = 0;
+
     int file_index = 0;
     while (configValues->ecuflash_def_ecu_id.at(file_index) != ecuCalDef->RomInfo[RomBase])
         file_index++;
@@ -146,7 +148,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalD
                             ecuCalDef->ScalingFormatList.append(child.attribute("format"," "));
                             ecuCalDef->ScalingMinValueList.append(child.attribute("min"," "));
                             ecuCalDef->ScalingMaxValueList.append(child.attribute("max"," "));
-                            ecuCalDef->ScalingIncList.append(child.attribute("inc"," "));
+                            ecuCalDef->ScalingCoarseIncList.append(child.attribute("inc"," "));
+                            ecuCalDef->ScalingFineIncList.append(QString::number(ecuCalDef->ScalingCoarseIncList.at(scaling_index).toFloat() / 10.0f));
                             ecuCalDef->ScalingStorageTypeList.append(child.attribute("storagetype"," "));
                             ecuCalDef->ScalingEndianList.append(child.attribute("endian"," "));
                             QString selection_name;
@@ -169,6 +172,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalD
                                 selection_value.append(" ");
                             ecuCalDef->ScalingSelectionsNameList.append(selection_name);
                             ecuCalDef->ScalingSelectionsValueList.append(selection_value);
+                            scaling_index++;
                         }
 
                         else if (child.tagName() == "table")
@@ -191,8 +195,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalD
                                                 ecuCalDef->TypeList.replace(i, "Selectable");
                                             ecuCalDef->StorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
                                             ecuCalDef->UnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
-                                            ecuCalDef->FineIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
-                                            ecuCalDef->CoarseIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
+                                            ecuCalDef->FineIncList.replace(i, ecuCalDef->ScalingFineIncList.at(k));
+                                            ecuCalDef->CoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
                                             ecuCalDef->MinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
                                             ecuCalDef->MaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
                                             ecuCalDef->EndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
@@ -226,8 +230,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalD
                                                     {
                                                         ecuCalDef->XScaleStorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
                                                         ecuCalDef->XScaleUnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
-                                                        ecuCalDef->XScaleFineIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
-                                                        ecuCalDef->XScaleCoarseIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
+                                                        ecuCalDef->XScaleFineIncList.replace(i, ecuCalDef->ScalingFineIncList.at(k));
+                                                        ecuCalDef->XScaleCoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
                                                         ecuCalDef->XScaleMinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
                                                         ecuCalDef->XScaleMaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
                                                         ecuCalDef->XScaleEndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
@@ -252,8 +256,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalD
                                                     {
                                                         ecuCalDef->YScaleStorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
                                                         ecuCalDef->YScaleUnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
-                                                        ecuCalDef->YScaleFineIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
-                                                        ecuCalDef->YScaleCoarseIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
+                                                        ecuCalDef->YScaleFineIncList.replace(i, ecuCalDef->ScalingFineIncList.at(k));
+                                                        ecuCalDef->YScaleCoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
                                                         ecuCalDef->YScaleMinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
                                                         ecuCalDef->YScaleMaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
                                                         ecuCalDef->YScaleEndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
@@ -278,8 +282,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalD
                                                         ecuCalDef->XScaleStorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
                                                         ecuCalDef->XScaleUnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
                                                         ecuCalDef->XScaleFormatList.replace(i, ecuCalDef->ScalingFormatList.at(k));
-                                                        ecuCalDef->XScaleFineIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
-                                                        ecuCalDef->XScaleCoarseIncList.replace(i, ecuCalDef->ScalingIncList.at(k));
+                                                        ecuCalDef->XScaleFineIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
+                                                        ecuCalDef->XScaleCoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
                                                         ecuCalDef->XScaleMinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
                                                         ecuCalDef->XScaleMaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
                                                         ecuCalDef->XScaleEndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
@@ -372,6 +376,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     QString filesize;
 
     QString filename;
+
+    int scaling_index = 0;
 
     int file_index = 0;
     if (!configValues->ecuflash_def_ecu_id.length())
@@ -508,7 +514,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 ecuCalDef->ScalingFormatList.append(child.attribute("format"," "));
                 ecuCalDef->ScalingMinValueList.append(child.attribute("min"," "));
                 ecuCalDef->ScalingMaxValueList.append(child.attribute("max"," "));
-                ecuCalDef->ScalingIncList.append(child.attribute("inc"," "));
+                ecuCalDef->ScalingCoarseIncList.append(child.attribute("inc"," "));
+                ecuCalDef->ScalingFineIncList.append(QString::number(ecuCalDef->ScalingCoarseIncList.at(scaling_index).toFloat() / 10.0f));
                 ecuCalDef->ScalingStorageTypeList.append(child.attribute("storagetype"," "));
                 ecuCalDef->ScalingEndianList.append(child.attribute("endian"," "));
                 QString selection_name;
@@ -531,6 +538,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     selection_value.append(" ");
                 ecuCalDef->ScalingSelectionsNameList.append(selection_name);
                 ecuCalDef->ScalingSelectionsValueList.append(selection_value);
+                scaling_index++;
             }
             else if (child.tagName() == "table" && xmlid == ecuId)
             {
@@ -702,8 +710,8 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
                 }
                 ecuCalDef->StorageTypeList.replace(def_map_index, ecuCalDef->ScalingStorageTypeList.at(k));
                 ecuCalDef->UnitsList.replace(def_map_index, ecuCalDef->ScalingUnitsList.at(k));
-                ecuCalDef->FineIncList.replace(def_map_index, ecuCalDef->ScalingIncList.at(k));
-                ecuCalDef->CoarseIncList.replace(def_map_index, ecuCalDef->ScalingIncList.at(k));
+                ecuCalDef->FineIncList.replace(def_map_index, ecuCalDef->ScalingFineIncList.at(k));
+                ecuCalDef->CoarseIncList.replace(def_map_index, ecuCalDef->ScalingCoarseIncList.at(k));
                 ecuCalDef->MinValueList.replace(def_map_index, ecuCalDef->ScalingMinValueList.at(k));
                 ecuCalDef->MaxValueList.replace(def_map_index, ecuCalDef->ScalingMaxValueList.at(k));
                 ecuCalDef->EndianList.replace(def_map_index, ecuCalDef->ScalingEndianList.at(k));
@@ -715,8 +723,8 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
             {
                 ecuCalDef->XScaleStorageTypeList.replace(def_map_index, ecuCalDef->ScalingStorageTypeList.at(k));
                 ecuCalDef->XScaleUnitsList.replace(def_map_index, ecuCalDef->ScalingUnitsList.at(k));
-                ecuCalDef->XScaleFineIncList.replace(def_map_index, ecuCalDef->ScalingIncList.at(k));
-                ecuCalDef->XScaleCoarseIncList.replace(def_map_index, ecuCalDef->ScalingIncList.at(k));
+                ecuCalDef->XScaleFineIncList.replace(def_map_index, ecuCalDef->ScalingFineIncList.at(k));
+                ecuCalDef->XScaleCoarseIncList.replace(def_map_index, ecuCalDef->ScalingCoarseIncList.at(k));
                 ecuCalDef->XScaleMinValueList.replace(def_map_index, ecuCalDef->ScalingMinValueList.at(k));
                 ecuCalDef->XScaleMaxValueList.replace(def_map_index, ecuCalDef->ScalingMaxValueList.at(k));
                 ecuCalDef->XScaleEndianList.replace(def_map_index, ecuCalDef->ScalingEndianList.at(k));
@@ -728,8 +736,8 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
             {
                 ecuCalDef->YScaleStorageTypeList.replace(def_map_index, ecuCalDef->ScalingStorageTypeList.at(k));
                 ecuCalDef->YScaleUnitsList.replace(def_map_index, ecuCalDef->ScalingUnitsList.at(k));
-                ecuCalDef->YScaleFineIncList.replace(def_map_index, ecuCalDef->ScalingIncList.at(k));
-                ecuCalDef->YScaleCoarseIncList.replace(def_map_index, ecuCalDef->ScalingIncList.at(k));
+                ecuCalDef->YScaleFineIncList.replace(def_map_index, ecuCalDef->ScalingFineIncList.at(k));
+                ecuCalDef->YScaleCoarseIncList.replace(def_map_index, ecuCalDef->ScalingCoarseIncList.at(k));
                 ecuCalDef->YScaleMinValueList.replace(def_map_index, ecuCalDef->ScalingMinValueList.at(k));
                 ecuCalDef->YScaleMaxValueList.replace(def_map_index, ecuCalDef->ScalingMaxValueList.at(k));
                 ecuCalDef->YScaleEndianList.replace(def_map_index, ecuCalDef->ScalingEndianList.at(k));

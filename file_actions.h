@@ -211,7 +211,8 @@ public:
         QStringList ScalingFormatList;
         QStringList ScalingMinValueList;
         QStringList ScalingMaxValueList;
-        QStringList ScalingIncList;
+        QStringList ScalingCoarseIncList;
+        QStringList ScalingFineIncList;
         QStringList ScalingStorageTypeList;
         QStringList ScalingEndianList;
         //QStringList ScalingBloblistList;

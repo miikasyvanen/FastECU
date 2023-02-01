@@ -34,6 +34,7 @@ linux {
 }
 
 SOURCES += \
+    biu_operations_subaru.cpp \
     calibration_maps.cpp \
     calibration_treewidget.cpp \
     definition_file_convert.cpp \
@@ -57,6 +58,7 @@ SOURCES += \
     verticallabel.cpp
 
 HEADERS += \
+    biu_operations_subaru.h \
     calibration_maps.h \
     calibration_treewidget.h \
     definition_file_convert.h \
@@ -77,10 +79,11 @@ HEADERS += \
     verticallabel.h
 
 FORMS += \
-    calibrationmaptable.ui \
-    definitionfileconvertwindow.ui \
-    ecumanualoperationswindow.ui \
-    ecuoperationswindow.ui \
+    biu_operations_subaru.ui \
+    calibration_map_table.ui \
+    definition_file_convert.ui \
+    ecu_manual_operations.ui \
+    ecu_operations.ui \
     logvalues.ui \
     mainwindow.ui \
     settings.ui

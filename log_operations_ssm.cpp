@@ -42,7 +42,7 @@ bool MainWindow::ecu_init()
         {
             if (car_model_list->currentText() == "Subaru")
             {
-                if (configValues->log_protocol == "CAN" || configValues->log_protocol == "ISO15765")
+                if (configValues->log_protocol == "CAN" || configValues->log_protocol == "iso15765")
                     ssm_can_init();
                 else
                     ssm_kline_init();

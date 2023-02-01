@@ -101,12 +101,21 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->calibrationDataTreeWidget, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calibration_data_treewidget_item_collapsed(QTreeWidgetItem*)));
     connect(calibrationTreeWidget, SIGNAL(closeRom()), this, SLOT(close_calibration()));
 
-    //QLabel *statusBarLabel = new QLabel(statusBarString);
-    statusBarLabel->setMargin(5);
-    statusBarLabel->setStyleSheet("QLabel { background-color : red; color : white; }");
+    status_bar_connection_label->setMargin(5);
+    //status_bar_connection_label->setStyleSheet("QLabel { background-color : red; color : white; }");
     set_status_bar_label(false, false, "");
 
-    statusBar()->addWidget(statusBarLabel);
+    status_bar_ecu_label->setText("");
+    status_bar_ecu_label->setMargin(5);
+    status_bar_ecu_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    //status_bar_ecu_label->setStyleSheet("QLabel { background-color : red; color : white; }");
+
+    QWidget* status_bar_spacer = new QWidget();
+    status_bar_spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    statusBar()->addWidget(status_bar_connection_label);
+    statusBar()->addWidget(status_bar_spacer);
+    statusBar()->addPermanentWidget(status_bar_ecu_label);
     statusBar()->setSizeGripEnabled(true);
 
     ui->calibrationDataTreeWidget->resizeColumnToContents(0);
@@ -285,7 +294,7 @@ QStringList MainWindow::create_car_models_list()
     QStringList car_models;
     bool car_model_found = false;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=5)
+    for (int i = 0; i < ecu_protocols.length(); i += ecu_protocols_list_length)
     {
         if (!car_models.contains(ecu_protocols.at(i)))
             car_models.append(ecu_protocols.at(i));
@@ -314,7 +323,7 @@ QStringList MainWindow::create_flash_methods_list()
 {
     QStringList flash_methods;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=5)
+    for (int i = 0; i < ecu_protocols.length(); i += ecu_protocols_list_length)
     {
         if (ecu_protocols.at(i) == car_model_list->currentText())
             flash_methods.append(ecu_protocols.at(i + 1));
@@ -325,6 +334,9 @@ QStringList MainWindow::create_flash_methods_list()
         if (configValues->flash_method == flash_methods.at(i))
             flash_method_list->setCurrentIndex(i);
     }
+
+    change_current_car_model_description();
+
     return flash_methods;
 }
 
@@ -332,7 +344,7 @@ QStringList MainWindow::create_flash_protocols_list()
 {
     QStringList flash_protocols;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=5)
+    for (int i = 0; i < ecu_protocols.length(); i += ecu_protocols_list_length)
     {
         if (flash_method_list->currentText() == ecu_protocols.at(i + 1))
             flash_protocols.append(ecu_protocols.at(i + 2).split(","));
@@ -350,7 +362,7 @@ QStringList MainWindow::create_log_protocols_list()
 {
     QStringList log_protocols;
 
-    for (int i = 0; i < ecu_protocols.length(); i+=5)
+    for (int i = 0; i < ecu_protocols.length(); i += ecu_protocols_list_length)
     {
         if (flash_method_list->currentText() == ecu_protocols.at(i + 1))
             log_protocols.append(ecu_protocols.at(i + 3).split(","));
@@ -422,7 +434,7 @@ void MainWindow::log_protocol_changed()
         serial->is_29_bit_id = false;
         serial->can_speed = "500000";
     }
-    else if (log_protocol_list->currentText() == "ISO15765")
+    else if (log_protocol_list->currentText() == "iso15765")
     {
         serial->is_can_connection = false;
         serial->is_iso15765_connection = true;
@@ -461,8 +473,22 @@ void MainWindow::flash_method_changed()
     qDebug() << "Change flash method";
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
 
+    flash_protocols = create_flash_protocols_list();
+    log_protocols = create_log_protocols_list();
+    change_current_car_model_description();
+
     configValues->flash_method = flash_method_list->currentText();
     fileActions->save_config_file(configValues);
+}
+
+void MainWindow::change_current_car_model_description()
+{
+    for (int i = 0; i < ecu_protocols.length(); i += ecu_protocols_list_length)
+    {
+        if (flash_method_list->currentText() == ecu_protocols.at(i + 1))
+            current_car_model = ecu_protocols.at(i + 5);
+    }
+    status_bar_ecu_label->setText(current_car_model + " ");
 }
 
 void MainWindow::flash_protocol_changed()
@@ -600,7 +626,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             }
         }
     }
-    else if (configValues->car_make == "Mercedes-Benz")
+    else if (configValues->car_make == "Mercedes")
     {
         qDebug() << "Testing MB EDC16 ECU";
 
@@ -612,7 +638,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         // For CAN comms
         if (flash_protocol_list->currentText() == "CAN")
             serial->is_can_connection = true;
-        if (flash_protocol_list->currentText() == "ISO15765")
+        if (flash_protocol_list->currentText() == "iso15765")
             serial->is_iso15765_connection = true;
 
         if (serial->is_can_connection || serial->is_iso15765_connection)
@@ -726,10 +752,8 @@ void MainWindow::save_calibration_file_as()
     QFileDialog saveDialog;
     saveDialog.setDefaultSuffix("bin");
     qDebug() << "Save as: Check if OEM ECU file";
-    if (ecuCalDef[romNumber]->OemEcuFile)
-    {
-        filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_base_directory, tr("Calibration file (*.bin)"));
-    }
+
+    filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_base_directory, tr("Calibration file (*.bin)"));
 
     if (filename.isEmpty()){
         ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
@@ -1249,19 +1273,19 @@ void MainWindow::set_status_bar_label(bool serialConnectionState, bool ecuConnec
     QString softwareVersionString = "FastECU";
     if (ecuConnectionState){
         connectionStatusString = "ECU connected";
-        statusBarLabel->setStyleSheet("QLabel { background-color : green; color : white; color: white;}");
+        status_bar_connection_label->setStyleSheet("QLabel { background-color : green; color : white; color: white;}");
     }
     else if(serialConnectionState){
         connectionStatusString = "ECU not connected";
-        statusBarLabel->setStyleSheet("QLabel { background-color : yellow; color : white; color: black;}");
+        status_bar_connection_label->setStyleSheet("QLabel { background-color : yellow; color : white; color: black;}");
     }
     else{
         connectionStatusString = "Serial port unavailable";
-        statusBarLabel->setStyleSheet("QLabel { background-color : red; color : white; color: white;}");
+        status_bar_connection_label->setStyleSheet("QLabel { background-color : red; color : white; color: white;}");
     }
     QString romIdString = "ECU ID: " + romId;
     QString statusBarString = softwareVersionString + " | " + connectionStatusString + " | " + romIdString;
-    statusBarLabel->setText(statusBarString);
+    status_bar_connection_label->setText(statusBarString);
 }
 
 void MainWindow::delay(int n)
