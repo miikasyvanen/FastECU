@@ -26,6 +26,7 @@
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
 #include <definition_file_convert.h>
+#include <biu_operations_subaru.h>
 #include <ecu_operations_nissan.h>
 #include <ecu_operations_mercedes.h>
 #include <ecu_operations_subaru.h>
@@ -66,6 +67,7 @@ private:
     bool ecu_init_started = false;
     bool ecu_init_complete = false;
     bool haltech_ic7_display_on = false;
+    bool simulate_obd_on = false;
 
     int ecuCalDefIndex = 0;
     struct FileActions::EcuCalDefStructure *ecuCalDef[100];
@@ -100,29 +102,48 @@ private:
     QString serial_port_prefix;
     QStringList serial_ports;
 
-    QStringList ecu_protocols = {
-        // Car make, flash method, flash protocol, log protocol
-        "Subaru", "wrx02", "K-Line", "K-Line", "SSM",
-        "Subaru", "fxt02", "K-Line,CAN", "K-Line,CAN", "SSM",
-        "Subaru", "sti04", "K-Line,CAN", "K-Line,CAN", "SSM",
-        "Subaru", "sti05", "K-Line,CAN", "K-Line,CAN", "SSM",
-        "Subaru", "subarucan", "K-Line,ISO15764", "K-Line,ISO15764", "SSM",
-        "Subaru", "Hitachi UJ20", "K-Line", "K-Line", "SSM",
+    int ecu_protocols_list_length = 6;
+    QString current_car_model ="";
 
-        //"Mercedes-Benz", "EDC16C31", "K-Line", "K-Line",
+    QStringList log_protocols;
+    QStringList flash_methods;
+    QStringList flash_protocols;
+
+    QStringList ecu_protocols = {
+        //Car make      flash method        flash protocol      log protocol        protocol    description
+        "Subaru",       "wrx02",            "K-Line",           "K-Line",           "SSM",      "Subaru Denso 2001-2005 K-Line (HC16/160KB)",
+        "Subaru",       "fxt02",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2002-2007 K-Line/CAN-bus (SH7055/512KB)",
+        "Subaru",       "sti04",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2003-2005 K-Line/CAN-bus (SH7055/512KB)",
+        "Subaru",       "sti05",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2005-2007 K-Line/CAN-bus (SH7058/1MB)",
+        "Subaru",       "subarucan",        "K-Line,iso15765",  "K-Line,iso15765",  "SSM",      "Subaru Denso 2007+ CAN-bus (SH7058S/1MB)",
+
+        "Subaru",       "Hitachi UJ20",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB)",
+        "Subaru",       "Hitachi UJ30",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)",
+
+        "Subaru",       "Hitachi UJ40",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)",
+        "Subaru",       "Hitachi UJ70",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)",
+/*
+        "Subaru",       "Hitachi HI70",     "K-Line",           "K-Line",           "SSM",      "Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)",
+        "Subaru",       "Hitachi HI70CAN",  "K-Line,iso15765",  "K-Line,iso15765",  "SSM",      "Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)",
+        "Subaru",       "Hitachi SH7058",   "iso15765",         "iso15765",         "SSM",      "Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)",
+        "Subaru",       "Hitachi SH7059",   "iso15765",         "iso15765",         "SSM",      "Forester 2013+ CAN (Hitachi SH7059/1.5MB)",
+        "Subaru",       "Hitachi SH7254",   "iso15765",         "iso15765",         "SSM",      "Forester 2013+ CAN (Hitachi SH7254/2MB)",
+*/
+        "Mercedes",     "CR3 EDC16C31",     "K-Line",           "K-Line",           "iso14230", "Mercedes Benz 320CDI",
     };
 
+    /*
     QStringList log_protocols = {
         "K-Line",
         "CAN",
-        "ISO15765",
+        "iso15765",
     };
-/*
+
     QStringList car_models = {
         "Subaru",
         "Renault"
     };
-*/
+
     QStringList flash_methods = {
         "wrx02",
         "wrx04",
@@ -135,8 +156,9 @@ private:
     QStringList flash_protocols = {
         "K-Line",
         "CAN",
-        "ISO15765",
+        "iso15765",
     };
+*/
 
     enum RomInfoEnum {
         XmlId,
@@ -179,7 +201,8 @@ private:
     QTreeWidget treeWidget;
     CalibrationTreeWidget *calibrationTreeWidget = new CalibrationTreeWidget();
 
-    QLabel *statusBarLabel = new QLabel("");
+    QLabel *status_bar_connection_label = new QLabel("");
+    QLabel *status_bar_ecu_label = new QLabel("");
 
     QMenu *mainWindowMenu;
 
@@ -231,6 +254,7 @@ private:
     QStringList create_flash_protocols_list();
     QStringList create_log_protocols_list();
     QString check_kernel(QString flash_method);
+    void change_current_car_model_description();
 
     // menuactions.c
     void inc_dec_value(QString action);
@@ -243,14 +267,18 @@ private:
     void winols_csv_to_romraider_xml();
     void toggle_realtime();
     void toggle_log_to_file();
-    void toggle_haltech_ic7_display();
     void set_maptablewidget_items();
     QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian);
     void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, float map_value);
     int get_mapvalue_decimal_count(QString valueFormat);
     int get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, float mapDataValue, int mapIndex);
-    int test_haltech_ic7_display();
     void show_preferences_window();
+
+    void toggle_haltech_ic7_display();
+    int test_haltech_ic7_display();
+    void toggle_simulate_obd();
+    int simulate_obd();
+    void show_subaru_biu_window();
 
 protected:
 

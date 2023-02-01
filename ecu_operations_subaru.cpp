@@ -1,5 +1,5 @@
 #include "ecu_operations_subaru.h"
-#include <ui_ecuoperationswindow.h>
+#include <ui_ecu_operations.h>
 
 EcuOperationsSubaru::EcuOperationsSubaru(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QWidget(parent),
@@ -61,6 +61,12 @@ void EcuOperationsSubaru::check_mcu_type(QString flash_method)
 
     if (flash_method == "Hitachi UJ20")
         mcu_type_string = "M32R_UJ20";
+    if (flash_method == "Hitachi UJ30")
+        mcu_type_string = "M32R_UJ30";
+    if (flash_method == "Hitachi UJ40")
+        mcu_type_string = "M32R_UJ40";
+    if (flash_method == "Hitachi UJ70")
+        mcu_type_string = "M32R_UJ70";
 
     mcu_type_index = 0;
 
@@ -356,23 +362,23 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "Hitachi UJ20")
+    else if (flash_method == "Hitachi UJ WA12212920/128KB")
     {
         if (cmd_type == "read")
         {
-            send_log_window_message("Initializing Subaru 99-00 Hitachi UJ20 K-Line read mode, please wait...", true, true);
-            result = initialize_read_mode_subaru_hitachi_uj20_kline();
+            send_log_window_message("Initializing Subaru 1999-2000 Hitachi UJ WA12212920/128KB read mode using K-Line, please wait...", true, true);
+            result = initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
             if (result == STATUS_SUCCESS)
             {
-                send_log_window_message("Reading ROM from Subaru 99-00 Hitachi UJ20 K-Line", true, true);
-                result = read_rom_subaru_hitachi_uj20_kline(ecuCalDef);
+                send_log_window_message("Reading ROM from Subaru 1999-2000 Hitachi UJ WA12212920/128KB using K-Line", true, true);
+                result = read_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
             }
-            result = uninitialize_read_mode_subaru_hitachi_uj20_kline();
+            result = uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
         }
         else if (cmd_type == "write")
         {
-            send_log_window_message("Initializing Subaru 99-00 Hitachi UJ20 K-Line flash mode, please wait...", true, true);
-            result = initialize_flash_mode_subaru_hitachi_uj20_kline();
+            send_log_window_message("Initializing Subaru 1999-2000 Hitachi UJ WA12212920/128KB flash mode using K-Line, please wait...", true, true);
+            result = initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
             if (result == STATUS_SUCCESS)
             {
 
@@ -384,12 +390,26 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     {
         if (cmd_type == "read")
         {
-
+            send_log_window_message("Initializing Subaru 2000-2002 Hitachi UJ WA12212930/256KB read mode using K-Line, please wait...", true, true);
+            result = initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            if (result == STATUS_SUCCESS)
+            {
+                send_log_window_message("Reading ROM from Subaru 2000-2002 Hitachi UJ WA12212930/256KB using K-Line", true, true);
+                result = read_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
+            }
+            result = uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
         }
         else if (cmd_type == "write")
         {
-
+            send_log_window_message("Initializing Subaru 2000-2002 Hitachi UJ WA12212930/256KB flash mode using K-Line, please wait...", true, true);
+            result = initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
+            if (result == STATUS_SUCCESS)
+            {
+                send_log_window_message("Writing ROM to Subaru 2000-2002 Hitachi UJ WA12212930/256KB using K-Line", true, true);
+                result = write_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
+            }
         }
+        return result;
     }
     else if (flash_method == "Hitachi UJ40")
     {
@@ -406,26 +426,26 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     {
         if (cmd_type == "read")
         {
-            if (serial->is_can_connection)
+            send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB read mode using K-Line, please wait...", true, true);
+            result = initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            if (result == STATUS_SUCCESS)
             {
-
+                send_log_window_message("Reading ROM from Subaru 2002-2005 Hitachi UJ WA12212970/512KB using K-Line", true, true);
+                result = read_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
             }
-            else
-            {
-
-            }
+            result = uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
         }
         else if (cmd_type == "write")
         {
-            if (serial->is_can_connection)
+            send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB flash mode using K-Line, please wait...", true, true);
+            result = initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
+            if (result == STATUS_SUCCESS)
             {
-
-            }
-            else
-            {
-
+                send_log_window_message("Writing ROM to Subaru 2002-2005 Hitachi UJ WA12212970/512KB using K-Line", true, true);
+                result = write_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
             }
         }
+        return result;
     }
     else
     {
@@ -789,7 +809,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_32bit()
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_uj20_kline()
+int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_uj20_uj30_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -832,7 +852,7 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_uj20_kline()
     return STATUS_SUCCESS;
 }
 
-int EcuOperationsSubaru::uninitialize_read_mode_subaru_hitachi_uj20_kline()
+int EcuOperationsSubaru::uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -852,7 +872,7 @@ int EcuOperationsSubaru::uninitialize_read_mode_subaru_hitachi_uj20_kline()
     return STATUS_SUCCESS;
 }
 
-int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj20_kline()
+int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj20_uj30_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -883,16 +903,8 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj20_kline()
     }
     QString ecuid = msg;
 
-    received = send_subaru_hitachi_sid_af_enter_flash_mode(received);
-
-    return STATUS_ERROR;
-}
-
-int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj30_kline()
-{
-    QByteArray output;
-    QByteArray received;
-    QString msg;
+    QMessageBox::information(this, tr("Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB)"), "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB) writing not yet confirmed!");
+    //received = send_subaru_hitachi_sid_af_enter_flash_mode(received);
 
     return STATUS_ERROR;
 }
@@ -1543,7 +1555,7 @@ int EcuOperationsSubaru::read_rom_subaru_denso_can_32bit(FileActions::EcuCalDefS
     return success;
 }
 
-int EcuOperationsSubaru::read_rom_subaru_hitachi_uj20_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::read_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     if (!serial->is_serial_port_open())
     {
@@ -1551,14 +1563,7 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_uj20_kline(FileActions::EcuCalD
         return STATUS_ERROR;
     }
 
-    bool success = ecuOperations->read_mem_hitachi_uj20(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-
-    return success;
-}
-
-int EcuOperationsSubaru::read_rom_subaru_hitachi_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef)
-{
-    bool success = false;
+    bool success = ecuOperations->read_mem_hitachi_uj20_uj30_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;
 }
@@ -1572,7 +1577,13 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalD
 
 int EcuOperationsSubaru::read_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
-    bool success = false;
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    bool success = ecuOperations->read_mem_hitachi_uj20_uj30_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;
 }
@@ -1619,14 +1630,7 @@ int EcuOperationsSubaru::write_rom_subaru_denso_can_32bit(FileActions::EcuCalDef
     return success;
 }
 
-int EcuOperationsSubaru::write_rom_subaru_hitachi_uj20_kline(FileActions::EcuCalDefStructure *ecuCalDef)
-{
-    bool success = false;
-
-    return success;
-}
-
-int EcuOperationsSubaru::write_rom_subaru_hitachi_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::write_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     bool success = false;
 

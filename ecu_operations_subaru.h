@@ -85,16 +85,14 @@ private:
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int connect_bootloader_subaru_denso_can_32bit();
 
-    int initialize_read_mode_subaru_hitachi_uj20_kline();
-    int initialize_read_mode_subaru_hitachi_uj30_kline();
+    int initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
     int initialize_read_mode_subaru_hitachi_uj40_kline();
     int initialize_read_mode_subaru_hitachi_uj70_kline();
     int initialize_read_mode_subaru_hitachi_uj70_can();
 
-    int uninitialize_read_mode_subaru_hitachi_uj20_kline();
+    int uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
 
-    int initialize_flash_mode_subaru_hitachi_uj20_kline();
-    int initialize_flash_mode_subaru_hitachi_uj30_kline();
+    int initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
     int initialize_flash_mode_subaru_hitachi_uj40_kline();
     int initialize_flash_mode_subaru_hitachi_uj70_kline();
     int initialize_flash_mode_subaru_hitachi_uj70_can();
@@ -109,8 +107,7 @@ private:
     int read_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_hitachi_uj20_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_hitachi_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef);
@@ -119,8 +116,7 @@ private:
     int write_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_hitachi_uj20_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int write_rom_subaru_hitachi_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int write_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int write_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int write_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef);

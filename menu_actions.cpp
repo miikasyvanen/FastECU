@@ -57,9 +57,12 @@ void MainWindow::menu_action_triggered(QString action)
 
     // TESTING MENU
     if (action == "haltech_ic7")
-    {
         toggle_haltech_ic7_display();
-    }
+    if (action == "simulate_obd")
+        toggle_simulate_obd();
+
+    if (action == "biu_communication")
+        show_subaru_biu_window();
 
     // HELP MENU
     if (action == "about")
@@ -378,23 +381,32 @@ void MainWindow::set_value()
                             if (map_value_storagetype.startsWith("uint"))
                                 map_data_value.four_byte_value = (uint32_t)(qRound(map_data_value.float_value));
 
-                            while (rom_data_value == QString::number(map_data_value.float_value))
+                            bool zero_addition = false;
+                            while (rom_data_value == QString::number(map_data_value.float_value) && zero_addition == false)
                             {
                                 if (text.at(0) == '+'){
                                     QStringList mapItemText = text.split("+");
                                     mapItemValue = mapItemValue + mapItemText[1].toFloat();
+                                    if (mapItemValue == 0)
+                                        zero_addition = true;
                                 }
                                 else if (text.at(0) == '-'){
                                     QStringList mapItemText = text.split("-");
                                     mapItemValue = mapItemValue - mapItemText[1].toFloat();
+                                    if (mapItemValue == 0)
+                                        zero_addition = true;
                                 }
                                 else if (text.at(0) == '*'){
                                     QStringList mapItemText = text.split("*");
                                     mapItemValue = mapItemValue * mapItemText[1].toFloat();
+                                    if (mapItemValue == 0)
+                                        zero_addition = true;
                                 }
                                 else if (text.at(0) == '/'){
                                     QStringList mapItemText = text.split("/");
                                     mapItemValue = mapItemValue / mapItemText[1].toFloat();
+                                    if (mapItemValue == 0)
+                                        zero_addition = true;
                                 }
                                 else
                                     mapItemValue = text.toFloat();
@@ -870,12 +882,52 @@ void MainWindow::toggle_haltech_ic7_display()
         //test_haltech_ic7_display();
 }
 
+void MainWindow::toggle_simulate_obd()
+{
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    foreach (QMenu *menu, menus) {
+        foreach (QAction *action, menu->actions()) {
+            if (action->isSeparator()) {
+
+            } else if (action->menu()) {
+
+            } else {
+                if (action->text() == "Simulate OBD")
+                    simulate_obd_on = action->isChecked();
+            }
+        }
+    }
+    if (simulate_obd_on)
+        simulate_obd();
+}
+
 void MainWindow::show_preferences_window()
 {
     Settings *settings = new Settings(configValues);
     settings->show();
     //fileActions->save_config_file();
 
+}
+
+void MainWindow::show_subaru_biu_window()
+{
+    serial_poll_timer->stop();
+    ssm_init_poll_timer->stop();
+    logging_poll_timer->stop();
+
+    serial->serialport_protocol_14230 = true;
+    serial->reset_connection();
+    ecuid.clear();
+    ecu_init_complete = false;
+    open_serial_port();
+    serial->change_port_speed("10400");
+
+    BiuOperationsSubaru *biuOperationsSubaru = new BiuOperationsSubaru(serial);
+    biuOperationsSubaru->show();
+    //fileActions->save_config_file();
+
+    serial_poll_timer->start();
+    ssm_init_poll_timer->start();
 }
 
 void MainWindow::winols_csv_to_romraider_xml()
@@ -1297,6 +1349,106 @@ int MainWindow::test_haltech_ic7_display()
     serial->can_speed = "500000";
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
+
+    return 0;
+}
+
+int MainWindow::simulate_obd()
+{
+    QByteArray output;
+    QByteArray received;
+
+    QByteArray sid3e = { "\x81\xf1\x12\x7e" };
+
+    uint8_t sid_81[] = { 0x83, 0xf1, 0x12, 0xc1, 0xef, 0x8f };
+    uint8_t sid_82[] = { 0x81, 0xf1, 0x12, 0xc2 };
+    uint8_t sid_83_00[] = { 0x80, 0xf1, 0x12, 0x07, 0xc3, 0x00, 0x00, 0xef, 0x00, 0x78, 0x00 };
+    uint8_t sid_83_02[] = { 0x80, 0xf1, 0x12, 0x07, 0xc3, 0x02, 0x00, 0x28, 0x00, 0x14, 0x00 };
+    uint8_t sid_83_03[] = { 0x82, 0xf1, 0x12, 0xc3, 0x03 };
+
+    uint8_t sid_27_01[] = { 0x80, 0xf1, 0x12, 0x05, 0x67, 0x01, 0xb3, 0x59, 0x2c };
+    uint8_t sid_27_02[] = { 0x82, 0xf1, 0x12, 0x03, 0x67, 0x01, 0x34 };
+    uint8_t sid_27_10[] = { 0x80, 0xf1, 0x12, 0x06, 0x67, 0x10, 0x10, 0x10, 0x10, 0x10 };
+    uint8_t sid_27_11[] = { 0x82, 0xf1, 0x12, 0x03, 0x67, 0x11, 0x34 };
+
+    uint8_t sid_1a_90[] = { 0x13, 0x5a, 0x90, 0x57, 0x44, 0x42, 0x32, 0x31, 0x31, 0x32, 0x32, 0x36, 0x31, 0x41, 0x32, 0x39, 0x32, 0x38, 0x36, 0x39 };
+    uint8_t sid_21_09[] = { 0x80, 0xf1, 0x12, 0x66, 0x61, 0x09, 0x43, 0x52, 0x33, 0x30, 0x2d, 0x36, 0x34, 0x38, 0x2d, 0x44,
+                            0x32, 0x4d, 0x31, 0x2d, 0x53, 0x32, 0x31, 0x31, 0x2d, 0x4d, 0x45, 0x30, 0x34, 0x30, 0x33, 0x2d,
+                            0x30, 0x30, 0x31, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                            0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                            0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                            0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+                            0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x00
+                          };
+
+    qDebug() << "Simulating OBD communications";
+
+    serial_poll_timer->stop();
+    ssm_init_poll_timer->stop();
+    logging_poll_timer->stop();
+
+    serial->reset_connection();
+    ecuid.clear();
+    ecu_init_complete = false;
+
+    serial->serialport_protocol_14230 = true;
+    open_serial_port();
+    serial->change_port_speed("10400");
+
+    while (simulate_obd_on)
+    {
+        output.clear();
+        received = serial->read_serial_data(10, 100);
+        if (received != "")
+            qDebug() << "Received:" << parse_message_to_hex(received);
+
+        if ((uint8_t)received.at(3) == 0x3e || (uint8_t)received.at(4) == 0x3e)
+            output = sid3e;
+
+        if ((uint8_t)received.at(3) == 0x81 || (uint8_t)received.at(4) == 0x81)
+            for (uint8_t i = 0; i < sizeof(sid_81); i++) output.append((uint8_t)sid_81[i]);
+        if ((uint8_t)received.at(3) == 0x82 || (uint8_t)received.at(4) == 0x82)
+            for (uint8_t i = 0; i < sizeof(sid_82); i++) output.append((uint8_t)sid_82[i]);
+        if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x00) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x00))
+            for (uint8_t i = 0; i < sizeof(sid_83_00); i++) output.append((uint8_t)sid_83_00[i]);
+        if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x02) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x02))
+            for (uint8_t i = 0; i < sizeof(sid_83_02); i++) output.append((uint8_t)sid_83_02[i]);
+        if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x03) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x03))
+            for (uint8_t i = 0; i < sizeof(sid_83_03); i++) output.append((uint8_t)sid_83_03[i]);
+
+        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x01) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x01))
+            for (uint8_t i = 0; i < sizeof(sid_27_01); i++) output.append((uint8_t)sid_27_01[i]);
+        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x02) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x02))
+            for (uint8_t i = 0; i < sizeof(sid_27_02); i++) output.append((uint8_t)sid_27_02[i]);
+        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x10) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x10))
+            for (uint8_t i = 0; i < sizeof(sid_27_10); i++) output.append((uint8_t)sid_27_10[i]);
+        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x11) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x11))
+            for (uint8_t i = 0; i < sizeof(sid_27_11); i++) output.append((uint8_t)sid_27_11[i]);
+
+        if ((uint8_t)received.at(1) == 0x1a && (uint8_t)received.at(2) == 0x90)
+            for (uint8_t i = 0; i < sizeof(sid_1a_90); i++) output.append((uint8_t)sid_1a_90[i]);
+
+        if ((uint8_t)received.at(3) == 0x21 && (uint8_t)received.at(4) == 0x09)
+            for (uint8_t i = 0; i < sizeof(sid_21_09); i++) output.append((uint8_t)sid_21_09[i]);
+
+        if (output != "")
+        {
+            qDebug() << "Send msg:" << parse_message_to_hex(output);
+            received = serial->write_serial_data_echo_check(output);
+        }
+
+    }
+
+    // 81 f1 12 7e
+    // 81 f1 12 c2
+    // 83 f1 12 c1 ef 8f
+    // 80 f1 12 07 c3 02 00 28 00 14 00
+    // 80 f1 12 07 c3 00 00 ef 00 78 00
+
+
+
+
+
 
     return 0;
 }

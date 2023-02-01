@@ -1881,7 +1881,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
  *  Hitachi ECU operations
  *
  ******************************************************/
-int EcuOperations::read_mem_hitachi_uj20(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int EcuOperations::read_mem_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -1978,6 +1978,7 @@ int EcuOperations::read_mem_hitachi_uj20(FileActions::EcuCalDefStructure *ecuCal
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         send_log_window_message(msg, true, true);
+        qDebug() << msg;
         delay(1);
 
         len_done += cplen;
