@@ -527,7 +527,8 @@ void MainWindow::open_serial_port()
         serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
         serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
 
-        QString opened_serial_port = serial->open_serial_port(serial_port);
+        serial->serial_port_list = serial_port;
+        QString opened_serial_port = serial->open_serial_port();
         if (opened_serial_port != NULL)
         {
             if (opened_serial_port != previous_serial_port)
@@ -576,8 +577,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         if (flash_method_list->currentText() == "subarucan")
             serial->is_iso15765_connection = true;
 
-        //serial->is_29_bit_id = true;
-        //serial->can_speed = "500000";
+        serial->is_29_bit_id = true;
+        serial->can_speed = "500000";
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
@@ -586,7 +587,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             ecu_init_complete = false;
             open_serial_port();
 
-            ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
+            //ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
+            fileActions->checksum_correction(ecuCalDef[romNumber]);
+
             ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
             //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
             ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);

@@ -588,6 +588,9 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
 
     serial->change_port_speed("62500");
     serial->serialport_protocol_14230 = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_source_id = 0xFC;
+    serial->iso14230_destination_id = 0x10;
 
     //delay(100);
 
@@ -635,6 +638,9 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_04_32bit()
 
     serial->change_port_speed("62500");
     serial->serialport_protocol_14230 = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_source_id = 0xFC;
+    serial->iso14230_destination_id = 0x10;
 
     delay(100);
 
@@ -1160,6 +1166,9 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
 
     serial->change_port_speed("62500");
     serial->serialport_protocol_14230 = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_source_id = 0xFC;
+    serial->iso14230_destination_id = 0x10;
 
     delay(100);
 
@@ -1320,19 +1329,25 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
 
     serial->change_port_speed("62500");
     serial->serialport_protocol_14230 = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_source_id = 0xFC;
+    serial->iso14230_destination_id = 0x10;
+    //serial->reset_connection();
+    //serial->open_serial_port();
 
     delay(100);
 
     received = ecuOperations->request_kernel_init();
+    //qDebug() << "Kernel init response:" << parse_message_to_hex(received);
     if (received == "")
     {
-        qDebug() << "Kernel init NOK! No response from kernel" + parse_message_to_hex(received);
+        //qDebug() << "Kernel init NOK! No response from kernel" + parse_message_to_hex(received);
         send_log_window_message("Kernel init NOK! No response from kernel" + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     if ((uint8_t)received.at(1) != SID_KERNEL_INIT + 0x40)
     {
-        qDebug() << "Kernel init NOK! Got bad startcomm response from kernel" + parse_message_to_hex(received);
+        //qDebug() << "Kernel init NOK! Got bad startcomm response from kernel" + parse_message_to_hex(received);
         send_log_window_message("Kernel init NOK! Got bad startcomm response from kernel" + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
@@ -1357,7 +1372,6 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
 int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
 {
     QFile file(kernel);
-    qDebug() << "Using kernel:" << kernel;
 
     QByteArray output;
     QByteArray payload;
@@ -1375,14 +1389,6 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
     int byte_counter = 0;
 
     QString mcu_name;
-/*
-    mcu_name = "SH7055";
-    if (flashdevices[mcu_type_index].name == mcu_name)
-        start_address = flashdevices[mcu_type_index].rblocks->start + 4;
-    mcu_name = "SH7058";
-    if (flashdevices[mcu_type_index].name == mcu_name)
-        start_address = flashdevices[mcu_type_index].rblocks->start;
-*/
 
     start_address = flashdevices[mcu_type_index].rblocks->start;
 
@@ -1420,7 +1426,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
     output.append((uint8_t)(start_address & 0xFF));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(output);
+    received = serial->write_serial_data_echo_check(output);
     qDebug() << parse_message_to_hex(output);
     delay(200);
     received = serial->read_serial_data(20, 10);
@@ -1440,7 +1446,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
         }
 
         byte_counter += 6;
-        serial->write_serial_data_echo_check(output);
+        received = serial->write_serial_data_echo_check(output);
         //qDebug() << "0xA8 message sent to bootloader to load kernel for block:" << i;
 
         delay(5);
@@ -1480,11 +1486,12 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
 
     qDebug() << "ECU should now be running from kernel";
 
+    received.clear();
     received = ecuOperations->request_kernel_id();
     if (received == "")
         return STATUS_ERROR;
 
-    qDebug() << parse_message_to_hex(received);
+    //qDebug() << "Request kernel ID OK: " << parse_message_to_hex(received);
     send_log_window_message("Request kernel ID OK: " + received, true, true);
 
     return STATUS_SUCCESS;
@@ -1570,7 +1577,13 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_uj20_uj30_kline(FileActions::Ec
 
 int EcuOperationsSubaru::read_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
-    bool success = false;
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    bool success = ecuOperations->read_mem_hitachi_uj20_uj30_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;
 }
@@ -2209,7 +2222,7 @@ QByteArray EcuOperationsSubaru::send_subaru_hitachi_sid_af_erase_memory_block(ui
     uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0xAF);
-    output.append((uint8_t)0x11);
+    output.append((uint8_t)0x31);
 
     return received;
 }
@@ -2223,6 +2236,19 @@ QByteArray EcuOperationsSubaru::send_subaru_hitachi_sid_af_write_memory_block(ui
 
     output.append((uint8_t)0xAF);
     output.append((uint8_t)0x61);
+
+    return received;
+}
+
+QByteArray EcuOperationsSubaru::send_subaru_hitachi_sid_af_write_last_memory_block(uint32_t address, QByteArray payload)
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    uint8_t loop_cnt = 0;
+
+    output.append((uint8_t)0xAF);
+    output.append((uint8_t)0x69);
 
     return received;
 }
@@ -2799,7 +2825,7 @@ QByteArray EcuOperationsSubaru::add_ssm_header(QByteArray output, bool dec_0x100
     if (!serial->serialport_protocol_14230)
         output.append(calculate_checksum(output, dec_0x100));
 
-    qDebug() << "Generated SSM message:" << parse_message_to_hex(output);
+    //qDebug() << "Generated SSM message:" << parse_message_to_hex(output);
 
     return output;
 }

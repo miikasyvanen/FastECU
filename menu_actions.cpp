@@ -877,9 +877,7 @@ void MainWindow::toggle_haltech_ic7_display()
         }
     }
     if (haltech_ic7_display_on)
-        kline_listener();
-        //canbus_listener();
-        //test_haltech_ic7_display();
+        test_haltech_ic7_display();
 }
 
 void MainWindow::toggle_simulate_obd()
@@ -1031,7 +1029,7 @@ void MainWindow::set_maptablewidget_items()
             }
         }
 
-        fileActions->checksum_correction(ecuCalDef[mapRomNumber]);
+        //fileActions->checksum_correction(ecuCalDef[mapRomNumber]);
 
     }
 }

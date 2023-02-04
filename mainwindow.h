@@ -111,25 +111,25 @@ private:
 
     QStringList ecu_protocols = {
         //Car make      flash method        flash protocol      log protocol        protocol    description
-        "Subaru",       "wrx02",            "K-Line",           "K-Line",           "SSM",      "Subaru Denso 2001-2005 K-Line (HC16/160KB)",
+//        "Subaru",       "wrx02",            "K-Line",           "K-Line",           "SSM",      "Subaru Denso 2001-2005 K-Line (HC16/160KB)",
         "Subaru",       "fxt02",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2002-2007 K-Line/CAN-bus (SH7055/512KB)",
         "Subaru",       "sti04",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2003-2005 K-Line/CAN-bus (SH7055/512KB)",
         "Subaru",       "sti05",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2005-2007 K-Line/CAN-bus (SH7058/1MB)",
         "Subaru",       "subarucan",        "K-Line,iso15765",  "K-Line,iso15765",  "SSM",      "Subaru Denso 2007+ CAN-bus (SH7058S/1MB)",
-
+/*
         "Subaru",       "Hitachi UJ20",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB)",
         "Subaru",       "Hitachi UJ30",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)",
-
+*/
+        /*
         "Subaru",       "Hitachi UJ40",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)",
         "Subaru",       "Hitachi UJ70",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)",
-/*
         "Subaru",       "Hitachi HI70",     "K-Line",           "K-Line",           "SSM",      "Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)",
         "Subaru",       "Hitachi HI70CAN",  "K-Line,iso15765",  "K-Line,iso15765",  "SSM",      "Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)",
         "Subaru",       "Hitachi SH7058",   "iso15765",         "iso15765",         "SSM",      "Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)",
         "Subaru",       "Hitachi SH7059",   "iso15765",         "iso15765",         "SSM",      "Forester 2013+ CAN (Hitachi SH7059/1.5MB)",
         "Subaru",       "Hitachi SH7254",   "iso15765",         "iso15765",         "SSM",      "Forester 2013+ CAN (Hitachi SH7254/2MB)",
-*/
-        "Mercedes",     "CR3 EDC16C31",     "K-Line",           "K-Line",           "iso14230", "Mercedes Benz 320CDI",
+        */
+//        "Mercedes",     "CR3 EDC16C31",     "K-Line",           "K-Line",           "iso14230", "Mercedes Benz 320CDI",
     };
 
     /*
