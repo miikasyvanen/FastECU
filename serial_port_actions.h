@@ -51,10 +51,15 @@ public:
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
 
+    uint8_t iso14230_startbyte = 0;
+    uint8_t iso14230_source_id = 0;
+    uint8_t iso14230_destination_id = 0;
+
     QElapsedTimer *lec_pulse_timer = new QElapsedTimer();
 
     QByteArray ssm_receive_header_start = { "\x80\xf0\x10" };
 
+    QStringList serial_port_list;
     QString openedSerialPort;
     QString subaru_02_16bit_bootloader_baudrate = "9600";
     QString subaru_04_16bit_bootloader_baudrate = "15625";
@@ -168,13 +173,13 @@ private:
     int line_end_check_1_toggled(int state);
     int line_end_check_2_toggled(int state);
 
-    QByteArray write_serial_iso14230_data(QByteArray output);
+    QByteArray write_serial_iso14230_data(QByteArray output, uint8_t iso14230_startbyte, uint8_t iso14230_source_id, uint8_t iso14230_destination_id);
     int write_j2534_data(QByteArray output);
     QByteArray read_j2534_data(unsigned long timeout);
 
 public slots:
     QStringList check_serial_ports();
-    QString open_serial_port(QStringList serial_port);
+    QString open_serial_port();
 
 private slots:
 

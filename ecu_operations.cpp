@@ -83,6 +83,7 @@ QByteArray EcuOperations::request_kernel_id()
         output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
         delay(200);
+        received.clear();
         received = serial->read_serial_data(100, serial_read_short_timeout);
         kernelid = received;
 
@@ -104,7 +105,8 @@ QByteArray EcuOperations::request_kernel_id()
         }
         else
             output.append(SID_RECUID);
-        serial->write_serial_data_echo_check(output);
+
+        received = serial->write_serial_data_echo_check(output);
         delay(100);
         received = serial->read_serial_data(100, serial_read_short_timeout);
 
@@ -123,6 +125,8 @@ QByteArray EcuOperations::request_kernel_id()
 
         request_denso_kernel_id = false;
     }
+
+    //qDebug() << "kernel ID:" << parse_message_to_hex(kernelid);
 
     return kernelid;
 }
@@ -269,6 +273,7 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
     uint32_t len_done = 0;  //total data written to file
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
+    serial->serialport_protocol_14230 = true;
 
     output.append(SID_DUMP);
     output.append(SID_DUMP_ROM);
@@ -315,6 +320,7 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         // Receive map data, check and remove header // ADJUST THIS LATER //
         //received.clear();
         received = serial->read_serial_data(numblocks * (32 + 3), serial_read_short_timeout);
+        //qDebug() << "Read received:" << parse_message_to_hex(received);
         if (!received.length())
             return STATUS_ERROR;
         for (uint32_t i = 0; i < numblocks; i++)
@@ -442,8 +448,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
         //qDebug() << "0xD8 message sent to kernel initiate dump";
         //delay(100);
         received = serial->read_serial_data(1, 10);
-        qDebug() << "Response to 0xD8 (dump mem) message:";
-        qDebug() << parse_message_to_hex(received);
+        //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
 
         if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_DUMP_CAN)
         {
@@ -467,7 +472,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
             send_log_window_message("Page data timeout!", true, true);
             return STATUS_ERROR;
         }
-        qDebug() << timeout << pagedata.length();
+
         mapdata.append(pagedata);
 
         // don't count skipped first bytes //
@@ -1848,6 +1853,15 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     //send_log_window_message("0xF0 message sent to kernel to erase block number: " + QString::number(blockno), true, true);
     qDebug() << "0xF0 message sent to kernel to erase block number: " << blockno;
     delay(500);
+
+    QTime dieTime = QTime::currentTime().addMSecs(serial_read_extra_long_timeout);
+    while ((uint32_t)received.length() < 3 && (QTime::currentTime() < dieTime))
+    {
+        received = serial->read_serial_data(3, serial_read_short_timeout);
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        delay(100);
+    }
+/*
     for (int i = 0; i < 5; i++)
     {
         received = serial->read_serial_data(3, serial_read_extra_long_timeout);
@@ -1857,6 +1871,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
             break;
         }
     }
+    */
     //send_log_window_message(parse_message_to_hex(received), true, true);
     qDebug() << parse_message_to_hex(received);
 

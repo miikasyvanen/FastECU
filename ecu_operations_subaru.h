@@ -138,6 +138,7 @@ private:
     QByteArray send_subaru_hitachi_sid_af_enter_flash_mode(QByteArray ecu_id);
     QByteArray send_subaru_hitachi_sid_af_erase_memory_block(uint32_t address);
     QByteArray send_subaru_hitachi_sid_af_write_memory_block(uint32_t address, QByteArray payload);
+    QByteArray send_subaru_hitachi_sid_af_write_last_memory_block(uint32_t address, QByteArray payload);
     QByteArray send_subaru_hitachi_sid_a0_read_memory_block(uint32_t block_address);
     QByteArray send_subaru_hitachi_sid_a8_read_memory_address(uint32_t address);
 

@@ -71,30 +71,45 @@ int SerialPortActions::change_port_speed(QString portSpeed)
 
 int SerialPortActions::fast_init(QByteArray output)
 {
-    unsigned long status;
-    PASSTHRU_MSG InputMsg;
-    PASSTHRU_MSG OutputMsg;
-
-    memset(&InputMsg, 0, sizeof(InputMsg));
-    memset(&OutputMsg, 0, sizeof(OutputMsg));
-
-    InputMsg.ProtocolID = ISO14230;
-    InputMsg.TxFlags = 0;
-    InputMsg.Data[0] = output.at(0); // Format (functional addressing, 1 byte payload)
-    InputMsg.Data[1] = output.at(1); // Initialization address used to activate all ECUs
-    InputMsg.Data[2] = output.at(2); // Scan Tool physical source address
-    InputMsg.Data[3] = output.at(3); // Data: Start Communication Request Service
-    InputMsg.DataSize = 4;
-
-    status = j2534->PassThruIoctl(chanID, FAST_INIT, &InputMsg, &OutputMsg);
-    if (status)
+    if (use_openport2_adapter)
     {
-        reportJ2534Error();
-        return STATUS_ERROR;
+        unsigned long status;
+        PASSTHRU_MSG InputMsg;
+        PASSTHRU_MSG OutputMsg;
+
+        memset(&InputMsg, 0, sizeof(InputMsg));
+        memset(&OutputMsg, 0, sizeof(OutputMsg));
+
+        InputMsg.ProtocolID = ISO14230;
+        InputMsg.TxFlags = 0;
+        InputMsg.Data[0] = output.at(0); // Format (functional addressing, 1 byte payload)
+        InputMsg.Data[1] = output.at(1); // Initialization address used to activate all ECUs
+        InputMsg.Data[2] = output.at(2); // Scan Tool physical source address
+        InputMsg.Data[3] = output.at(3); // Data: Start Communication Request Service
+        InputMsg.DataSize = 4;
+
+        status = j2534->PassThruIoctl(chanID, FAST_INIT, &InputMsg, &OutputMsg);
+        if (status)
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+        else
+        {
+            //qDebug() << "FAST_INIT OK";
+        }
     }
     else
     {
-        //qDebug() << "FAST_INIT OK";
+        QByteArray init;
+        QByteArray received;
+
+        init.append((uint8_t)0x00);
+        serial->setBaudRate(360);
+        delay(300);
+        received = write_serial_data_echo_check(init);
+        serial->setBaudRate(10400);
+        received = write_serial_data_echo_check(output);
     }
 
     return STATUS_SUCCESS;
@@ -232,7 +247,7 @@ QStringList SerialPortActions::check_serial_ports()
     return serial_ports;
 }
 
-QString SerialPortActions::open_serial_port(QStringList serial_port_list)
+QString SerialPortActions::open_serial_port()
 {
     //qDebug() << "Serial port =" << serial_port_list;
     QString serial_port_text = serial_port_list.at(1);
@@ -403,16 +418,13 @@ QByteArray SerialPortActions::write_serial_data(QByteArray output)
 
     if (is_serial_port_open())
     {
+        if (serialport_protocol_14230)
+            output = write_serial_iso14230_data(output, iso14230_startbyte, iso14230_source_id, iso14230_destination_id);
+
         if (use_openport2_adapter)
         {
             write_j2534_data(output);
-            //if (serialport_protocol_14230)
-            //    qDebug() << write_serial_iso14230_data(output);
             return 0;
-        }
-        if (serialport_protocol_14230)
-        {
-            output = write_serial_iso14230_data(output);
         }
         for (int i = 0; i < output.length(); i++)
         {
@@ -433,16 +445,13 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
 
     if (is_serial_port_open())
     {
+        if (serialport_protocol_14230)
+            output = write_serial_iso14230_data(output, iso14230_startbyte, iso14230_source_id, iso14230_destination_id);
+
         if (use_openport2_adapter)
         {
             write_j2534_data(output);
-            //if (serialport_protocol_14230)
-            //    qDebug() << write_serial_iso14230_data(output);
             return STATUS_SUCCESS;
-        }
-        if (serialport_protocol_14230)
-        {
-            output = write_serial_iso14230_data(output);
         }
         for (int i = 0; i < output.length(); i++)
         {
@@ -469,22 +478,24 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
     return received;
 }
 
-QByteArray SerialPortActions::write_serial_iso14230_data(QByteArray output)
+QByteArray SerialPortActions::write_serial_iso14230_data(QByteArray output, uint8_t iso14230_startbyte, uint8_t iso14230_source_id, uint8_t iso14230_destination_id)
 {
     uint8_t chk_sum = 0;
     uint8_t msglength = output.length();
 
     //qDebug() << "Adding iso14230 header to message";
 
-    output.insert(0, 0x80);
-    output.insert(1, 0x10);
-    output.insert(2, 0xFC);
-    output.insert(3, msglength);
+    output.insert(0, iso14230_startbyte);
+    output.insert(1, iso14230_destination_id);
+    output.insert(2, iso14230_source_id);
+    if (msglength < 0x40)
+        output[0] = output[0] | msglength;
+    else
+        output.insert(3, msglength);
 
     for (int i = 0; i < output.length(); i++)
-    {
         chk_sum = chk_sum + output.at(i);
-    }
+
     output.append(chk_sum);
 
     return output;
@@ -812,8 +823,8 @@ int SerialPortActions::set_j2534_can_filters()
         txmsg.ExtraDataIndex = 0;
 
         msgMask = msgPattern = txmsg;
-        memset(msgMask.Data, 0xFF, txmsg.DataSize); // mask the first 4 byte to 0
-        memset(msgPattern.Data, 0xFF, txmsg.DataSize);// match it with 0 (i.e. pass everything)
+        memset(msgMask.Data, 0xff, txmsg.DataSize); // mask the first 4 byte to 0
+        memset(msgPattern.Data, 0x00, txmsg.DataSize);// match it with 0 (i.e. pass everything)
 
         if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
         {

@@ -1457,15 +1457,6 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
 
     checksum_correction(ecuCalDef);
-    /*
-    if (configValues->car_make == "Subaru")
-    {
-        if (ecuCalDef->RomInfo[MemModel] == "SH7055")
-            checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
-        if (ecuCalDef->RomInfo[MemModel] == "SH7058")
-            checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
-    }
-    */
 
     return ecuCalDef;
 }
@@ -1483,7 +1474,9 @@ FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::
         return NULL;
     }
 
-    ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
+    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
+    checksum_correction(ecuCalDef);
+
     file.write(ecuCalDef->FullRomData);
     file.close();
 
@@ -1665,15 +1658,6 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
     }
 
     checksum_correction(ecuCalDef);
-    /*
-    if (configValues->car_make == "Subaru")
-    {
-        if (ecuCalDef->RomInfo[MemModel] == "SH7055")
-            checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
-        if (ecuCalDef->RomInfo[MemModel] == "SH7058")
-            checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
-    }
-    */
 
     return ecuCalDef;
 }
