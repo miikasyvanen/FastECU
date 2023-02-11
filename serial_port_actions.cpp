@@ -106,9 +106,10 @@ int SerialPortActions::fast_init(QByteArray output)
 
         init.append((uint8_t)0x00);
         serial->setBaudRate(360);
-        delay(300);
+        fast_delay(300);
         received = write_serial_data_echo_check(init);
         serial->setBaudRate(10400);
+        fast_delay(11);
         received = write_serial_data_echo_check(output);
     }
 
@@ -1195,9 +1196,16 @@ void SerialPortActions::handle_error(QSerialPort::SerialPortError error)
     }
 }
 
-void SerialPortActions::delay(int n)
+void SerialPortActions::fast_delay(int timeout)
 {
-    QTime dieTime = QTime::currentTime().addMSecs(n);
+    QTime dieTime = QTime::currentTime().addMSecs(timeout);
+    while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+}
+
+void SerialPortActions::delay(int timeout)
+{
+    QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 }

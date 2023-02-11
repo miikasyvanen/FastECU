@@ -25,7 +25,6 @@ class BiuOperationsSubaru : public QWidget
     Q_OBJECT
 
 public:
-    BiuOperationsSubaru();
     explicit BiuOperationsSubaru(SerialPortActions *serial, QWidget *parent = nullptr);
     ~BiuOperationsSubaru();
 

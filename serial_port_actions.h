@@ -185,7 +185,8 @@ private slots:
 
     void close_serial_port();
     void handle_error(QSerialPort::SerialPortError error);
-    void delay(int n);
+    void fast_delay(int timeout);
+    void delay(int timeout);
 
 };
 
