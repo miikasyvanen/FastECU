@@ -103,7 +103,26 @@ DISTFILES += \
     LICENSE \
     README.md \
     USING.txt \
+    config/fastecu.cfg \
+    config/logger.cfg \
+    config/menu.cfg \
+    config/protocols.cfg \
+    definitions/16BITBASE.xml \
+    definitions/32BITBASE.xml \
+    definitions/A2ZJ601A.xml \
+    definitions/A4SE700D.xml \
+    definitions/A8DH200Z.xml \
+    definitions/ecu_defs.xml \
+    definitions/logger_METRIC_EN_v370.xml \
     fastecu.rc \
+    kernels/ssmk_CAN_SH7055.bin \
+    kernels/ssmk_CAN_SH7058.bin \
+    kernels/ssmk_HC16.bin \
+    kernels/ssmk_HC16_decryp.bin \
+    kernels/ssmk_SH7055.bin \
+    kernels/ssmk_SH7058.bin \
+    kernels/ssmk_SH7058_EEPSCI3.bin \
+    kernels/ssmk_SH7058_EEPSCI4.bin \
     precompiled/FastECU-Linux.zip \
     precompiled/FastECU-Win7-32bit.zip \
     precompiled/FastECU-Win7-64bit.zip
