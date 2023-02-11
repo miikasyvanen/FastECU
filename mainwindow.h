@@ -25,6 +25,7 @@
 
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
+#include <protocol_select.h>
 #include <definition_file_convert.h>
 #include <biu_operations_subaru.h>
 #include <ecu_operations_nissan.h>
@@ -109,56 +110,7 @@ private:
     QStringList flash_methods;
     QStringList flash_protocols;
 
-    QStringList ecu_protocols = {
-        //Car make      flash method        flash protocol      log protocol        protocol    description
-//        "Subaru",       "wrx02",            "K-Line",           "K-Line",           "SSM",      "Subaru Denso 2001-2005 K-Line (HC16/160KB)",
-        "Subaru",       "fxt02",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2002-2007 K-Line/CAN-bus (SH7055/512KB)",
-        "Subaru",       "sti04",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2003-2005 K-Line/CAN-bus (SH7055/512KB)",
-        "Subaru",       "sti05",            "K-Line,CAN",       "K-Line,CAN",       "SSM",      "Subaru Denso 2005-2007 K-Line/CAN-bus (SH7058/1MB)",
-        "Subaru",       "subarucan",        "K-Line,iso15765",  "K-Line,iso15765",  "SSM",      "Subaru Denso 2007+ CAN-bus (SH7058S/1MB)",
-/*
-        "Subaru",       "Hitachi UJ20",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB)",
-        "Subaru",       "Hitachi UJ30",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)",
-*/
-        /*
-        "Subaru",       "Hitachi UJ40",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)",
-        "Subaru",       "Hitachi UJ70",     "K-Line",           "K-Line",           "SSM",      "Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)",
-        "Subaru",       "Hitachi HI70",     "K-Line",           "K-Line",           "SSM",      "Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)",
-        "Subaru",       "Hitachi HI70CAN",  "K-Line,iso15765",  "K-Line,iso15765",  "SSM",      "Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)",
-        "Subaru",       "Hitachi SH7058",   "iso15765",         "iso15765",         "SSM",      "Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)",
-        "Subaru",       "Hitachi SH7059",   "iso15765",         "iso15765",         "SSM",      "Forester 2013+ CAN (Hitachi SH7059/1.5MB)",
-        "Subaru",       "Hitachi SH7254",   "iso15765",         "iso15765",         "SSM",      "Forester 2013+ CAN (Hitachi SH7254/2MB)",
-        */
 //        "Mercedes",     "CR3 EDC16C31",     "K-Line",           "K-Line",           "iso14230", "Mercedes Benz 320CDI",
-    };
-
-    /*
-    QStringList log_protocols = {
-        "K-Line",
-        "CAN",
-        "iso15765",
-    };
-
-    QStringList car_models = {
-        "Subaru",
-        "Renault"
-    };
-
-    QStringList flash_methods = {
-        "wrx02",
-        "wrx04",
-        "fxt02",
-        "sti04",
-        "sti05",
-        "subarucan",
-    };
-
-    QStringList flash_protocols = {
-        "K-Line",
-        "CAN",
-        "iso15765",
-    };
-*/
 
     enum RomInfoEnum {
         XmlId,
@@ -207,9 +159,7 @@ private:
     QMenu *mainWindowMenu;
 
     QComboBox *serial_port_list;
-    QComboBox *flash_method_list;
     QComboBox *flash_protocol_list;
-    QComboBox *car_model_list;
     QComboBox *log_protocol_list;
 
     QFile log_file;
@@ -249,12 +199,9 @@ private:
 
     // mainwindow.c
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
-    QStringList create_car_models_list();
-    QStringList create_flash_methods_list();
     QStringList create_flash_protocols_list();
     QStringList create_log_protocols_list();
     QString check_kernel(QString flash_method);
-    void change_current_car_model_description();
 
     // menuactions.c
     void inc_dec_value(QString action);
@@ -302,9 +249,9 @@ private slots:
     void menu_action_triggered(QString action);
 
     // mainwindow.c
+    void select_protocol();
+    void select_protocol_finished(int result);
     void log_protocol_changed();
-    void car_model_changed();
-    void flash_method_changed();
     void flash_protocol_changed();
     void check_serial_ports();
     void open_serial_port();

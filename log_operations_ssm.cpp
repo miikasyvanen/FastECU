@@ -31,20 +31,29 @@ void MainWindow::canbus_listener()
 bool MainWindow::ecu_init()
 {
     QString car_model;
-    QComboBox *car_model_list = ui->toolBar->findChild<QComboBox*>("car_model_list");
-    QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
 
     //qDebug() << "ECU init";
+    QByteArray output;
+    uint8_t chksum = 0;
+    output.clear();
+    output.append((uint8_t)0x81);
+    output.append((uint8_t)0x40);
+    output.append((uint8_t)0xf0);
+    output.append((uint8_t)0x81);
+    for (int i = 0; i < output.length(); i++)
+        chksum += (uint8_t)output.at(i);
+    output.append(chksum & 0xFF);
 
     if (serial->is_serial_port_open())
     {
         if (!ecu_init_complete)
         {
-            if (car_model_list->currentText() == "Subaru")
+            if (configValues->flash_protocol_selected_make == "Subaru")
             {
                 if (configValues->log_protocol == "CAN" || configValues->log_protocol == "iso15765")
                     ssm_can_init();
                 else
+                    //serial->fast_init(output);
                     ssm_kline_init();
             }
         }
@@ -79,18 +88,21 @@ void MainWindow::ssm_kline_init()
         //qDebug() << "ECU ID:" << parse_ecuid(received);
         //qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
         //qDebug() << "ECU INIT:" << parse_message_to_hex(received);
-        if (received.length() == (uint8_t)received.at(3) + 5)
+        if (received.length() > 0)
         {
-            //qDebug() << "ECU ID:" << parse_ecuid(received);
-            ecu_init_complete = true;
-            //set_status_bar_label(true, true, ecuid);
-            ecuid = parse_ecuid(received);
-            parse_log_value_list(received, "SSM");
-
-            received = serial->read_serial_data(1, 100);
-            while(received.length() > 0)
+            if (received.length() == (uint8_t)received.at(3) + 5)
             {
+                //qDebug() << "ECU ID:" << parse_ecuid(received);
+                ecu_init_complete = true;
+                //set_status_bar_label(true, true, ecuid);
+                ecuid = parse_ecuid(received);
+                parse_log_value_list(received, "SSM");
+
                 received = serial->read_serial_data(1, 100);
+                while(received.length() > 0)
+                {
+                    received = serial->read_serial_data(1, 100);
+                }
             }
         }
     }

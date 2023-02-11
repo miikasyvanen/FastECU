@@ -53,6 +53,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
+    protocol_select.cpp \
     serial_port_actions.cpp \
     settings.cpp \
     verticallabel.cpp
@@ -74,6 +75,7 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
+    protocol_select.h \
     serial_port_actions.h \
     settings.h \
     verticallabel.h
@@ -86,6 +88,7 @@ FORMS += \
     ecu_operations.ui \
     logvalues.ui \
     mainwindow.ui \
+    protocol_select.ui \
     settings.ui
 
 # Default rules for deployment.

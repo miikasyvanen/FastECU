@@ -64,6 +64,8 @@ private:
     uint16_t receive_timeout = 500;
 
     QString mcu_type_string;
+    QString flash_method;
+    QString kernel;
 
     SerialPortActions *serial;
 
@@ -85,17 +87,17 @@ private:
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int connect_bootloader_subaru_denso_can_32bit();
 
-    int initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
-    int initialize_read_mode_subaru_hitachi_uj40_kline();
-    int initialize_read_mode_subaru_hitachi_uj70_kline();
-    int initialize_read_mode_subaru_hitachi_uj70_can();
+    int initialize_read_mode_subaru_uj20_30_40_70_kline();
+    int initialize_read_mode_subaru_uj70_kline();
+    int initialize_read_mode_subaru_hitachi_70_kline();
+    int initialize_read_mode_subaru_hitachi_70_can();
 
-    int uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+    int uninitialize_read_mode_subaru_uj20_30_40_70_kline();
 
-    int initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
-    int initialize_flash_mode_subaru_hitachi_uj40_kline();
-    int initialize_flash_mode_subaru_hitachi_uj70_kline();
-    int initialize_flash_mode_subaru_hitachi_uj70_can();
+    int initialize_flash_mode_subaru_uj20_30_40_70_kline();
+    int initialize_flash_mode_subaru_uj70_kline();
+    int initialize_flash_mode_subaru_hitachi_70_kline();
+    int initialize_flash_mode_subaru_hitachi_70_can();
 
     int upload_kernel_subaru_denso_kline_02_16bit(QString kernel);
     int upload_kernel_subaru_denso_kline_04_16bit(QString kernel);
@@ -107,19 +109,19 @@ private:
     int read_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int read_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_hitachi_70_can(FileActions::EcuCalDefStructure *ecuCalDef);
 
     int write_rom_subaru_denso_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int write_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int write_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int write_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
-    int write_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_hitachi_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
+    int write_rom_subaru_hitachi_70_can(FileActions::EcuCalDefStructure *ecuCalDef);
 
     QByteArray send_subaru_sid_a8_read_mem();
     QByteArray send_subaru_sid_bf_ssm_init();
@@ -173,8 +175,10 @@ private:
     QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray subaru_hitachi_transform_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_hitachi_generate_kline_seed_key(QByteArray seed);
+    QByteArray subaru_hitachi_generate_kline_seed_key_1(QByteArray seed);
+    QByteArray subaru_hitachi_generate_kline_seed_key_2(QByteArray seed);
     QByteArray subaru_hitachi_generate_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_hitachi_uj_generate_kline_seed_key(QByteArray requested_seed);
     QByteArray subaru_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray subaru_denso_encrypt_buf(QByteArray buf, uint32_t pl_len);

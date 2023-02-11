@@ -275,17 +275,11 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
         //qDebug() << "Message header" << received.at(0) << received.at(1) << received.at(2);
         if (received.at(0) == 0x61 && received.at(1) == 0x72)
         {
-            if (received.at(2) == 0x6F)
+            if (received.at(2) == 0x6f)
             {
                 read_serial_data(2, Timeout);
-                //qDebug() << "Message ACK";
-                msg_byte_cnt = received.at(3) - 1;
-                msg_type = received.at(4);
-                msg_type_string = "ACK";
-                //qDebug() << "RECEIVED ACK:" << received << parseMessageToHex(received);
-                //qDebug() << "Message received at channel" << ChannelID << ", size is" << msg_byte_cnt << "and message type is" << msg_type_string << "(" << msg_type << ")";
+                //msg_type_string = "ACK";
                 received.clear();
-                //return STATUS_NOERROR;
             }
             else if (received.at(2) == 'e')
             {

@@ -5,8 +5,8 @@ FileActions::FileActions()
 
 }
 
-FileActions::ConfigValuesStructure *FileActions::check_config_dir(){
-    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesStructure *configValues){
+    //ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     if (!QDir(configValues->base_directory).exists()){
         QDir().mkdir(configValues->base_directory);
@@ -86,9 +86,9 @@ bool FileActions::copy_directory_files(const QString &source_dir, const QString 
     return true;
 }
 
-FileActions::ConfigValuesStructure *FileActions::read_config_file()
+FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesStructure *configValues)
 {
-    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+    //ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QDomDocument xmlBOM;
     //QFile file(configValues->config_base_directory + "/fastecu.cfg");
@@ -187,7 +187,21 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
                             }
                             qDebug() << "Flash method:" << configValues->flash_method;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "flash_protocol")
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "protocol_id")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->flash_protocol_selected_id = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                            qDebug() << "Protocol ID:" << configValues->flash_protocol_selected_id;
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "ecu_protocol")
                         {
                             while(reader.readNextStartElement())
                             {
@@ -199,7 +213,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file()
                                 else
                                     reader.skipCurrentElement();
                             }
-                            qDebug() << "Flash protocol:" << configValues->flash_protocol;
+                            qDebug() << "ECU protocol:" << configValues->flash_protocol;
                         }
                         else if (reader.name() == "setting" && reader.attributes().value("name") == "log_protocol")
                         {
@@ -400,6 +414,13 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeEndElement();
 
     stream.writeStartElement("setting");
+    stream.writeAttribute("name", "protocol_id");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->flash_protocol_selected_id);
+    stream.writeEndElement();
+    stream.writeEndElement();
+
+    stream.writeStartElement("setting");
     stream.writeAttribute("name", "flash_protocol");
     stream.writeStartElement("value");
     stream.writeAttribute("data", configValues->flash_protocol);
@@ -481,6 +502,118 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     file.close();
 
     return 0;
+}
+
+FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions::ConfigValuesStructure *configValues)
+{
+    QDomDocument xmlBOM;
+
+    QString filename = configValues->protocols_file;
+
+    QFile file(filename);
+    if(!file.open(QFile::ReadWrite | QFile::Text)) {
+        QMessageBox::warning(this, tr("Protocols file"), "Unable to open protocols file for reading");
+        return NULL;
+    }
+    xmlBOM.setContent(&file);
+    file.close();
+
+    QDomElement root = xmlBOM.documentElement();
+
+    if (root.tagName() == "ecu")
+    {
+        QDomElement ecu_protocols = root.firstChild().toElement();
+        while (!ecu_protocols.isNull())
+        {
+            if (ecu_protocols.tagName() == "ecu_protocols")
+            {
+                int index = 0;
+
+                QDomElement flash_protocol = ecu_protocols.firstChild().toElement();
+                while (!flash_protocol.isNull())
+                {
+                    if (flash_protocol.tagName() == "protocol")
+                    {
+                        //qDebug() << "Add new list";
+                        configValues->flash_protocol_id.append(flash_protocol.attribute("id","No id"));
+                        configValues->flash_protocol_make.append(" ");
+                        configValues->flash_protocol_model.append(" ");
+                        configValues->flash_protocol_version.append(" ");
+                        configValues->flash_protocol_type.append(" ");
+                        configValues->flash_protocol_kw.append(" ");
+                        configValues->flash_protocol_hp.append(" ");
+                        configValues->flash_protocol_fuel.append(" ");
+                        configValues->flash_protocol_year.append(" ");
+                        configValues->flash_protocol_ecu.append(" ");
+                        configValues->flash_protocol_mode.append(" ");
+                        configValues->flash_protocol_checksum.append(" ");
+                        configValues->flash_protocol_read.append(" ");
+                        configValues->flash_protocol_write.append(" ");
+                        configValues->flash_protocol_flash_protocol.append(" ");
+                        configValues->flash_protocol_log_protocol.append(" ");
+                        configValues->flash_protocol_comms_protocol.append(" ");
+                        configValues->flash_protocol_description.append(" ");
+                        configValues->flash_protocol_family.append(" ");
+
+                        QDomElement flash_protocol_data = flash_protocol.firstChild().toElement();
+                        while (!flash_protocol_data.isNull())
+                        {
+                            //qDebug() << flash_protocol_data.tagName();
+                            if (flash_protocol_data.tagName() == "make")
+                                configValues->flash_protocol_make.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "model")
+                                configValues->flash_protocol_model.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "version")
+                                configValues->flash_protocol_version.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "type")
+                                configValues->flash_protocol_type.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "kw")
+                                configValues->flash_protocol_kw.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "hp")
+                                configValues->flash_protocol_hp.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "fuel")
+                                configValues->flash_protocol_fuel.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "year")
+                                configValues->flash_protocol_year.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "ecu")
+                                configValues->flash_protocol_ecu.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "mode")
+                                configValues->flash_protocol_mode.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "checksum")
+                                configValues->flash_protocol_checksum.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "read")
+                                configValues->flash_protocol_read.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "write")
+                                configValues->flash_protocol_write.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "flash_protocol")
+                                configValues->flash_protocol_flash_protocol.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "log_protocol")
+                                configValues->flash_protocol_log_protocol.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "comms_protocol")
+                                configValues->flash_protocol_comms_protocol.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "description")
+                                configValues->flash_protocol_description.replace(index, flash_protocol_data.text());
+                            if (flash_protocol_data.tagName() == "family")
+                                configValues->flash_protocol_family.replace(index, flash_protocol_data.text());
+
+                            flash_protocol_data = flash_protocol_data.nextSibling().toElement();
+                        }
+                        qDebug() << "Flash protocol ID:" << configValues->flash_protocol_id.at(index) << "make:" << configValues->flash_protocol_make.at(index) << "model:" << configValues->flash_protocol_model.at(index) << "flash method:" << configValues->flash_protocol_family.at(index);
+                        index++;
+                    }
+                    flash_protocol = flash_protocol.nextSibling().toElement();
+                }
+            }
+            ecu_protocols = ecu_protocols.nextSibling().toElement();
+        }
+    }
+
+
+
+
+
+
+    return configValues;
 }
 
 FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id, bool modify)
@@ -746,6 +879,8 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
     stream.writeEndElement();
     stream.writeEndElement();
     stream.writeEndElement();
+
+    return 0;
 }
 
 FileActions::LogValuesStructure *FileActions::read_logger_definition_file()
@@ -1143,10 +1278,11 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (configValues->car_make == "Subaru")
     {
-        ecu_id_addr.append("0x01F8");
-        ecu_id_addr.append("0x0200");
-        ecu_id_addr.append("0x2000");
-        ecu_id_addr.append("0x2004");
+        ecu_id_addr.append("0x01F8");   // UJ20
+        ecu_id_addr.append("0x0200");   // HC16
+        ecu_id_addr.append("0x2000");   // SH7055 / SH7058 K-Line
+        ecu_id_addr.append("0x2004");   // SH7058 CAN
+        ecu_id_addr.append("0x10271");  // 2F04207006
         ecu_id_length = 8;
     }
     if (configValues->car_make == "Mercedes-Benz")

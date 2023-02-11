@@ -82,8 +82,6 @@ void EcuOperationsSubaru::check_mcu_type(QString flash_method)
 int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
 {
     QByteArray romdata;
-    QString flash_method;
-    QString kernel;
     int test_write = 0;
     int result = STATUS_ERROR;
 
@@ -117,6 +115,8 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         kernel = ecuCalDef->Kernel;
     }
 
+    qDebug() << "Flash method:" << flash_method;
+    qDebug() << "Kernel:" << kernel;
     check_mcu_type(flash_method);
 
     ecuOperations = new EcuOperations(this, serial, mcu_type_string, mcu_type_index);
@@ -362,23 +362,23 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "Hitachi UJ WA12212920/128KB")
+    else if (flash_method == "UJ20")
     {
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 1999-2000 Hitachi UJ WA12212920/128KB read mode using K-Line, please wait...", true, true);
-            result = initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            result = initialize_read_mode_subaru_uj20_30_40_70_kline();
             if (result == STATUS_SUCCESS)
             {
                 send_log_window_message("Reading ROM from Subaru 1999-2000 Hitachi UJ WA12212920/128KB using K-Line", true, true);
-                result = read_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
+                result = read_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
             }
-            result = uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            result = uninitialize_read_mode_subaru_uj20_30_40_70_kline();
         }
         else if (cmd_type == "write")
         {
             send_log_window_message("Initializing Subaru 1999-2000 Hitachi UJ WA12212920/128KB flash mode using K-Line, please wait...", true, true);
-            result = initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
+            result = initialize_flash_mode_subaru_uj20_30_40_70_kline();
             if (result == STATUS_SUCCESS)
             {
 
@@ -386,63 +386,102 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "Hitachi UJ30")
+    else if (flash_method == "UJ30")
     {
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 2000-2002 Hitachi UJ WA12212930/256KB read mode using K-Line, please wait...", true, true);
-            result = initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            result = initialize_read_mode_subaru_uj20_30_40_70_kline();
             if (result == STATUS_SUCCESS)
             {
                 send_log_window_message("Reading ROM from Subaru 2000-2002 Hitachi UJ WA12212930/256KB using K-Line", true, true);
-                result = read_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
+                result = read_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
             }
-            result = uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            result = uninitialize_read_mode_subaru_uj20_30_40_70_kline();
         }
         else if (cmd_type == "write")
         {
             send_log_window_message("Initializing Subaru 2000-2002 Hitachi UJ WA12212930/256KB flash mode using K-Line, please wait...", true, true);
-            result = initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
+            result = initialize_flash_mode_subaru_uj20_30_40_70_kline();
             if (result == STATUS_SUCCESS)
             {
                 send_log_window_message("Writing ROM to Subaru 2000-2002 Hitachi UJ WA12212930/256KB using K-Line", true, true);
-                result = write_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
+                result = write_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
             }
         }
         return result;
     }
-    else if (flash_method == "Hitachi UJ40")
+    else if (flash_method == "UJ40")
     {
         if (cmd_type == "read")
         {
-
+            send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212940/384KB read mode using K-Line, please wait...", true, true);
+            result = initialize_read_mode_subaru_uj20_30_40_70_kline();
+            if (result == STATUS_SUCCESS)
+            {
+                send_log_window_message("Reading ROM from Subaru 2002-2005 Hitachi UJ WA12212940/384KB using K-Line", true, true);
+                result = read_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
+            }
+            result = uninitialize_read_mode_subaru_uj20_30_40_70_kline();
         }
         else if (cmd_type == "write")
         {
-
+            send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212940/384KB flash mode using K-Line, please wait...", true, true);
+            result = initialize_flash_mode_subaru_uj20_30_40_70_kline();
+            if (result == STATUS_SUCCESS)
+            {
+                send_log_window_message("Writing ROM to Subaru 2002-2005 Hitachi UJ WA12212940/384KB using K-Line", true, true);
+                result = write_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
+            }
         }
+        return result;
     }
-    else if (flash_method == "Hitachi UJ70")
+    else if (flash_method == "UJ70")
     {
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB read mode using K-Line, please wait...", true, true);
-            result = initialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            result = initialize_read_mode_subaru_uj20_30_40_70_kline();
             if (result == STATUS_SUCCESS)
             {
                 send_log_window_message("Reading ROM from Subaru 2002-2005 Hitachi UJ WA12212970/512KB using K-Line", true, true);
-                result = read_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
+                result = read_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
             }
-            result = uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline();
+            result = uninitialize_read_mode_subaru_uj20_30_40_70_kline();
         }
         else if (cmd_type == "write")
         {
             send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB flash mode using K-Line, please wait...", true, true);
-            result = initialize_flash_mode_subaru_hitachi_uj20_uj30_kline();
+            result = initialize_flash_mode_subaru_uj20_30_40_70_kline();
             if (result == STATUS_SUCCESS)
             {
                 send_log_window_message("Writing ROM to Subaru 2002-2005 Hitachi UJ WA12212970/512KB using K-Line", true, true);
-                result = write_rom_subaru_hitachi_uj20_uj30_kline(ecuCalDef);
+                result = write_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
+            }
+        }
+        return result;
+    }
+    else if (flash_method == "HI70")
+    {
+        if (cmd_type == "read")
+        {
+            send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB read mode using K-Line, please wait...", true, true);
+            result = initialize_read_mode_subaru_uj70_kline();
+            if (result == STATUS_SUCCESS)
+            {
+                send_log_window_message("Reading ROM from Subaru 2002-2005 Hitachi UJ WA12212970/512KB using K-Line", true, true);
+                result = read_rom_subaru_uj70_kline(ecuCalDef);
+            }
+            //result = uninitialize_read_mode_subaru_uj20_30_40_70_kline();
+        }
+        else if (cmd_type == "write")
+        {
+            send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB flash mode using K-Line, please wait...", true, true);
+            result = initialize_flash_mode_subaru_uj70_kline();
+            if (result == STATUS_SUCCESS)
+            {
+                send_log_window_message("Writing ROM to Subaru 2002-2005 Hitachi UJ WA12212970/512KB using K-Line", true, true);
+                result = write_rom_subaru_uj70_kline(ecuCalDef);
             }
         }
         return result;
@@ -815,7 +854,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_32bit()
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_uj20_uj30_kline()
+int EcuOperationsSubaru::initialize_read_mode_subaru_uj20_30_40_70_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -835,6 +874,7 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_uj20_uj30_kline()
     received = send_subaru_sid_bf_ssm_init();
     if (received == "" || (uint8_t)received.at(4) != 0xFF)
         return STATUS_ERROR;
+
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
 
@@ -858,7 +898,7 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_uj20_uj30_kline()
     return STATUS_SUCCESS;
 }
 
-int EcuOperationsSubaru::uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline()
+int EcuOperationsSubaru::uninitialize_read_mode_subaru_uj20_30_40_70_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -878,7 +918,109 @@ int EcuOperationsSubaru::uninitialize_read_mode_subaru_hitachi_uj20_uj30_kline()
     return STATUS_SUCCESS;
 }
 
-int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj20_uj30_kline()
+int EcuOperationsSubaru::initialize_read_mode_subaru_uj70_kline()
+{
+    QByteArray output;
+    QByteArray received;
+    QString msg;
+
+    QByteArray seed;
+    QByteArray seed_key;
+
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    // Start countdown
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
+
+    // SSM init
+    received = send_subaru_sid_bf_ssm_init();
+    if (received == "" || (uint8_t)received.at(4) != 0xFF)
+        return STATUS_ERROR;
+
+    received.remove(0, 8);
+    received.remove(5, received.length() - 5);
+
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+    }
+    QString ecuid = msg;
+    qDebug() << "ECU ID =" << ecuid;
+    send_log_window_message("ECU ID = " + ecuid, true, true);
+
+    // Start communication
+    received = send_subaru_denso_sid_81_start_communication();
+    send_log_window_message("SID_81 = " + parse_message_to_hex(received), true, true);
+    if (received == "" || (uint8_t)received.at(4) != 0xC1)
+        return STATUS_ERROR;
+
+    qDebug() << "Start communication ok: " << parse_message_to_hex(received);
+    send_log_window_message("Start communication ok: " + parse_message_to_hex(received), true, true);
+
+    // Request timing parameters
+    received = send_subaru_denso_sid_83_request_timings();
+    send_log_window_message("SID_83 = " + parse_message_to_hex(received), true, true);
+    if (received == "" || (uint8_t)received.at(4) != 0xC3)
+        return STATUS_ERROR;
+
+    qDebug() << "Request timing parameters ok:" << parse_message_to_hex(received);
+    send_log_window_message("Request timing parameters ok: " + parse_message_to_hex(received), true, true);
+
+    // Request seed
+    received = send_subaru_denso_sid_27_request_seed();
+    send_log_window_message("SID_27_01 = " + parse_message_to_hex(received), true, true);
+    if (received == "" || (uint8_t)received.at(4) != 0x67)
+        return STATUS_ERROR;
+
+    qDebug() << "Seed request ok:" << parse_message_to_hex(received);
+    send_log_window_message("Seed request ok: " + parse_message_to_hex(received), true, true);
+
+    seed.append(received.at(6));
+    seed.append(received.at(7));
+    seed.append(received.at(8));
+    seed.append(received.at(9));
+
+    seed_key = subaru_hitachi_uj_generate_kline_seed_key(seed);
+
+    msg = parse_message_to_hex(seed_key);
+    //qDebug() << "Calculated seed key: " + msg + ", sending to ECU";
+    //send_log_window_message("Calculated seed key: " + msg + ", sending to ECU", true, true);
+    qDebug() << "Sending seed key:" << parse_message_to_hex(seed_key);
+    send_log_window_message("Sending seed key: " + parse_message_to_hex(seed_key), true, true);
+
+    received = send_subaru_denso_sid_27_send_seed_key(seed_key);
+    //send_log_window_message("SID_27_02 = " + parse_message_to_hex(received), true, true);
+    if (received == "" || (uint8_t)received.at(4) != 0x67)
+    {
+        qDebug() << "Seed key error:" << parse_message_to_hex(received);
+        send_log_window_message("Seed key error: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+
+    qDebug() << "Seed key ok:" << parse_message_to_hex(received);
+    send_log_window_message("Seed key ok: " + parse_message_to_hex(received), true, true);
+
+    return STATUS_ERROR;
+}
+
+int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_70_kline()
+{
+
+    return STATUS_SUCCESS;
+}
+
+int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_70_can()
+{
+
+    return STATUS_SUCCESS;
+}
+
+int EcuOperationsSubaru::initialize_flash_mode_subaru_uj20_30_40_70_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -915,7 +1057,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj20_uj30_kline()
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj40_kline()
+int EcuOperationsSubaru::initialize_flash_mode_subaru_uj70_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -924,7 +1066,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj40_kline()
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj70_kline()
+int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_kline()
 {
     QByteArray output;
     QByteArray received;
@@ -933,7 +1075,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj70_kline()
     return STATUS_ERROR;
 }
 
-int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_uj70_can()
+int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_can()
 {
     QByteArray output;
     QByteArray received;
@@ -1136,15 +1278,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
     output.append(pl_encr);
     chk_sum = calculate_checksum(output, true);
     output.append((uint8_t) chk_sum);
-/*
-    for (int i = 0; i < (output.length() / 16); i++)
-    {
-        msg.clear();
-        for (int j = 0; j < 16; j++)
-            msg.append(output.at(i * 16 + j));
-        send_log_window_message(parse_message_to_hex(msg), false, true);
-    }
-*/
+
     send_log_window_message("Start sending kernel... please wait...", true, true);
     serial->write_serial_data_echo_check(output);
     received = serial->read_serial_data(100, serial_read_short_timeout);
@@ -1222,17 +1356,6 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
 
     QString mcu_name;
 
-    //qDebug() << "MCU name:" << flashdevices[mcu_type_index].name;
-/*
-    mcu_name = "SH7055";
-    if (flashdevices[mcu_type_index].name == mcu_name)
-        start_address = flashdevices[mcu_type_index].rblocks->start + 4;
-    mcu_name = "SH7058";
-    if (flashdevices[mcu_type_index].name == mcu_name)
-        start_address = flashdevices[mcu_type_index].rblocks->start;
-
-    //qDebug() << "Start address to upload kernel:" << hex << start_address;
-*/
     start_address = flashdevices[mcu_type_index].rblocks->start;
     qDebug() << "Start address to upload kernel:" << hex << start_address;
 
@@ -1562,7 +1685,7 @@ int EcuOperationsSubaru::read_rom_subaru_denso_can_32bit(FileActions::EcuCalDefS
     return success;
 }
 
-int EcuOperationsSubaru::read_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::read_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     if (!serial->is_serial_port_open())
     {
@@ -1575,7 +1698,7 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_uj20_uj30_kline(FileActions::Ec
     return success;
 }
 
-int EcuOperationsSubaru::read_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::read_rom_subaru_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     if (!serial->is_serial_port_open())
     {
@@ -1588,7 +1711,7 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalD
     return success;
 }
 
-int EcuOperationsSubaru::read_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::read_rom_subaru_hitachi_70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     if (!serial->is_serial_port_open())
     {
@@ -1601,7 +1724,7 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalD
     return success;
 }
 
-int EcuOperationsSubaru::read_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::read_rom_subaru_hitachi_70_can(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     bool success = false;
 
@@ -1643,28 +1766,28 @@ int EcuOperationsSubaru::write_rom_subaru_denso_can_32bit(FileActions::EcuCalDef
     return success;
 }
 
-int EcuOperationsSubaru::write_rom_subaru_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::write_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     bool success = false;
 
     return success;
 }
 
-int EcuOperationsSubaru::write_rom_subaru_hitachi_uj40_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::write_rom_subaru_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     bool success = false;
 
     return success;
 }
 
-int EcuOperationsSubaru::write_rom_subaru_hitachi_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::write_rom_subaru_hitachi_70_kline(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     bool success = false;
 
     return success;
 }
 
-int EcuOperationsSubaru::write_rom_subaru_hitachi_uj70_can(FileActions::EcuCalDefStructure *ecuCalDef)
+int EcuOperationsSubaru::write_rom_subaru_hitachi_70_can(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     bool success = false;
 
@@ -1748,6 +1871,7 @@ QByteArray EcuOperationsSubaru::send_subaru_sid_bf_ssm_init()
         qDebug() << "Next BF loop";
         send_log_window_message("SSM init", true, true);
         //qDebug() << "SSM init";
+        qDebug() << "SSM init" << parse_message_to_hex(received);
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(100, receive_timeout);
@@ -2191,11 +2315,12 @@ QByteArray EcuOperationsSubaru::send_subaru_hitachi_sid_af_enter_flash_mode(QByt
     output.append((uint8_t)ecu_id.at(2)); // ECU ID [2]
     output.append((uint8_t)ecu_id.at(3)); // ECU ID [3]
     output.append((uint8_t)ecu_id.at(4)); // ECU ID [4]
-    output.append((uint8_t)0x01); // ROM size >> 24
-    output.append((uint8_t)0xFF); // ROM size >> 16
-    output.append((uint8_t)0xFF); // ROM size
+    output.append((uint8_t)(rom_size >> 16) & 0xFF); // ROM size >> 24
+    output.append((uint8_t)(rom_size >> 8) & 0xFF); // ROM size >> 16
+    output.append((uint8_t)rom_size & 0xFF); // ROM size
     //serial->write_serial_data_echo_check(add_ssm_header(output, false));
     serial->write_serial_data_echo_check(output); // No SSM header?
+    delay(500);
     received = serial->read_serial_data(8, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
@@ -2674,7 +2799,7 @@ QByteArray EcuOperationsSubaru::subaru_hitachi_transform_32bit_payload(QByteArra
 /***********************************
  * Hitachi K-Line ECUs seed key
  **********************************/
-QByteArray EcuOperationsSubaru::subaru_hitachi_generate_kline_seed_key(QByteArray requested_seed)
+QByteArray EcuOperationsSubaru::subaru_hitachi_generate_kline_seed_key_1(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -2700,6 +2825,36 @@ QByteArray EcuOperationsSubaru::subaru_hitachi_generate_kline_seed_key(QByteArra
     };
 
     key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+QByteArray EcuOperationsSubaru::subaru_hitachi_generate_kline_seed_key_2(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
+
+    const uint16_t keytogenerateindex_2[]={
+        0x3275, 0x6AD8, 0x1062, 0x512B,
+        0xD695, 0x7640, 0x25F6, 0xAC45,
+        0x6803, 0xE5DA, 0xC821, 0x36BF,
+        0xA433, 0x3F41, 0x842C, 0x05D9
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_2, indextransformation);
 
     return key;
 }
@@ -2737,9 +2892,34 @@ QByteArray EcuOperationsSubaru::subaru_hitachi_generate_can_seed_key(QByteArray 
     return key;
 }
 
+QByteArray EcuOperationsSubaru::subaru_hitachi_uj_generate_kline_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x8519, 0x5c53, 0xc0e9, 0x2452,
+        0x1e68, 0x6feb, 0x2648, 0x81e2,
+        0x8ce4, 0x953b, 0x1ca9, 0x6180,
+        0xb85e, 0x5109, 0xdb3c, 0x3cf2,
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
 QByteArray EcuOperationsSubaru::subaru_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
+    QByteArray key;
 
+    return key;
 }
 
 QByteArray EcuOperationsSubaru::subaru_denso_encrypt_buf(QByteArray buf, uint32_t len)
@@ -2877,9 +3057,8 @@ uint8_t EcuOperationsSubaru::calculate_checksum(QByteArray output, bool dec_0x10
     uint8_t checksum = 0;
 
     for (uint16_t i = 0; i < output.length(); i++)
-    {
         checksum += (uint8_t)output.at(i);
-    }
+
     if (dec_0x100)
         checksum = (uint8_t) (0x100 - checksum);
 

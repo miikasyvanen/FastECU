@@ -42,6 +42,7 @@ public:
         QString baudrate = "4800";
         QString car_make = "Subaru";
         QString flash_method = "wrx02";
+        //QString protocol_id = "0";
         QString flash_protocol = "K-Line";
         QString log_protocol = "K-Line";
         QString window_size = "default";
@@ -59,6 +60,7 @@ public:
         QString config_file = config_base_directory + "/fastecu.cfg";
         QString menu_config_file = config_base_directory + "/menu.cfg";
         QString logger_config_file = config_base_directory + "/logger.cfg";
+        QString protocols_file = config_base_directory + "/protocols.cfg";
 
         QStringList calibration_files;
         QString calibration_files_directory = calibration_files_base_directory;
@@ -73,6 +75,34 @@ public:
         QString primary_definition_base = "ecuflash";
         QStringList ecuflash_def_ecu_id;
         QStringList ecuflash_def_filename;
+
+        QStringList flash_protocol_id;
+        QStringList flash_protocol_make;
+        QStringList flash_protocol_model;
+        QStringList flash_protocol_version;
+        QStringList flash_protocol_type;
+        QStringList flash_protocol_kw;
+        QStringList flash_protocol_hp;
+        QStringList flash_protocol_fuel;
+        QStringList flash_protocol_year;
+        QStringList flash_protocol_ecu;
+        QStringList flash_protocol_mode;
+        QStringList flash_protocol_checksum;
+        QStringList flash_protocol_read;
+        QStringList flash_protocol_write;
+        QStringList flash_protocol_flash_protocol;
+        QStringList flash_protocol_log_protocol;
+        QStringList flash_protocol_comms_protocol;
+        QStringList flash_protocol_description;
+        QStringList flash_protocol_family;
+
+        QString flash_protocol_selected_id;
+        QString flash_protocol_selected_make;
+        QString flash_protocol_selected_model;
+        QString flash_protocol_selected_version;
+        QString flash_protocol_selected_family;
+        QString flash_protocol_selected_description;
+
     } ConfigValuesStruct;
 
     struct protocolsStructure {
@@ -280,18 +310,23 @@ public:
      * Check if FastECU dir exists in users home folder
      * If not, create one with appropriate files
      ***************************************************/
-    ConfigValuesStructure *check_config_dir();
+    ConfigValuesStructure *check_config_dir(ConfigValuesStructure *configValues);
     bool copy_directory_files(const QString &source_dir, const QString &target_dir, bool cover_file_if_exist);
 
     /****************************
-     * Open FastECU config file
+     * Read FastECU config file
      ***************************/
-    ConfigValuesStructure *read_config_file();
+    ConfigValuesStructure *read_config_file(ConfigValuesStructure *configValues);
 
     /****************************
-     * Open FastECU config file
+     * Save FastECU config file
      ***************************/
     ConfigValuesStructure *save_config_file(FileActions::ConfigValuesStructure *configValues);
+
+    /*************************************
+     * Read FastECU flash protocols file
+     ************************************/
+    ConfigValuesStructure *read_protocols_file(FileActions::ConfigValuesStructure *configValues);
 
     /************************
      * Read logger def file
