@@ -56,6 +56,7 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
     configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(index);
 
     QStringList car_makes;
+    QStringList car_makes_sorted;
 
     for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
     {
@@ -65,7 +66,10 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
             car_makes.append(configValues->flash_protocol_make.at(i));
         }
     }
-    for (int i = 0; i < car_makes.length(); i++)
+
+    car_makes_sorted = car_makes;
+    sort(car_makes_sorted.begin(), car_makes_sorted.end(), less<QString>());
+    for (int i = 0; i < car_makes_sorted.length(); i++)
     {
         QTreeWidgetItem *item = new QTreeWidgetItem();
         font = item->font(0);
@@ -73,10 +77,10 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
         font.setBold(font_bold);
         font.setFamily(font_family);
         item->setFont(0, font);
-        item->setText(0, car_makes.at(i));
+        item->setText(0, car_makes_sorted.at(i));
         item->setFirstColumnSpanned(true);
         ui->car_make_tree_widget->addTopLevelItem(item);
-        if (car_makes.at(i) == configValues->flash_protocol_selected_make)
+        if (car_makes_sorted.at(i) == configValues->flash_protocol_selected_make)
             ui->car_make_tree_widget->setCurrentItem(item);
         else if (i == 0)
             ui->car_make_tree_widget->setCurrentItem(item);

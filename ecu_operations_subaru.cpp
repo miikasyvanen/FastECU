@@ -466,13 +466,13 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB read mode using K-Line, please wait...", true, true);
-            result = initialize_read_mode_subaru_uj70_kline();
+            result = initialize_read_mode_subaru_uj20_30_40_70_kline();
             if (result == STATUS_SUCCESS)
             {
                 send_log_window_message("Reading ROM from Subaru 2002-2005 Hitachi UJ WA12212970/512KB using K-Line", true, true);
-                result = read_rom_subaru_uj70_kline(ecuCalDef);
+                result = read_rom_subaru_uj20_30_40_70_kline(ecuCalDef);
             }
-            //result = uninitialize_read_mode_subaru_uj20_30_40_70_kline();
+            result = uninitialize_read_mode_subaru_uj20_30_40_70_kline();
         }
         else if (cmd_type == "write")
         {
@@ -920,6 +920,61 @@ int EcuOperationsSubaru::uninitialize_read_mode_subaru_uj20_30_40_70_kline()
 
 int EcuOperationsSubaru::initialize_read_mode_subaru_uj70_kline()
 {
+
+    return STATUS_ERROR;
+}
+
+int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_70_kline()
+{
+
+    return STATUS_SUCCESS;
+}
+
+int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_70_can()
+{
+
+    return STATUS_SUCCESS;
+}
+
+int EcuOperationsSubaru::initialize_flash_mode_subaru_uj20_30_40_70_kline()
+{
+    QByteArray output;
+    QByteArray received;
+    QString msg;
+
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    // Start countdown
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
+
+    // SSM init
+    received = send_subaru_sid_bf_ssm_init();
+    //send_log_window_message("SID BF = " + parse_message_to_hex(received), true, true);
+    if (received == "")
+        return STATUS_ERROR;
+    //qDebug() << "SID_BF received:" << parse_message_to_hex(received);
+    received.remove(0, 8);
+    received.remove(5, received.length() - 5);
+    //qDebug() << "Received length:" << received.length();
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+    }
+    QString ecuid = msg;
+
+    QMessageBox::information(this, tr("Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB)"), "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB) writing not yet confirmed!");
+    //received = send_subaru_hitachi_sid_af_enter_flash_mode(received);
+
+    return STATUS_ERROR;
+}
+
+int EcuOperationsSubaru::initialize_flash_mode_subaru_uj70_kline()
+{
     QByteArray output;
     QByteArray received;
     QString msg;
@@ -1004,64 +1059,6 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_uj70_kline()
 
     qDebug() << "Seed key ok:" << parse_message_to_hex(received);
     send_log_window_message("Seed key ok: " + parse_message_to_hex(received), true, true);
-
-    return STATUS_ERROR;
-}
-
-int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_70_kline()
-{
-
-    return STATUS_SUCCESS;
-}
-
-int EcuOperationsSubaru::initialize_read_mode_subaru_hitachi_70_can()
-{
-
-    return STATUS_SUCCESS;
-}
-
-int EcuOperationsSubaru::initialize_flash_mode_subaru_uj20_30_40_70_kline()
-{
-    QByteArray output;
-    QByteArray received;
-    QString msg;
-
-    if (!serial->is_serial_port_open())
-    {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
-        return STATUS_ERROR;
-    }
-
-    // Start countdown
-    if (connect_bootloader_start_countdown(bootloader_start_countdown))
-        return STATUS_ERROR;
-
-    // SSM init
-    received = send_subaru_sid_bf_ssm_init();
-    //send_log_window_message("SID BF = " + parse_message_to_hex(received), true, true);
-    if (received == "")
-        return STATUS_ERROR;
-    //qDebug() << "SID_BF received:" << parse_message_to_hex(received);
-    received.remove(0, 8);
-    received.remove(5, received.length() - 5);
-    //qDebug() << "Received length:" << received.length();
-    for (int i = 0; i < received.length(); i++)
-    {
-        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-    }
-    QString ecuid = msg;
-
-    QMessageBox::information(this, tr("Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB)"), "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB) writing not yet confirmed!");
-    //received = send_subaru_hitachi_sid_af_enter_flash_mode(received);
-
-    return STATUS_ERROR;
-}
-
-int EcuOperationsSubaru::initialize_flash_mode_subaru_uj70_kline()
-{
-    QByteArray output;
-    QByteArray received;
-    QString msg;
 
     return STATUS_ERROR;
 }
@@ -1693,7 +1690,7 @@ int EcuOperationsSubaru::read_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCal
         return STATUS_ERROR;
     }
 
-    bool success = ecuOperations->read_mem_hitachi_uj20_uj30_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+    bool success = ecuOperations->read_mem_uj20_30_40_70_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;
 }
@@ -1706,7 +1703,7 @@ int EcuOperationsSubaru::read_rom_subaru_uj70_kline(FileActions::EcuCalDefStruct
         return STATUS_ERROR;
     }
 
-    bool success = ecuOperations->read_mem_hitachi_uj20_uj30_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+    bool success = ecuOperations->read_mem_uj20_30_40_70_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;
 }
@@ -1719,7 +1716,7 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_70_kline(FileActions::EcuCalDef
         return STATUS_ERROR;
     }
 
-    bool success = ecuOperations->read_mem_hitachi_uj20_uj30_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+    bool success = ecuOperations->read_mem_uj20_30_40_70_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;
 }

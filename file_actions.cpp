@@ -21,11 +21,16 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     }
     if (!QDir(configValues->config_base_directory).exists()){
         QDir().mkdir(configValues->config_base_directory);
-        QDir dir("config/");
-        foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
+        save_config_file(configValues);
+    }
+    QDir dir("config/");
+    foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
+        qDebug() << "Check file" << entry.fileName();
+        if(!QFileInfo::exists(configValues->config_base_directory + "/" + entry.fileName()))
+        {
+            qDebug() << "File" << entry.fileName() << "does not exists, copying...";
             QFile().copy("config/" + entry.fileName(), configValues->config_base_directory + "/" + entry.fileName());
         }
-        save_config_file(configValues);
     }
     if (!QDir(configValues->definition_files_base_directory).exists()){
         QDir().mkdir(configValues->definition_files_base_directory);

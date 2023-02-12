@@ -33,7 +33,8 @@ public:
     int compare_mem_32bit_kline(QString mcu_type_string);
     int compare_mem_32bit_can(QString mcu_type_string);
 
-    int read_mem_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int read_mem_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
 
 private:
     void closeEvent(QCloseEvent *bar);
