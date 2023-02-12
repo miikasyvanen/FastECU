@@ -1896,7 +1896,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
  *  Hitachi ECU operations
  *
  ******************************************************/
-int EcuOperations::read_mem_hitachi_uj20_uj30_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int EcuOperations::read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;

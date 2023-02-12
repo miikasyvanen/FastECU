@@ -9,11 +9,11 @@ After software is executed for the first time, it should create folder "FastECU_
 and copy all config and definition files there that will come with software.
 
 In main screen, with right COM-port selected (dropdown in right of toolbar) it will repeatedly send
-SSM-init command to ECU to check ECU ID and possible log parameters. Toolbar/Ecu-menu play-button will
+init command to ECU to check ECU ID and possible log parameters. Toolbar/Ecu-menu play-button will
 start and stop logging.
 
 Green down-arrow will read ROM from ECU, green up-arrow will test write ROM to ECU and red up-arrow will
-write ROM to ECU. In toolbar dropbox car make and flash method should be selected prior that.
+write ROM to ECU. Car/ECU model should be selected prior read/write via toolbar 'Select vehicle'-button.
 
 For tuning, check 'Tune' -menu for possible options and shorcuts. Also copy&paste will work in maps.
 
@@ -26,6 +26,7 @@ Tested flash methods:
 - sti04 method read/write (K-Line / CAN)
 - sti05 method read/write (K-Line / CAN)
 - Logging of basic ssm values
+- Read Subaru Unisia Jecs ECUs
 
 K-Line and CAN read and write succesfully tested - Open port 2.0 and generic OBD-cable (FTDI chip) in Windows 7 64-bit and Linux.
 
