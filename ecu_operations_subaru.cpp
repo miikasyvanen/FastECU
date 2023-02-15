@@ -59,13 +59,21 @@ void EcuOperationsSubaru::check_mcu_type(QString flash_method)
     if (flash_method == "subarucan")
         mcu_type_string = "SH7058";
 
-    if (flash_method == "Hitachi UJ20")
+    if (flash_method == "uj20")
         mcu_type_string = "M32R_UJ20";
-    if (flash_method == "Hitachi UJ30")
+    if (flash_method == "uj30")
         mcu_type_string = "M32R_UJ30";
-    if (flash_method == "Hitachi UJ40")
+    if (flash_method == "uj40")
         mcu_type_string = "M32R_UJ40";
-    if (flash_method == "Hitachi UJ70")
+    if (flash_method == "uj70")
+        mcu_type_string = "M32R_UJ70";
+
+    if (flash_method == "mitsubootloader")
+        mcu_type_string = "M32R_UJ70";
+
+    if (flash_method == "hitachi")
+        mcu_type_string = "M32R_UJ70";
+    if (flash_method == "hitachican")
         mcu_type_string = "M32R_UJ70";
 
     mcu_type_index = 0;
@@ -124,6 +132,8 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
 
     if (flash_method == "wrx02")
     {
+        serial->open_serial_port();
+
         send_log_window_message("Connecting to Subaru 01 16-bit K-Line bootloader, please wait...", true, true);
         result = connect_bootloader_subaru_denso_kline_02_16bit();
         if (result == STATUS_SUCCESS && !kernel_alive)
@@ -148,6 +158,8 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "wrx04")
     {
+        serial->open_serial_port();
+
         send_log_window_message("Connecting to Subaru 04 16-bit K-Line bootloader, please wait...", true, true);
         result = connect_bootloader_subaru_denso_kline_04_16bit();
         if (result == STATUS_SUCCESS && !kernel_alive)
@@ -172,6 +184,8 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "fxt02")
     {
+        serial->open_serial_port();
+
         if (serial->is_can_connection)
         {
             send_log_window_message("Connecting to Subaru 02 32-bit CAN bootloader, please wait...", true, true);
@@ -228,6 +242,8 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "sti04")
     {
+        serial->open_serial_port();
+
         if (serial->is_can_connection)
         {
             send_log_window_message("Connecting to Subaru 04 32-bit CAN bootloader, please wait...", true, true);
@@ -284,6 +300,8 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "sti05")
     {
+        serial->open_serial_port();
+
         if (serial->is_can_connection)
         {
             send_log_window_message("Connecting to Subaru 05 32-bit CAN bootloader, please wait...", true, true);
@@ -340,6 +358,8 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "subarucan")
     {
+        serial->open_serial_port();
+
         send_log_window_message("Connecting to Subaru 32-bit CAN bootloader, please wait...", true, true);
         result = connect_bootloader_subaru_denso_can_32bit();
         if (result == STATUS_SUCCESS && !kernel_alive)
@@ -362,8 +382,11 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "UJ20")
+    else if (flash_method == "uj20")
     {
+        serial->serialport_protocol_14230 = true;
+        serial->open_serial_port();
+
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 1999-2000 Hitachi UJ WA12212920/128KB read mode using K-Line, please wait...", true, true);
@@ -386,8 +409,11 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "UJ30")
+    else if (flash_method == "uj30")
     {
+        serial->serialport_protocol_14230 = true;
+        serial->open_serial_port();
+
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 2000-2002 Hitachi UJ WA12212930/256KB read mode using K-Line, please wait...", true, true);
@@ -411,8 +437,11 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "UJ40")
+    else if (flash_method == "uj40")
     {
+        serial->serialport_protocol_14230 = true;
+        serial->open_serial_port();
+
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212940/384KB read mode using K-Line, please wait...", true, true);
@@ -436,8 +465,11 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "UJ70")
+    else if (flash_method == "uj70")
     {
+        serial->serialport_protocol_14230 = true;
+        serial->open_serial_port();
+
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB read mode using K-Line, please wait...", true, true);
@@ -461,8 +493,11 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         return result;
     }
-    else if (flash_method == "HI70")
+    else if (flash_method == "mitsubootloader")
     {
+        serial->serialport_protocol_14230 = true;
+        serial->open_serial_port();
+
         if (cmd_type == "read")
         {
             send_log_window_message("Initializing Subaru 2002-2005 Hitachi UJ WA12212970/512KB read mode using K-Line, please wait...", true, true);
@@ -499,7 +534,6 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_16bit()
 {
     QByteArray output;
     QByteArray received;
-    int result;
 
     if (!serial->is_serial_port_open())
     {
@@ -1040,7 +1074,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj70_kline()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    seed_key = subaru_hitachi_uj_generate_kline_seed_key(seed);
+    seed_key = subaru_mitsubootloader_generate_kline_seed_key(seed);
 
     msg = parse_message_to_hex(seed_key);
     //qDebug() << "Calculated seed key: " + msg + ", sending to ECU";
@@ -2889,7 +2923,7 @@ QByteArray EcuOperationsSubaru::subaru_hitachi_generate_can_seed_key(QByteArray 
     return key;
 }
 
-QByteArray EcuOperationsSubaru::subaru_hitachi_uj_generate_kline_seed_key(QByteArray requested_seed)
+QByteArray EcuOperationsSubaru::subaru_mitsubootloader_generate_kline_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 

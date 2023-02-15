@@ -50,7 +50,7 @@ bool MainWindow::ecu_init()
         {
             if (configValues->flash_protocol_selected_make == "Subaru")
             {
-                if (configValues->log_protocol == "CAN" || configValues->log_protocol == "iso15765")
+                if (configValues->flash_protocol_selected_log_protocol == "CAN" || configValues->flash_protocol_selected_log_protocol == "iso15765")
                     ssm_can_init();
                 else
                     //serial->fast_init(output);
@@ -114,10 +114,8 @@ void MainWindow::ssm_can_init()
     QByteArray output;
     QByteArray received;
 
-    if (configValues->log_protocol == "CAN")
-
-
-    received = serial->read_serial_data(100, 500);
+    if (configValues->flash_protocol_selected_log_protocol == "CAN")
+        received = serial->read_serial_data(100, 500);
 }
 
 void MainWindow::log_ssm_values()

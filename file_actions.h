@@ -40,11 +40,12 @@ public:
     struct ConfigValuesStructure {
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
-        QString car_make = "Subaru";
-        QString flash_method = "wrx02";
+        //QString car_make = "Subaru";
+        //QString flash_method = "wrx02";
         //QString protocol_id = "0";
-        QString flash_protocol = "K-Line";
-        QString log_protocol = "K-Line";
+        //QString flash_transport = "K-Line";
+        //QString log_transport = "K-Line";
+        //QString log_protocol = "SSM";
         QString window_size = "default";
         QString window_width = "default";
         QString window_height = "default";
@@ -90,7 +91,8 @@ public:
         QStringList flash_protocol_checksum;
         QStringList flash_protocol_read;
         QStringList flash_protocol_write;
-        QStringList flash_protocol_flash_protocol;
+        QStringList flash_protocol_flash_transport;
+        QStringList flash_protocol_log_transport;
         QStringList flash_protocol_log_protocol;
         QStringList flash_protocol_comms_protocol;
         QStringList flash_protocol_description;
@@ -100,6 +102,10 @@ public:
         QString flash_protocol_selected_make;
         QString flash_protocol_selected_model;
         QString flash_protocol_selected_version;
+        //QString flash_protocol_selected_protocol;
+        QString flash_protocol_selected_flash_transport;
+        QString flash_protocol_selected_log_transport;
+        QString flash_protocol_selected_log_protocol;
         QString flash_protocol_selected_family;
         QString flash_protocol_selected_description;
 

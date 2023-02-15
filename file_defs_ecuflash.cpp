@@ -486,6 +486,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 }
                 if (xmlid == ecuId)
                 {
+                    ecuid_def_found = true;
+                    ecuCalDef->use_ecuflash_definition = true;
+
                     if (ecuCalDef->RomInfo.at(XmlId) == " ")
                     {
                         ecuCalDef->RomInfo.replace(XmlId, xmlid);

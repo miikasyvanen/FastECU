@@ -106,9 +106,9 @@ private:
     int ecu_protocols_list_length = 6;
     QString current_car_model ="";
 
-    QStringList log_protocols;
-    QStringList flash_methods;
-    QStringList flash_protocols;
+    //QStringList flash_methods;
+    QStringList flash_transports;
+    QStringList log_transports;
 
 //        "Mercedes",     "CR3 EDC16C31",     "K-Line",           "K-Line",           "iso14230", "Mercedes Benz 320CDI",
 
@@ -159,8 +159,8 @@ private:
     QMenu *mainWindowMenu;
 
     QComboBox *serial_port_list;
-    QComboBox *flash_protocol_list;
-    QComboBox *log_protocol_list;
+    QComboBox *flash_transport_list;
+    QComboBox *log_transport_list;
 
     QFile log_file;
     QTextStream log_file_outstream;
@@ -199,8 +199,8 @@ private:
 
     // mainwindow.c
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
-    QStringList create_flash_protocols_list();
-    QStringList create_log_protocols_list();
+    QStringList create_flash_transports_list();
+    QStringList create_log_transports_list();
     QString check_kernel(QString flash_method);
 
     // menuactions.c

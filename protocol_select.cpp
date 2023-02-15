@@ -30,7 +30,7 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
     ui->car_version_tree_widget->setColumnWidth(8, 40);
     ui->car_version_tree_widget->setColumnWidth(9, 40);
     ui->car_version_tree_widget->setColumnWidth(10, 40);
-    ui->car_version_tree_widget->setColumnWidth(11, 75);
+    ui->car_version_tree_widget->setColumnWidth(11, 125);
 
     int width = 0;
     for (int i = 0; i < ui->car_version_tree_widget->columnCount(); i++)
@@ -38,6 +38,9 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
 
     qDebug() << "Full width =" << width;
     ui->car_version_tree_widget->setFixedWidth(width);
+
+    int height = width / 4 * 2.5 + 18;
+    this->setFixedHeight(height);
 
     font = ui->car_make_tree_widget->font();
     font.setPointSize(header_font_size);
@@ -121,6 +124,9 @@ void ProtocolSelect::car_model_selected()
     configValues->flash_protocol_selected_version = flash_protocol_version;
     configValues->flash_protocol_selected_family = flash_protocol_family;
     configValues->flash_protocol_selected_description = flash_protocol_description;
+    configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
 
     qDebug() << "Selected car model:";
     qDebug() << configValues->flash_protocol_id.at(configValues->flash_protocol_selected_id.toInt());
@@ -261,6 +267,7 @@ void ProtocolSelect::car_model_treewidget_item_selected()
                 item->setCheckState(10, Qt::Unchecked);
 
             item->setText(11, family.at(i));
+            item->setToolTip(11, family.at(i));
             item->setText(12, id.at(i));
             item->setText(13, description.at(i));
             //topLevelCarVersionTreeItem->setFirstColumnSpanned(true);
