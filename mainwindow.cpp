@@ -45,12 +45,16 @@ MainWindow::MainWindow(QWidget *parent)
     configValues = fileActions->read_config_file(configValues);
 
     fileActions->read_protocols_file(configValues);
+    qDebug() << "ECU protocols read";
 
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_family = configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
 
     qDebug() << configValues->flash_protocol_selected_make;
     qDebug() << configValues->flash_protocol_selected_model;
@@ -160,31 +164,31 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBar->addWidget(select_protocol_button);
     connect(select_protocol_button, SIGNAL(clicked(bool)), this, SLOT(select_protocol()));
 
-    flash_protocol_list = new QComboBox();
-    flash_protocol_list->setFixedHeight(toolbar_item_size.height());
-    flash_protocol_list->setObjectName("flash_protocol_list");
-    ui->toolBar->addWidget(flash_protocol_list);
+    flash_transport_list = new QComboBox();
+    flash_transport_list->setFixedHeight(toolbar_item_size.height());
+    flash_transport_list->setObjectName("flash_transport_list");
+    ui->toolBar->addWidget(flash_transport_list);
 
     ui->toolBar->addSeparator();
 
-    QLabel *log_protocol = new QLabel("Log protocol:");
-    log_protocol->setMargin(10);
-    ui->toolBar->addWidget(log_protocol);
+    QLabel *log_transport = new QLabel("Log:");
+    log_transport->setMargin(10);
+    ui->toolBar->addWidget(log_transport);
 
-    log_protocol_list = new QComboBox();
-    log_protocol_list->setFixedHeight(toolbar_item_size.height());
-    log_protocol_list->setObjectName("log_protocol_list");
-    ui->toolBar->addWidget(log_protocol_list);
+    log_transport_list = new QComboBox();
+    log_transport_list->setFixedHeight(toolbar_item_size.height());
+    log_transport_list->setObjectName("log_transport_list");
+    ui->toolBar->addWidget(log_transport_list);
 
-    ui->toolBar->addSeparator();
+    flash_transports = create_flash_transports_list();
+    log_transports = create_log_transports_list();
+    connect(flash_transport_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_protocol_changed()));
+    connect(log_transport_list, SIGNAL(currentIndexChanged(int)), this, SLOT(log_protocol_changed()));
 
-    flash_protocols = create_flash_protocols_list();
-    log_protocols = create_log_protocols_list();
-    connect(flash_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_protocol_changed()));
-    connect(log_protocol_list, SIGNAL(currentIndexChanged(int)), this, SLOT(log_protocol_changed()));
+    //ui->toolBar->addSeparator();
 
-    QLabel *log_select = new QLabel("Log:");
-    log_select->setMargin(10);
+    QLabel *log_select = new QLabel();
+    log_select->setMargin(5);
     ui->toolBar->addWidget(log_select);
 
     QCheckBox *ecu_check_box = new QCheckBox("ECU");
@@ -262,7 +266,7 @@ MainWindow::MainWindow(QWidget *parent)
         emit ui->calibrationFilesTreeWidget->clicked(index);
     }
 
-    emit log_protocol_list->currentIndexChanged(log_protocol_list->currentIndex());
+    emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
 
     status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 }
@@ -293,33 +297,33 @@ void MainWindow::SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool en
     item->setEnabled(enabled);
 }
 
-QStringList MainWindow::create_flash_protocols_list()
+QStringList MainWindow::create_flash_transports_list()
 {
     QStringList flash_protocols;
 
-    flash_protocols.append(configValues->flash_protocol_flash_protocol.at(configValues->flash_protocol_selected_id.toInt()).split(","));
+    flash_protocols.append(configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt()).split(","));
 
-    flash_protocol_list->clear();
+    flash_transport_list->clear();
     for (int i = 0; i < flash_protocols.length(); i++){
-        flash_protocol_list->addItem(flash_protocols.at(i));
-        if (configValues->flash_protocol == flash_protocols.at(i))
-            flash_protocol_list->setCurrentIndex(i);
+        flash_transport_list->addItem(flash_protocols.at(i));
+        if (configValues->flash_protocol_selected_flash_transport == flash_protocols.at(i))
+            flash_transport_list->setCurrentIndex(i);
     }
     return flash_protocols;
 }
 
-QStringList MainWindow::create_log_protocols_list()
+QStringList MainWindow::create_log_transports_list()
 {
-    QStringList log_protocols;
+    QStringList log_transports;
 
-    log_protocols.append(configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt()).split(","));
+    log_transports.append(configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt()).split(","));
 
-    log_protocol_list->clear();
-    for (int i = 0; i < log_protocols.length(); i++){
-        log_protocol_list->addItem(log_protocols.at(i));
-        if (configValues->log_protocol == log_protocols.at(i))
+    log_transport_list->clear();
+    for (int i = 0; i < log_transports.length(); i++){
+        log_transport_list->addItem(log_transports.at(i));
+        if (configValues->flash_protocol_selected_flash_transport == log_transports.at(i))
         {
-            log_protocol_list->setCurrentIndex(i);
+            log_transport_list->setCurrentIndex(i);
             protocol = "SSM";
         }
     }
@@ -327,7 +331,7 @@ QStringList MainWindow::create_log_protocols_list()
     //if (car_model_list->currentText() == "Subaru")
         //protocol = "SSM";
 
-    return log_protocols;
+    return log_transports;
 }
 
 QString MainWindow::check_kernel(QString flash_method)
@@ -387,8 +391,8 @@ void MainWindow::select_protocol_finished(int result)
    if(result == QDialog::Accepted)
    {
         qDebug() << "Dialog is accepted";
-        create_flash_protocols_list();
-        create_log_protocols_list();
+        create_flash_transports_list();
+        create_log_transports_list();
         fileActions->save_config_file(configValues);
    }
    else
@@ -399,8 +403,8 @@ void MainWindow::select_protocol_finished(int result)
 
 void MainWindow::log_protocol_changed()
 {
-    qDebug() << "Change log protocol";
-    QComboBox *log_protocol_list = ui->toolBar->findChild<QComboBox*>("log_protocol_list");
+    qDebug() << "Change log transport";
+    QComboBox *log_protocol_list = ui->toolBar->findChild<QComboBox*>("log_transport_list");
 
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
@@ -419,8 +423,8 @@ void MainWindow::log_protocol_changed()
         serial->can_speed = "500000";
     }
 
-    configValues->log_protocol = "SSM";//log_protocol_list->currentText();
-    protocol = configValues->log_protocol;
+    configValues->flash_protocol_selected_log_protocol = "SSM";//log_protocol_list->currentText();
+    protocol = configValues->flash_protocol_selected_log_protocol;
     fileActions->save_config_file(configValues);
 
     serial->reset_connection();
@@ -431,10 +435,10 @@ void MainWindow::log_protocol_changed()
 
 void MainWindow::flash_protocol_changed()
 {
-    qDebug() << "Change flash protocol";
-    QComboBox *flash_protocol_list = ui->toolBar->findChild<QComboBox*>("flash_protocol_list");
+    qDebug() << "Change flash transport";
+    QComboBox *flash_transport_list = ui->toolBar->findChild<QComboBox*>("flash_transport_list");
 
-    configValues->flash_protocol = flash_protocol_list->currentText();
+    configValues->flash_protocol_selected_flash_transport = flash_transport_list->currentText();
     fileActions->save_config_file(configValues);
 }
 
@@ -505,46 +509,47 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
+    serial->serial_port_list.clear();
+    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
 
-    if (configValues->car_make == "Subaru")
+    if (configValues->flash_protocol_selected_make == "Subaru")
     {
-
-        if (flash_protocol_list->currentText() == "CAN")
+        if (flash_transport_list->currentText() == "CAN")
+        {
             serial->is_can_connection = true;
-        if (configValues->flash_protocol_selected_family == "subarucan")
+            serial->is_iso15765_connection = false;
+            serial->is_29_bit_id = true;
+            serial->can_speed = "500000";
+        }
+        if (configValues->flash_protocol_selected_family == "subarucan" && flash_transport_list->currentText() != "CAN")
+        {
+            serial->is_can_connection = false;
             serial->is_iso15765_connection = true;
+            serial->is_29_bit_id = true;
+            serial->can_speed = "500000";
+        }
 
-        serial->is_29_bit_id = true;
-        serial->can_speed = "500000";
+        serial->reset_connection();
+        ecuid.clear();
+        ecu_init_complete = false;
+        serial->serialport_protocol_14230 = false;
+        //open_serial_port();
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
-            serial->reset_connection();
-            ecuid.clear();
-            ecu_init_complete = false;
-            open_serial_port();
-
+            qDebug() << "DAA" << romNumber;
             //ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
             fileActions->checksum_correction(ecuCalDef[romNumber]);
 
             ecuCalDef[romNumber]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
+            //ecuCalDef[romNumber]->RomInfo.replace(fileActions->MemModel,
             ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
             //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
             ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
         }
         else
         {
-            serial->reset_connection();
-            ecuid.clear();
-            ecu_init_complete = false;
-
-            if (configValues->flash_protocol_selected_family.startsWith("UJ") || configValues->flash_protocol_selected_family.startsWith("HI"))
-                serial->serialport_protocol_14230 = true;
-
-            open_serial_port();
-
             ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
             while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
                 ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
@@ -575,7 +580,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             }
         }
     }
-    else if (configValues->car_make == "Mercedes")
+    else if (configValues->flash_protocol_selected_make == "Mercedes")
     {
         qDebug() << "Testing MB EDC16 ECU";
 
@@ -585,9 +590,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         ecu_init_complete = false;
 
         // For CAN comms
-        if (flash_protocol_list->currentText() == "CAN")
+        if (flash_transport_list->currentText() == "CAN")
             serial->is_can_connection = true;
-        if (flash_protocol_list->currentText() == "iso15765")
+        if (flash_transport_list->currentText() == "iso15765")
             serial->is_iso15765_connection = true;
 
         if (serial->is_can_connection || serial->is_iso15765_connection)
@@ -609,7 +614,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
     serial->serialport_protocol_14230 = false;
     serial->change_port_speed("4800");
-    emit log_protocol_list->currentIndexChanged(log_protocol_list->currentIndex());
+    emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial_poll_timer->start();
     ssm_init_poll_timer->start();

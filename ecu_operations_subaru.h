@@ -178,7 +178,7 @@ private:
     QByteArray subaru_hitachi_generate_kline_seed_key_1(QByteArray seed);
     QByteArray subaru_hitachi_generate_kline_seed_key_2(QByteArray seed);
     QByteArray subaru_hitachi_generate_can_seed_key(QByteArray requested_seed);
-    QByteArray subaru_hitachi_uj_generate_kline_seed_key(QByteArray requested_seed);
+    QByteArray subaru_mitsubootloader_generate_kline_seed_key(QByteArray requested_seed);
     QByteArray subaru_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray subaru_denso_encrypt_buf(QByteArray buf, uint32_t pl_len);

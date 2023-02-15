@@ -8,9 +8,6 @@ CalibrationTreeWidget::CalibrationTreeWidget()
 QTreeWidget *CalibrationTreeWidget::buildCalibrationFilesTree(int ecuCalDefIndex, QTreeWidget *filesTreeWidget, FileActions::EcuCalDefStructure *ecuCalDef)
 {
     QString filename(ecuCalDef->FileName);
-    //qDebug() << filename;
-
-    qDebug() << "buildCalibrationFilesTree: start";
 
     /**************************
      * Create files tree
