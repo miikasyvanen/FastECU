@@ -367,6 +367,11 @@ QString MainWindow::check_kernel(QString flash_method)
     }
     else if (flash_method == "subarucan")
         kernel = prefix + "ssmk_CAN_SH7058.bin";
+
+    else if (flash_method == "sh7055_denso_can_recovery")
+        kernel = prefix + "ssmk_CAN_SH7055.bin";
+    else if (flash_method == "sh7058_denso_can_recovery")
+        kernel = prefix + "ssmk_CAN_SH7058.bin";
     else
         kernel = "N/A";
 
@@ -538,7 +543,6 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
-            qDebug() << "DAA" << romNumber;
             //ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
             fileActions->checksum_correction(ecuCalDef[romNumber]);
 
@@ -612,8 +616,13 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         ecuOperationsRenault = new EcuOperationsMercedes(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
     }
 
+    serial->reset_connection();
+    ecuid.clear();
+    ecu_init_complete = false;
     serial->serialport_protocol_14230 = false;
-    serial->change_port_speed("4800");
+    serial->is_can_connection = false;
+    serial->is_iso15765_connection = false;
+    serial->serial_port_baudrate = "4800";
     emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial_poll_timer->start();
