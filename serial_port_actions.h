@@ -124,6 +124,10 @@ public:
     int set_j2534_iso9141_timings();
     int clear_rx_buffer();
 
+    int write_periodic_j2534_data(QByteArray output);
+    int stop_periodic_j2534_data();
+    unsigned long msgID = 0;
+
 private:
     enum rx_msg_type {
         NORM_MSG,

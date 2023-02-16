@@ -509,6 +509,7 @@ int SerialPortActions::write_j2534_data(QByteArray output)
     unsigned long numMsgs;
     PASSTHRU_MSG rxmsg;
     unsigned long numRxMsg;
+    unsigned long msgID = 10;
     long txMsgLen;
     int PASSTHRU_MSG_MAX_DATA_SIZE = 256;
 
@@ -546,6 +547,62 @@ int SerialPortActions::write_j2534_data(QByteArray output)
         if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
             txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
     }
+
+    return STATUS_SUCCESS;
+}
+
+int SerialPortActions::write_periodic_j2534_data(QByteArray output)
+{
+    PASSTHRU_MSG txmsg;
+    unsigned long NumMsgs;
+    unsigned long numMsgs;
+    PASSTHRU_MSG rxmsg;
+    unsigned long numRxMsg;
+    long txMsgLen;
+    int PASSTHRU_MSG_MAX_DATA_SIZE = 256;
+
+    txMsgLen = output.length();
+    if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
+        txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
+
+    numMsgs = 0;
+
+    while (txMsgLen > 0)
+    {
+        txmsg.ProtocolID = protocol;
+        txmsg.RxStatus = 0;
+        txmsg.TxFlags = 0;
+        if (is_29_bit_id)
+            txmsg.TxFlags = CAN_29BIT_ID;
+        else
+            txmsg.TxFlags = 0;
+        txmsg.Timestamp = 0;
+        txmsg.DataSize = txMsgLen;
+        txmsg.ExtraDataIndex = 0;
+
+        for (long i = 0; i < txMsgLen; i++)
+        {
+            txmsg.Data[i] = (uint8_t)output.at(i);
+        }
+        // Indicate that the PASSTHRU_MSG array contains just a single message.
+        NumMsgs = 1;
+
+        j2534->PassThruStartPeriodicMsg(chanID, &txmsg, &msgID, 10);
+
+        numMsgs++;
+        output.remove(0, txMsgLen);
+        txMsgLen = output.length();
+        if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
+            txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int SerialPortActions::stop_periodic_j2534_data()
+{
+
+    j2534->PassThruStopPeriodicMsg(chanID, msgID);
 
     return STATUS_SUCCESS;
 }

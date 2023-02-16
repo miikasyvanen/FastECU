@@ -86,6 +86,7 @@ private:
     int connect_bootloader_subaru_denso_kline_02_32bit();
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int connect_bootloader_subaru_denso_can_32bit();
+    int connect_bootloader_subaru_denso_can_recovery_32bit();
 
     int initialize_read_mode_subaru_uj20_30_40_70_kline();
     int initialize_read_mode_subaru_uj70_kline();
