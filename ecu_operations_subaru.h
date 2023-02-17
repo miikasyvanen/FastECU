@@ -56,6 +56,7 @@ private:
     bool kill_process = false;
 
     int mcu_type_index;
+    int recovery_timeout = 1;
 
     uint8_t bootloader_start_countdown = 3;
 
@@ -87,6 +88,7 @@ private:
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int connect_bootloader_subaru_denso_can_32bit();
     int connect_bootloader_subaru_denso_can_recovery_32bit();
+    int connect_bootloader_subaru_denso_iso15765_recovery_32bit();
 
     int initialize_read_mode_subaru_uj20_30_40_70_kline();
     int initialize_read_mode_subaru_uj70_kline();

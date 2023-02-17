@@ -380,12 +380,12 @@ QString MainWindow::check_kernel(QString flash_method)
 
 void MainWindow::select_protocol()
 {
-    qDebug() << "Select protocol";
+    //qDebug() << "Select protocol";
     ProtocolSelect *protocolSelect = new ProtocolSelect(configValues);
     connect(protocolSelect, SIGNAL(finished (int)), this, SLOT(select_protocol_finished(int)));
     protocolSelect->exec();
 
-    qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_family;
+    //qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_family;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 
 }
@@ -395,20 +395,22 @@ void MainWindow::select_protocol_finished(int result)
 {
    if(result == QDialog::Accepted)
    {
-        qDebug() << "Dialog is accepted";
+        //qDebug() << "Dialog is accepted";
         create_flash_transports_list();
         create_log_transports_list();
         fileActions->save_config_file(configValues);
    }
    else
-       qDebug() << "Dialog is rejected";
+   {
+       //qDebug() << "Dialog is rejected";
+   }
 
    status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 }
 
 void MainWindow::log_protocol_changed()
 {
-    qDebug() << "Change log transport";
+    //qDebug() << "Change log transport";
     QComboBox *log_protocol_list = ui->toolBar->findChild<QComboBox*>("log_transport_list");
 
     serial->is_can_connection = false;
@@ -440,7 +442,7 @@ void MainWindow::log_protocol_changed()
 
 void MainWindow::flash_protocol_changed()
 {
-    qDebug() << "Change flash transport";
+    //qDebug() << "Change flash transport";
     QComboBox *flash_transport_list = ui->toolBar->findChild<QComboBox*>("flash_transport_list");
 
     configValues->flash_protocol_selected_flash_transport = flash_transport_list->currentText();
@@ -527,7 +529,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             serial->is_29_bit_id = true;
             serial->can_speed = "500000";
         }
-        if (configValues->flash_protocol_selected_family == "subarucan" && flash_transport_list->currentText() != "CAN")
+        else if (flash_transport_list->currentText() == "iso15765")
         {
             serial->is_can_connection = false;
             serial->is_iso15765_connection = true;
@@ -559,22 +561,22 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
             ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
             ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(ecuCalDef[ecuCalDefIndex]->RomInfo.at(fileActions->FlashMethod));
-            //ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, flash_method_list->currentText());
-            //ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(flash_method_list->currentText());
-            qDebug() << "ID:" << configValues->flash_protocol_selected_id;
-            qDebug() << "Make:" << configValues->flash_protocol_selected_make;
-            qDebug() << "Model:" << configValues->flash_protocol_selected_model;
-            qDebug() << "Version:" << configValues->flash_protocol_selected_version;
-            qDebug() << "Flash method:" << configValues->flash_protocol_selected_family << ecuCalDef[ecuCalDefIndex]->RomInfo.at(fileActions->FlashMethod);
+            ////ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, flash_method_list->currentText());
+            ////ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(flash_method_list->currentText());
+            //qDebug() << "ID:" << configValues->flash_protocol_selected_id;
+            //qDebug() << "Make:" << configValues->flash_protocol_selected_make;
+            //qDebug() << "Model:" << configValues->flash_protocol_selected_model;
+            //qDebug() << "Version:" << configValues->flash_protocol_selected_version;
+            //qDebug() << "Flash method:" << configValues->flash_protocol_selected_family << ecuCalDef[ecuCalDefIndex]->RomInfo.at(fileActions->FlashMethod);
             ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
 
             if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
             {
-                qDebug() << "Checking definitions, please wait...";
+                //qDebug() << "Checking definitions, please wait...";
                 fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
                 //if(ecuCalDef[ecuCalDefIndex]->RomId != NULL)
                 //{
-                    qDebug() << "Building treewidget, please wait...";
+                    //qDebug() << "Building treewidget, please wait...";
                     calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
                     calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
 
