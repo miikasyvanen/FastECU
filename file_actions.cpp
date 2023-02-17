@@ -572,7 +572,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                             protocol_data = protocol_data.nextSibling().toElement();
 
                         }
-                        qDebug() << "Flash protocol name:" << flash_protocol_name.at(index) << "and family:" << flash_protocol_family.at(index);
+                        //qDebug() << "Flash protocol name:" << flash_protocol_name.at(index) << "and family:" << flash_protocol_family.at(index);
                         index++;
                     }
                     protocol = protocol.nextSibling().toElement();
@@ -651,7 +651,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
 
                             car_model_data = car_model_data.nextSibling().toElement();
                         }
-                        qDebug() << "Flash protocol ID:" << configValues->flash_protocol_id.at(index) << "make:" << configValues->flash_protocol_make.at(index) << "model:" << configValues->flash_protocol_model.at(index) << "flash method:" << configValues->flash_protocol_family.at(index);
+                        //qDebug() << "Flash protocol ID:" << configValues->flash_protocol_id.at(index) << "make:" << configValues->flash_protocol_make.at(index) << "model:" << configValues->flash_protocol_model.at(index) << "flash method:" << configValues->flash_protocol_family.at(index);
                         index++;
                     }
                     car_model = car_model.nextSibling().toElement();

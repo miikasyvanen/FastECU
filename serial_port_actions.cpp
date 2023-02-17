@@ -551,7 +551,7 @@ int SerialPortActions::write_j2534_data(QByteArray output)
     return STATUS_SUCCESS;
 }
 
-int SerialPortActions::write_periodic_j2534_data(QByteArray output)
+int SerialPortActions::send_periodic_j2534_data(QByteArray output, int timeout)
 {
     PASSTHRU_MSG txmsg;
     unsigned long NumMsgs;
@@ -569,6 +569,7 @@ int SerialPortActions::write_periodic_j2534_data(QByteArray output)
 
     while (txMsgLen > 0)
     {
+        qDebug() << "Start periodic messages with protocol:" << protocol;
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         txmsg.TxFlags = 0;
@@ -587,7 +588,7 @@ int SerialPortActions::write_periodic_j2534_data(QByteArray output)
         // Indicate that the PASSTHRU_MSG array contains just a single message.
         NumMsgs = 1;
 
-        j2534->PassThruStartPeriodicMsg(chanID, &txmsg, &msgID, 10);
+        j2534->PassThruStartPeriodicMsg(chanID, &txmsg, &msgID, timeout);
 
         numMsgs++;
         output.remove(0, txMsgLen);
@@ -881,7 +882,7 @@ int SerialPortActions::set_j2534_can_filters()
         txmsg.ExtraDataIndex = 0;
 
         msgMask = msgPattern = txmsg;
-        memset(msgMask.Data, 0xff, txmsg.DataSize); // mask the first 4 byte to 0
+        memset(msgMask.Data, 0xFF, txmsg.DataSize); // mask the first 4 byte to 0
         memset(msgPattern.Data, 0x00, txmsg.DataSize);// match it with 0 (i.e. pass everything)
 
         if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
@@ -903,7 +904,9 @@ int SerialPortActions::set_j2534_can_filters()
     {
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
-        txmsg.TxFlags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
+        //txmsg.TxFlags = 0;
+        txmsg.TxFlags = ISO15765_FRAME_PAD;
+        //txmsg.TxFlags = ISO15765_FRAME_PAD | CAN_ID_BOTH;
         if (is_29_bit_id)
             txmsg.TxFlags |= CAN_29BIT_ID;
         txmsg.Timestamp = 0;
@@ -911,20 +914,20 @@ int SerialPortActions::set_j2534_can_filters()
         txmsg.ExtraDataIndex = 0;
         msgMask = msgPattern = msgFlow = txmsg;
         memset(msgMask.Data, 0xFF, txmsg.DataSize); // mask the first 4 byte to 0
-        memset(msgPattern.Data, 0xFF, txmsg.DataSize); // mask the first 4 byte to 0
+        memset(msgPattern.Data, 0x00, txmsg.DataSize); // mask the first 4 byte to 0
         memset(msgFlow.Data, 0xFF, txmsg.DataSize); // mask the first 4 byte to 0
-/*
+
         msgPattern.Data[0] = 0x00;
         msgPattern.Data[1] = 0x00;
-        msgPattern.Data[2] = 0x07;
-        msgPattern.Data[3] = 0xE0;
+        msgPattern.Data[2] = 0x00;
+        msgPattern.Data[3] = 0x21;
         msgFlow.Data[0] = 0x00;
-        msgFlow.Data[1] = 0x00;
-        msgFlow.Data[2] = 0x07;
-        msgFlow.Data[3] = 0xE8;
-*/
-        if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
-        //if (j2534->PassThruStartMsgFilter(chanID, FLOW_CONTROL_FILTER, &msgMask, &msgPattern, &msgFlow, &msgId))
+        msgFlow.Data[1] = 0x0F;
+        msgFlow.Data[2] = 0xFF;
+        msgFlow.Data[3] = 0xFE;
+
+        //if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
+        if (j2534->PassThruStartMsgFilter(chanID, FLOW_CONTROL_FILTER, &msgMask, &msgPattern, &msgFlow, &msgId))
         {
             reportJ2534Error();
             return STATUS_ERROR;

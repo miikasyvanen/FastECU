@@ -124,7 +124,7 @@ public:
     int set_j2534_iso9141_timings();
     int clear_rx_buffer();
 
-    int write_periodic_j2534_data(QByteArray output);
+    int send_periodic_j2534_data(QByteArray output, int timeout);
     int stop_periodic_j2534_data();
     unsigned long msgID = 0;
 

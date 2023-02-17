@@ -36,7 +36,7 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
     for (int i = 0; i < ui->car_version_tree_widget->columnCount(); i++)
         width += ui->car_version_tree_widget->columnWidth(i);
 
-    qDebug() << "Full width =" << width;
+    //qDebug() << "Full width =" << width;
     ui->car_version_tree_widget->setFixedWidth(width);
 
     int height = width / 4 * 2.5 + 18;
@@ -128,13 +128,13 @@ void ProtocolSelect::car_model_selected()
     configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
 
-    qDebug() << "Selected car model:";
-    qDebug() << configValues->flash_protocol_id.at(configValues->flash_protocol_selected_id.toInt());
-    qDebug() << configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
-    qDebug() << configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
-    qDebug() << configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
-    qDebug() << configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
-    qDebug() << configValues->flash_protocol_description.at(configValues->flash_protocol_selected_id.toInt());
+    //qDebug() << "Selected car model:";
+    //qDebug() << configValues->flash_protocol_id.at(configValues->flash_protocol_selected_id.toInt());
+    //qDebug() << configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
+    //qDebug() << configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
+    //qDebug() << configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
+    //qDebug() << configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
+    //qDebug() << configValues->flash_protocol_description.at(configValues->flash_protocol_selected_id.toInt());
 
     accept();
 
@@ -149,7 +149,7 @@ void ProtocolSelect::car_make_treewidget_item_selected()
         QTreeWidgetItem *item = ui->car_make_tree_widget->selectedItems().at(0);
         QString selected_text = item->text(0);
 
-        qDebug() << "Check models for manufacturer:" << selected_text;
+        //qDebug() << "Check models for manufacturer:" << selected_text;
 
         QString car_make = selected_text;
         flash_protocol_id.clear();
@@ -194,7 +194,7 @@ void ProtocolSelect::car_model_treewidget_item_selected()
         QTreeWidgetItem *item = ui->car_model_tree_widget->selectedItems().at(0);
         QString selected_text = item->text(0);
 
-        qDebug() << "Check versions for model:" << selected_text;
+        //qDebug() << "Check versions for model:" << selected_text;
 
         QString car_model = selected_text;
         flash_protocol_id.clear();
@@ -222,7 +222,7 @@ void ProtocolSelect::car_model_treewidget_item_selected()
         {
             if (configValues->flash_protocol_model.at(i) == car_model && configValues->flash_protocol_make.at(i) == flash_protocol_make)
             {
-                qDebug() << "Model found:" << configValues->flash_protocol_model.at(i);
+                //qDebug() << "Model found:" << configValues->flash_protocol_model.at(i);
                 id.append(configValues->flash_protocol_id.at(i));
                 version.append(configValues->flash_protocol_version.at(i));
                 type.append(configValues->flash_protocol_type.at(i));
@@ -290,7 +290,7 @@ void ProtocolSelect::car_version_treewidget_item_selected()
         QTreeWidgetItem *item = ui->car_version_tree_widget->selectedItems().at(0);
         QString selected_text = item->text(0);
 
-        qDebug() << "Selected version for model" << flash_protocol_model << "is" << selected_text;
+        //qDebug() << "Selected version for model" << flash_protocol_model << "is" << selected_text;
 
         ui->select_button->setEnabled(true);
 
@@ -303,6 +303,6 @@ void ProtocolSelect::car_version_treewidget_item_selected()
 
         //flash_protocol_id = selected_text;//car_version_treewidget_item->text(11);
 
-        qDebug() << "Protocol ID:" << flash_protocol_id;
+        //qDebug() << "Protocol ID:" << flash_protocol_id;
     }
 }

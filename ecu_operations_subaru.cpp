@@ -80,6 +80,8 @@ void EcuOperationsSubaru::check_mcu_type(QString flash_method)
         mcu_type_string = "SH7055";
     if (flash_method == "sh7058_denso_can_recovery")
         mcu_type_string = "SH7058";
+    if (flash_method == "sh7058s_denso_can_recovery")
+        mcu_type_string = "SH7058";
 
     mcu_type_index = 0;
 
@@ -531,7 +533,11 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         serial->open_serial_port();
 
         send_log_window_message("Connecting to Subaru Denso 32-bit CAN bootloader, please wait...", true, true);
-        result = connect_bootloader_subaru_denso_can_recovery_32bit();
+
+        if (flash_method == "sh7058s_denso_can_recovery")
+            result = connect_bootloader_subaru_denso_iso15765_recovery_32bit();
+        else
+            result = connect_bootloader_subaru_denso_can_recovery_32bit();
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
             send_log_window_message("Initializing Subaru Denso 32-bit CAN kernel upload, please wait...", true, true);
@@ -934,7 +940,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
 
-    send_log_window_message("Start sending connection requests to bootloader", true, true);
+    send_log_window_message("Start sending connection requests to Denso CAN bootloader (CAN)", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -953,7 +959,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
     received.clear();
     int pass = 0;
     int timeout = 10000;
-
+/*
     //bool response = false;
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (received == "" && (QTime::currentTime() < dieTime) && !kill_process)
@@ -970,14 +976,16 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
     }
     //send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
     //qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+*/
 
-/*
-    serial->write_periodic_j2534_data(output);
+    serial->send_periodic_j2534_data(output, recovery_timeout);
     delay(timeout);
     serial->stop_periodic_j2534_data();
-    delay(500);
-    received = serial->read_serial_data(20, 500);
-*/
+    delay(200);
+    received = serial->read_serial_data(20, 50);
+    send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+
     output[4] = (uint8_t)SID_START_COMM_CAN;
     output[5] = (uint8_t)(SID_CHECK_COMM_BL_CAN & 0xFF);
     output[6] = (uint8_t)0x00;
@@ -990,6 +998,94 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
     qDebug() << parse_message_to_hex(output);
     delay(200);
     received = serial->read_serial_data(20, 10);
+    send_log_window_message("0x7A 0x90 response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
+    if ((uint8_t)(received.at(1) & 0xF8) == 0x90)
+    {
+        send_log_window_message("Connected to bootloader, start kernel upload", true, true);
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_ERROR;
+}
+
+int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_recovery_32bit()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
+
+    send_log_window_message("Start sending connection requests to Denso CAN bootloader (iso15765)", true, true);
+    qDebug() << "Start sending connection requests to Denso CAN bootloader (iso15765)";
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)((SID_ENTER_BL_CAN >> 8) & 0xFF));
+    output.append((uint8_t)(SID_ENTER_BL_CAN & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+
+    received.clear();
+    int pass = 0;
+    int timeout = 10000;
+/*
+    //bool response = false;
+    QTime dieTime = QTime::currentTime().addMSecs(timeout);
+    while (received == "" && (QTime::currentTime() < dieTime) && !kill_process)
+    {
+        serial->write_serial_data_echo_check(output);
+        received = serial->read_serial_data(20, 1);
+        delay(1);
+        if (pass % 250 == 0)
+            qDebug() << "0xFF 0x86 pass:" << pass << parse_message_to_hex(received);
+            //float pleft = (float)pass / (float)timeout * 100.0f;
+            //ui->progressbar->setValue(pleft);
+            //QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        pass++;
+    }
+    //send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
+    //qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+*/
+
+    serial->send_periodic_j2534_data(output, recovery_timeout);
+    delay(timeout);
+    serial->stop_periodic_j2534_data();
+    delay(200);
+    received = serial->read_serial_data(20, 50);
+    send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+
+    send_log_window_message("Checking if bootloader started...", true, true);
+
+    output[4] = (uint8_t)SID_START_COMM_CAN;
+    output[5] = (uint8_t)(SID_CHECK_COMM_BL_CAN & 0xFF);
+    output[6] = (uint8_t)0x00;
+    output[7] = (uint8_t)0x00;
+    output[8] = (uint8_t)0x00;
+    output[9] = (uint8_t)0x00;
+    output[10] = (uint8_t)0x00;
+    output[11] = (uint8_t)0x00;
+    serial->write_serial_data_echo_check(output);
+    qDebug() << parse_message_to_hex(output);
+    delay(200);
+    received = serial->read_serial_data(20, 10);
+    send_log_window_message("0x7A 0x90 response: " + parse_message_to_hex(received), true, true);
     qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
     if ((uint8_t)(received.at(1) & 0xF8) == 0x90)
     {
