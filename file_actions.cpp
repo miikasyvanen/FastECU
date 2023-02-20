@@ -503,6 +503,12 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QStringList flash_protocol_flash_transport;
     QStringList flash_protocol_log_transport;
     QStringList flash_protocol_log_protocol;
+    QStringList flash_protocol_ecu_id_ascii;
+    QStringList flash_protocol_ecu_id_addr;
+    QStringList flash_protocol_ecu_id_length;
+    QStringList flash_protocol_cal_id_ascii;
+    QStringList flash_protocol_cal_id_addr;
+    QStringList flash_protocol_cal_id_length;
     QStringList flash_protocol_description;
     QStringList flash_protocol_family;
 
@@ -543,8 +549,16 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         flash_protocol_flash_transport.append(" ");
                         flash_protocol_log_transport.append(" ");
                         flash_protocol_log_protocol.append(" ");
+                        flash_protocol_ecu_id_ascii.append(" ");
+                        flash_protocol_ecu_id_addr.append(" ");
+                        flash_protocol_ecu_id_length.append(" ");
+                        flash_protocol_cal_id_ascii.append(" ");
+                        flash_protocol_cal_id_addr.append(" ");
+                        flash_protocol_cal_id_length.append(" ");
                         flash_protocol_description.append(" ");
                         flash_protocol_family.append(" ");
+                        flash_protocol_family.replace(index, protocol.attribute("name","No name"));
+
                         QDomElement protocol_data = protocol.firstChild().toElement();
                         while (!protocol_data.isNull())
                         {
@@ -564,10 +578,22 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 flash_protocol_log_transport.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "log_protocol")
                                 flash_protocol_log_protocol.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "ecu_id_ascii")
+                                flash_protocol_ecu_id_ascii.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "ecu_id_addr")
+                                flash_protocol_ecu_id_addr.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "ecu_id_length")
+                                flash_protocol_ecu_id_length.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "cal_id_ascii")
+                                flash_protocol_cal_id_ascii.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "cal_id_addr")
+                                flash_protocol_cal_id_addr.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "cal_id_length")
+                                flash_protocol_cal_id_length.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "description")
                                 flash_protocol_description.replace(index, protocol_data.text());
-                            if (protocol_data.tagName() == "family")
-                                flash_protocol_family.replace(index, protocol_data.text());
+                            //if (protocol_data.tagName() == "family")
+                                //flash_protocol_family.replace(index, protocol_data.text());
 
                             protocol_data = protocol_data.nextSibling().toElement();
 
@@ -605,6 +631,12 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         configValues->flash_protocol_flash_transport.append(" ");
                         configValues->flash_protocol_log_transport.append(" ");
                         configValues->flash_protocol_log_protocol.append(" ");
+                        configValues->flash_protocol_ecu_id_ascii.append(" ");
+                        configValues->flash_protocol_ecu_id_addr.append(" ");
+                        configValues->flash_protocol_ecu_id_length.append(" ");
+                        configValues->flash_protocol_cal_id_ascii.append(" ");
+                        configValues->flash_protocol_cal_id_addr.append(" ");
+                        configValues->flash_protocol_cal_id_length.append(" ");
                         configValues->flash_protocol_description.append(" ");
                         configValues->flash_protocol_family.append(" ");
 
@@ -628,6 +660,31 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 configValues->flash_protocol_fuel.replace(index, car_model_data.text());
                             if (car_model_data.tagName() == "year")
                                 configValues->flash_protocol_year.replace(index, car_model_data.text());
+                            if (car_model_data.tagName() == "family")
+                            {
+                                configValues->flash_protocol_family.replace(index, car_model_data.text());
+                                for (int i = 0; i < flash_protocol_family.length(); i++)
+                                {
+                                    if (flash_protocol_family.at(i) == configValues->flash_protocol_family.at(index))
+                                    {
+                                        configValues->flash_protocol_ecu.replace(index, flash_protocol_ecu.at(i));
+                                        configValues->flash_protocol_mode.replace(index, flash_protocol_mode.at(i));
+                                        configValues->flash_protocol_checksum.replace(index, flash_protocol_checksum.at(i));
+                                        configValues->flash_protocol_read.replace(index, flash_protocol_read.at(i));
+                                        configValues->flash_protocol_write.replace(index, flash_protocol_write.at(i));
+                                        configValues->flash_protocol_flash_transport.replace(index, flash_protocol_flash_transport.at(i));
+                                        configValues->flash_protocol_log_transport.replace(index, flash_protocol_log_transport.at(i));
+                                        configValues->flash_protocol_log_protocol.replace(index, flash_protocol_log_protocol.at(i));
+                                        configValues->flash_protocol_ecu_id_ascii.replace(index, flash_protocol_cal_id_ascii.at(i));
+                                        configValues->flash_protocol_ecu_id_addr.replace(index, flash_protocol_cal_id_addr.at(i));
+                                        configValues->flash_protocol_ecu_id_length.replace(index, flash_protocol_cal_id_length.at(i));
+                                        configValues->flash_protocol_cal_id_ascii.replace(index, flash_protocol_cal_id_ascii.at(i));
+                                        configValues->flash_protocol_cal_id_addr.replace(index, flash_protocol_cal_id_addr.at(i));
+                                        configValues->flash_protocol_cal_id_length.replace(index, flash_protocol_cal_id_length.at(i));
+                                    }
+                                }
+                            }
+/*
                             if (car_model_data.tagName() == "ecu")
                                 configValues->flash_protocol_ecu.replace(index, car_model_data.text());
                             if (car_model_data.tagName() == "mode")
@@ -644,10 +701,9 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 configValues->flash_protocol_log_transport.replace(index, car_model_data.text());
                             if (car_model_data.tagName() == "log_protocol")
                                 configValues->flash_protocol_log_protocol.replace(index, car_model_data.text());
+*/
                             if (car_model_data.tagName() == "description")
                                 configValues->flash_protocol_description.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "family")
-                                configValues->flash_protocol_family.replace(index, car_model_data.text());
 
                             car_model_data = car_model_data.nextSibling().toElement();
                         }
@@ -1322,26 +1378,38 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QString file_name_str;
-    QString ecuId;
-    bool ecuIdConfirmed = true;
-    bool bStatus = false;
-    QStringList ecu_id_addr;
-    //uint16_t ecuIdAddr[] = { 0x0054, 0x01F8, 0x0200, 0x2000, 0x2004 };
-    int ecu_id_length = 0;
+    QString ecu_id;
+    QString cal_id;
+    QString selected_id;
+    bool cal_id_confirmed = true;
+    QStringList cal_id_family_list;
+    QStringList cal_id_ascii_list;
+    QStringList cal_id_addr_list;
+    QStringList cal_id_length_list;
+    bool ecu_id_confirmed = true;
+    QStringList ecu_id_ascii_list;
+    QStringList ecu_id_addr_list;
+    QStringList ecu_id_length_list;
+    QString selected_id_addr;
 
-    if (configValues->flash_protocol_selected_make == "Subaru")
+    bool bStatus = false;
+
+    for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
     {
-        ecu_id_addr.append("0x01F8");   // UJ20
-        ecu_id_addr.append("0x0200");   // HC16
-        ecu_id_addr.append("0x2000");   // SH7055 / SH7058 K-Line
-        ecu_id_addr.append("0x2004");   // SH7058 CAN
-        ecu_id_addr.append("0x10271");  // 2F04207006
-        ecu_id_length = 8;
+        if (!cal_id_family_list.contains(configValues->flash_protocol_family.at(i)))
+        {
+            cal_id_family_list.append(configValues->flash_protocol_family.at(i));
+            cal_id_ascii_list.append(configValues->flash_protocol_cal_id_ascii.at(i));
+            cal_id_addr_list.append(configValues->flash_protocol_cal_id_addr.at(i));
+            cal_id_length_list.append(configValues->flash_protocol_cal_id_length.at(i));
+            ecu_id_ascii_list.append(configValues->flash_protocol_ecu_id_ascii.at(i));
+            ecu_id_addr_list.append(configValues->flash_protocol_ecu_id_addr.at(i));
+            ecu_id_length_list.append(configValues->flash_protocol_ecu_id_length.at(i));
+        }
     }
-    if (configValues->flash_protocol_selected_make == "Mercedes-Benz")
+    for (int i = 0; i < cal_id_family_list.length(); i++)
     {
-        ecu_id_addr.append("0x0054");
-        ecu_id_length = 6;
+        qDebug() << "ECU id family/address list:" << cal_id_family_list.at(i) << "-" << ecu_id_addr_list.at(i);
     }
 
     if (!ecuCalDef->FullRomData.length())
@@ -1378,46 +1446,111 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         file_name_str = fileInfo.fileName();
     }
 
-    ecuIdConfirmed = true;
-
-    //for (unsigned j = 0; j < sizeof(ecuIdAddr) / sizeof(ecuIdAddr[0]); j++)
-    for (int j = 0; j < ecu_id_addr.length(); j++)
+    for (int k = 0; k < cal_id_addr_list.length(); k++)
     {
-        //qDebug() << "Looking for ECU ID from address: 0x" + QString("%1").arg(ecuIdAddr[j],4,16,QLatin1Char('0')).toUtf8();
-        ecuIdConfirmed = true;
-        ecuId.clear();
-        for (unsigned int i = ecu_id_addr.at(j).toUInt(&bStatus, 16); i < (ecu_id_addr.at(j).toUInt(&bStatus, 16) + ecu_id_length); i++)
+        if (cal_id_ascii_list.at(k) == "no")
+            continue;
+        cal_id_confirmed = true;
+        cal_id.clear();
+        for (unsigned int i = cal_id_addr_list.at(k).toUInt(&bStatus, 16); i < (cal_id_addr_list.at(k).toUInt(&bStatus, 16) + cal_id_length_list.at(k).toInt()); i++)
         {
             if ((uint8_t)ecuCalDef->FullRomData.at(i) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i) > 0x5A)
             {
-                ecuIdConfirmed = false;
-                qDebug() << "ECU ID not found, looking from next address";
+                cal_id_confirmed = false;
+                qDebug() << "CAL ID not found at address " + cal_id_addr_list.at(k) + ", looking from next address";
                 break;
             }
             else
-            {
-                ecuId.append((uint8_t)ecuCalDef->FullRomData.at(i));
-            }
+                cal_id.append((uint8_t)ecuCalDef->FullRomData.at(i));
         }
-        if (ecuIdConfirmed)
+        if (cal_id_confirmed)
+        {
+            selected_id = cal_id;
             break;
+        }
     }
 
-    if (!ecuIdConfirmed)
+    if (!cal_id_confirmed)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find ID from selected ROM file, file might be from unsupported model!");
+        int id_index = 0;
+        for (int k = 0; k < cal_id_addr_list.length(); k++)
+        {
+            if (cal_id_ascii_list.at(k) == "no")
+            {
+                cal_id_confirmed = false;
+                cal_id.clear();
+                for (unsigned int i = cal_id_addr_list.at(k).toUInt(&bStatus, 16); i < (cal_id_addr_list.at(k).toUInt(&bStatus, 16) + cal_id_length_list.at(k).toInt()); i++)
+                {
+                    if (cal_id_family_list.at(k) == "uj20" && ecuCalDef->FullRomData.length() == 128 * 1024)
+                    {
+                        cal_id.append(QString("%1").arg(ecuCalDef->FullRomData.at(i),2,16,QLatin1Char('0')).toUpper());
+                        cal_id_confirmed = true;
+                    }
+                    if (cal_id_family_list.at(k) == "uj30" && ecuCalDef->FullRomData.length() == 256 * 1024)
+                    {
+                        cal_id.append(QString("%1").arg(ecuCalDef->FullRomData.at(i),2,16,QLatin1Char('0')).toUpper());
+                        cal_id_confirmed = true;
+                    }
+                    if (cal_id_family_list.at(k) == "uj40" && ecuCalDef->FullRomData.length() == 384 * 1024)
+                    {
+                        cal_id.append(QString("%1").arg(ecuCalDef->FullRomData.at(i),2,16,QLatin1Char('0')).toUpper());
+                        cal_id_confirmed = true;
+                    }
+                }
+                qDebug() << "CAL ID (hex):" << cal_id << cal_id_family_list.at(k);
+            }
+            if (cal_id_confirmed)
+                break;
+        }
+        selected_id = cal_id;
+
+        /*
+        QMessageBox::warning(this, tr("Calibration file"), "Unable to find CAL ID from selected ROM file, file might be from unsupported model!");
         ecuCalDef->FileName = "No name";
         ecuCalDef->RomId = "No id";
         ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
         ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
         qDebug() << ecuCalDef->RomInfo.at(FileSize);
         return ecuCalDef;
+        */
+/*
+        QMessageBox::StandardButton reply;
+        QString title = "Calibration ID not found";
+        QString message = "Unable to find CAL ID from selected ROM file, do you want to use selected protocol to extract ID and maps?";
+        reply = QMessageBox::question(this, title, message, QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes)
+          qDebug() << "Yes was clicked";
+        else
+            return ecuCalDef;
+
+        bool id_ok = true;
+        QString ecu_id_test;
+        for (int i = 0; i < ecuCalDef->FullRomData.length(); i++)
+        {
+            id_ok = true;
+            ecu_id_test.clear();
+            for (int j = 0; j < 6; j++)
+            {
+                if ((uint8_t)ecuCalDef->FullRomData.at(i + j) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i + j) > 0x5A)
+                {
+                    id_ok = false;
+                    break;
+                }
+                else
+                {
+                    ecu_id_test.append(ecuCalDef->FullRomData.at(i + j));
+                }
+            }
+            if (id_ok)
+                qDebug() << "ID:" << ecu_id_test << "at address" << hex << i;
+        }
+        */
     }
-    else
-        qDebug() << "ECU ID:" << ecuId;
+    //else
+        qDebug() << "CAL ID:" << cal_id;
 
     if (!file_name_str.length())
-        file_name_str = ecuId;// + ".bin";
+        file_name_str = cal_id;// + ".bin";
 
     def_map_index = 0;
 
@@ -1426,43 +1559,55 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
     {
-        read_ecuflash_ecu_def(ecuCalDef, ecuId);
+        read_ecuflash_ecu_def(ecuCalDef, cal_id);
         parse_ecuflash_def_scalings(ecuCalDef);
 
         if (!ecuCalDef->use_ecuflash_definition)
         {
-            read_romraider_ecu_def(ecuCalDef, ecuId);
+            read_romraider_ecu_def(ecuCalDef, cal_id);
         }
     }
     if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
     {
-        read_romraider_ecu_def(ecuCalDef, ecuId);
+        read_romraider_ecu_def(ecuCalDef, cal_id);
         if(!ecuCalDef->use_romraider_definition)
         {
-            read_ecuflash_ecu_def(ecuCalDef, ecuId);
+            read_ecuflash_ecu_def(ecuCalDef, cal_id);
             parse_ecuflash_def_scalings(ecuCalDef);
         }
     }
 
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file with ECU ID: " + ecuId);
-        ecuCalDef = NULL;
-        return NULL;
+        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file with CAL ID: " + selected_id);
+        //ecuCalDef = NULL;
+        //return NULL;
+        ecuCalDef->RomInfo.replace(XmlId, selected_id);
+        ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
+        ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
+        ecuCalDef->RomInfo.replace(EcuId, selected_id);
+        ecuCalDef->RomInfo.replace(Make, configValues->flash_protocol_selected_make);
+        //ecuCalDef->RomInfo.replace(Model, configValues->flash_protocol_selected_model);
+        //ecuCalDef->RomInfo.replace(SubModel, submodel);
+        //ecuCalDef->RomInfo.replace(Transmission, transmission);
+        //ecuCalDef->RomInfo.replace(MemModel, memmodel);
+        //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
+        ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_family);
+        ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
     }
-
+/*
     if (ecuCalDef == NULL)
     {
         QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file with ECU ID: " + ecuId);
         ecuCalDef = NULL;
         return NULL;
     }
-
+*/
     ecuCalDef->OemEcuFile = true;
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
-    ecuCalDef->RomId = ecuId;
+    ecuCalDef->RomId = selected_id;
     //qDebug() << "File size =" << ecuCalDef->FileSize;
 
     QByteArray padding;// = QByteArray("\x00", 0x8000);
@@ -1641,7 +1786,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (ecuCalDef == NULL)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected calibration file with ECU ID: " + ecuId);
+        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected calibration file with ECU ID: " + selected_id);
         return NULL;
     }
 

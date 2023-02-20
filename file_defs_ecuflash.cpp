@@ -640,12 +640,12 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 if (i == 0)
                                 {
                                     ecuCalDef->XScaleAddressList.replace(def_map_index, sub_child.attribute("address", " "));
-                                    //ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
+                                    ecuCalDef->XSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
                                 }
                                 if (i == 1)
                                 {
                                     ecuCalDef->YScaleAddressList.replace(def_map_index, sub_child.attribute("address", " "));
-                                    //ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", "1"));
+                                    ecuCalDef->YSizeList.replace(def_map_index, sub_child.attribute("elements", " "));
                                 }
                                 i++;
                             }

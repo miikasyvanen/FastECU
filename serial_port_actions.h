@@ -37,9 +37,12 @@ public:
     ~SerialPortActions();
 
     bool serialPortAvailable = false;
-    bool serialport_protocol_14230 = false;
     bool setRequestToSend = true;
     bool setDataTerminalReady = true;
+
+    bool is_packet_header = false;
+    bool is_checksum = false;
+    bool is_iso14230_connection = false;
     bool is_can_connection = false;
     bool is_iso15765_connection = false;
     bool is_29_bit_id = false;
@@ -51,9 +54,9 @@ public:
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
 
-    uint8_t iso14230_startbyte = 0;
-    uint8_t iso14230_source_id = 0;
-    uint8_t iso14230_destination_id = 0;
+    uint8_t packet_header_startbyte = 0;
+    uint8_t packet_header_source_id = 0;
+    uint8_t packet_header_destination_id = 0;
 
     QElapsedTimer *lec_pulse_timer = new QElapsedTimer();
 
@@ -123,6 +126,7 @@ public:
     int set_j2534_iso9141_filters();
     int set_j2534_iso9141_timings();
     int clear_rx_buffer();
+    int clear_tx_buffer();
 
     int send_periodic_j2534_data(QByteArray output, int timeout);
     int stop_periodic_j2534_data();
@@ -177,7 +181,7 @@ private:
     int line_end_check_1_toggled(int state);
     int line_end_check_2_toggled(int state);
 
-    QByteArray write_serial_iso14230_data(QByteArray output, uint8_t iso14230_startbyte, uint8_t iso14230_source_id, uint8_t iso14230_destination_id);
+    QByteArray add_packet_header(QByteArray output);
     int write_j2534_data(QByteArray output);
     QByteArray read_j2534_data(unsigned long timeout);
 

@@ -182,8 +182,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     flash_transports = create_flash_transports_list();
     log_transports = create_log_transports_list();
-    connect(flash_transport_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_protocol_changed()));
-    connect(log_transport_list, SIGNAL(currentIndexChanged(int)), this, SLOT(log_protocol_changed()));
+    connect(flash_transport_list, SIGNAL(currentIndexChanged(int)), this, SLOT(flash_transport_changed()));
+    connect(log_transport_list, SIGNAL(currentIndexChanged(int)), this, SLOT(log_transport_changed()));
 
     //ui->toolBar->addSeparator();
 
@@ -408,30 +408,35 @@ void MainWindow::select_protocol_finished(int result)
    status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 }
 
-void MainWindow::log_protocol_changed()
+void MainWindow::log_transport_changed()
 {
     //qDebug() << "Change log transport";
-    QComboBox *log_protocol_list = ui->toolBar->findChild<QComboBox*>("log_transport_list");
+    QComboBox *log_transport_list = ui->toolBar->findChild<QComboBox*>("log_transport_list");
 
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
-    if (log_protocol_list->currentText() == "CAN")
+    if (log_transport_list->currentText() == "CAN")
     {
         serial->is_can_connection = true;
         serial->is_iso15765_connection = false;
         serial->is_29_bit_id = false;
         serial->can_speed = "500000";
     }
-    else if (log_protocol_list->currentText() == "iso15765")
+    else if (log_transport_list->currentText() == "iso15765")
     {
         serial->is_can_connection = false;
         serial->is_iso15765_connection = true;
         serial->is_29_bit_id = true;
         serial->can_speed = "500000";
     }
+    else if (log_transport_list->currentText() == "K-Line")
+    {
+        if (configValues->flash_protocol_selected_log_protocol == "SSM")
+            serial->change_port_speed("4800");
+    }
 
-    configValues->flash_protocol_selected_log_protocol = "SSM";//log_protocol_list->currentText();
     protocol = configValues->flash_protocol_selected_log_protocol;
+    configValues->flash_protocol_selected_log_transport = log_transport_list->currentText();
     fileActions->save_config_file(configValues);
 
     serial->reset_connection();
@@ -440,7 +445,7 @@ void MainWindow::log_protocol_changed()
     ssm_init_poll_timer->start();
 }
 
-void MainWindow::flash_protocol_changed()
+void MainWindow::flash_transport_changed()
 {
     //qDebug() << "Change flash transport";
     QComboBox *flash_transport_list = ui->toolBar->findChild<QComboBox*>("flash_transport_list");
@@ -510,6 +515,14 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         //qDebug() << "No ROM to write, exiting!";
         return 0;
     }
+
+    QComboBox *serial_port_list = ui->toolBar->findChild<QComboBox*>("serial_port_list");
+    if (serial_port_list->currentText() == "")
+    {
+        qDebug() << "No serial port selected!";
+        QMessageBox::warning(this, tr("Serial port"), "No serial port selected!");
+        return 0;
+    }
     romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
 
     serial_poll_timer->stop();
@@ -540,7 +553,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         serial->reset_connection();
         ecuid.clear();
         ecu_init_complete = false;
-        serial->serialport_protocol_14230 = false;
+        serial->is_packet_header = false;
         //open_serial_port();
 
         if (cmd_type == "test_write" || cmd_type == "write")
@@ -610,7 +623,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         // For K-Line comms
         else
         {
-            serial->serialport_protocol_14230 = true;
+            serial->is_packet_header = true;
             open_serial_port();
             serial->change_port_speed("10400");
         }
@@ -621,7 +634,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    serial->serialport_protocol_14230 = false;
+    serial->is_29_bit_id = false;
+    serial->is_packet_header = false;
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
     serial->serial_port_baudrate = "4800";
@@ -629,7 +643,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
-    serial->is_29_bit_id = false;
+    serial->change_port_speed("4800");
 
     return 0;
 }
@@ -1186,7 +1200,11 @@ bool MainWindow::event(QEvent *event)
         }
         else
         {
-            //qDebug() << "Maximize event off";
+            QString window_width = QString::number(MainWindow::size().width());
+            QString window_height = QString::number(MainWindow::size().height());
+
+            configValues->window_width = window_width;
+            configValues->window_height = window_height;
         }
         fileActions->save_config_file(configValues);
     }

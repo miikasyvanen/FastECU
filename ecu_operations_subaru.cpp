@@ -96,43 +96,39 @@ void EcuOperationsSubaru::check_mcu_type(QString flash_method)
 
 int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
 {
-    QByteArray romdata;
+    //QByteArray romdata;
     int test_write = 0;
     int result = STATUS_ERROR;
 
+    flash_method = ecuCalDef->RomInfo.at(FlashMethod);
+    kernel = ecuCalDef->Kernel;
+    check_mcu_type(flash_method);
+
     if (cmd_type == "read")
     {
-        QMessageBox::information(this, tr("Read ROM"), "Press OK to start read countdown");
         send_log_window_message("Read memory with flashmethod " + flash_method + " and kernel " + ecuCalDef->Kernel, true, true);
+        qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+
+        QMessageBox::information(this, tr("Read ROM"), "Press OK to start read countdown");
     }
     else if (cmd_type == "test_write")
     {
+        //romdata = ecuCalDef->FullRomData;
         test_write = 1;
-        QMessageBox::information(this, tr("Test write ROM"), "Press OK to start test write countdown");
         send_log_window_message("Test write memory with flashmethod " + flash_method + " and kernel " + ecuCalDef->Kernel, true, true);
+        qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+
+        QMessageBox::information(this, tr("Test write ROM"), "Press OK to start test write countdown");
     }
     else if (cmd_type == "write")
     {
+        //romdata = ecuCalDef->FullRomData;
         test_write = 0;
-        QMessageBox::information(this, tr("Write ROM"), "Press OK to start write countdown!");
         send_log_window_message("Write memory with flashmethod " + flash_method + " and kernel " + ecuCalDef->Kernel, true, true);
-    }
+        qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
 
-    if (cmd_type == "test_write" || cmd_type == "write")
-    {
-        romdata = ecuCalDef->FullRomData;
-        flash_method = ecuCalDef->RomInfo.at(FlashMethod);
-        kernel = ecuCalDef->Kernel;
+        QMessageBox::information(this, tr("Write ROM"), "Press OK to start write countdown!");
     }
-    if (cmd_type == "read")
-    {
-        flash_method = ecuCalDef->RomInfo.at(FlashMethod);
-        kernel = ecuCalDef->Kernel;
-    }
-
-    qDebug() << "Flash method:" << flash_method;
-    qDebug() << "Kernel:" << kernel;
-    check_mcu_type(flash_method);
 
     ecuOperations = new EcuOperations(this, serial, mcu_type_string, mcu_type_index);
     kernel_alive = false;
@@ -249,6 +245,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "sti04")
     {
+        serial->is_iso14230_connection = true;
         serial->open_serial_port();
 
         if (serial->is_can_connection)
@@ -391,7 +388,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj20")
     {
-        serial->serialport_protocol_14230 = true;
+        serial->is_iso14230_connection = true;
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -418,7 +415,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj30")
     {
-        serial->serialport_protocol_14230 = true;
+        serial->is_iso14230_connection = true;
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -446,7 +443,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj40")
     {
-        serial->serialport_protocol_14230 = true;
+        serial->is_iso14230_connection = true;
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -474,7 +471,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj70")
     {
-        serial->serialport_protocol_14230 = true;
+        serial->is_iso14230_connection = true;
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -502,7 +499,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "mitsubootloader")
     {
-        serial->serialport_protocol_14230 = true;
+        serial->is_iso14230_connection = true;
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -530,6 +527,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.endsWith("denso_can_recovery"))
     {
+        serial->is_iso14230_connection = false;
         serial->open_serial_port();
 
         send_log_window_message("Connecting to Subaru Denso 32-bit CAN bootloader, please wait...", true, true);
@@ -665,42 +663,38 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
 
     // Connect to bootloader
     delay(800);
-    //for (int i = 0; i < 5; i++)
-    //{
-        //delay(200);
-        serial->pulse_lec_2_line(200);
-        output.clear();
-        //for (uint8_t i = 0; i < (sizeof(subaru_16bit_bootloader_init) / sizeof(subaru_16bit_bootloader_init[0])); i++)
-        for (uint8_t i = 0; i < subaru_16bit_bootloader_init.length(); i++)
-        {
-            output.append(subaru_16bit_bootloader_init[i]);
-        }
-        //received = serial->write_serial_data_echo_check(output);
-        serial->write_serial_data_echo_check(output);
-        send_log_window_message("Sent to bootloader: " + parse_message_to_hex(output), true, true);
-        //delay(200);
-        received = serial->read_serial_data(output.length(), serial_read_short_timeout);
-        send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
 
-        if (received.length() != 3 || !check_received_message(subaru_16bit_bootloader_init_ok, received))
-        {
-            send_log_window_message("Bad response from bootloader", true, true);
-        }
-        else
-        {
-            send_log_window_message("Connected to bootloader", true, true);
-            return STATUS_SUCCESS;
-        }
-        //delay(200);
-    //}
+    serial->pulse_lec_2_line(200);
+    output.clear();
+    //for (uint8_t i = 0; i < (sizeof(subaru_16bit_bootloader_init) / sizeof(subaru_16bit_bootloader_init[0])); i++)
+    for (uint8_t i = 0; i < subaru_16bit_bootloader_init.length(); i++)
+    {
+        output.append(subaru_16bit_bootloader_init[i]);
+    }
+    //received = serial->write_serial_data_echo_check(output);
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent to bootloader: " + parse_message_to_hex(output), true, true);
+    //delay(200);
+    received = serial->read_serial_data(output.length(), serial_read_short_timeout);
+    send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
+
+    if (received.length() != 3 || !check_received_message(subaru_16bit_bootloader_init_ok, received))
+    {
+        send_log_window_message("Bad response from bootloader", true, true);
+    }
+    else
+    {
+        send_log_window_message("Connected to bootloader", true, true);
+        return STATUS_SUCCESS;
+    }
 
     send_log_window_message("Cannot connect to bootloader, testing if kernel is alive", true, true);
 
     serial->change_port_speed("62500");
-    serial->serialport_protocol_14230 = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_source_id = 0xFC;
-    serial->iso14230_destination_id = 0x10;
+    serial->is_packet_header = true;
+    serial->packet_header_startbyte = 0x80;
+    serial->packet_header_source_id = 0xFC;
+    serial->packet_header_destination_id = 0x10;
 
     //delay(100);
 
@@ -723,7 +717,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
         }
     }
 
-    serial->serialport_protocol_14230 = false;
+    serial->is_packet_header = false;
 
     return STATUS_ERROR;
 }
@@ -747,10 +741,10 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_04_32bit()
         return STATUS_ERROR;
 
     serial->change_port_speed("62500");
-    serial->serialport_protocol_14230 = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_source_id = 0xFC;
-    serial->iso14230_destination_id = 0x10;
+    serial->is_packet_header = true;
+    serial->packet_header_startbyte = 0x80;
+    serial->packet_header_source_id = 0xFC;
+    serial->packet_header_destination_id = 0x10;
 
     delay(100);
 
@@ -773,8 +767,9 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_04_32bit()
             return STATUS_SUCCESS;
         }
     }
-    serial->serialport_protocol_14230 = false;
+
     serial->change_port_speed("4800");
+    serial->is_packet_header = false;
     delay(100);
 
     // SSM init
@@ -859,6 +854,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_32bit()
         return STATUS_ERROR;
     }
 
+    serial->is_packet_header = false;
+
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
 
@@ -937,10 +934,13 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
         return STATUS_ERROR;
     }
 
+    serial->is_packet_header = false;
+
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
 
     send_log_window_message("Start sending connection requests to Denso CAN bootloader (CAN)", true, true);
+    qDebug() << "Start sending connection requests to Denso CAN bootloader (CAN)";
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -959,32 +959,22 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
     received.clear();
     int pass = 0;
     int timeout = 10000;
-/*
-    //bool response = false;
-    QTime dieTime = QTime::currentTime().addMSecs(timeout);
-    while (received == "" && (QTime::currentTime() < dieTime) && !kill_process)
-    {
-        serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(20, 1);
-        delay(1);
-        if (pass % 250 == 0)
-            qDebug() << "0xFF 0x86 pass:" << pass << parse_message_to_hex(received);
-            //float pleft = (float)pass / (float)timeout * 100.0f;
-            //ui->progressbar->setValue(pleft);
-            //QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-        pass++;
-    }
-    //send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
-    //qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
-*/
 
     serial->send_periodic_j2534_data(output, recovery_timeout);
-    delay(timeout);
+    for (int i = 0; i < 100; i++)
+    {
+        ui->progressbar->setValue(i);
+        delay(timeout / 100.0);
+    }
     serial->stop_periodic_j2534_data();
     delay(200);
     received = serial->read_serial_data(20, 50);
+
     send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
     qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+
+    send_log_window_message("Checking if bootloader started...", true, true);
+    qDebug() << "Checking if bootloader started...";
 
     output[4] = (uint8_t)SID_START_COMM_CAN;
     output[5] = (uint8_t)(SID_CHECK_COMM_BL_CAN & 0xFF);
@@ -1021,6 +1011,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_recovery_32bit
         return STATUS_ERROR;
     }
 
+    serial->is_packet_header = false;
+
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
 
@@ -1044,34 +1036,23 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_recovery_32bit
     received.clear();
     int pass = 0;
     int timeout = 10000;
-/*
-    //bool response = false;
-    QTime dieTime = QTime::currentTime().addMSecs(timeout);
-    while (received == "" && (QTime::currentTime() < dieTime) && !kill_process)
-    {
-        serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(20, 1);
-        delay(1);
-        if (pass % 250 == 0)
-            qDebug() << "0xFF 0x86 pass:" << pass << parse_message_to_hex(received);
-            //float pleft = (float)pass / (float)timeout * 100.0f;
-            //ui->progressbar->setValue(pleft);
-            //QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-        pass++;
-    }
-    //send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
-    //qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
-*/
 
     serial->send_periodic_j2534_data(output, recovery_timeout);
-    delay(timeout);
+    for (int i = 0; i < 100; i++)
+    {
+        ui->progressbar->setValue(i);
+        delay(timeout / 100.0);
+    }
     serial->stop_periodic_j2534_data();
     delay(200);
-    received = serial->read_serial_data(20, 50);
-    send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+    serial->clear_tx_buffer();
+    serial->clear_rx_buffer();
+    //received = serial->read_serial_data(20, 50);
+    //send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
+    //qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
 
     send_log_window_message("Checking if bootloader started...", true, true);
+    qDebug() << "Checking if bootloader started...";
 
     output[4] = (uint8_t)SID_START_COMM_CAN;
     output[5] = (uint8_t)(SID_CHECK_COMM_BL_CAN & 0xFF);
@@ -1108,12 +1089,30 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
+    serial->is_packet_header = false;
+
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
 
+    // Fast init (aty)
+    // C1 33 F1 81
+
+    // Init (att)
+    // C1 33 F1 81
+
+    // iso14230
+    // 80 F0 10 01 BF
+    output.clear();
+    output.append((uint8_t)0xBF);
+    received = serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
+    delay(50);
+    received = serial->read_serial_data(20, 1000);
+    send_log_window_message("SSM init response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "SSM init response:" << parse_message_to_hex(received);
+
     // SSM init
-    received = send_subaru_sid_bf_ssm_init();
+    //received = send_subaru_sid_bf_ssm_init();
     if (received == "" || (uint8_t)received.at(4) != 0xFF)
         return STATUS_ERROR;
 
@@ -1128,12 +1127,20 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_uj20_30_40_70_kline()
     send_log_window_message("ECU ID = " + ecuid, true, true);
 
     received = send_subaru_hitachi_sid_b8_change_baudrate_38400();
+    send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "0xB8 response:" << parse_message_to_hex(received);
     if (received == "" || (uint8_t)received.at(4) != 0xF8)
         return STATUS_ERROR;
 
     serial->change_port_speed("38400");
 
-    received = send_subaru_sid_bf_ssm_init();
+    output.clear();
+    output.append((uint8_t)0xBF);
+    received = serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
+    delay(50);
+    received = serial->read_serial_data(20, 1000);
+    send_log_window_message("SSM init response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "SSM init response:" << parse_message_to_hex(received);
     if (received == "")
         return STATUS_ERROR;
 
@@ -1152,10 +1159,14 @@ int EcuOperationsSubaru::uninitialize_read_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
+    serial->is_packet_header = false;
+
     received = send_subaru_hitachi_sid_b8_change_baudrate_4800();
     qDebug() << "SID_B8 received:" << parse_message_to_hex(received);
     if (received == "" || (uint8_t)received.at(4) != 0xF8)
         return STATUS_ERROR;
+
+    //serial->change_port_speed("4800");
 
     return STATUS_SUCCESS;
 }
@@ -1190,6 +1201,8 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
+    serial->is_packet_header = false;
+
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1210,7 +1223,9 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj20_30_40_70_kline()
     QString ecuid = msg;
 
     QMessageBox::information(this, tr("Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB)"), "Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB) writing not yet confirmed!");
-    //received = send_subaru_hitachi_sid_af_enter_flash_mode(received);
+    received = send_subaru_hitachi_sid_af_enter_flash_mode(received);
+
+    qDebug() << parse_message_to_hex(received);
 
     return STATUS_ERROR;
 }
@@ -1229,6 +1244,8 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj70_kline()
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
+
+    serial->is_packet_header = false;
 
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -1311,6 +1328,8 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_kline()
     QByteArray received;
     QString msg;
 
+    serial->is_packet_header = false;
+
     return STATUS_ERROR;
 }
 
@@ -1319,6 +1338,8 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_can()
     QByteArray output;
     QByteArray received;
     QString msg;
+
+    serial->is_packet_header = false;
 
     return STATUS_ERROR;
 }
@@ -1337,28 +1358,6 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_16bit(QString kerne
     uint32_t len = 0;
     uint8_t chk_sum = 0;
 
-/*
-    if (!encrypted_kernel.open(QIODevice::ReadOnly ))
-    {
-        send_log_window_message("Unable to open encrypted_kernel file for reading", true, true);
-        return -1;
-    }
-
-    QByteArray encrypted_kernel_data = encrypted_kernel.readAll();
-    unsigned char *data = (unsigned char*) encrypted_kernel_data.data();
-    int kernel_length = encrypted_kernel_data.size();
-
-    sub_transform_wrx02_kernel(data, kernel_length, false);
-    for (int i = 0; i < (kernel_length / 16); i++)
-    {
-        QByteArray output;
-        for (int j = 0; j < 16; j++)
-        {
-            output.append(data[i * 16 + j]);
-        }
-        qDebug() << parse_message_to_hex(output);
-    }
-*/
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -1366,6 +1365,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_16bit(QString kerne
     }
 
     //serial->change_port_speed("9600");
+    serial->is_packet_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1435,6 +1435,8 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_16bit(QString kerne
         return STATUS_ERROR;
     }
 
+    serial->is_packet_header = false;
+
     return STATUS_ERROR;
 }
 
@@ -1460,6 +1462,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
     }
 
     //serial->change_port_speed("9600");
+    serial->is_packet_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1538,10 +1541,10 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
     send_log_window_message("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
-    serial->serialport_protocol_14230 = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_source_id = 0xFC;
-    serial->iso14230_destination_id = 0x10;
+    serial->is_packet_header = true;
+    serial->packet_header_startbyte = 0x80;
+    serial->packet_header_source_id = 0xFC;
+    serial->packet_header_destination_id = 0x10;
 
     delay(100);
 
@@ -1603,6 +1606,8 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
+
+    serial->is_packet_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1690,10 +1695,11 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
     send_log_window_message("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
-    serial->serialport_protocol_14230 = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_source_id = 0xFC;
-    serial->iso14230_destination_id = 0x10;
+    serial->is_packet_header = true;
+    serial->packet_header_startbyte = 0x80;
+    serial->packet_header_source_id = 0xFC;
+    serial->packet_header_destination_id = 0x10;
+
     //serial->reset_connection();
     //serial->open_serial_port();
 
@@ -1759,6 +1765,8 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
+
+    serial->is_packet_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1884,20 +1892,7 @@ int EcuOperationsSubaru::read_rom_subaru_denso_kline_04_16bit(FileActions::EcuCa
 
     return STATUS_ERROR;
 }
-/*
-int EcuOperationsSubaru::read_rom_subaru_kline_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef)
-{
-    if (!serial->is_serial_port_open())
-    {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
-        return STATUS_ERROR;
-    }
 
-    bool success = ecuOperations->read_mem_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-
-    return success;
-}
-*/
 int EcuOperationsSubaru::read_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     if (!serial->is_serial_port_open())
@@ -1972,7 +1967,6 @@ int EcuOperationsSubaru::read_rom_subaru_hitachi_70_can(FileActions::EcuCalDefSt
 
 int EcuOperationsSubaru::write_rom_subaru_denso_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
-    //send_log_window_message("Writing ROM to Subaru K-Line 02 16-bit", true, true);
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -2066,7 +2060,7 @@ QByteArray EcuOperationsSubaru::send_subaru_sid_a8_read_mem()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x05);
 
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     received = serial->read_serial_data(100, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
@@ -2074,7 +2068,7 @@ QByteArray EcuOperationsSubaru::send_subaru_sid_a8_read_mem()
         //qDebug() << "A8 received:" << parse_message_to_hex(received);
         send_log_window_message("Read ECU ID", true, true);
         //qDebug() << "Read ECU ID";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(100, receive_timeout);
         loop_cnt++;
@@ -2102,7 +2096,7 @@ QByteArray EcuOperationsSubaru::send_subaru_sid_bf_ssm_init()
     send_log_window_message("SSM init", true, true);
     //qDebug() << "SSM init";
     output.append((uint8_t)0xBF);
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     delay(250);
     received = serial->read_serial_data(100, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
@@ -2111,7 +2105,7 @@ QByteArray EcuOperationsSubaru::send_subaru_sid_bf_ssm_init()
         send_log_window_message("SSM init", true, true);
         //qDebug() << "SSM init";
         qDebug() << "SSM init" << parse_message_to_hex(received);
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(100, receive_timeout);
         loop_cnt++;
@@ -2137,12 +2131,12 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_81_start_communication()
 
     //qDebug() << "Start 81";
     output.append((uint8_t)0x81);
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     received = serial->read_serial_data(8, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
         //qDebug() << "Next 81 loop";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(8, receive_timeout);
         loop_cnt++;
@@ -2169,12 +2163,12 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_83_request_timings()
     //qDebug() << "Start 83";
     output.append((uint8_t)0x83);
     output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     received = serial->read_serial_data(12, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
         //qDebug() << "Next 83 loop";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(12, receive_timeout);
         loop_cnt++;
@@ -2202,13 +2196,13 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_27_request_seed()
     //qDebug() << "Start 27 01";
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
-    received = serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    received = serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     //qDebug() << "27 01 send received:" << parse_message_to_hex(received);
     received = serial->read_serial_data(11, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
         //qDebug() << "Next 27 01 loop";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(11, receive_timeout);
         loop_cnt++;
@@ -2237,12 +2231,12 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_27_send_seed_key(QByteArra
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x02);
     output.append(seed_key);
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     received = serial->read_serial_data(8, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
         //qDebug() << "Next 27 02 loop";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(8, receive_timeout);
         loop_cnt++;
@@ -2271,12 +2265,12 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_10_start_diagnostic()
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x85);
     output.append((uint8_t)0x02);
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     received = serial->read_serial_data(7, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
         //qDebug() << "Next 10 loop";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(7, receive_timeout);
         loop_cnt++;
@@ -2313,12 +2307,12 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_34_request_upload(uint32_t
 
     //qDebug() << "34 message:" << parse_message_to_hex(add_ssm_header(output, false));
 
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     received = serial->read_serial_data(7, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
         //qDebug() << "Next 34 loop";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(7, receive_timeout);
         loop_cnt++;
@@ -2381,12 +2375,12 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_36_transferdata(uint32_t d
             len -= 128;
         }
 
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         received = serial->read_serial_data(6, receive_timeout);
         while (received == "" && loop_cnt < comm_try_count)
         {
             //qDebug() << "Next 36 loop";
-            serial->write_serial_data_echo_check(add_ssm_header(output, false));
+            serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
             delay(comm_try_timeout);
             received = serial->read_serial_data(6, receive_timeout);
             loop_cnt++;
@@ -2466,12 +2460,12 @@ QByteArray EcuOperationsSubaru::send_subaru_denso_sid_31_start_routine()
     output.append((uint8_t)0x31);
     output.append((uint8_t)0x01);
     output.append((uint8_t)0x01);
-    serial->write_serial_data_echo_check(add_ssm_header(output, false));
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
     received = serial->read_serial_data(8, receive_timeout);
     while (received == "" && loop_cnt < comm_try_count)
     {
         //qDebug() << "Next 31 loop";
-        serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(8, receive_timeout);
         loop_cnt++;
@@ -2493,17 +2487,13 @@ QByteArray EcuOperationsSubaru::send_subaru_hitachi_sid_b8_change_baudrate_4800(
 
     //qDebug() << "Start B8";
     output.clear();
-    output.append((uint8_t)0x80);
-    output.append((uint8_t)0x10);
-    output.append((uint8_t)0xF0);
-    output.append((uint8_t)0x05);
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x15);
-    //serial->write_serial_data_echo_check(add_ssm_header(output, false));
-    serial->write_serial_data_echo_check(output); // No SSM header?
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
+    //serial->write_serial_data_echo_check(output); // No SSM header?
     delay(200);
     received = serial->read_serial_data(8, receive_timeout);
 
@@ -2519,17 +2509,13 @@ QByteArray EcuOperationsSubaru::send_subaru_hitachi_sid_b8_change_baudrate_38400
 
     //qDebug() << "Start B8";
     output.clear();
-    output.append((uint8_t)0x80);
-    output.append((uint8_t)0x10);
-    output.append((uint8_t)0xF0);
-    output.append((uint8_t)0x05);
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x75);
-    //serial->write_serial_data_echo_check(add_ssm_header(output, false));
-    serial->write_serial_data_echo_check(output); // No SSM header?
+    serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
+    //serial->write_serial_data_echo_check(output); // No SSM header?
     delay(200);
     received = serial->read_serial_data(8, receive_timeout);
 
@@ -3233,7 +3219,7 @@ QByteArray EcuOperationsSubaru::subaru_denso_encrypt(const uint8_t *datatoencryp
     return encrypted;
 }
 
-QByteArray EcuOperationsSubaru::add_ssm_header(QByteArray output, bool dec_0x100)
+QByteArray EcuOperationsSubaru::add_ssm_header_ecu(QByteArray output, bool dec_0x100)
 {
     uint8_t length = output.length();
 
@@ -3241,8 +3227,24 @@ QByteArray EcuOperationsSubaru::add_ssm_header(QByteArray output, bool dec_0x100
     output.insert(1, (uint8_t)0x10);
     output.insert(2, (uint8_t)0xF0);
     output.insert(3, length);
-    if (!serial->serialport_protocol_14230)
-        output.append(calculate_checksum(output, dec_0x100));
+
+    output.append(calculate_checksum(output, dec_0x100));
+
+    //qDebug() << "Generated SSM message:" << parse_message_to_hex(output);
+
+    return output;
+}
+
+QByteArray EcuOperationsSubaru::add_ssm_header_tcu(QByteArray output, bool dec_0x100)
+{
+    uint8_t length = output.length();
+
+    output.insert(0, (uint8_t)0x80);
+    output.insert(1, (uint8_t)0x18);
+    output.insert(2, (uint8_t)0xF0);
+    output.insert(3, length);
+
+    output.append(calculate_checksum(output, dec_0x100));
 
     //qDebug() << "Generated SSM message:" << parse_message_to_hex(output);
 

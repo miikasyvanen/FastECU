@@ -124,8 +124,8 @@ void ProtocolSelect::car_model_selected()
     configValues->flash_protocol_selected_version = flash_protocol_version;
     configValues->flash_protocol_selected_family = flash_protocol_family;
     configValues->flash_protocol_selected_description = flash_protocol_description;
-    configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
-    configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
+    //configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
+    //configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
 
     //qDebug() << "Selected car model:";

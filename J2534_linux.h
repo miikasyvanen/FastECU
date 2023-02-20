@@ -59,6 +59,7 @@ private:
     QString serial_port_baudrate = "4800";
 
     QSerialPort *serial = new QSerialPort();
+    unsigned long periodic_msg_id;
 
     enum rx_msg_type {
         NORM_MSG,
