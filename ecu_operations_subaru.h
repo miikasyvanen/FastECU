@@ -188,7 +188,8 @@ private:
     QByteArray subaru_denso_encrypt(const uint8_t *datatoencrypt);
 
 
-    QByteArray add_ssm_header(QByteArray output, bool dec_0x100);
+    QByteArray add_ssm_header_ecu(QByteArray output, bool dec_0x100);
+    QByteArray add_ssm_header_tcu(QByteArray output, bool dec_0x100);
     int check_received_message(QByteArray msg, QByteArray received);
     int connect_bootloader_start_countdown(int timeout);
     void barrel_shift_16_right(unsigned short *barrel);

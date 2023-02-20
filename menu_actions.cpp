@@ -913,7 +913,7 @@ void MainWindow::show_subaru_biu_window()
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    serial->serialport_protocol_14230 = true;
+    serial->is_packet_header = true;
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
@@ -1389,7 +1389,7 @@ int MainWindow::simulate_obd()
     ecuid.clear();
     ecu_init_complete = false;
 
-    serial->serialport_protocol_14230 = true;
+    serial->is_packet_header = true;
     open_serial_port();
     serial->change_port_speed("10400");
 

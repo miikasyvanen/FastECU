@@ -114,9 +114,10 @@ QByteArray EcuOperations::request_kernel_id()
         if (serial->is_can_connection || serial->is_iso15765_connection)
             received.remove(0, 1);
         kernelid = received;
+
         while (received != "")
         {
-            received = serial->read_serial_data(100, serial_read_short_timeout);
+            received = serial->read_serial_data(1, serial_read_short_timeout);
             received.remove(0, 1);
             if (serial->is_can_connection || serial->is_iso15765_connection)
                 received.remove(0, 1);
@@ -273,7 +274,8 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
     uint32_t len_done = 0;  //total data written to file
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
-    serial->serialport_protocol_14230 = true;
+    serial->is_packet_header = true;
+    //serial->iso14230_checksum = true;
 
     output.append(SID_DUMP);
     output.append(SID_DUMP_ROM);
@@ -320,9 +322,16 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         // Receive map data, check and remove header // ADJUST THIS LATER //
         //received.clear();
         received = serial->read_serial_data(numblocks * (32 + 3), serial_read_short_timeout);
-        //qDebug() << "Read received:" << parse_message_to_hex(received);
+        qDebug() << "Read received:" << parse_message_to_hex(received);
         if (!received.length())
-            return STATUS_ERROR;
+        {
+            delay(500);
+            received = serial->write_serial_data_echo_check(output);
+            received = serial->read_serial_data(numblocks * (32 + 3), serial_read_short_timeout);
+            qDebug() << "Read received:" << parse_message_to_hex(received);
+            if (!received.length())
+                return STATUS_ERROR;
+        }
         for (uint32_t i = 0; i < numblocks; i++)
         {
             received.remove(0, 2);
@@ -1861,17 +1870,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         delay(100);
     }
-/*
-    for (int i = 0; i < 5; i++)
-    {
-        received = serial->read_serial_data(3, serial_read_extra_long_timeout);
-        if (received != "")
-        {
-            qDebug() << "Got page erase response in loop" << i;
-            break;
-        }
-    }
-    */
+
     //send_log_window_message(parse_message_to_hex(received), true, true);
     qDebug() << parse_message_to_hex(received);
 
@@ -1934,10 +1933,11 @@ int EcuOperations::read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure 
     output.append((uint8_t)0x06);
     output.append((uint8_t)(SID_HITACHI_BLOCK_READ & 0xFF));
     output.append((uint8_t)0x00);
-    output.append((uint8_t)(addr >> 16) & 0xFF);
-    output.append((uint8_t)(addr >> 8) & 0xFF);
-    output.append((uint8_t)addr & 0xFF);
-    output.append((uint8_t)(pagesize - 1) & 0xFF);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
 
     while (willget)
     {
@@ -1957,16 +1957,19 @@ int EcuOperations::read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure 
         output[7] = (uint8_t)(addr >> 8) & 0xFF;
         output[8] = (uint8_t)addr & 0xFF;
         output[9] = (uint8_t)(pagesize - 1) & 0xFF;
+        output.remove(10, 1);
+        output.append(calculate_checksum(output, false));
 
         //chk_sum = calculate_checksum(output, false);
         //output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
 
+        qDebug() << "Received map data:" << parse_message_to_hex(received);
         if (received.startsWith("\x80\xf0"))
         {
             received.remove(0, 5);
-            //received.remove(received.length() - 1, 1);
+            received.remove(received.length() - 1, 1);
             mapdata.append(received);
         }
         else
@@ -1991,7 +1994,7 @@ int EcuOperations::read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure 
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        msg = QString("ROM read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         send_log_window_message(msg, true, true);
         qDebug() << msg;
         delay(1);

@@ -94,7 +94,12 @@ public:
         QStringList flash_protocol_flash_transport;
         QStringList flash_protocol_log_transport;
         QStringList flash_protocol_log_protocol;
-        QStringList flash_protocol_comms_protocol;
+        QStringList flash_protocol_ecu_id_ascii;
+        QStringList flash_protocol_ecu_id_addr;
+        QStringList flash_protocol_ecu_id_length;
+        QStringList flash_protocol_cal_id_ascii;
+        QStringList flash_protocol_cal_id_addr;
+        QStringList flash_protocol_cal_id_length;
         QStringList flash_protocol_description;
         QStringList flash_protocol_family;
 

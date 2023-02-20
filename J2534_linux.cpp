@@ -289,6 +289,24 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 //qDebug() << "Error sending message: " + received + " | " + parseMessageToHex(received);
                 received.clear();
             }
+            else if (received.at(2) == 'm')
+            {
+                received.append(read_serial_data(2, Timeout));
+                msg.clear();
+                while ((uint8_t)msg[msg.length()-1] != 0x20)
+                    msg.append(read_serial_data(1, Timeout));
+                received.append(msg);
+                periodic_msg_id = msg.remove(msg.length()-1, 1).toULong();
+                //qDebug() << "Msg ID:" << periodic_msg_id;
+
+                while ((uint8_t)msg[msg.length()-1] != 0x0a)
+                    msg.append(read_serial_data(1, Timeout));
+                received.append(msg);
+                msg = read_serial_data(msg_byte_cnt, Timeout);
+                received.append(msg);
+
+                msg_index = 0;
+            }
             else if (received.at(2) == 'y')
             {
                 received.append(read_serial_data(2, Timeout));
@@ -409,7 +427,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->RxStatus = NORM_MSG;
 
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
-                    //qDebug() << "NORM_MSG" << parseMessageToHex(received);
+                    //qDebug() << "NORM_MSG" << parseMessageToHex(received) << received;
                     ////qDebug() << msg_byte_cnt << "MSG:" << parseMessageToHex(received);
                     //qDebug() << parseMessageToHex(received);
                     if (received.at(2) == '5' || received.at(2) == '6')
@@ -501,14 +519,36 @@ long J2534::PassThruWriteMsgs(unsigned long ChannelID, const PASSTHRU_MSG *pMsg,
 
 long J2534::PassThruStartPeriodicMsg(unsigned long ChannelID, const PASSTHRU_MSG *pMsg, unsigned long *pMsgID, unsigned long TimeInterval)
 {
+    PASSTHRU_MSG rxmsg;
+    unsigned long numRxMsg;
+    unsigned long timeout = 10;
+
+    QByteArray output;
     long result = STATUS_NOERROR;
+
+    output.clear();
+    output.append("atm" + QString::number(ChannelID) + " " + QString::number(TimeInterval * 1000) + " 0 " + QString::number(pMsg->TxFlags) + " " + QString::number(pMsg->DataSize) + "\r\n");
+    for (unsigned long i = 0; i < pMsg->DataSize; i++)
+    {
+        output.append(pMsg->Data[i]);
+    }
+
+    write_serial_data(output);
+    PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, timeout);
+
+    *pMsgID = periodic_msg_id;
 
     return result;
 }
 
 long J2534::PassThruStopPeriodicMsg(unsigned long ChannelID, unsigned long MsgID)
 {
+    QByteArray output;
     long result = STATUS_NOERROR;
+
+    output.append("atn" + QString::number(ChannelID) + " " + QString::number(MsgID) + "\r\n");
+
+    write_serial_data(output);
 
     return result;
 }

@@ -116,6 +116,48 @@ int SerialPortActions::fast_init(QByteArray output)
     return STATUS_SUCCESS;
 }
 
+int SerialPortActions::clear_rx_buffer()
+{
+    if (use_openport2_adapter)
+    {
+        unsigned long status;
+
+        status = j2534->PassThruIoctl(chanID, CLEAR_RX_BUFFER, NULL, NULL);
+        if (status)
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+        else
+        {
+            qDebug() << "RX BUFFER EMPTY";
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int SerialPortActions::clear_tx_buffer()
+{
+    if (use_openport2_adapter)
+    {
+        unsigned long status;
+
+        status = j2534->PassThruIoctl(chanID, CLEAR_TX_BUFFER, NULL, NULL);
+        if (status)
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+        else
+        {
+            qDebug() << "TX BUFFER EMPTY";
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
 int SerialPortActions::set_lec_lines(int lec1_state, int lec2_state)
 {
     line_end_check_1_toggled(lec1_state);
@@ -263,6 +305,7 @@ QString SerialPortActions::open_serial_port()
     {
         close_serial_port();
         use_openport2_adapter = true;
+
         if (!J2534_init_ok)
         {
             long result;
@@ -419,8 +462,8 @@ QByteArray SerialPortActions::write_serial_data(QByteArray output)
 
     if (is_serial_port_open())
     {
-        if (serialport_protocol_14230)
-            output = write_serial_iso14230_data(output, iso14230_startbyte, iso14230_source_id, iso14230_destination_id);
+        if (is_packet_header)
+            output = add_packet_header(output);
 
         if (use_openport2_adapter)
         {
@@ -446,8 +489,8 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
 
     if (is_serial_port_open())
     {
-        if (serialport_protocol_14230)
-            output = write_serial_iso14230_data(output, iso14230_startbyte, iso14230_source_id, iso14230_destination_id);
+        if (is_packet_header)
+            output = add_packet_header(output);
 
         if (use_openport2_adapter)
         {
@@ -479,16 +522,16 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
     return received;
 }
 
-QByteArray SerialPortActions::write_serial_iso14230_data(QByteArray output, uint8_t iso14230_startbyte, uint8_t iso14230_source_id, uint8_t iso14230_destination_id)
+QByteArray SerialPortActions::add_packet_header(QByteArray output)
 {
     uint8_t chk_sum = 0;
     uint8_t msglength = output.length();
 
     //qDebug() << "Adding iso14230 header to message";
 
-    output.insert(0, iso14230_startbyte);
-    output.insert(1, iso14230_destination_id);
-    output.insert(2, iso14230_source_id);
+    output.insert(0, packet_header_startbyte);
+    output.insert(1, packet_header_destination_id);
+    output.insert(2, packet_header_source_id);
     if (msglength < 0x40)
         output[0] = output[0] | msglength;
     else
@@ -589,7 +632,6 @@ int SerialPortActions::send_periodic_j2534_data(QByteArray output, int timeout)
         NumMsgs = 1;
 
         j2534->PassThruStartPeriodicMsg(chanID, &txmsg, &msgID, timeout);
-
         numMsgs++;
         output.remove(0, txMsgLen);
         txMsgLen = output.length();
@@ -597,13 +639,22 @@ int SerialPortActions::send_periodic_j2534_data(QByteArray output, int timeout)
             txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
     }
 
+    delay(10);
+
+    qDebug() << "Periodic msgID:" << msgID;
+
     return STATUS_SUCCESS;
 }
 
 int SerialPortActions::stop_periodic_j2534_data()
 {
+    PASSTHRU_MSG rxmsg;
+    unsigned long numRxMsg;
+    unsigned long timeout = 100;
 
     j2534->PassThruStopPeriodicMsg(chanID, msgID);
+    delay(10);
+    j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
 
     return STATUS_SUCCESS;
 }
@@ -1072,10 +1123,10 @@ int SerialPortActions::set_j2534_can_filters()
 */
 int SerialPortActions::set_j2534_iso9141()
 {
-    if (serialport_protocol_14230)
+    if (is_iso14230_connection)
     {
         protocol = ISO14230;
-        flags = 0;
+        flags = ISO9141_NO_CHECKSUM;
     }
     else
     {
@@ -1158,30 +1209,6 @@ int SerialPortActions::set_j2534_iso9141_filters()
         //qDebug() << "Set filters OK";
     }
     //j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
-
-    return STATUS_SUCCESS;
-}
-
-int SerialPortActions::clear_rx_buffer()
-{
-    if (j2534->PassThruIoctl(chanID,CLEAR_RX_BUFFER,NULL,NULL))
-    {
-        reportJ2534Error();
-        return STATUS_ERROR;
-    }
-    else
-    {
-        //qDebug() << "RX flush OK";
-    }
-    if (j2534->PassThruIoctl(chanID,CLEAR_TX_BUFFER,NULL,NULL))
-    {
-        reportJ2534Error();
-        return STATUS_ERROR;
-    }
-    else
-    {
-        //qDebug() << "TX flush OK";
-    }
 
     return STATUS_SUCCESS;
 }

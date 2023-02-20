@@ -251,8 +251,8 @@ private slots:
     // mainwindow.c
     void select_protocol();
     void select_protocol_finished(int result);
-    void log_protocol_changed();
-    void flash_protocol_changed();
+    void log_transport_changed();
+    void flash_transport_changed();
     void check_serial_ports();
     void open_serial_port();
     int start_ecu_operations(QString cmd_type);
