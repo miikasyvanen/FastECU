@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     fileActions = new FileActions();
     configValues = &fileActions->ConfigValuesStruct;
 
-    fileActions->check_config_dir(configValues);
+    //fileActions->check_config_dir(configValues);
     configValues = fileActions->read_config_file(configValues);
 
     fileActions->read_protocols_file(configValues);
@@ -52,16 +52,18 @@ MainWindow::MainWindow(QWidget *parent)
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_family = configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(configValues->flash_protocol_selected_id.toInt());
-    configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
-    configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
-    configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
+    //configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
+    //configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
+    //configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
 
     qDebug() << configValues->flash_protocol_selected_make;
     qDebug() << configValues->flash_protocol_selected_model;
     qDebug() << configValues->flash_protocol_selected_version;
     qDebug() << configValues->flash_protocol_selected_family;
     qDebug() << configValues->flash_protocol_selected_description;
-
+    qDebug() << configValues->flash_protocol_selected_flash_transport;
+    qDebug() << configValues->flash_protocol_selected_log_transport;
+    qDebug() << configValues->flash_protocol_selected_log_protocol;
     QRect qrect = MainWindow::geometry();
 
     toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
@@ -211,7 +213,7 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i = 0; i < serial_ports.length(); i++)
     {
         serial_port_list->addItem(serial_ports.at(i));
-        if (configValues->serial_port == serial_ports.at(i).split(" ").at(0))
+        if (configValues->serial_port == serial_ports.at(i).split(" - ").at(0))
             serial_port_list->setCurrentIndex(i);
     }
     ui->toolBar->addWidget(serial_port_list);
@@ -269,6 +271,9 @@ MainWindow::MainWindow(QWidget *parent)
     emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
 
     status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
+
+
+    //subaru_denso_kline_sti04_32bit(ecuCalDef[ecuCalDefIndex]);
 }
 
 MainWindow::~MainWindow()
@@ -371,6 +376,8 @@ QString MainWindow::check_kernel(QString flash_method)
     else if (flash_method == "sh7055_denso_can_recovery")
         kernel = prefix + "ssmk_CAN_SH7055.bin";
     else if (flash_method == "sh7058_denso_can_recovery")
+        kernel = prefix + "ssmk_CAN_SH7058.bin";
+    else if (flash_method == "sh7058s_denso_can_recovery")
         kernel = prefix + "ssmk_CAN_SH7058.bin";
     else
         kernel = "N/A";
@@ -492,6 +499,7 @@ void MainWindow::open_serial_port()
             }
             //qDebug() << "Serial port" << opened_serial_port << "opened" << previous_serial_port;
             previous_serial_port = opened_serial_port;
+            configValues->serial_port = serial_port.at(0);
             if (ecuid == "")
                 set_status_bar_label(true, false, "");
             else

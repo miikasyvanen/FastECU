@@ -30,7 +30,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class EcuOperationsSubaru : public QWidget
+class EcuOperationsSubaru : public QDialog
 {
     Q_OBJECT
 
@@ -72,7 +72,9 @@ private:
 
     QByteArray subaru_16bit_bootloader_init = { "\x4D\xFF\xB4" };
 
-    QByteArray subaru_16bit_bootloader_init_ok = { "\x4D\x00\xB3" };
+    QByteArray subaru_16bit_bootloader_stock_init_ok = { "\x4D\x00\xB3" };
+    QByteArray subaru_16bit_bootloader_ecutek_init_ok = { "\x4D\x00\xB3" };
+    QByteArray subaru_16bit_bootloader_init_ok;
 
     unsigned long serial_read_extra_short_timeout = 50;
     unsigned long serial_read_short_timeout = 200;
@@ -87,6 +89,7 @@ private:
     int connect_bootloader_subaru_denso_kline_02_32bit();
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int connect_bootloader_subaru_denso_can_32bit();
+    int connect_bootloader_subaru_denso_iso15765_32bit();
     int connect_bootloader_subaru_denso_can_recovery_32bit();
     int connect_bootloader_subaru_denso_iso15765_recovery_32bit();
 
@@ -107,11 +110,13 @@ private:
     int upload_kernel_subaru_denso_kline_02_32bit(QString kernel);
     int upload_kernel_subaru_denso_kline_04_32bit(QString kernel);
     int upload_kernel_subaru_denso_can_32bit(QString kernel);
+    int upload_kernel_subaru_denso_iso15765_32bit(QString kernel);
 
     int read_rom_subaru_denso_kline_02_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
+    int read_rom_subaru_denso_iso15765_32bit(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int read_rom_subaru_hitachi_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
@@ -121,6 +126,7 @@ private:
     int write_rom_subaru_denso_kline_04_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_denso_can_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_rom_subaru_denso_iso15765_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int write_rom_subaru_uj70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
     int write_rom_subaru_hitachi_70_kline(FileActions::EcuCalDefStructure *ecuCalDef);
@@ -167,9 +173,9 @@ private:
 
     QByteArray subaru_denso_transform_wrx02_kernel(unsigned char *data, int length, bool doencrypt);
     QByteArray subaru_denso_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt);
-    QByteArray subaru_denso_transform_denso_02_32bit_kernel(QByteArray buf, uint32_t len);
+    QByteArray subaru_denso_transform_02_32bit_kernel(QByteArray buf, uint32_t len);
 
-    QByteArray subaru_denso_transform_denso_32bit_payload(QByteArray buf, uint32_t len);
+    QByteArray subaru_denso_transform_32bit_payload(QByteArray buf, uint32_t len);
     QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
     QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
     QByteArray subaru_denso_generate_can_seed_key(QByteArray requested_seed);
