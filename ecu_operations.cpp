@@ -526,6 +526,27 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
     return STATUS_SUCCESS;
 }
 
+int EcuOperations::read_mem_32bit_iso15765(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+{
+    QElapsedTimer timer;
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    QByteArray pagedata;
+    QByteArray mapdata;
+    uint32_t cplen = 0;
+    uint32_t timeout = 0;
+
+    uint32_t pagesize = 0x400;
+
+    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
+    uint32_t addr = start_addr - skip_start;
+    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
+    uint32_t len_done = 0;  //total data written to file
+
+    return STATUS_ERROR;
+}
+
 /*******************************************************
  *  Write ROM 16bit K-Line ECUs
  ******************************************************/
@@ -757,12 +778,6 @@ int EcuOperations::write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCal
 int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
     QByteArray filedata;
-    //QByteArray output;
-    //QByteArray received;
-    //QByteArray msg;
-    //uint32_t start_addr = 0;
-    //uint32_t length = 0;
-    //uint32_t pagesize = 0x400;
 
     filedata = ecuCalDef->FullRomData;
 
@@ -866,6 +881,29 @@ int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDe
     }
 
     return STATUS_SUCCESS;
+}
+
+int EcuOperations::write_mem_32bit_iso15765(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+{
+    QByteArray filedata;
+
+    filedata = ecuCalDef->FullRomData;
+
+    uint8_t data_array[filedata.length()];
+
+    //qDebug() << filename << origfilename;
+
+    int block_modified[16] = {0};
+
+    unsigned bcnt = 0;
+    unsigned blockno;
+
+    for (int i = 0; i < filedata.length(); i++)
+    {
+        data_array[i] = filedata.at(i);
+    }
+
+    return STATUS_ERROR;
 }
 
 /*******************************************************
@@ -2060,8 +2098,8 @@ void EcuOperations::set_progressbar_value(int value)
 void EcuOperations::delay(int n)
 {
     QTime dieTime = QTime::currentTime().addMSecs(n);
-    while (QTime::currentTime() < dieTime)
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    while (QTime::currentTime() < dieTime){}
+        //QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 /* special checksum for reflash blocks:

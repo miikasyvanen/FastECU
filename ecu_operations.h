@@ -27,9 +27,11 @@ public:
     int read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int read_mem_32bit_iso15765(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_mem_32bit_iso15765(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int compare_mem_32bit_kline(QString mcu_type_string);
     int compare_mem_32bit_can(QString mcu_type_string);
 

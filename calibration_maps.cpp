@@ -1,5 +1,5 @@
 #include "calibration_maps.h"
-#include <ui_calibrationmaptable.h>
+#include <ui_calibration_map_table.h>
 
 CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int romIndex, int mapIndex, QRect mdiAreaSize, QWidget *parent)
     : QWidget(parent),

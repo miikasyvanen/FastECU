@@ -346,8 +346,8 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     case START_OF_MESSAGE:
                         msg_type_string = "START_OF_MESSAGE";
                         break;
-                    case TX_DONE_:
-                        msg_type_string = "TX_DONE_";
+                    case TX_DONE_MSG:
+                        msg_type_string = "TX_DONE_MSG";
                         break;
                     case TX_LB_MSG:
                         msg_type_string = "TX_LB_MSG";
@@ -384,12 +384,21 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     //received.clear();
                 }
 
+                if (msg_type == TX_DONE_MSG)
+                {
+                    pMsg->RxStatus = TX_DONE_MSG;
+                    received.append(read_serial_data(msg_byte_cnt, Timeout));
+                    msg_index = 0;
+                    msg_cnt = 0;
+                    //qDebug() << "TX_DONE_MSG" << parseMessageToHex(received);
+                    received.clear();
+                }
                 if (msg_type == TX_LB_START_IND)
                 {
                     pMsg->RxStatus = TX_LB_START_IND;
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
                     msg_index = 0;
-                    msg_cnt++;
+                    msg_cnt = 0;
                     //qDebug() << "TX_LB_START_IND" << parseMessageToHex(received);
                     received.clear();
                 }
@@ -398,7 +407,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->RxStatus = TX_LB_MSG;
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
                     msg_index = 0;
-                    msg_cnt++;
+                    msg_cnt = 0;
                     //qDebug() << "TX_LB_MSG" << parseMessageToHex(received);
                     received.clear();
                 }
@@ -407,7 +416,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->RxStatus = LB_MSG_END_IND;
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
                     msg_index = 0;
-                    msg_cnt++;
+                    msg_cnt = 0;
                     //qDebug() << "LB_MSG_END_IND" << parseMessageToHex(received);
                     received.clear();
                 }
@@ -441,7 +450,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                             pMsg->Data[msg_index++] = (uint8_t)received.at(i + 9);
                     }
 
-                    if (received.at(2) == '5' || received.at(2) == '6')
+                    if (received.at(2) == '5')
                     {
                         char data[4];
                         data[0] = (uint8_t)received.at(8);
@@ -461,6 +470,12 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
 
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
 
+                    if (received.at(2) == '6')
+                    {
+                        msg_byte_cnt -= 4;
+                        for (unsigned long i = 0; i < msg_byte_cnt; i++)
+                            pMsg->Data[msg_index++] = (uint8_t)received.at(i + 9);
+                    }
                     char data[4];
                     data[0] = (uint8_t)received.at(8);
                     data[1] = (uint8_t)received.at(7);
@@ -508,7 +523,7 @@ long J2534::PassThruWriteMsgs(unsigned long ChannelID, const PASSTHRU_MSG *pMsg,
             output.append(pMsg->Data[i]);
         }
         //output.append("\r\n");
-        //qDebug() << "TX:" << parseMessageToHex(output);
+        qDebug() << "TX:" << parseMessageToHex(output);
         write_serial_data(output);
         //PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, Timeout);
         pMsg++;

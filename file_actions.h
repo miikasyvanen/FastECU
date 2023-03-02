@@ -40,18 +40,14 @@ public:
     struct ConfigValuesStructure {
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
-        //QString car_make = "Subaru";
-        //QString flash_method = "wrx02";
-        //QString protocol_id = "0";
-        //QString flash_transport = "K-Line";
-        //QString log_transport = "K-Line";
-        //QString log_protocol = "SSM";
         QString window_size = "default";
         QString window_width = "default";
         QString window_height = "default";
         QString toolbar_iconsize = "32";
 
-        QString base_directory = QDir::homePath() + "/FastECU_OEM";
+        QString app_base_directory = ".";
+        QString home_base_directory = QDir::homePath() + "/FastECU_OEM";
+        QString base_directory = app_base_directory;
         QString calibration_files_base_directory = base_directory + "/calibrations";
         QString config_base_directory = base_directory + "/config";
         QString definition_files_base_directory = base_directory + "/definitions";

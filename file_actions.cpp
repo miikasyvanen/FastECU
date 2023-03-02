@@ -190,7 +190,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                                 else
                                     reader.skipCurrentElement();
                             }
-                            qDebug() << "ECU protocol:" << configValues->flash_protocol_selected_flash_transport;
+                            qDebug() << "Flash transport:" << configValues->flash_protocol_selected_flash_transport;
                         }
                         else if (reader.name() == "setting" && reader.attributes().value("name") == "log_transport")
                         {
@@ -483,6 +483,7 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeEndElement();
     stream.writeEndElement();
     stream.writeEndDocument();
+
     file.close();
 
     return 0;
