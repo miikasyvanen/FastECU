@@ -948,7 +948,17 @@ int SerialPortActions::set_j2534_can_filters()
 
         msgMask = msgPattern = txmsg;
         memset(msgMask.Data, 0xFF, txmsg.DataSize); // mask the first 4 byte to 0
-        memset(msgPattern.Data, 0x00, txmsg.DataSize);// match it with 0 (i.e. pass everything)
+        memset(msgPattern.Data, 0xFF, txmsg.DataSize);// match it with 0 (i.e. pass everything)
+/*
+        msgMask.Data[0] = (can_source_address >> 24) & 0xFF;
+        msgMask.Data[1] = (can_source_address >> 16) & 0xFF;
+        msgMask.Data[2] = (can_source_address >> 8) & 0xFF;
+        msgMask.Data[3] = can_source_address & 0xFF;
+*/
+        msgPattern.Data[0] = (can_destination_address >> 24) & 0xFF;
+        msgPattern.Data[1] = (can_destination_address >> 16) & 0xFF;
+        msgPattern.Data[2] = (can_destination_address >> 8) & 0xFF;
+        msgPattern.Data[3] = (can_destination_address & 0xFF);
 
         if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
         {
@@ -996,7 +1006,7 @@ int SerialPortActions::set_j2534_can_filters()
             reportJ2534Error();
             return STATUS_ERROR;
         }
-
+/*
         msgPattern.Data[0] = 0x00;
         msgPattern.Data[1] = 0x00;
         msgPattern.Data[2] = 0x00;
@@ -1011,6 +1021,7 @@ int SerialPortActions::set_j2534_can_filters()
             reportJ2534Error();
             return STATUS_ERROR;
         }
+*/
     }
     else
         return STATUS_ERROR;

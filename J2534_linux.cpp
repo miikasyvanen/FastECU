@@ -523,7 +523,7 @@ long J2534::PassThruWriteMsgs(unsigned long ChannelID, const PASSTHRU_MSG *pMsg,
             output.append(pMsg->Data[i]);
         }
         //output.append("\r\n");
-        qDebug() << "TX:" << parseMessageToHex(output);
+        //qDebug() << "TX:" << parseMessageToHex(output);
         write_serial_data(output);
         //PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, Timeout);
         pMsg++;
