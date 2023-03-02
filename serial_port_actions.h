@@ -87,6 +87,8 @@ public:
     QString serial_port_prefix_win;
     QSerialPort *serial = new QSerialPort();
 
+    uint32_t can_source_address = 0;
+    uint32_t can_destination_address = 0;
     uint32_t iso15765_source_address = 0;
     uint32_t iso15765_destination_address = 0;
 

@@ -89,6 +89,7 @@ private:
     int connect_bootloader_subaru_denso_kline_02_32bit();
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int connect_bootloader_subaru_denso_can_32bit();
+    int connect_bootloader_subaru_denso_can_iso15765_32bit();
     int connect_bootloader_subaru_denso_iso15765_32bit();
     int connect_bootloader_subaru_denso_can_recovery_32bit();
     int connect_bootloader_subaru_denso_iso15765_recovery_32bit();

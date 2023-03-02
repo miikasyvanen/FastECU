@@ -223,15 +223,26 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.startsWith("fxt02"))
     {
-        serial->open_serial_port();
-
         if (serial->is_can_connection)
         {
+            serial->is_can_connection = true;
+            serial->is_iso15765_connection = false;
+            serial->is_29_bit_id = true;
+            serial->can_speed = "500000";
+            serial->can_source_address = 0xFFFFE;
+            serial->can_destination_address = 0x21;
+            serial->open_serial_port();
+
             send_log_window_message("Connecting to Subaru 02 32-bit CAN bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_can_32bit();
         }
         else
         {
+            serial->is_can_connection = false;
+            serial->is_iso15765_connection = false;
+            serial->is_iso14230_connection = true;
+            serial->open_serial_port();
+
             send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_kline_02_32bit();
         }
@@ -281,16 +292,26 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.startsWith("sti04"))
     {
-        serial->is_iso14230_connection = true;
-        serial->open_serial_port();
-
         if (serial->is_can_connection)
         {
+            serial->is_can_connection = true;
+            serial->is_iso15765_connection = false;
+            serial->is_29_bit_id = true;
+            serial->can_speed = "500000";
+            serial->can_source_address = 0xFFFFE;
+            serial->can_destination_address = 0x21;
+            serial->open_serial_port();
+
             send_log_window_message("Connecting to Subaru 04 32-bit CAN bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_can_32bit();
         }
         else
         {
+            serial->is_can_connection = false;
+            serial->is_iso15765_connection = false;
+            serial->is_iso14230_connection = true;
+            serial->open_serial_port();
+
             send_log_window_message("Connecting to Subaru 04 32-bit K-line bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_kline_04_32bit();
         }
@@ -340,15 +361,26 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.startsWith("sti05"))
     {
-        serial->open_serial_port();
-
         if (serial->is_can_connection)
         {
+            serial->is_can_connection = true;
+            serial->is_iso15765_connection = false;
+            serial->is_29_bit_id = true;
+            serial->can_speed = "500000";
+            serial->can_source_address = 0xFFFFE;
+            serial->can_destination_address = 0x21;
+            serial->open_serial_port();
+
             send_log_window_message("Connecting to Subaru 05 32-bit CAN bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_can_32bit();
         }
         else
         {
+            serial->is_can_connection = false;
+            serial->is_iso15765_connection = false;
+            serial->is_iso14230_connection = true;
+            serial->open_serial_port();
+
             send_log_window_message("Connecting to Subaru 05 32-bit K-line bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_kline_04_32bit();
         }
@@ -398,13 +430,29 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.startsWith("subarucan"))
     {
-        //serial->open_serial_port();
-
         send_log_window_message("Connecting to Subaru 32-bit CAN bootloader, please wait...", true, true);
         if (serial->is_iso15765_connection)
+        {
+            serial->is_29_bit_id = false;
+            serial->iso15765_source_address = 0x7E0;
+            serial->iso15765_destination_address = 0x7E8;
+            serial->can_speed = "500000";
+            serial->open_serial_port();
+
             result = connect_bootloader_subaru_denso_iso15765_32bit();
+        }
         else
+        {
+            serial->is_can_connection = false;
+            serial->is_iso15765_connection = true;
+            serial->is_29_bit_id = false;
+            serial->can_source_address = 0xFFFFE;
+            serial->can_destination_address = 0x21;
+            serial->can_speed = "500000";
+            serial->open_serial_port();
+
             result = connect_bootloader_subaru_denso_can_32bit();
+        }
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
             send_log_window_message("Initializing Subaru 32-bit CAN kernel upload, please wait...", true, true);
@@ -575,15 +623,34 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.endsWith("denso_can_recovery"))
     {
-        serial->is_iso14230_connection = false;
-        serial->open_serial_port();
-
         send_log_window_message("Connecting to Subaru Denso 32-bit CAN bootloader, please wait...", true, true);
 
         if (flash_method == "sh7058s_denso_can_recovery")
-            result = connect_bootloader_subaru_denso_iso15765_recovery_32bit();
-        else
+        {
+            serial->is_can_connection = false;
+            serial->is_iso15765_connection = true;
+            serial->is_29_bit_id = false;
+            serial->can_speed = "500000";
+
+            serial->iso15765_source_address = 0xFFFFE;
+            serial->iso15765_destination_address = 0x21;
+            serial->open_serial_port();
+
             result = connect_bootloader_subaru_denso_can_recovery_32bit();
+        }
+        else
+        {
+            serial->is_can_connection = true;
+            serial->is_iso15765_connection = false;
+            serial->is_29_bit_id = true;
+            serial->can_speed = "500000";
+
+            serial->can_source_address = 0xFFFFE;
+            serial->can_destination_address = 0x21;
+            serial->open_serial_port();
+
+            result = connect_bootloader_subaru_denso_can_recovery_32bit();
+        }
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
             send_log_window_message("Initializing Subaru Denso 32-bit CAN kernel upload, please wait...", true, true);
@@ -909,7 +976,91 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_32bit()
     QByteArray received;
     QByteArray msg;
 
-    serial->open_serial_port();
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    serial->is_packet_header = false;
+
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
+
+    // Check if kernel already alive
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)(SID_START_COMM_CAN & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(200);
+    received = serial->read_serial_data(20, 10);
+    qDebug() << "0x7A 0x00 response:" << parse_message_to_hex(received);
+    send_log_window_message("0x7A 0x00 response: " + parse_message_to_hex(received), true, true);
+    if ((uint8_t)received.at(0) == 0x7F && (uint8_t)received.at(2) == 0x34)
+    {
+        send_log_window_message("Kernel already uploaded", true, true);
+
+        kernel_alive = true;
+        return STATUS_SUCCESS;
+    }
+
+    output[4] = (uint8_t)((SID_ENTER_BL_CAN >> 8) & 0xFF);
+    output[5] = (uint8_t)(SID_ENTER_BL_CAN & 0xFF);
+    output[6] = (uint8_t)0x00;
+    output[7] = (uint8_t)0x00;
+    output[8] = (uint8_t)0x00;
+    output[9] = (uint8_t)0x00;
+    output[10] = (uint8_t)0x00;
+    output[11] = (uint8_t)0x00;
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(200);
+    received = serial->read_serial_data(20, 10);
+    send_log_window_message("0xFF 0x86 response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "0xFF 0x86 response:" << parse_message_to_hex(received);
+
+    output[4] = (uint8_t)SID_START_COMM_CAN;
+    output[5] = (uint8_t)(SID_CHECK_COMM_BL_CAN & 0xFF);
+    output[6] = (uint8_t)0x00;
+    output[7] = (uint8_t)0x00;
+    output[8] = (uint8_t)0x00;
+    output[9] = (uint8_t)0x00;
+    output[10] = (uint8_t)0x00;
+    output[11] = (uint8_t)0x00;
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(200);
+    received = serial->read_serial_data(20, 10);
+    send_log_window_message("0x7A 0x90 response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
+    if ((uint8_t)(received.at(1) & 0xF8) == 0x90)
+    {
+        send_log_window_message("Connected to bootloader, start kernel upload", true, true);
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_ERROR;
+}
+
+int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_iso15765_32bit()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
 
     if (!serial->is_serial_port_open())
     {
@@ -991,10 +1142,6 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     QByteArray received;
     QByteArray msg;
 
-    serial->iso15765_source_address = 0x7e0;
-    serial->iso15765_destination_address = 0x7e8;
-    serial->open_serial_port();
-
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -1019,7 +1166,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     // Start initialization
 
     serial->write_serial_data_echo_check(output);
-    qDebug() << parse_message_to_hex(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(200);
     received = serial->read_serial_data(20, 10);
     send_log_window_message(QString::number(try_count) + ": 0x01 response: " + parse_message_to_hex(received), true, true);
@@ -1037,7 +1185,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        qDebug() << parse_message_to_hex(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
         received = serial->read_serial_data(20, 10);
         send_log_window_message(QString::number(try_count) + ": 0x01 0x00 response: " + parse_message_to_hex(received), true, true);
@@ -1060,7 +1209,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        qDebug() << parse_message_to_hex(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
         received = serial->read_serial_data(20, 10);
         send_log_window_message(QString::number(try_count) + ": 0x10 0x03 response: " + parse_message_to_hex(received), true, true);
@@ -1082,7 +1232,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        qDebug() << parse_message_to_hex(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
         received = serial->read_serial_data(20, 10);
         send_log_window_message(QString::number(try_count) + ": 0x10 0x43 response: " + parse_message_to_hex(received), true, true);
@@ -1105,7 +1256,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        qDebug() << parse_message_to_hex(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
         received = serial->read_serial_data(20, 10);
         send_log_window_message(QString::number(try_count) + ": 0x09 0x02 response: " + parse_message_to_hex(received), true, true);
@@ -1128,7 +1280,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        qDebug() << parse_message_to_hex(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
         received = serial->read_serial_data(20, 10);
         send_log_window_message(QString::number(try_count) + ": 0x09 0x06 response: " + parse_message_to_hex(received), true, true);
@@ -1151,7 +1304,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        qDebug() << parse_message_to_hex(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
         received = serial->read_serial_data(20, 10);
         send_log_window_message(QString::number(try_count) + ": 0x27 0x01 response: " + parse_message_to_hex(received), true, true);
