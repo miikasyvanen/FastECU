@@ -382,7 +382,7 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
 }
 
 /*******************************************************
- *  Read ROM 16bit CAN ECUs
+ *  Read ROM 32bit CAN ECUs
  ******************************************************/
 int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {

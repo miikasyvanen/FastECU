@@ -140,7 +140,7 @@ public:
 private:
     enum rx_msg_type {
         NORM_MSG,
-        TX_DONE_ = 0x10,
+        TX_DONE_MSG = 0x10,
         TX_LB_MSG = 0x20,
         RX_MSG_END_IND = 0x40,
         EXT_ADDR_MSG_END_IND = 0x44,

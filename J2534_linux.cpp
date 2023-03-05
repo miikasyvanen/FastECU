@@ -220,16 +220,12 @@ long J2534::PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, un
         return 0;//J2534_ERR_INVALID_PROTOCOL_ID;
     }
 
-    //Flags = 4608;
-    //qDebug() << "Connect J2534 device ID:" << DeviceID << "channel:" << pChannelID;
-
     output.clear();
-    output.append("ato" + QString::number(ProtocolID) + " " + QString::number(Flags) + " " + QString::number(Baudrate) + " 0\r\n");
+    output.append("ato" + QString::number(ProtocolID) + " " + QString::number(Flags) + " " + QString::number(Baudrate) + " " + QString::number(ProtocolID) + "\r\n");
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
     received = read_serial_data(100, 50);
-    //qDebug() << "Received:" << parseMessageToHex(received);
-
+    qDebug() << "Connect received:" << parseMessageToHex(received) << received << pChannelID;
 
     return result;
 }
@@ -523,7 +519,7 @@ long J2534::PassThruWriteMsgs(unsigned long ChannelID, const PASSTHRU_MSG *pMsg,
             output.append(pMsg->Data[i]);
         }
         //output.append("\r\n");
-        //qDebug() << "TX:" << parseMessageToHex(output);
+        qDebug() << "TX:" << parseMessageToHex(output);
         write_serial_data(output);
         //PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, Timeout);
         pMsg++;

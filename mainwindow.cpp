@@ -273,7 +273,11 @@ MainWindow::MainWindow(QWidget *parent)
     status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 
 
-    //subaru_denso_kline_sti04_32bit(ecuCalDef[ecuCalDefIndex]);
+    //ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
+    //while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
+    //    ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
+    //FlashSti04 *flash_sti04 = new FlashSti04(serial, ecuCalDef[0], "read");
+
 }
 
 MainWindow::~MainWindow()
@@ -500,6 +504,7 @@ void MainWindow::open_serial_port()
             //qDebug() << "Serial port" << opened_serial_port << "opened" << previous_serial_port;
             previous_serial_port = opened_serial_port;
             configValues->serial_port = serial_port.at(0);
+            fileActions->save_config_file(configValues);
             if (ecuid == "")
                 set_status_bar_label(true, false, "");
             else
@@ -573,7 +578,10 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             //ecuCalDef[romNumber]->RomInfo.replace(fileActions->MemModel,
             ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
             //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
-            ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
+            if (configValues->flash_protocol_selected_family == "sti04")
+                FlashSti04 *flash_sti04 = new FlashSti04(serial, ecuCalDef[romNumber], cmd_type);
+            else
+                ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
         }
         else
         {
@@ -582,14 +590,10 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
             ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
             ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(ecuCalDef[ecuCalDefIndex]->RomInfo.at(fileActions->FlashMethod));
-            ////ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, flash_method_list->currentText());
-            ////ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(flash_method_list->currentText());
-            //qDebug() << "ID:" << configValues->flash_protocol_selected_id;
-            //qDebug() << "Make:" << configValues->flash_protocol_selected_make;
-            //qDebug() << "Model:" << configValues->flash_protocol_selected_model;
-            //qDebug() << "Version:" << configValues->flash_protocol_selected_version;
-            //qDebug() << "Flash method:" << configValues->flash_protocol_selected_family << ecuCalDef[ecuCalDefIndex]->RomInfo.at(fileActions->FlashMethod);
-            ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
+            if (configValues->flash_protocol_selected_family == "sti04")
+                FlashSti04 *flash_sti04 = new FlashSti04(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
+            else
+                ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
 
             if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
             {

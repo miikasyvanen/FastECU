@@ -2,7 +2,7 @@
 #include <ui_biu_operations_subaru.h>
 
 BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *parent)
-    : QWidget(parent),
+    : QDialog(parent),
       ui(new Ui::BiuOperationsSubaruWindow)
 {
     ui->setupUi(this);
@@ -36,6 +36,7 @@ void BiuOperationsSubaru::send_biu_msg()
     QStringList selected_item_msg;
 
     bool ok = false;
+    uint8_t chk_sum;
 
     if (selected_item_text != "Custom")
     {
@@ -60,16 +61,22 @@ void BiuOperationsSubaru::send_biu_msg()
         output.append(selected_item_msg.at(i).toUInt(&ok, 16));
     }
     output[0] = output[0] | (output.length() - 3);
+    chk_sum = calculate_checksum(output, false);
+    output.append((uint8_t) chk_sum);
 
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
 
     if (selected_item_text == "Connect")
     {
+        //send_log_window_message("Init connection: " + parse_message_to_hex(output), true, true);
         serial->fast_init(output);
         delay(100);
     }
     else
+    {
+        //send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
         received = serial->write_serial_data_echo_check(output);
+    }
 
     received = serial->read_serial_data(100, 100);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
@@ -134,6 +141,19 @@ void BiuOperationsSubaru::parse_biu_message(QByteArray message)
             send_log_window_message("No BIU DTC found", true, true);
 
     }
+}
+
+uint8_t BiuOperationsSubaru::calculate_checksum(QByteArray output, bool dec_0x100)
+{
+    uint8_t checksum = 0;
+
+    for (uint16_t i = 0; i < output.length(); i++)
+        checksum += (uint8_t)output.at(i);
+
+    if (dec_0x100)
+        checksum = (uint8_t) (0x100 - checksum);
+
+    return checksum;
 }
 
 QString BiuOperationsSubaru::parse_message_to_hex(QByteArray received)
