@@ -10,6 +10,7 @@
 #include <QTime>
 #include <QTimer>
 #include <QWidget>
+#include <QDialog>
 
 #include <serial_port_actions.h>
 
@@ -20,7 +21,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class BiuOperationsSubaru : public QWidget
+class BiuOperationsSubaru : public QDialog
 {
     Q_OBJECT
 
@@ -98,6 +99,7 @@ private:
 
 
     void parse_biu_message(QByteArray message);
+    uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);
     int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int timeout);

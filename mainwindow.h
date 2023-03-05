@@ -37,6 +37,10 @@
 #include <settings.h>
 #include <serial_port_actions.h>
 
+// Flash modules
+#include <modules/flash_sti04.h>
+//
+
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
@@ -226,7 +230,7 @@ private:
     int simulate_obd();
     void show_subaru_biu_window();
 
-    #include <modules/flash_sti04.h>
+    //#include <modules/flash_sti04.h>
 
 protected:
 
