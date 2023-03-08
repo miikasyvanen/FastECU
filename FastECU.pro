@@ -53,7 +53,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
-    modules/flash_sti04.cpp \
+    modules/flash_denso_kline_04.cpp \
     protocol_select.cpp \
     serial_port_actions.cpp \
     settings.cpp \
@@ -76,7 +76,7 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
-    modules/flash_sti04.h \
+    modules/flash_denso_kline_04.h \
     protocol_select.h \
     serial_port_actions.h \
     settings.h \

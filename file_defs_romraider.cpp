@@ -364,6 +364,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                                 }
                                 if (xmlid == ecuId)
                                 {
+                                    qDebug() << "Romraider def:" << xmlid << ecuId;
                                     if (ecuCalDef->RomInfo.at(XmlId) == " ")
                                     {
                                         ecuCalDef->RomInfo.replace(XmlId, xmlid);
@@ -396,6 +397,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                             {
                                 ecuid_def_found = true;
                                 ecuCalDef->use_romraider_definition = true;
+                                qDebug() << "Romraider def:" << xmlid << ecuId;
 
                                 add_romraider_def_list_item(ecuCalDef);
 

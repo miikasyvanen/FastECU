@@ -439,10 +439,13 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         if (serial->is_can_connection)
         {
             denso_can_bootloader = true;
-            serial->is_can_connection = false;
-            serial->is_iso15765_connection = true;
-            serial->iso15765_source_address = 0xFFFFFFFF;
-            serial->iso15765_destination_address = 0x00000021;
+            serial->is_29_bit_id = true;
+            serial->is_can_connection = true;
+            serial->is_iso15765_connection = false;
+            //serial->iso15765_source_address = 0xFFFFFFFF;
+            //serial->iso15765_destination_address = 0x00000021;
+            serial->can_source_address = 0xFFFFFFFF;
+            serial->can_destination_address = 0x00000021;
         }
         serial->open_serial_port();
 
@@ -1259,12 +1262,40 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
         received = serial->read_serial_data(20, 10);
         //send_log_window_message(QString::number(try_count) + ": 0x09 0x02 response: " + parse_message_to_hex(received) + " " + received, true, true);
         //qDebug() << try_count << ": 0x09 0x02 response:" << parse_message_to_hex(received);
+        received.clear();
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x07);
+        received.append((uint8_t)0xe8);
+        received.append((uint8_t)0x49);
+        received.append((uint8_t)0x02);
+        received.append((uint8_t)0x01);
+        received.append((uint8_t)0x4a);
+        received.append((uint8_t)0x46);
+        received.append((uint8_t)0x31);
+        received.append((uint8_t)0x56);
+        received.append((uint8_t)0x41);
+        received.append((uint8_t)0x32);
+        received.append((uint8_t)0x4d);
+        received.append((uint8_t)0x36);
+        received.append((uint8_t)0x39);
+        received.append((uint8_t)0x4a);
+        received.append((uint8_t)0x39);
+        received.append((uint8_t)0x38);
+        received.append((uint8_t)0x30);
+        received.append((uint8_t)0x38);
+        received.append((uint8_t)0x39);
+        received.append((uint8_t)0x34);
+        received.append((uint8_t)0x35);
         while (received != "")
         {
             if (received != "")
                 connected = true;
-            send_log_window_message(QString::number(try_count) + ": 0x09 0x02 response: " + parse_message_to_hex(received) + " " + received, true, true);
-            qDebug() << try_count << ": 0x09 0x02 response:" << parse_message_to_hex(received);
+            QString msg = QString::fromStdString(received.remove(0, 7).toStdString());
+            send_log_window_message(QString::number(try_count) + ": 0x09 0x02 response: " + parse_message_to_hex(received), true, true);
+            if (received != "")
+                send_log_window_message("VIN: " + msg, true, true);
+            qDebug() << try_count << ": 0x09 0x02 response:" << parse_message_to_hex(received) << received;
             received = serial->read_serial_data(20, 10);
         }
         try_count++;
@@ -1504,16 +1535,17 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_uj20_30_40_70_kline()
 
     // iso14230
     // 80 F0 10 01 BF
-    output.clear();
-    output.append((uint8_t)0xBF);
-    received = serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
-    delay(50);
-    received = serial->read_serial_data(20, 1000);
-    send_log_window_message("SSM init response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "SSM init response:" << parse_message_to_hex(received);
+    //output.clear();
+    //output.append((uint8_t)0xBF);
+    //received = serial->write_serial_data_echo_check(add_ssm_header_ecu(output, false));
+    //delay(50);
+    //received = serial->read_serial_data(20, 1000);
+    //send_log_window_message("SSM init response: " + parse_message_to_hex(received), true, true);
+    //qDebug() << "SSM init response:" << parse_message_to_hex(received);
 
+    serial->change_port_speed("4800");
     // SSM init
-    //received = send_subaru_sid_bf_ssm_init();
+    received = send_subaru_sid_bf_ssm_init();
     if (received == "" || (uint8_t)received.at(4) != 0xFF)
         return STATUS_ERROR;
 
@@ -2387,6 +2419,7 @@ int EcuOperationsSubaru::read_rom_subaru_uj20_30_40_70_kline(FileActions::EcuCal
         return STATUS_ERROR;
     }
 
+    qDebug() << mcu_type_string << mcu_type_index;
     bool success = ecuOperations->read_mem_uj20_30_40_70_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
 
     return success;

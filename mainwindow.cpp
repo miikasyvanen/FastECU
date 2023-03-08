@@ -525,7 +525,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
     if (!selectedItem && cmd_type != "read")
     {
-        //qDebug() << "No ROM to write, exiting!";
+        QMessageBox::warning(this, tr("Write ROM"), "No file selected!");
         return 0;
     }
 
@@ -579,19 +579,23 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
             //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
             if (configValues->flash_protocol_selected_family == "sti04")
-                FlashSti04 *flash_sti04 = new FlashSti04(serial, ecuCalDef[romNumber], cmd_type);
+                FlashDensoKline04 *flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[romNumber], cmd_type);
             else
                 ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
         }
         else
         {
             ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
-            while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
+            int i = 0;
+            while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length()){
                 ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
+                qDebug() << "MEM MODEL:" << ecuCalDef[ecuCalDefIndex]->RomInfo.at(i);
+                i++;
+            }
             ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
             ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(ecuCalDef[ecuCalDefIndex]->RomInfo.at(fileActions->FlashMethod));
             if (configValues->flash_protocol_selected_family == "sti04")
-                FlashSti04 *flash_sti04 = new FlashSti04(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
+                FlashDensoKline04 *flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
             else
                 ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
 
