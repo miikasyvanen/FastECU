@@ -356,6 +356,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     bool inherits_another_def = false;
     bool needs_base_def = false;
     bool ecuid_def_found = false;
+    bool ecuid_file_found = false;
     bool map_defined = false;
 
     QString inherits_ecu_id;
@@ -387,10 +388,16 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     {
         if (configValues->ecuflash_def_ecu_id.at(index) == ecuId)
         {
+            ecuid_file_found = true;
             file_index = index;
             continue;
         }
     }
+
+    if (!ecuid_def_found)
+        return ecuCalDef;
+
+    ecuid_file_found = false;
 
     filename = configValues->ecuflash_def_filename.at(file_index);
 
@@ -486,6 +493,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 }
                 if (xmlid == ecuId)
                 {
+                    qDebug() << "EcuFlash def filename:" << filename << xmlid << ecuId;
                     ecuid_def_found = true;
                     ecuCalDef->use_ecuflash_definition = true;
 
@@ -547,7 +555,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             {
                 //qDebug() << "ECU ID found" << xmlid << ecuid;
                 ecuid_def_found = true;
-                ecuCalDef->use_ecuflash_definition = true;
+                //ecuCalDef->use_ecuflash_definition = true;
 
                 QString name = child.attribute("name"," ");
                 for (int i = 0; i < ecuCalDef->NameList.length(); i++)
@@ -690,9 +698,11 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         {
             read_ecuflash_ecu_base_def(ecuCalDef);
         }
+        if (ecuid_def_found)
+            ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
         ecuid_def_found = false;
     }
-    ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
+    //ecuCalDef->IdList.append(ecuCalDef->RomInfo.at(EcuId));
 
     return ecuCalDef;
 }

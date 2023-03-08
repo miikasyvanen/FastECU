@@ -38,7 +38,7 @@
 #include <serial_port_actions.h>
 
 // Flash modules
-#include <modules/flash_sti04.h>
+#include <modules/flash_denso_kline_04.h>
 //
 
 QT_BEGIN_NAMESPACE

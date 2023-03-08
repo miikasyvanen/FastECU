@@ -676,9 +676,9 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                         configValues->flash_protocol_flash_transport.replace(index, flash_protocol_flash_transport.at(i));
                                         configValues->flash_protocol_log_transport.replace(index, flash_protocol_log_transport.at(i));
                                         configValues->flash_protocol_log_protocol.replace(index, flash_protocol_log_protocol.at(i));
-                                        configValues->flash_protocol_ecu_id_ascii.replace(index, flash_protocol_cal_id_ascii.at(i));
-                                        configValues->flash_protocol_ecu_id_addr.replace(index, flash_protocol_cal_id_addr.at(i));
-                                        configValues->flash_protocol_ecu_id_length.replace(index, flash_protocol_cal_id_length.at(i));
+                                        configValues->flash_protocol_ecu_id_ascii.replace(index, flash_protocol_ecu_id_ascii.at(i));
+                                        configValues->flash_protocol_ecu_id_addr.replace(index, flash_protocol_ecu_id_addr.at(i));
+                                        configValues->flash_protocol_ecu_id_length.replace(index, flash_protocol_ecu_id_length.at(i));
                                         configValues->flash_protocol_cal_id_ascii.replace(index, flash_protocol_cal_id_ascii.at(i));
                                         configValues->flash_protocol_cal_id_addr.replace(index, flash_protocol_cal_id_addr.at(i));
                                         configValues->flash_protocol_cal_id_length.replace(index, flash_protocol_cal_id_length.at(i));
@@ -1410,7 +1410,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     for (int i = 0; i < cal_id_family_list.length(); i++)
     {
-        qDebug() << "ECU id family/address list:" << cal_id_family_list.at(i) << "-" << ecu_id_addr_list.at(i);
+        qDebug() << "ECU id family/address list:" << cal_id_family_list.at(i) << "-" << ecu_id_addr_list.at(i) << "-" << cal_id_addr_list.at(i);
     }
 
     if (!ecuCalDef->FullRomData.length())
@@ -1558,23 +1558,26 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->use_ecuflash_definition = false;
     ecuCalDef->use_romraider_definition = false;
 
-    if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
+    if (ecu_id != "")
     {
-        read_ecuflash_ecu_def(ecuCalDef, cal_id);
-        parse_ecuflash_def_scalings(ecuCalDef);
-
-        if (!ecuCalDef->use_ecuflash_definition)
-        {
-            read_romraider_ecu_def(ecuCalDef, cal_id);
-        }
-    }
-    if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
-    {
-        read_romraider_ecu_def(ecuCalDef, cal_id);
-        if(!ecuCalDef->use_romraider_definition)
+        if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
         {
             read_ecuflash_ecu_def(ecuCalDef, cal_id);
             parse_ecuflash_def_scalings(ecuCalDef);
+
+            if (!ecuCalDef->use_ecuflash_definition)
+            {
+                read_romraider_ecu_def(ecuCalDef, cal_id);
+            }
+        }
+        if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
+        {
+            read_romraider_ecu_def(ecuCalDef, cal_id);
+            if(!ecuCalDef->use_romraider_definition)
+            {
+                read_ecuflash_ecu_def(ecuCalDef, cal_id);
+                parse_ecuflash_def_scalings(ecuCalDef);
+            }
         }
     }
 
@@ -2007,7 +2010,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
         if (ecuCalDef->RomInfo[MemModel] == "SH7058")
             checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
-
+        qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
     }
     return ecuCalDef;
 }

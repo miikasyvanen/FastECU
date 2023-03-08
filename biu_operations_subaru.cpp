@@ -64,35 +64,21 @@ void BiuOperationsSubaru::send_biu_msg()
     chk_sum = calculate_checksum(output, false);
     output.append((uint8_t) chk_sum);
 
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
-
     if (selected_item_text == "Connect")
     {
-        //send_log_window_message("Init connection: " + parse_message_to_hex(output), true, true);
+        send_log_window_message("Init connection: " + parse_message_to_hex(output), true, true);
         serial->fast_init(output);
-        delay(100);
     }
     else
     {
-        //send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
         received = serial->write_serial_data_echo_check(output);
     }
 
+    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+
     received = serial->read_serial_data(100, 100);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-/*
-    received.clear();
-    received.append((uint8_t)0x80);
-    received.append((uint8_t)0xf0);
-    received.append((uint8_t)0x40);
-    received.append((uint8_t)0x58);
-    received.append((uint8_t)0x82);
-    received.append((uint8_t)0x01);
-    received.append((uint8_t)0x00);
-    received.append((uint8_t)0x83);
-    received.append((uint8_t)0x27);
-    received.append((uint8_t)0xfe);
-*/
+
     parse_biu_message(received);
 }
 

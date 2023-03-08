@@ -1,5 +1,5 @@
-#ifndef FLASH_STI04_H
-#define FLASH_STI04_H
+#ifndef FLASH_DENSO_KLINE_04_H
+#define FLASH_DENSO_KLINE_04_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashSti04 : public QDialog
+class FlashDensoKline04 : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashSti04(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashSti04();
+    explicit FlashDensoKline04(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashDensoKline04();
 
 private:
     #define STATUS_SUCCESS							0x00
@@ -125,4 +125,4 @@ private:
 
 };
 
-#endif // FLASH_STI04_H
+#endif // FLASH_DENSO_KLINE_04_H

@@ -2003,7 +2003,7 @@ int EcuOperations::read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure 
         received = serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
 
-        qDebug() << "Received map data:" << parse_message_to_hex(received);
+        //qDebug() << "Received map data:" << parse_message_to_hex(received);
         if (received.startsWith("\x80\xf0"))
         {
             received.remove(0, 5);
@@ -2034,7 +2034,7 @@ int EcuOperations::read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure 
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("ROM read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         send_log_window_message(msg, true, true);
-        qDebug() << msg;
+        //qDebug() << msg;
         delay(1);
 
         len_done += cplen;

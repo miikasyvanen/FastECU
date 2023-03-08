@@ -103,14 +103,31 @@ int SerialPortActions::fast_init(QByteArray output)
     {
         QByteArray init;
         QByteArray received;
+        double seconds = (double)350 / (double)1000;
+        auto spin_start = high_resolution_clock::now();
 
-        init.append((uint8_t)0x00);
-        serial->setBaudRate(360);
-        fast_delay(300);
-        received = write_serial_data_echo_check(init);
         serial->setBaudRate(10400);
-        fast_delay(15);
+
+        /* Set timeout to 350ms before init */
+        seconds = (double)350 / (double)1000;
+        spin_start = high_resolution_clock::now();
+        while ((high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
+        /* Set break to set seril line low */
+        serial->setBreakEnabled(true);
+        /* Set timeout to 25ms to generate 25ms low pulse  */
+        seconds = (double)25.1 / (double)1000;
+        spin_start = high_resolution_clock::now();
+        while ((high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
+        /* Unset break to set seril line high */
+        serial->setBreakEnabled(false);
+        /* Set timeout to 25ms to generate 25ms high pulse before init data is sent */
+        seconds = (double)24.7 / (double)1000;
+        spin_start = high_resolution_clock::now();
+        while ((high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
+        /* Send init data */
         received = write_serial_data_echo_check(output);
+        delay(100);
+        received = read_serial_data(100, 100);
     }
 
     return STATUS_SUCCESS;
@@ -672,6 +689,7 @@ QByteArray SerialPortActions::read_j2534_data(unsigned long timeout)
     rxmsg.DataSize = 0;
     numRxMsg = 1;
     j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
     if (numRxMsg)
     {
         //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
@@ -1156,6 +1174,13 @@ void SerialPortActions::handle_error(QSerialPort::SerialPortError error)
     {
         reset_connection();
     }
+}
+
+void SerialPortActions::accurate_delay(int timeout)
+{
+    double seconds = (double)timeout / 1000.0;
+    auto spinStart = high_resolution_clock::now();
+    while ((high_resolution_clock::now() - spinStart).count() / 1e9 < seconds);
 }
 
 void SerialPortActions::fast_delay(int timeout)

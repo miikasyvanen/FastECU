@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QDateTime>
 #include <QTime>
 #include <QTimer>
 #include <QWidget>
@@ -16,6 +17,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <thread>
+#include <chrono>
+#include <stdio.h>
+using namespace std;
+using namespace std::chrono;
 
 //#include <functional>
 //#include <iostream>
@@ -198,6 +205,7 @@ private slots:
 
     void close_serial_port();
     void handle_error(QSerialPort::SerialPortError error);
+    void accurate_delay(int timeout);
     void fast_delay(int timeout);
     void delay(int timeout);
 
