@@ -2,7 +2,6 @@
 #include <ui_biu_operations_subaru.h>
 
 BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *parent)
-//    : QWidget(parent),
     : QDialog(parent),
       ui(new Ui::BiuOperationsSubaruWindow)
 {
