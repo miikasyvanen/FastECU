@@ -12,19 +12,56 @@ BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *par
 
     this->serial = serial;
 
+    switches_window_shown = false;
+    switch_result = new QStringList();
+    keep_alive_timer = new QTimer(this);
+    keep_alive_timer->setInterval(3000);
+
     for (int i = 0; i < biu_messages.length(); i+=2)
     {
         ui->msg_combo_box->addItem(biu_messages.at(i));
     }
 
     connect(ui->send_msg, SIGNAL(clicked(bool)), this, SLOT(send_biu_msg()));
-
+    connect(keep_alive_timer, SIGNAL(timeout()), this, SLOT(keep_alive()));
 
 }
 
 BiuOperationsSubaru::~BiuOperationsSubaru()
 {
     //delete ui;
+    keep_alive_timer->stop();
+}
+
+void BiuOperationsSubaru::update_biu_ops_subaru_switches_window()
+{
+    if (!switches_window_shown)
+    {
+        biuOpsSubaruSwitches = new BiuOpsSubaruSwitches(switch_result);
+        biuOpsSubaruSwitches->show();
+        switches_window_shown = true;
+    }
+    else biuOpsSubaruSwitches->update_switch_results(switch_result);
+
+}
+
+void BiuOperationsSubaru::keep_alive()
+{
+    QByteArray output;
+    QByteArray received;
+
+    output.append((uint8_t)0x81);
+    output.append((uint8_t)0x40);
+    output.append((uint8_t)0xf0);
+    output.append((uint8_t)0x3E);
+    output.append((uint8_t)0xEF);
+
+    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+    received = serial->write_serial_data_echo_check(output);
+
+    received = serial->read_serial_data(100, 100);
+    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    parse_biu_message(received);
 }
 
 void BiuOperationsSubaru::send_biu_msg()
@@ -37,6 +74,8 @@ void BiuOperationsSubaru::send_biu_msg()
 
     bool ok = false;
     uint8_t chk_sum;
+
+    keep_alive_timer->stop();
 
     if (selected_item_text != "Custom")
     {
@@ -69,54 +108,71 @@ void BiuOperationsSubaru::send_biu_msg()
     if (selected_item_text == "Connect")
     {
         serial->fast_init(output);
-        delay(100);
+        //delay(100);
 
     }
     else
         received = serial->write_serial_data_echo_check(output);
 
     received = serial->read_serial_data(100, 100);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
-
+    if(!switches_window_shown)
+    {
     received.clear();
-    received.append((uint8_t)0x84);
+    received.append((uint8_t)0x92);
     received.append((uint8_t)0xf0);
     received.append((uint8_t)0x40);
     received.append((uint8_t)0x61);
-    received.append((uint8_t)0x52);
-    received.append((uint8_t)0x02);
-    received.append((uint8_t)0x03);
-    received.append((uint8_t)0x6C);
-    /*
-    received.append((uint8_t)0x3F);
+    received.append((uint8_t)0x50);
+    received.append((uint8_t)0x01);
+    received.append((uint8_t)0x01);
+    received.append((uint8_t)0x01);
+    received.append((uint8_t)0x40);
+    received.append((uint8_t)0x04);
     received.append((uint8_t)0x00);
-    received.append((uint8_t)0xC0);
-    received.append((uint8_t)0x56);
+    received.append((uint8_t)0x08);
+    received.append((uint8_t)0x49);
+    received.append((uint8_t)0x00);
+    received.append((uint8_t)0x01);
+    received.append((uint8_t)0x00);
+    received.append((uint8_t)0x40);
+    received.append((uint8_t)0x2C);
     received.append((uint8_t)0x00);
     received.append((uint8_t)0x00);
-    received.append((uint8_t)0x51);
-    received.append((uint8_t)0xFD);
-    received.append((uint8_t)0x00);
-    received.append((uint8_t)0x0F);
-    received.append((uint8_t)0x12);
-    */
-
-    chk_sum = calculate_checksum(received, true);
-    if (((uint8_t)received.at(0) & 0x80) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x40)
-    {
-        if (((uint8_t)received.at(0) & 0x7F) == (uint8_t)received.length() - 4)
-        {
-            if (chk_sum == (uint8_t)received.at(received.length() - 1))
-            {
-                parse_biu_message(received);
-            }
-            else send_log_window_message("Invalid message received: invalid checksum", true, true);
-        }
-        else send_log_window_message("Invalid message received: invalid length", true, true);
+    received.append((uint8_t)0x80);
+    received.append((uint8_t)0xF8);
     }
-    else send_log_window_message("Invalid message received: invalid header", true, true);
+    else
+    {
+        received.clear();
+        received.append((uint8_t)0x92);
+        received.append((uint8_t)0xf0);
+        received.append((uint8_t)0x40);
+        received.append((uint8_t)0x61);
+        received.append((uint8_t)0x50);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x40);
+        received.append((uint8_t)0x04);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x08);
+        received.append((uint8_t)0x49);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x01);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x40);
+        received.append((uint8_t)0x2C);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x00);
+        received.append((uint8_t)0x80);
+        received.append((uint8_t)0xF5);
+    }
 
+    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    parse_biu_message(received);
+
+    if (selected_item_text != "Disconnect") keep_alive_timer->start();
 }
 
 uint8_t BiuOperationsSubaru::calculate_checksum(QByteArray output, bool exclude_last_byte)
@@ -132,6 +188,26 @@ uint8_t BiuOperationsSubaru::calculate_checksum(QByteArray output, bool exclude_
 
 void BiuOperationsSubaru::parse_biu_message(QByteArray message)
 {
+    uint8_t chk_sum;
+
+    chk_sum = calculate_checksum(message, true);
+    if (((uint8_t)message.at(0) & 0x80) != 0x80 || (uint8_t)message.at(1) != 0xf0 || (uint8_t)message.at(2) != 0x40)
+    {
+        send_log_window_message("Invalid message received: invalid header", true, true);
+        return;
+    }
+
+    if (((uint8_t)message.at(0) & 0x7F) != (uint8_t)message.length() - 4)
+    {
+        send_log_window_message("Invalid message received: invalid length", true, true);
+        return;
+    }
+
+    if (chk_sum != (uint8_t)message.at(message.length() - 1))
+    {
+        send_log_window_message("Invalid message received: invalid checksum", true, true);
+        return;
+    }
 
     if ((uint8_t)message.at(3) == (DTC_READ + 0x40))
     {
@@ -189,9 +265,10 @@ void BiuOperationsSubaru::parse_biu_message(QByteArray message)
          * rsp:   fm+l dest src  rply 0x50 0xB1 0xB2 0xBn cksm
          */
 
-        QString switch_result;
-
         int index = 5;
+        int i;
+
+        switch_result->clear();
 
         if (message.length() >= (index + 2))
         {
@@ -200,15 +277,18 @@ void BiuOperationsSubaru::parse_biu_message(QByteArray message)
                 int bit_mask = 1;
                 for (int bit_counter = 0; bit_counter < 8; bit_counter++)
                 {
-                    switch_result = biu_switch_names.at(((index - 5) * 8) + bit_counter);
-                    if ((uint8_t)message.at(index) & bit_mask) switch_result.append(" ON");
-                    else switch_result.append(" OFF");
-                    send_log_window_message(switch_result, true, true);
+                    i = ((index - 5) * 8) + bit_counter;
+                    switch_result->append(biu_switch_names.at(i));
+                    if ((uint8_t)message.at(index) & bit_mask) switch_result->append(" ON");
+                    else switch_result->append(" OFF");
+                    send_log_window_message(switch_result->at(2 * i) + switch_result->at(2 * i + 1), true, true);
                     bit_mask = bit_mask << 1;
                 }
             }
 
         }
+
+        update_biu_ops_subaru_switches_window();
 
     }
     else if ((uint8_t)message.at(3) == (INFO_REQUEST + 0x40) && (uint8_t)message.at(4) == LIGHTING_SWITCHES)
