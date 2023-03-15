@@ -13,6 +13,7 @@
 #include <QDialog>
 
 #include <serial_port_actions.h>
+#include <biu_ops_subaru_switches.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -309,16 +310,24 @@ private:
                                  "outside temp offset      ", "degC ",
                                };
 
+    QTimer *keep_alive_timer;
+
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     void parse_biu_message(QByteArray message);
     QString parse_message_to_hex(QByteArray received);
     int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int timeout);
+    void update_biu_ops_subaru_switches_window();
 
     SerialPortActions *serial;
+    QStringList *switch_result;
+    BiuOpsSubaruSwitches *biuOpsSubaruSwitches;
+    bool switches_window_shown;
+
     Ui::BiuOperationsSubaruWindow *ui;
 
 private slots:
+    void keep_alive();
     void send_biu_msg();
 
 signals:
