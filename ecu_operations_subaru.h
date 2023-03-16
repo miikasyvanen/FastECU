@@ -182,6 +182,7 @@ private:
     QByteArray subaru_denso_generate_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray subaru_hitachi_transform_32bit_payload(QByteArray buf, uint32_t len);

@@ -70,8 +70,14 @@ public:
         QString log_files_directory = log_files_base_directory;
 
         QString primary_definition_base = "ecuflash";
+        QStringList ecuflash_def_cal_id;
+        QStringList ecuflash_def_cal_id_addr;
         QStringList ecuflash_def_ecu_id;
         QStringList ecuflash_def_filename;
+        QStringList romraider_def_cal_id;
+        QStringList romraider_def_cal_id_addr;
+        QStringList romraider_def_ecu_id;
+        QStringList romraider_def_filename;
 
         QStringList flash_protocol_id;
         QStringList flash_protocol_make;
@@ -83,6 +89,7 @@ public:
         QStringList flash_protocol_fuel;
         QStringList flash_protocol_year;
         QStringList flash_protocol_ecu;
+        QStringList flash_protocol_mcu;
         QStringList flash_protocol_mode;
         QStringList flash_protocol_checksum;
         QStringList flash_protocol_read;
@@ -103,7 +110,7 @@ public:
         QString flash_protocol_selected_make;
         QString flash_protocol_selected_model;
         QString flash_protocol_selected_version;
-        //QString flash_protocol_selected_protocol;
+        QString flash_protocol_selected_mcu;
         QString flash_protocol_selected_flash_transport;
         QString flash_protocol_selected_log_transport;
         QString flash_protocol_selected_log_protocol;
@@ -206,6 +213,25 @@ public:
         QStringList MapScalingNameList;
         QStringList MapData;
 
+        QStringList ScaleTypeList[2];
+        QStringList ScaleNameList[2];
+        QStringList ScaleAddressList[2];
+        QStringList ScaleSizeList[2];
+        QStringList ScaleMinValueList[2];
+        QStringList ScaleMaxValueList[2];
+        QStringList ScaleUnitsList[2];
+        QStringList ScaleFormatList[2];
+        QStringList ScaleFineIncList[2];
+        QStringList ScaleCoarseIncList[2];
+        QStringList ScaleStorageTypeList[2];
+        QStringList ScaleEndianList[2];
+        QStringList ScaleLogParamList[2];
+        QStringList ScaleFromByteList[2];
+        QStringList ScaleToByteList[2];
+        QStringList ScaleStaticDataList[2];
+        QStringList ScaleScalingNameList[2];
+        QStringList ScaleData[2];
+
         QStringList XScaleTypeList;
         QStringList XScaleNameList;
         QStringList XScaleAddressList;
@@ -262,6 +288,7 @@ public:
         QString RomId;
         QString Kernel;
         QString RomProtocol;
+        QString McuType;
 
         QStringList StorageTypeList;
         QStringList EndianList;
@@ -353,7 +380,7 @@ public:
     /*****************************************************
      * Search and read RomRaider ECU definition from file
      *****************************************************/
-    //EcuCalDefStructure *read_ecu_definition_file(EcuCalDefStructure *ecuCalDef, QString ecuId);
+    ConfigValuesStructure *create_romraider_def_id_list(ConfigValuesStructure *configValues);
     EcuCalDefStructure *read_romraider_ecu_base_def(FileActions::EcuCalDefStructure *ecuCalDef);
     EcuCalDefStructure *read_romraider_ecu_def(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);
     EcuCalDefStructure *add_romraider_def_list_item(EcuCalDefStructure *ecuCalDef);
@@ -363,10 +390,15 @@ public:
      *****************************************************/
     QString convert_value_format(QString value_format);
     ConfigValuesStructure *create_ecuflash_def_id_list(ConfigValuesStructure *configValues);
-    EcuCalDefStructure *read_ecuflash_ecu_base_def(FileActions::EcuCalDefStructure *ecuCalDef);
-    EcuCalDefStructure *read_ecuflash_ecu_def(FileActions::EcuCalDefStructure *ecuCalDef, QString ecuId);
+    //EcuCalDefStructure *read_ecuflash_ecu_base_def(FileActions::EcuCalDefStructure *ecuCalDef);
+    EcuCalDefStructure *read_ecuflash_ecu_def(FileActions::EcuCalDefStructure *ecuCalDef, QString cal_id);
     EcuCalDefStructure *parse_ecuflash_def_scalings(EcuCalDefStructure *ecuCalDef);
     EcuCalDefStructure *add_ecuflash_def_list_item(EcuCalDefStructure *ecuCalDef);
+
+    //EcuCalDefStructure *read_ecuflash_ecu_def_test(FileActions::EcuCalDefStructure *ecuCalDef, QString cal_id);
+
+    EcuCalDefStructure *parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef);
+    EcuCalDefStructure *parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef);
 
     /***********************************************
      * Open ECU ROM file, including possible

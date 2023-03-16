@@ -52,6 +52,7 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
 
     int index = configValues->flash_protocol_selected_id.toInt();
     configValues->flash_protocol_selected_id = configValues->flash_protocol_selected_id;
+    configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(index);
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(index);
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(index);
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(index);
@@ -124,18 +125,10 @@ void ProtocolSelect::car_model_selected()
     configValues->flash_protocol_selected_version = flash_protocol_version;
     configValues->flash_protocol_selected_family = flash_protocol_family;
     configValues->flash_protocol_selected_description = flash_protocol_description;
-    //configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
-    //configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
 
-    //qDebug() << "Selected car model:";
-    //qDebug() << configValues->flash_protocol_id.at(configValues->flash_protocol_selected_id.toInt());
-    //qDebug() << configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
-    //qDebug() << configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
-    //qDebug() << configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
-    //qDebug() << configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
-    //qDebug() << configValues->flash_protocol_description.at(configValues->flash_protocol_selected_id.toInt());
-
+    qDebug() << "Selected MCU:" << configValues->flash_protocol_selected_mcu;
     accept();
 
     close();
@@ -209,6 +202,7 @@ void ProtocolSelect::car_model_treewidget_item_selected()
         QStringList fuel;
         QStringList year;
         QStringList ecu;
+        QStringList mcu;
         QStringList mode;
         QStringList checksum;
         QStringList read;
@@ -231,6 +225,7 @@ void ProtocolSelect::car_model_treewidget_item_selected()
                 fuel.append(configValues->flash_protocol_fuel.at(i));
                 year.append(configValues->flash_protocol_year.at(i));
                 ecu.append(configValues->flash_protocol_ecu.at(i));
+                mcu.append(configValues->flash_protocol_mcu.at(i));
                 mode.append(configValues->flash_protocol_mode.at(i));
                 checksum.append(configValues->flash_protocol_checksum.at(i));
                 read.append(configValues->flash_protocol_read.at(i));

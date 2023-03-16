@@ -1,5 +1,95 @@
 #include "file_actions.h"
 
+FileActions::ConfigValuesStructure *FileActions::create_romraider_def_id_list(ConfigValuesStructure *configValues)
+{
+    QString filename;
+
+    int file_count = 0;
+    int cal_id_count = 0;
+
+    bool cal_id_found = false;
+    bool cal_id_addr_found = false;
+    bool ecu_id_found = false;
+
+    for (int i = 0; i < configValues->romraider_definition_files.length(); i++)
+    {
+        filename = configValues->romraider_definition_files.at(i);
+
+        QFile file(filename);
+        if (!file.open(QIODevice::ReadOnly ))
+        {
+            QMessageBox::warning(this, tr("Ecu definition file"), "Unable to open ecuflash definition file " + filename + " for reading");
+        }
+
+        QDomDocument xmlBOM;
+        xmlBOM.setContent(&file);
+        file.close();
+
+        QDomElement root = xmlBOM.documentElement();
+
+        QDomNodeList items = root.childNodes();
+        for(int x=0; x< items.count(); x++)
+        {
+            if (items.at(x).isComment())
+                continue;
+
+            QDomElement child = items.at(x).toElement();
+
+            if (child.tagName() == "rom")
+            {
+                QDomElement sub_child = child.firstChild().toElement();
+                while (!sub_child.tagName().isNull())
+                {
+                    if (sub_child.tagName() == "romid")
+                    {
+                        QDomElement id_child = sub_child.firstChild().toElement();
+                        while (!id_child.tagName().isNull())
+                        {
+                            if (id_child.tagName() == "xmlid")
+                            {
+                                //qDebug() << "cal tag:" << id_child.text();
+                                cal_id_found = true;
+                                configValues->romraider_def_cal_id.append(id_child.text());
+                                configValues->romraider_def_filename.append(filename);
+                                cal_id_count++;
+                            }
+                            if (id_child.tagName() == "internalidaddress")
+                            {
+                                //qDebug() << "cal addr:" << id_child.text();
+                                cal_id_addr_found = true;
+                                configValues->romraider_def_cal_id_addr.append(id_child.text());
+                            }
+                            if (id_child.tagName() == "ecuid")
+                            {
+                                //qDebug() << "ecuid:" << id_child.text();
+                                ecu_id_found = true;
+                                configValues->romraider_def_ecu_id.append(id_child.text());
+                            }
+                            id_child = id_child.nextSibling().toElement();
+                        }
+                        if (!cal_id_found)
+                            configValues->romraider_def_cal_id.append("");
+                        if (!cal_id_addr_found)
+                            configValues->romraider_def_cal_id_addr.append("");
+                        if (!ecu_id_found)
+                            configValues->romraider_def_ecu_id.append("");
+
+                        cal_id_found = false;
+                        cal_id_addr_found = false;
+                        ecu_id_found = false;
+                    }
+                    sub_child = sub_child.nextSibling().toElement();
+                }
+            }
+        }
+        file_count++;
+    }
+    qDebug() << file_count << "RomRaider definition files found";
+    qDebug() << cal_id_count << "RomRaider ecu id's found";
+
+    return configValues;
+}
+
 FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCalDefStructure *ecuCalDef)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -364,7 +454,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                                 }
                                 if (xmlid == ecuId)
                                 {
-                                    qDebug() << "Romraider def:" << xmlid << ecuId;
+                                    //qDebug() << "Romraider def:" << xmlid << ecuId;
                                     if (ecuCalDef->RomInfo.at(XmlId) == " ")
                                     {
                                         ecuCalDef->RomInfo.replace(XmlId, xmlid);
@@ -397,7 +487,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                             {
                                 ecuid_def_found = true;
                                 ecuCalDef->use_romraider_definition = true;
-                                qDebug() << "Romraider def:" << xmlid << ecuId;
+                                //qDebug() << "Romraider def:" << xmlid << ecuId;
 
                                 add_romraider_def_list_item(ecuCalDef);
 

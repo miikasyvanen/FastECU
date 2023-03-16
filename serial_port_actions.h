@@ -20,7 +20,6 @@
 
 #include <thread>
 #include <chrono>
-#include <stdio.h>
 using namespace std;
 using namespace std::chrono;
 
@@ -47,8 +46,8 @@ public:
     bool setRequestToSend = true;
     bool setDataTerminalReady = true;
 
-    bool is_packet_header = false;
-    bool is_checksum = false;
+    bool add_iso14230_header = false;
+    //bool is_checksum = false;
     bool is_iso14230_connection = false;
     bool is_can_connection = false;
     bool is_iso15765_connection = false;
@@ -61,9 +60,9 @@ public:
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
 
-    uint8_t packet_header_startbyte = 0;
-    uint8_t packet_header_source_id = 0;
-    uint8_t packet_header_destination_id = 0;
+    uint8_t iso14230_startbyte = 0;
+    uint8_t iso14230_tester_id = 0;
+    uint8_t iso14230_target_id = 0;
 
     QElapsedTimer *lec_pulse_timer = new QElapsedTimer();
 
@@ -112,6 +111,7 @@ public:
     QByteArray read_serial_data(uint32_t datalen, unsigned long timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);
+    int set_j2534_ioctl(unsigned long parameter, int value);
 
     long PassThruOpen(const void *pName, unsigned long *pDeviceID);
     long PassThruClose(unsigned long DeviceID);
@@ -196,6 +196,7 @@ private:
     QByteArray add_packet_header(QByteArray output);
     int write_j2534_data(QByteArray output);
     QByteArray read_j2534_data(unsigned long timeout);
+    QString parse_message_to_hex(QByteArray received);
 
 public slots:
     QStringList check_serial_ports();

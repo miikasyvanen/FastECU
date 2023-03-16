@@ -497,6 +497,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
 
     QStringList flash_protocol_name;
     QStringList flash_protocol_ecu;
+    QStringList flash_protocol_mcu;
     QStringList flash_protocol_mode;
     QStringList flash_protocol_checksum;
     QStringList flash_protocol_read;
@@ -543,6 +544,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         flash_protocol_name.replace(index, protocol.attribute("name","No name"));
 
                         flash_protocol_ecu.append(" ");
+                        flash_protocol_mcu.append(" ");
                         flash_protocol_mode.append(" ");
                         flash_protocol_checksum.append(" ");
                         flash_protocol_read.append(" ");
@@ -565,6 +567,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         {
                             if (protocol_data.tagName() == "ecu")
                                 flash_protocol_ecu.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "mcu")
+                                flash_protocol_mcu.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "mode")
                                 flash_protocol_mode.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "checksum")
@@ -625,6 +629,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         configValues->flash_protocol_fuel.append(" ");
                         configValues->flash_protocol_year.append(" ");
                         configValues->flash_protocol_ecu.append(" ");
+                        configValues->flash_protocol_mcu.append(" ");
                         configValues->flash_protocol_mode.append(" ");
                         configValues->flash_protocol_checksum.append(" ");
                         configValues->flash_protocol_read.append(" ");
@@ -669,6 +674,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                     if (flash_protocol_family.at(i) == configValues->flash_protocol_family.at(index))
                                     {
                                         configValues->flash_protocol_ecu.replace(index, flash_protocol_ecu.at(i));
+                                        configValues->flash_protocol_mcu.replace(index, flash_protocol_mcu.at(i));
                                         configValues->flash_protocol_mode.replace(index, flash_protocol_mode.at(i));
                                         configValues->flash_protocol_checksum.replace(index, flash_protocol_checksum.at(i));
                                         configValues->flash_protocol_read.replace(index, flash_protocol_read.at(i));
@@ -1374,6 +1380,72 @@ QSignalMapper *FileActions::read_menu_file(QMenuBar *menubar, QToolBar *toolBar)
     return mapper;
 }
 
+FileActions::EcuCalDefStructure *FileActions::parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString cal_id;
+
+    bool bStatus = false;
+    bool cal_id_confirmed = false;
+
+    for (int i = 0; i < configValues->ecuflash_def_cal_id.length(); i++)
+    {
+        cal_id.clear();
+        int addr = configValues->ecuflash_def_cal_id_addr.at(i).toUInt(&bStatus, 16);
+        int ecuid_length = configValues->ecuflash_def_cal_id.at(i).length();
+        for (int j = addr; j < addr + ecuid_length; j++)
+            cal_id.append((uint8_t)ecuCalDef->FullRomData.at(j));
+
+        if (cal_id == configValues->ecuflash_def_cal_id.at(i))
+            cal_id_confirmed = true;
+
+        //qDebug() << "EcuFlash cal id:" << configValues->ecuflash_def_cal_id.at(i);
+
+        if (cal_id_confirmed)
+        {
+            //qDebug() << "EcuFlash cal id" << cal_id << "found";
+            ecuCalDef->RomId = cal_id;
+            break;
+        }
+    }
+
+    return ecuCalDef;
+}
+
+FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString cal_id;
+
+    bool bStatus = false;
+    bool cal_id_confirmed = false;
+
+    for (int i = 0; i < configValues->romraider_def_cal_id.length(); i++)
+    {
+        cal_id.clear();
+        int addr = configValues->romraider_def_cal_id_addr.at(i).toUInt(&bStatus, 16);
+        int ecuid_length = configValues->romraider_def_cal_id.at(i).length();
+        for (int j = addr; j < addr + ecuid_length; j++)
+            cal_id.append((uint8_t)ecuCalDef->FullRomData.at(j));
+
+        if (cal_id == configValues->romraider_def_cal_id.at(i))
+            cal_id_confirmed = true;
+
+        //qDebug() << "RomRaider cal id:" << configValues->ecuflash_def_cal_id.at(i);
+
+        if (cal_id_confirmed)
+        {
+            //qDebug() << "CAL ID found";
+            ecuCalDef->RomId = cal_id;
+            break;
+        }
+    }
+
+    return ecuCalDef;
+}
+
 FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -1447,135 +1519,48 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         file_name_str = fileInfo.fileName();
     }
 
-    for (int k = 0; k < cal_id_addr_list.length(); k++)
-    {
-        if (cal_id_ascii_list.at(k) == "no")
-            continue;
-        cal_id_confirmed = true;
-        cal_id.clear();
-        for (unsigned int i = cal_id_addr_list.at(k).toUInt(&bStatus, 16); i < (cal_id_addr_list.at(k).toUInt(&bStatus, 16) + cal_id_length_list.at(k).toInt()); i++)
-        {
-            if ((uint8_t)ecuCalDef->FullRomData.at(i) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i) > 0x5A)
-            {
-                cal_id_confirmed = false;
-                qDebug() << "CAL ID not found at address " + cal_id_addr_list.at(k) + ", looking from next address";
-                break;
-            }
-            else
-                cal_id.append((uint8_t)ecuCalDef->FullRomData.at(i));
-        }
-        if (cal_id_confirmed)
-        {
-            selected_id = cal_id;
-            break;
-        }
-    }
-
-    if (!cal_id_confirmed)
-    {
-        int id_index = 0;
-        for (int k = 0; k < cal_id_addr_list.length(); k++)
-        {
-            if (cal_id_ascii_list.at(k) == "no")
-            {
-                cal_id_confirmed = false;
-                cal_id.clear();
-                for (unsigned int i = cal_id_addr_list.at(k).toUInt(&bStatus, 16); i < (cal_id_addr_list.at(k).toUInt(&bStatus, 16) + cal_id_length_list.at(k).toInt()); i++)
-                {
-                    if (cal_id_family_list.at(k) == "uj20" && ecuCalDef->FullRomData.length() == 128 * 1024)
-                    {
-                        cal_id.append(QString("%1").arg(ecuCalDef->FullRomData.at(i),2,16,QLatin1Char('0')).toUpper());
-                        cal_id_confirmed = true;
-                    }
-                    if (cal_id_family_list.at(k) == "uj30" && ecuCalDef->FullRomData.length() == 256 * 1024)
-                    {
-                        cal_id.append(QString("%1").arg(ecuCalDef->FullRomData.at(i),2,16,QLatin1Char('0')).toUpper());
-                        cal_id_confirmed = true;
-                    }
-                    if (cal_id_family_list.at(k) == "uj40" && ecuCalDef->FullRomData.length() == 384 * 1024)
-                    {
-                        cal_id.append(QString("%1").arg(ecuCalDef->FullRomData.at(i),2,16,QLatin1Char('0')).toUpper());
-                        cal_id_confirmed = true;
-                    }
-                }
-                qDebug() << "CAL ID (hex):" << cal_id << cal_id_family_list.at(k);
-            }
-            if (cal_id_confirmed)
-                break;
-        }
-        selected_id = cal_id;
-
-        /*
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find CAL ID from selected ROM file, file might be from unsupported model!");
-        ecuCalDef->FileName = "No name";
-        ecuCalDef->RomId = "No id";
-        ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
-        ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
-        qDebug() << ecuCalDef->RomInfo.at(FileSize);
-        return ecuCalDef;
-        */
-/*
-        QMessageBox::StandardButton reply;
-        QString title = "Calibration ID not found";
-        QString message = "Unable to find CAL ID from selected ROM file, do you want to use selected protocol to extract ID and maps?";
-        reply = QMessageBox::question(this, title, message, QMessageBox::Yes|QMessageBox::No);
-        if (reply == QMessageBox::Yes)
-          qDebug() << "Yes was clicked";
-        else
-            return ecuCalDef;
-
-        bool id_ok = true;
-        QString ecu_id_test;
-        for (int i = 0; i < ecuCalDef->FullRomData.length(); i++)
-        {
-            id_ok = true;
-            ecu_id_test.clear();
-            for (int j = 0; j < 6; j++)
-            {
-                if ((uint8_t)ecuCalDef->FullRomData.at(i + j) < 0x30 || (uint8_t)ecuCalDef->FullRomData.at(i + j) > 0x5A)
-                {
-                    id_ok = false;
-                    break;
-                }
-                else
-                {
-                    ecu_id_test.append(ecuCalDef->FullRomData.at(i + j));
-                }
-            }
-            if (id_ok)
-                qDebug() << "ID:" << ecu_id_test << "at address" << hex << i;
-        }
-        */
-    }
-    //else
-        qDebug() << "CAL ID:" << cal_id;
-
-    if (!file_name_str.length())
-        file_name_str = cal_id;// + ".bin";
-
     def_map_index = 0;
 
     ecuCalDef->use_ecuflash_definition = false;
     ecuCalDef->use_romraider_definition = false;
 
-    if (ecu_id != "")
+    if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
     {
-        if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
+        parse_ecuid_ecuflash_def_files(ecuCalDef);
+        if (ecuCalDef->RomId != "")
         {
-            read_ecuflash_ecu_def(ecuCalDef, cal_id);
+            qDebug() << "Parse EcuFlash def files (primary)" << ecuCalDef->RomId;
+            read_ecuflash_ecu_def(ecuCalDef, ecuCalDef->RomId);
+            //read_ecuflash_ecu_def_test(ecuCalDef, ecuCalDef->RomId);
             parse_ecuflash_def_scalings(ecuCalDef);
+        }
 
-            if (!ecuCalDef->use_ecuflash_definition)
+        if (!ecuCalDef->use_ecuflash_definition)
+        {
+            parse_ecuid_romraider_def_files(ecuCalDef);
+            if (ecuCalDef->RomId != "")
             {
-                read_romraider_ecu_def(ecuCalDef, cal_id);
+                qDebug() << "Parse RomRaider def files (secondary)" << ecuCalDef->RomId;
+                read_romraider_ecu_def(ecuCalDef, ecuCalDef->RomId);
             }
         }
-        if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
+    }
+    if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
+    {
+        parse_ecuid_romraider_def_files(ecuCalDef);
+        if (ecuCalDef->RomId !="")
         {
-            read_romraider_ecu_def(ecuCalDef, cal_id);
-            if(!ecuCalDef->use_romraider_definition)
+            qDebug() << "Parse RomRaider def files (primary)" << ecuCalDef->RomId;
+            read_romraider_ecu_def(ecuCalDef, ecuCalDef->RomId);
+        }
+        if(!ecuCalDef->use_romraider_definition)
+        {
+            parse_ecuid_ecuflash_def_files(ecuCalDef);
+            if (ecuCalDef->RomId !="")
             {
-                read_ecuflash_ecu_def(ecuCalDef, cal_id);
+                qDebug() << "Parse EcuFlash def files (secondary)" << ecuCalDef->RomId;
+                read_ecuflash_ecu_def(ecuCalDef, ecuCalDef->RomId);
+                //read_ecuflash_ecu_def_test(ecuCalDef, ecuCalDef->RomId);
                 parse_ecuflash_def_scalings(ecuCalDef);
             }
         }
@@ -1584,8 +1569,6 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
         QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file with CAL ID: " + selected_id);
-        //ecuCalDef = NULL;
-        //return NULL;
         ecuCalDef->RomInfo.replace(XmlId, selected_id);
         ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
         ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
@@ -1607,11 +1590,14 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         return NULL;
     }
 */
+    if (!file_name_str.length())
+        file_name_str = ecuCalDef->RomId;
+
     ecuCalDef->OemEcuFile = true;
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
-    ecuCalDef->RomId = selected_id;
+    //ecuCalDef->RomId = selected_id;
     //qDebug() << "File size =" << ecuCalDef->FileSize;
 
     QByteArray padding;// = QByteArray("\x00", 0x8000);
@@ -1676,7 +1662,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                         mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                     }
                 }
-
+                //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
+                //    qDebug() << "dataByte:" << dataByte << mapDataValue.twoByteValue[0] << mapDataValue.twoByteValue[1];
                 double value = 0;
                 if (ecuCalDef->TypeList.at(i) != "Selectable")
                 {
@@ -1686,9 +1673,15 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     else{
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
                     }
+                    //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
+                    //    qDebug() << "MapData value" << value;
                 }
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
             }
+            if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
+                qDebug() << "From byte" << ecuCalDef->FromByteList.at(i);
+            //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
+            //    qDebug() << "MapData" << mapData << "at address" << ecuCalDef->AddressList.at(i).toUInt(&bStatus, 16);
             ecuCalDef->MapData.replace(i, mapData);
         }
         if (ecuCalDef->XSizeList.at(i).toUInt() > 1)

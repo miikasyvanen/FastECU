@@ -920,16 +920,16 @@ void MainWindow::show_subaru_biu_window()
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
     serial->is_iso14230_connection = true;
     open_serial_port();
-    //serial->change_port_speed("10400");
+    serial->change_port_speed("10400");
     //serial->change_port_speed("4800");
 
     BiuOperationsSubaru *biuOperationsSubaru = new BiuOperationsSubaru(serial);
     biuOperationsSubaru->exec();
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
 }
@@ -1395,7 +1395,7 @@ int MainWindow::simulate_obd()
     ecuid.clear();
     ecu_init_complete = false;
 
-    serial->is_packet_header = true;
+    serial->add_iso14230_header = true;
     open_serial_port();
     serial->change_port_speed("10400");
 

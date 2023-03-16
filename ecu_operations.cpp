@@ -274,7 +274,7 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
     uint32_t len_done = 0;  //total data written to file
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
-    serial->is_packet_header = true;
+    serial->add_iso14230_header = true;
     //serial->iso14230_checksum = true;
 
     output.append(SID_DUMP);
@@ -409,7 +409,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
     output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_DUMP_CAN + 0x06));
+    output.append((uint8_t)(SID_DUMP_ROM_CAN + 0x06));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -459,7 +459,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
         received = serial->read_serial_data(1, 10);
         //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
 
-        if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_DUMP_CAN)
+        if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_DUMP_ROM_CAN)
         {
             send_log_window_message("Page data request failed!", true, true);
             send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
