@@ -419,6 +419,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
             if (i < mapDataCellText.count())
                 cellItem->setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->FormatList.at(mapIndex))));
+            //qDebug() << mapDataCellText.at(i);
             int yPos = 0;
             int xPos = 0;
             if (ecuCalDef->XSizeList.at(mapIndex) > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")

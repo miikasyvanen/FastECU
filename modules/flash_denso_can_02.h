@@ -1,5 +1,5 @@
-#ifndef FLASH_DENSO_KLINE_04_H
-#define FLASH_DENSO_KLINE_04_H
+#ifndef FLASH_DENSO_CAN_02_H
+#define FLASH_DENSO_CAN_02_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -15,7 +15,6 @@
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
 #include <serial_port_actions.h>
-//#include <ecu_operations.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -24,13 +23,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashDensoKline04 : public QDialog
+class FlashDensoCan02 : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashDensoKline04(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashDensoKline04();
+    explicit FlashDensoCan02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashDensoCan02();
 
 private:
     #define STATUS_SUCCESS							0x00
@@ -63,17 +62,18 @@ private:
     QString flash_method;
     QString kernel;
 
-    void closeEvent(QCloseEvent *bar);
+    void closeEvent(QCloseEvent *event);
 
-    int init_flash_denso_kline_04(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
-    int connect_bootloader_subaru_denso_kline_04_32bit();
-    int upload_kernel_subaru_denso_kline_04_32bit(QString kernel);
-    int read_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int get_changed_blocks_kline_32bit(const uint8_t *src, int *modified);
-    int check_romcrc_kline_32bit(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int flash_block_kline_32bit(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_kline_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int init_flash_denso_can_02(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
+
+    int connect_bootloader_subaru_denso_can_02_32bit();
+    int upload_kernel_subaru_denso_can_02_32bit(QString kernel);
+    int read_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified);
+    int check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
+    int flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t start, uint32_t len);
+    int reflash_block_denso_can_02_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     void init_crc16_tab(void);
@@ -115,4 +115,4 @@ private:
 
 };
 
-#endif // FLASH_DENSO_KLINE_04_H
+#endif // FLASH_DENSO_CAN_02_H

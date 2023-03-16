@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "ECU protocols read";
 
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_family = configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
@@ -57,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     //configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
 
     qDebug() << configValues->flash_protocol_selected_make;
+    qDebug() << configValues->flash_protocol_selected_mcu;
     qDebug() << configValues->flash_protocol_selected_model;
     qDebug() << configValues->flash_protocol_selected_version;
     qDebug() << configValues->flash_protocol_selected_family;
@@ -78,8 +80,8 @@ MainWindow::MainWindow(QWidget *parent)
     if (!configValues->romraider_definition_files.length() && !configValues->primary_definition_base.contains("ecuflash"))
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
 
-    if (QDir(configValues->ecuflash_definition_files_directory).exists())
-        fileActions->create_ecuflash_def_id_list(configValues);
+    fileActions->create_ecuflash_def_id_list(configValues);
+    fileActions->create_romraider_def_id_list(configValues);
 
     if (QDir(configValues->kernel_files_directory).exists()){
         QDir dir(configValues->kernel_files_directory);
@@ -360,29 +362,30 @@ QString MainWindow::check_kernel(QString flash_method)
         else
             kernel = prefix + "ssmk_SH7055.bin";
     }
-    else if (flash_method == "sti04")
+    else if (flash_method.startsWith("sti04"))
     {
         if (serial->is_can_connection)
             kernel = prefix + "ssmk_CAN_SH7055.bin";
         else
             kernel = prefix + "ssmk_SH7055.bin";
     }
-    else if (flash_method == "sti05")
+    else if (flash_method.startsWith("sti05"))
     {
         if (serial->is_can_connection)
             kernel = prefix + "ssmk_CAN_SH7058.bin";
         else
             kernel = prefix + "ssmk_SH7058.bin";
     }
-    else if (flash_method == "subarucan")
+    else if (flash_method.startsWith("subarucan"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
 
-    else if (flash_method == "sh7055_denso_can_recovery")
+    else if (flash_method.startsWith("sh7055_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7055.bin";
-    else if (flash_method == "sh7058_denso_can_recovery")
+    else if (flash_method.startsWith("sh7058_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
-    else if (flash_method == "sh7058s_denso_can_recovery")
+    else if (flash_method.startsWith("sh7058s_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
+
     else
         kernel = "N/A";
 
@@ -520,7 +523,7 @@ void MainWindow::open_serial_port()
 
 int MainWindow::start_ecu_operations(QString cmd_type)
 {
-    int romNumber = 0;
+    int rom_number = 0;
 
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
     if (!selectedItem && cmd_type != "read")
@@ -536,8 +539,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         QMessageBox::warning(this, tr("Serial port"), "No serial port selected!");
         return 0;
     }
-    romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
+    rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
 
+    // Stop serial timers
     serial_poll_timer->stop();
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
@@ -559,55 +563,66 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         {
             serial->is_can_connection = false;
             serial->is_iso15765_connection = true;
-            serial->is_29_bit_id = true;
+            serial->is_29_bit_id = false;
             serial->can_speed = "500000";
         }
 
         serial->reset_connection();
         ecuid.clear();
         ecu_init_complete = false;
-        serial->is_packet_header = false;
+        serial->add_iso14230_header = false;
         //open_serial_port();
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
             //ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
-            fileActions->checksum_correction(ecuCalDef[romNumber]);
+            fileActions->checksum_correction(ecuCalDef[rom_number]);
 
-            ecuCalDef[romNumber]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
+            ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
             //ecuCalDef[romNumber]->RomInfo.replace(fileActions->MemModel,
-            ecuCalDef[romNumber]->Kernel = check_kernel(ecuCalDef[romNumber]->RomInfo.at(FlashMethod));
+            ecuCalDef[rom_number]->Kernel = check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+            ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
             //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
-            if (configValues->flash_protocol_selected_family == "sti04")
-                FlashDensoKline04 *flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[romNumber], cmd_type);
-            else
-                ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[romNumber], cmd_type);
         }
         else
         {
-            ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
-            int i = 0;
-            while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length()){
-                ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
-                qDebug() << "MEM MODEL:" << ecuCalDef[ecuCalDefIndex]->RomInfo.at(i);
-                i++;
+            rom_number = ecuCalDefIndex;
+            ecuCalDef[rom_number] = new FileActions::EcuCalDefStructure;
+            while (ecuCalDef[rom_number]->RomInfo.length() < fileActions->RomInfoStrings.length()){
+                ecuCalDef[rom_number]->RomInfo.append(" ");
             }
-            ecuCalDef[ecuCalDefIndex]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
-            ecuCalDef[ecuCalDefIndex]->Kernel = check_kernel(ecuCalDef[ecuCalDefIndex]->RomInfo.at(fileActions->FlashMethod));
-            if (configValues->flash_protocol_selected_family == "sti04")
-                FlashDensoKline04 *flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
-            else
-                ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
+            ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
+            ecuCalDef[rom_number]->Kernel = check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
+            ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+        }
 
-            if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
+        qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
+        if (configValues->flash_protocol_selected_family.startsWith("sti04"))
+            flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("sti05"))
+            flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("subarucan"))
+            flashDensoSubaruCan = new FlashDensoSubaruCan(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("sh7055_denso_can"))
+            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("sh7058_denso_can"))
+            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("sh7058s_denso_can"))
+            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+        else
+            ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[rom_number], cmd_type);
+
+        if (cmd_type == "read")
+        {
+            if (ecuCalDef[rom_number]->FullRomData.length())
             {
                 //qDebug() << "Checking definitions, please wait...";
-                fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
+                fileActions->open_subaru_rom_file(ecuCalDef[rom_number], ecuCalDef[rom_number]->FullFileName);
                 //if(ecuCalDef[ecuCalDefIndex]->RomId != NULL)
                 //{
                     //qDebug() << "Building treewidget, please wait...";
-                    calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
-                    calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
+                    calibrationTreeWidget->buildCalibrationFilesTree(rom_number, ui->calibrationFilesTreeWidget, ecuCalDef[rom_number]);
+                    calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[rom_number]);
 
                 //}
                 ecuCalDefIndex++;
@@ -639,7 +654,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         // For K-Line comms
         else
         {
-            serial->is_packet_header = true;
+            serial->add_iso14230_header = true;
             open_serial_port();
             serial->change_port_speed("10400");
         }
@@ -651,7 +666,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     ecuid.clear();
     ecu_init_complete = false;
     serial->is_29_bit_id = false;
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
     serial->serial_port_baudrate = "4800";

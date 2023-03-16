@@ -266,7 +266,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
     //qDebug() << "Message block" << received.length();
     while (received.length() > 0 && is_serial_port_open())
     {
-        //qDebug() << "RECEIVED:" << received << parseMessageToHex(received);
+        qDebug() << "RECEIVED:" << received << parseMessageToHex(received);
 
         //qDebug() << "Message header" << received.at(0) << received.at(1) << received.at(2);
         if (received.at(0) == 0x61 && received.at(1) == 0x72)
@@ -375,7 +375,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     //received.append(read_serial_data(msg_byte_cnt, Timeout));
                     msg_index = 0;
                     msg_cnt++;
-                    //qDebug() << "START_OF_MESSAGE" << parseMessageToHex(received);
+                    qDebug() << "START_OF_MESSAGE" << parseMessageToHex(received);
                     //stop_reading = true;
                     //received.clear();
                 }
@@ -424,7 +424,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     msg_index = 0;
                     msg_cnt++;
 
-                    //qDebug() << "NORM_MSG_START_IND" << parseMessageToHex(received);
+                    qDebug() << "NORM_MSG_START_IND" << parseMessageToHex(received);
                     received.clear();
                 }
                 if (msg_type == NORM_MSG || msg_type == START_OF_MESSAGE)
@@ -432,7 +432,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->RxStatus = NORM_MSG;
 
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
-                    //qDebug() << "NORM_MSG" << parseMessageToHex(received) << received;
+                    qDebug() << "NORM_MSG" << parseMessageToHex(received) << received;
                     ////qDebug() << msg_byte_cnt << "MSG:" << parseMessageToHex(received);
                     //qDebug() << parseMessageToHex(received);
                     if (received.at(2) == '5' || received.at(2) == '6')
@@ -479,8 +479,9 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     data[3] = (uint8_t)received.at(5);
                     pMsg->Timestamp = parse_ts(data);
                     pMsg->DataSize = msg_index;
+                    msg_cnt++;
 
-                    //qDebug() << "RX_MSG_END_IND" << parseMessageToHex(received);
+                    qDebug() << "RX_MSG_END_IND" << parseMessageToHex(received);
                     received.clear();
                     stop_reading = true;
                 }
@@ -572,11 +573,11 @@ long J2534::PassThruStartMsgFilter(unsigned long ChannelID, unsigned long Filter
 
     output.clear();
     output.append("atf" + QString::number(ChannelID) + " " + QString::number(FilterType) + " " + QString::number(pMaskMsg->TxFlags) + " " + QString::number(pMaskMsg->DataSize));
-    if (pPatternMsg->DataSize > 0)
-        output.append(" " + QString::number(pPatternMsg->DataSize));
-    if (pFlowControlMsg != NULL)
-        if (pFlowControlMsg->DataSize > 0)
-            output.append(" " + QString::number(pFlowControlMsg->DataSize));
+    //if (pPatternMsg->DataSize > 0)
+        //output.append(" " + QString::number(pPatternMsg->DataSize));
+    //if (pFlowControlMsg != NULL)
+        //if (pFlowControlMsg->DataSize > 0)
+            //output.append(" " + QString::number(pFlowControlMsg->DataSize));
     output.append("\r\n");
 
     for (unsigned long  i = 0; i < pMaskMsg->DataSize; i++)
@@ -594,7 +595,7 @@ long J2534::PassThruStartMsgFilter(unsigned long ChannelID, unsigned long Filter
             output.append(pFlowControlMsg->Data[i]);
         }
     }
-    //qDebug() << "Send data:" << output;
+    qDebug() << "Send data:" << parseMessageToHex(output);
     write_serial_data(output);
     received = read_serial_data(100, 50);
     //qDebug() << "Received:" << received;

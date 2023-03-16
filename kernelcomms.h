@@ -97,7 +97,7 @@
 #define SID_ENTER_BL_CAN            0xFF86
 #define SID_CHECK_COMM_BL_CAN       0x90
 
-#define SID_DUMP_CAN                0xD8
+#define SID_DUMP_ROM_CAN            0xD8
 
 #define SID_KERNEL_ADDRESS          0x98
 #define SID_KERNEL_CHECKSUM         0xB0

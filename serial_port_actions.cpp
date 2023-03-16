@@ -106,7 +106,7 @@ int SerialPortActions::fast_init(QByteArray output)
         double seconds = (double)350 / (double)1000;
         auto spin_start = high_resolution_clock::now();
 
-        serial->setBaudRate(10400);
+        //serial->setBaudRate(10400);
 
         /* Set timeout to 350ms before init */
         seconds = (double)350 / (double)1000;
@@ -126,8 +126,9 @@ int SerialPortActions::fast_init(QByteArray output)
         while ((high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
         /* Send init data */
         received = write_serial_data_echo_check(output);
+        received.append(read_serial_data(1, 10));
+        qDebug() << parse_message_to_hex(received);
         delay(100);
-        received = read_serial_data(100, 100);
     }
 
     return STATUS_SUCCESS;
@@ -479,7 +480,7 @@ QByteArray SerialPortActions::write_serial_data(QByteArray output)
 
     if (is_serial_port_open())
     {
-        if (is_packet_header)
+        if (add_iso14230_header)
             output = add_packet_header(output);
 
         if (use_openport2_adapter)
@@ -506,7 +507,7 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
 
     if (is_serial_port_open())
     {
-        if (is_packet_header)
+        if (add_iso14230_header)
             output = add_packet_header(output);
 
         if (use_openport2_adapter)
@@ -546,9 +547,9 @@ QByteArray SerialPortActions::add_packet_header(QByteArray output)
 
     //qDebug() << "Adding iso14230 header to message";
 
-    output.insert(0, packet_header_startbyte);
-    output.insert(1, packet_header_destination_id);
-    output.insert(2, packet_header_source_id);
+    output.insert(0, iso14230_startbyte);
+    output.insert(1, iso14230_target_id);
+    output.insert(2, iso14230_tester_id);
     if (msglength < 0x40)
         output[0] = output[0] | msglength;
     else
@@ -601,7 +602,7 @@ int SerialPortActions::write_j2534_data(QByteArray output)
         // Indicate that the PASSTHRU_MSG array contains just a single message.
         NumMsgs = 1;
 
-        //qDebug() << "TX:" << output;
+        //qDebug() << "TX:" << parse_message_to_hex(output);
         j2534->PassThruWriteMsgs(chanID, &txmsg, &NumMsgs, 100);
 
         numMsgs++;
@@ -724,6 +725,27 @@ QByteArray SerialPortActions::read_j2534_data(unsigned long timeout)
         }
     }
     return received;
+}
+
+int SerialPortActions::set_j2534_ioctl(unsigned long parameter, int value)
+{
+    // Set timeouts etc.
+    SCONFIG_LIST scl;
+    SCONFIG scp[1] = {{parameter,0}};
+    scl.NumOfParams = 1;
+    scp[0].Value = value;
+    scl.ConfigPtr = scp;
+    if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
+    {
+        reportJ2534Error();
+        return STATUS_ERROR;
+    }
+    else
+    {
+        //qDebug() << "Set timings OK";
+    }
+
+    return STATUS_SUCCESS;
 }
 
 void SerialPortActions::dump_msg(PASSTHRU_MSG* msg)
@@ -891,7 +913,10 @@ int SerialPortActions::set_j2534_can()
     else
     {
         protocol = ISO15765;
-        flags = 0;
+        if (is_29_bit_id)
+            flags = CAN_29BIT_ID;
+        else
+            flags = 0;
     }
     baudrate = can_speed.toUInt();
 
@@ -1195,5 +1220,17 @@ void SerialPortActions::delay(int timeout)
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+}
+
+QString SerialPortActions::parse_message_to_hex(QByteArray received)
+{
+    QByteArray msg;
+
+    for (unsigned long i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
+    }
+
+    return msg;
 }
 

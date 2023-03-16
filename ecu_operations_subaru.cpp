@@ -816,10 +816,10 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
     send_log_window_message("Cannot connect to bootloader, testing if kernel is alive", true, true);
 
     serial->change_port_speed("62500");
-    serial->is_packet_header = true;
-    serial->packet_header_startbyte = 0x80;
-    serial->packet_header_source_id = 0xFC;
-    serial->packet_header_destination_id = 0x10;
+    serial->add_iso14230_header = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_tester_id = 0xFC;
+    serial->iso14230_target_id = 0x10;
 
     //delay(100);
 
@@ -842,7 +842,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
         }
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     return STATUS_ERROR;
 }
@@ -866,10 +866,10 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_04_32bit()
         return STATUS_ERROR;
 
     serial->change_port_speed("62500");
-    serial->is_packet_header = true;
-    serial->packet_header_startbyte = 0x80;
-    serial->packet_header_source_id = 0xFC;
-    serial->packet_header_destination_id = 0x10;
+    serial->add_iso14230_header = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_tester_id = 0xFC;
+    serial->iso14230_target_id = 0x10;
 
     delay(100);
 
@@ -894,7 +894,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_04_32bit()
     }
 
     serial->change_port_speed("4800");
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
     delay(100);
 
     // SSM init
@@ -982,7 +982,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_32bit()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1068,7 +1068,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_iso15765_32bit()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1148,7 +1148,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1364,7 +1364,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1442,7 +1442,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_recovery_32bit
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1521,7 +1521,7 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -1592,7 +1592,7 @@ int EcuOperationsSubaru::uninitialize_read_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     received = send_subaru_hitachi_sid_b8_change_baudrate_4800();
     qDebug() << "SID_B8 received:" << parse_message_to_hex(received);
@@ -1634,7 +1634,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -1678,7 +1678,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj70_kline()
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -1761,7 +1761,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_kline()
     QByteArray received;
     QString msg;
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     return STATUS_ERROR;
 }
@@ -1772,7 +1772,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_can()
     QByteArray received;
     QString msg;
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     return STATUS_ERROR;
 }
@@ -1798,7 +1798,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_16bit(QString kerne
     }
 
     //serial->change_port_speed("9600");
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1868,7 +1868,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_16bit(QString kerne
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     return STATUS_ERROR;
 }
@@ -1895,7 +1895,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
     }
 
     //serial->change_port_speed("9600");
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1974,10 +1974,10 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
     send_log_window_message("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
-    serial->is_packet_header = true;
-    serial->packet_header_startbyte = 0x80;
-    serial->packet_header_source_id = 0xFC;
-    serial->packet_header_destination_id = 0x10;
+    serial->add_iso14230_header = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_tester_id = 0xFC;
+    serial->iso14230_target_id = 0x10;
 
     delay(100);
 
@@ -2040,7 +2040,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -2128,10 +2128,10 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
     send_log_window_message("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
-    serial->is_packet_header = true;
-    serial->packet_header_startbyte = 0x80;
-    serial->packet_header_source_id = 0xFC;
-    serial->packet_header_destination_id = 0x10;
+    serial->add_iso14230_header = true;
+    serial->iso14230_startbyte = 0x80;
+    serial->iso14230_tester_id = 0xFC;
+    serial->iso14230_target_id = 0x10;
 
     //serial->reset_connection();
     //serial->open_serial_port();
@@ -2199,7 +2199,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -2329,7 +2329,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_iso15765_32bit(QString kerne
         return STATUS_ERROR;
     }
 
-    serial->is_packet_header = false;
+    serial->add_iso14230_header = false;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -3446,6 +3446,32 @@ QByteArray EcuOperationsSubaru::subaru_denso_generate_ecutek_can_seed_key(QByteA
 
     const uint8_t indextransformation[]={
         0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+/************************************
+ * COBB'd Denso CAN ECUs seed key
+ ***********************************/
+QByteArray EcuOperationsSubaru::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x77C1, 0x80BB, 0xD5C1, 0x7A94,
+        0x11F0, 0x25FF, 0xC365, 0x10B4,
+        0x48DA, 0x6720, 0x3255, 0xFA17,
+        0x60BF, 0x780E, 0x9C1D, 0x5A28
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
         0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
         0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8

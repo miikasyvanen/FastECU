@@ -37,6 +37,7 @@ private:
     QString header_font_family = "Franklin Gothic";
 
     QString flash_protocol_id;
+    QString flash_protocol_mcu;
     QString flash_protocol_make;
     QString flash_protocol_model;
     QString flash_protocol_version;
