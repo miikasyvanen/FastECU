@@ -10,11 +10,11 @@
     <x>0</x>
     <y>0</y>
     <width>820</width>
-    <height>678</height>
+    <height>682</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Communication Interface with BIU</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">

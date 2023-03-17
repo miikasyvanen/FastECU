@@ -14,6 +14,7 @@
 
 #include <serial_port_actions.h>
 #include <biu_ops_subaru_switches.h>
+#include <biu_ops_subaru_dtcs.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -33,6 +34,7 @@ public:
 private:
 
     enum BiuCommands {
+        NO_COMMAND = 0x00,
         CONNECT = 0x81,
         DISCONNECT = 0x82,
         DTC_READ = 0x18,
@@ -44,6 +46,12 @@ private:
         CAN_DATA = 0x41,
         BIU_CUSTOM_TIME_TEMP = 0x52,
         DEALER_COUNTRY_OPTIONS = 0x53,
+        TESTER_PRESENT = 0x3E,
+    };
+
+    enum ConnectionState {
+        NOT_CONNECTED = 0,
+        CONNECTED = 1,
     };
 
     QStringList biu_messages = {    "Connect", "81",
@@ -318,17 +326,25 @@ private:
     int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int timeout);
     void update_biu_ops_subaru_switches_window();
+    void update_biu_ops_subaru_dtcs_window();
+    void close_results_windows();
 
     SerialPortActions *serial;
     QStringList *switch_result;
+    QStringList *dtc_result;
     BiuOpsSubaruSwitches *biuOpsSubaruSwitches;
-    bool switches_window_shown;
+    BiuOpsSubaruDtcs *biuOpsSubaruDtcs;
+    int counter;
+    uint8_t current_command;
+    ConnectionState connection_state;
+    QByteArray output;
 
     Ui::BiuOperationsSubaruWindow *ui;
 
 private slots:
     void keep_alive();
     void send_biu_msg();
+    void prepare_biu_msg();
 
 signals:
 

@@ -27,17 +27,17 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
             row_num = 0;
         }
         label = new QLabel();
-        label->setObjectName("Name" + i);
+        label->setObjectName("Name" + QString::number(i));
         label->setFont(custom_font);
         label->setText(switch_result->at(2 * i));
         ui->gridLayout->addWidget(label, row_num, col_num);
 
         label = new QLabel();
-        label->setObjectName("Result" + i);
+        label->setObjectName("Result" + QString::number(i));
         label->setFont(custom_font);
         label->setText(switch_result->at(2 * i + 1));
         label->setAlignment(Qt::AlignCenter);
-        if (switch_result->at(2 * i + 1) == " ON") label->setStyleSheet("QLabel { background-color : green; color : white;}");
+        if (switch_result->at(2 * i + 1) == "ON") label->setStyleSheet("QLabel { background-color : green; color : white;}");
         else label->setStyleSheet("QLabel { background-color : red; color : white;}");
         ui->gridLayout->addWidget(label, row_num, col_num + 1);
 
@@ -59,12 +59,12 @@ void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)
 
     for (int i = 0; i < 128; i++) {
 
-        current_label = ui->gridLayoutWidget->findChild< QLabel* >("Result" + i);
+        current_label = ui->gridLayoutWidget->findChild< QLabel* >("Result" + QString::number(i));
 
         if (current_label)
         {
             current_label->setText(switch_result->at(2 * i + 1));
-            if (switch_result->at(2 * i + 1) == " ON") current_label->setStyleSheet("QLabel { background-color : green; color : white;}");
+            if (switch_result->at(2 * i + 1) == "ON") current_label->setStyleSheet("QLabel { background-color : green; color : white;}");
             else current_label->setStyleSheet("QLabel { background-color : red; color : white;}");
             //current_label->repaint();
         }
