@@ -626,32 +626,17 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     {
         send_log_window_message("Connecting to Subaru Denso 32-bit CAN bootloader, please wait...", true, true);
 
-        if (flash_method == "sh7058s_denso_can_recovery")
-        {
-            serial->is_can_connection = false;
-            serial->is_iso15765_connection = true;
-            serial->is_29_bit_id = false;
-            serial->can_speed = "500000";
+        serial->is_iso14230_connection = false;
+        serial->is_can_connection = true;
+        serial->is_iso15765_connection = false;
+        serial->is_29_bit_id = true;
+        serial->can_speed = "500000";
+        serial->can_source_address = 0xFFFFE;
+        serial->can_destination_address = 0x21;
+        serial->open_serial_port();
 
-            serial->iso15765_source_address = 0xFFFFE;
-            serial->iso15765_destination_address = 0x21;
-            serial->open_serial_port();
+        result = connect_bootloader_subaru_denso_can_recovery_32bit();
 
-            result = connect_bootloader_subaru_denso_can_recovery_32bit();
-        }
-        else
-        {
-            serial->is_can_connection = true;
-            serial->is_iso15765_connection = false;
-            serial->is_29_bit_id = true;
-            serial->can_speed = "500000";
-
-            serial->can_source_address = 0xFFFFE;
-            serial->can_destination_address = 0x21;
-            serial->open_serial_port();
-
-            result = connect_bootloader_subaru_denso_can_recovery_32bit();
-        }
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
             send_log_window_message("Initializing Subaru Denso 32-bit CAN kernel upload, please wait...", true, true);
@@ -1367,8 +1352,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
 
     serial->add_iso14230_header = false;
 
-    if (connect_bootloader_start_countdown(bootloader_start_countdown))
-        return STATUS_ERROR;
+    //if (connect_bootloader_start_countdown(bootloader_start_countdown))
+    //    return STATUS_ERROR;
 
     send_log_window_message("Start sending connection requests to Denso CAN bootloader (CAN)", true, true);
     qDebug() << "Start sending connection requests to Denso CAN bootloader (CAN)";
@@ -1394,6 +1379,8 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
     serial->send_periodic_j2534_data(output, recovery_timeout);
     for (int i = 0; i < 100; i++)
     {
+        if (kill_process)
+            return STATUS_ERROR;
         ui->progressbar->setValue(i);
         delay(timeout / 100.0);
     }
