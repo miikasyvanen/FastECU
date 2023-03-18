@@ -1568,8 +1568,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file with CAL ID: " + selected_id);
-        ecuCalDef->RomInfo.replace(XmlId, selected_id);
+        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file");
+        ecuCalDef->RomInfo.replace(XmlId, "UnknownID");//selected_id);
         ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
         ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
         ecuCalDef->RomInfo.replace(EcuId, selected_id);

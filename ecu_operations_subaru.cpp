@@ -60,7 +60,8 @@ EcuOperationsSubaru::EcuOperationsSubaru(SerialPortActions *serial, FileActions:
     if (result == STATUS_SUCCESS)
     {
         QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-        this->close();
+        this->accept();
+        //this->close();
     }
     else
     {

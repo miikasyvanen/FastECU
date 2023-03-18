@@ -376,9 +376,10 @@ QString MainWindow::check_kernel(QString flash_method)
         else
             kernel = prefix + "ssmk_SH7058.bin";
     }
+    else if (flash_method.startsWith("subarucand"))
+        kernel = prefix + "ssmk_CAN_SH7058d.bin";
     else if (flash_method.startsWith("subarucan"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
-
     else if (flash_method.startsWith("sh7055_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7055.bin";
     else if (flash_method.startsWith("sh7058_denso_can"))
@@ -592,15 +593,33 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDef[rom_number]->RomInfo.append(" ");
             }
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
+            ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_family;
             ecuCalDef[rom_number]->Kernel = check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
         }
 
         qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
-        if (configValues->flash_protocol_selected_family.startsWith("sti04"))
-            flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[rom_number], cmd_type);
+
+        if (configValues->flash_protocol_selected_flash_transport == "CAN")
+        {
+            if (ecuCalDef[rom_number]->McuType == "SH7055")
+                ecuCalDef[rom_number]->FlashMethod = "sh7055_denso_can";
+            if (ecuCalDef[rom_number]->McuType == "SH7058")
+                ecuCalDef[rom_number]->FlashMethod = "sh7058_denso_can";
+            if (ecuCalDef[rom_number]->McuType == "SH7058S")
+                ecuCalDef[rom_number]->FlashMethod = "sh7058s_denso_can";
+            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+        }
+        else if (configValues->flash_protocol_selected_family.startsWith("wrx02"))
+            flashDensoWrx02 = new FlashDensoWrx02(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("fxt02"))
+            flashDensoFxt02 = new FlashDensoFxt02(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("sti04"))
+            flashDensoSti04 = new FlashDensoSti04(serial, ecuCalDef[rom_number], cmd_type);
         else if (configValues->flash_protocol_selected_family.startsWith("sti05"))
-            flashDensoKline04 = new FlashDensoKline04(serial, ecuCalDef[rom_number], cmd_type);
+            flashDensoSti04 = new FlashDensoSti04(serial, ecuCalDef[rom_number], cmd_type);
+        else if (configValues->flash_protocol_selected_family.startsWith("subarucand"))
+            flashDensoSubaruCanDiesel = new FlashDensoSubaruCanDiesel(serial, ecuCalDef[rom_number], cmd_type);
         else if (configValues->flash_protocol_selected_family.startsWith("subarucan"))
             flashDensoSubaruCan = new FlashDensoSubaruCan(serial, ecuCalDef[rom_number], cmd_type);
         else if (configValues->flash_protocol_selected_family.startsWith("sh7055_denso_can"))
