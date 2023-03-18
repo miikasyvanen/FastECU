@@ -217,7 +217,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
     }
     if (received == "" || (uint8_t)received.at(4) != 0x41)
         return STATUS_ERROR;
-/*
+
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x10);
@@ -262,7 +262,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
     }
     //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
     //    return STATUS_ERROR;
-*/
+
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x09);
@@ -315,6 +315,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
     /****************************
      *
      * */
+    /*
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x10);
@@ -337,6 +338,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
     }
     //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(4) != 0x03)
     //    return STATUS_ERROR;
+    */
     /****************************
      *
      * */

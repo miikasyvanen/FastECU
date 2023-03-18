@@ -379,7 +379,8 @@ QString MainWindow::check_kernel(QString flash_method)
     else if (flash_method.startsWith("subarucand"))
         kernel = prefix + "ssmk_CAN_SH7058d.bin";
     else if (flash_method.startsWith("subarucan"))
-        kernel = prefix + "ssmk_CAN_SH7058.bin";
+        //kernel = prefix + "ssmk_CAN_SH7058.bin";
+        kernel = prefix + "ecuflash_subarucan.bin";
     else if (flash_method.startsWith("sh7055_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7055.bin";
     else if (flash_method.startsWith("sh7058_denso_can"))
