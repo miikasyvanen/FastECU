@@ -56,7 +56,7 @@ private:
     bool kill_process = false;
 
     int mcu_type_index;
-    int recovery_timeout = 1;
+    int recovery_timeout = 10;
 
     uint8_t bootloader_start_countdown = 3;
 

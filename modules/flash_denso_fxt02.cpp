@@ -93,24 +93,24 @@ int FlashDensoFxt02::init_flash_denso_kline_fxt02(FileActions::EcuCalDefStructur
     QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
     //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
 
-    send_log_window_message("Connecting to Subaru 04 32-bit K-line bootloader, please wait...", true, true);
+    send_log_window_message("Connecting to Subaru 02 32-bit K-line bootloader, please wait...", true, true);
     result = connect_bootloader_subaru_denso_kline_fxt02();
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
-        send_log_window_message("Initializing Subaru 04 32-bit K-Line kernel upload, please wait...", true, true);
+        send_log_window_message("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
         result = upload_kernel_subaru_denso_kline_fxt02(kernel);
     }
     if (result == STATUS_SUCCESS)
     {
         if (cmd_type == "read")
         {
-            send_log_window_message("Reading ROM from Subaru 04 32-bit using K-Line", true, true);
+            send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
             result = read_mem_subaru_denso_kline_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
-            send_log_window_message("Writing ROM to Subaru 04 32-bit using K-Line", true, true);
+            send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
             result = write_mem_subaru_denso_kline_32bit(ecuCalDef, test_write);
         }
     }

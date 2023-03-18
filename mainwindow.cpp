@@ -600,7 +600,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
 
-        if (configValues->flash_protocol_selected_flash_transport == "CAN")
+        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType == "SH7055")
                 ecuCalDef[rom_number]->FlashMethod = "sh7055_denso_can";
@@ -622,12 +622,15 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashDensoSubaruCanDiesel = new FlashDensoSubaruCanDiesel(serial, ecuCalDef[rom_number], cmd_type);
         else if (configValues->flash_protocol_selected_family.startsWith("subarucan"))
             flashDensoSubaruCan = new FlashDensoSubaruCan(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("sh7055_denso_can"))
-            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("sh7058_denso_can"))
-            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("sh7058s_denso_can"))
-            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+        else if (!configValues->flash_protocol_selected_family.endsWith("denso_can_recovery"))
+        {
+            if (configValues->flash_protocol_selected_family.startsWith("sh7055_denso_can"))
+                flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+            else if (configValues->flash_protocol_selected_family.startsWith("sh7058_denso_can"))
+                flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+            else if (configValues->flash_protocol_selected_family.startsWith("sh7058s_denso_can"))
+                flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+        }
         else
             ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[rom_number], cmd_type);
 
