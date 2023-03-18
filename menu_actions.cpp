@@ -927,7 +927,9 @@ void MainWindow::show_subaru_biu_window()
     //serial->change_port_speed("4800");
 
     BiuOperationsSubaru *biuOperationsSubaru = new BiuOperationsSubaru(serial);
-    biuOperationsSubaru->exec();
+    biuOperationsSubaru->show();
+
+    qDebug() << "BIU stopped";
 
     serial->add_iso14230_header = false;
     serial_poll_timer->start();

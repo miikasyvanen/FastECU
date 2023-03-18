@@ -38,9 +38,12 @@
 #include <serial_port_actions.h>
 
 // Flash modules
-#include <modules/flash_denso_can_02.h>
-#include <modules/flash_denso_kline_04.h>
+#include <modules/flash_denso_wrx02.h>
+#include <modules/flash_denso_fxt02.h>
+#include <modules/flash_denso_can02.h>
+#include <modules/flash_denso_sti04.h>
 #include <modules/flash_denso_subarucan.h>
+#include <modules/flash_denso_subarucan_diesel.h>
 //
 
 QT_BEGIN_NAMESPACE
@@ -96,9 +99,12 @@ private:
     EcuOperationsSubaru *ecuOperationsSubaru;
     EcuOperationsMercedes *ecuOperationsRenault;
 
+    FlashDensoWrx02 *flashDensoWrx02;
+    FlashDensoFxt02 *flashDensoFxt02;
     FlashDensoCan02 *flashDensoCan02;
-    FlashDensoKline04 *flashDensoKline04;
+    FlashDensoSti04 *flashDensoSti04;
     FlashDensoSubaruCan *flashDensoSubaruCan;
+    FlashDensoSubaruCanDiesel *flashDensoSubaruCanDiesel;
 
     SerialPortActions *serial;
     QTimer *serial_poll_timer;

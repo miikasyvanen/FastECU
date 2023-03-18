@@ -32,6 +32,8 @@ public:
     explicit BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *parent = nullptr);
     ~BiuOpsSubaruSwitches();
 
+    bool switches_window_shown;
+
     void update_switch_results(QStringList *switch_result);
 
 private:

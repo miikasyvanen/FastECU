@@ -15,6 +15,7 @@
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
 #include <serial_port_actions.h>
+#include <ui_ecu_operations.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -32,8 +33,8 @@ public:
     ~FlashDensoSubaruCan();
 
 private:
-    #define STATUS_SUCCESS							0x00
-    #define STATUS_ERROR							0x01
+    #define STATUS_SUCCESS	0x00
+    #define STATUS_ERROR	0x01
 
     bool kill_process = false;
     bool kernel_alive = false;
@@ -98,7 +99,10 @@ private:
     QByteArray request_kernel_id();
 
     QByteArray subaru_denso_transform_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+
+    QByteArray subaru_denso_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt);
+    void barrel_shift_16_right(unsigned short *barrel);
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);

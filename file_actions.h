@@ -287,7 +287,7 @@ public:
         QString RomBase;
         QString RomId;
         QString Kernel;
-        QString RomProtocol;
+        QString FlashMethod;
         QString McuType;
 
         QStringList StorageTypeList;

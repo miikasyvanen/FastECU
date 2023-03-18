@@ -2,7 +2,7 @@
 #include <ui_biu_operations_subaru.h>
 
 BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *parent)
-    : QDialog(parent),
+    : QWidget(parent),
       ui(new Ui::BiuOperationsSubaruWindow)
 {
     ui->setupUi(this);
@@ -30,7 +30,8 @@ BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *par
 
 BiuOperationsSubaru::~BiuOperationsSubaru()
 {
-    biuOpsSubaruSwitches->close();
+    if (biuOpsSubaruSwitches)
+        biuOpsSubaruSwitches->close();
     keep_alive_timer->stop();
 }
 

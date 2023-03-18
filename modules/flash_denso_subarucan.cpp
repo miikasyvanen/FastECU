@@ -1,5 +1,4 @@
 #include "flash_denso_subarucan.h"
-#include <ui_ecu_operations.h>
 
 FlashDensoSubaruCan::FlashDensoSubaruCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent),
@@ -17,10 +16,10 @@ FlashDensoSubaruCan::FlashDensoSubaruCan(SerialPortActions *serial, FileActions:
     this->serial = serial;
     this->show();
 
-    int result = 0;
+    int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    init_flash_denso_subarucan(ecuCalDef, cmd_type);
+    result = init_flash_denso_subarucan(ecuCalDef, cmd_type);
 
     if (result == STATUS_SUCCESS)
     {
@@ -61,22 +60,23 @@ int FlashDensoSubaruCan::init_flash_denso_subarucan(FileActions::EcuCalDefStruct
     int result = STATUS_ERROR;
 
     kernel = ecuCalDef->Kernel;
+    flash_method = ecuCalDef->FlashMethod;
 
     if (cmd_type == "read")
     {
-        send_log_window_message("Read memory with flashmethod " + flash_method + " and kernel " + ecuCalDef->Kernel, true, true);
+        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
         //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
     else if (cmd_type == "test_write")
     {
         test_write = true;
-        send_log_window_message("Test write memory with flashmethod " + flash_method + " and kernel " + ecuCalDef->Kernel, true, true);
+        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
         //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
     else if (cmd_type == "write")
     {
         test_write = false;
-        send_log_window_message("Write memory with flashmethod " + flash_method + " and kernel " + ecuCalDef->Kernel, true, true);
+        send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
         //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
 
@@ -217,7 +217,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
     }
     if (received == "" || (uint8_t)received.at(4) != 0x41)
         return STATUS_ERROR;
-
+/*
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x10);
@@ -262,7 +262,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
     }
     //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
     //    return STATUS_ERROR;
-
+*/
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x09);
@@ -312,6 +312,35 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
     if (received == "" || (uint8_t)received.at(4) != 0x49 || (uint8_t)received.at(5) != 0x06)
         return STATUS_ERROR;
 
+    /****************************
+     *
+     * */
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x10);
+    output[5] = ((uint8_t)0x03);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x10 0x03 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x10 0x03 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(4) != 0x03)
+    //    return STATUS_ERROR;
+    /****************************
+     *
+     * */
+
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x27);
@@ -350,6 +379,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
         seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
     else
         seed_key = subaru_denso_generate_can_seed_key(seed);
+
     send_log_window_message("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
     qDebug() << "Calculated seed key:" << parse_message_to_hex(seed_key);
     send_log_window_message("Sending seed key", true, true);
@@ -441,7 +471,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
 
     QString mcu_name;
 
-    data_addr = flashdevices[mcu_type_index].rblocks->start;
+    data_addr = flashdevices[mcu_type_index].kblocks->start;
 
     if (!serial->is_serial_port_open())
     {
@@ -462,12 +492,34 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
     //pl_len = file_len + 6;
     pl_encr = file.readAll();
     maxblocks = file_len / 128;
-    if((file_len % 128) != 0)
+    //if((file_len % 128) != 0)
+    if((pl_len % 128) != 0)
         maxblocks++;
     end_addr = (data_addr + (maxblocks * 128)) & 0xFFFFFFFF;
     uint32_t data_len = end_addr - data_addr;
+    while ((uint32_t)pl_encr.length() < data_len)
+    {
+        pl_encr.append((uint8_t)0x00);
+        pl_encr.append((uint8_t)0x09);
+    }
 
-    pl_encr = subaru_denso_transform_32bit_payload(pl_encr, pl_len);
+/*
+    uint32_t len = pl_len;// &= ~3;
+    unsigned char data[file_len];
+    QByteArray kernel_data;
+    kernel_data.clear();
+
+    for (uint32_t i = 0; i < len; i++)
+        data[i] = (uint8_t)pl_encr.at(i);
+    kernel_data = subaru_denso_transform_wrx04_kernel(data, len, false);
+    qDebug() << "\nDecrypted kernel wrx04:" << parse_message_to_hex(kernel_data);
+    return STATUS_ERROR;
+*/
+    pl_encr = subaru_denso_transform_32bit_payload(pl_encr, pl_encr.length());//pl_len);
+    //qDebug() << "\nEncrypted kernel orig: " << parse_message_to_hex(pl_encr);
+
+
+
 
     set_progressbar_value(0);
 
@@ -493,16 +545,16 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
+        //delay(50);
         received = serial->read_serial_data(20, 10);
         if (received != "")
         {
             connected = true;
-            send_log_window_message(QString::number(try_count) + ": 0x10 0x02 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << try_count << ": 0x10 0x02 response:" << parse_message_to_hex(received);
+            send_log_window_message(QString::number(try_count) + ": 0x34 0x04 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x34 0x04 response:" << parse_message_to_hex(received);
         }
         try_count++;
-        delay(try_timeout);
+        //delay(try_timeout);
     }
     if (received == "" || (uint8_t)received.at(4) != 0x74)
         return STATUS_ERROR;
@@ -518,38 +570,51 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
     output.append((uint8_t)0x00);
     output.append(128, (uint8_t)0x00);
 
+    int data_bytes_sent = 0;
     for (blockno = 0; blockno <= maxblocks; blockno++)
     {
         if (kill_process)
-            return NULL;
+            return 0;
 
         blockaddr = data_addr + blockno * 128;
-        output[5] = (uint8_t)(blockaddr >> 16) & 0xFF;
-        output[6] = (uint8_t)(blockaddr >> 8) & 0xFF;
-        output[7] = (uint8_t)blockaddr & 0xFF;
+        output.clear();
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x07);
+        output.append((uint8_t)0xE0);
+        output.append((uint8_t)0xB6);
+        output.append((uint8_t)(blockaddr >> 16) & 0xFF);
+        output.append((uint8_t)(blockaddr >> 8) & 0xFF);
+        output.append((uint8_t)blockaddr & 0xFF);
+        //qDebug() << "Data header:" << parse_message_to_hex(output);
 
         if (blockno == maxblocks)
         {
             for (uint32_t i = 0; i < data_len; i++)
             {
-                output.replace(8, pl_encr.at(i + blockno * 128));
+                output.append(pl_encr.at(i + blockno * 128));
+                data_bytes_sent++;
             }
         }
         else
         {
             for (int i = 0; i < 128; i++)
             {
-                output.replace(8, pl_encr.at(i + blockno * 128));
+                output.append(pl_encr.at(i + blockno * 128));
+                data_bytes_sent++;
             }
             data_len -= 128;
         }
 
         serial->write_serial_data_echo_check(output);
+        //qDebug() << "Kernel data:" << parse_message_to_hex(output);
+        //delay(20);
         received = serial->read_serial_data(5, receive_timeout);
 
         float pleft = (float)blockno / (float)maxblocks * 100;
         set_progressbar_value(pleft);
     }
+    qDebug() << "Data bytes sent:" << hex << data_bytes_sent;
 
     connected = false;
     try_count = 0;
@@ -565,7 +630,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
+        //delay(50);
         received = serial->read_serial_data(20, 10);
         if (received != "")
         {
@@ -574,7 +639,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
             qDebug() << try_count << ": 0x37 response:" << parse_message_to_hex(received);
         }
         try_count++;
-        delay(try_timeout);
+        //delay(try_timeout);
     }
     if (received == "" || (uint8_t)received.at(4) != 0x77)
         return STATUS_ERROR;
@@ -597,7 +662,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
+        //delay(50);
         received = serial->read_serial_data(20, 10);
         if (received != "")
         {
@@ -606,7 +671,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
             qDebug() << try_count << ": 0x31 response:" << parse_message_to_hex(received);
         }
         try_count++;
-        delay(try_timeout);
+        //delay(try_timeout);
     }
     if (received == "" || (uint8_t)received.at(4) != 0x71)
         return STATUS_ERROR;
@@ -1337,13 +1402,6 @@ QByteArray FlashDensoSubaruCan::subaru_denso_generate_can_seed_key(QByteArray re
 {
     QByteArray key;
 
-    const uint16_t keytogenerateindex_diesel[]={
-        0x78B1, 0x4625, 0x201C, 0x9EA5,
-        0xAD6B, 0x35F4, 0xFD21, 0x5E71,
-        0xB046, 0x7F4A, 0x4B75, 0x93F9,
-        0x1895, 0x8961, 0x3ECC, 0x862B
-    };
-
     const uint16_t keytogenerateindex_1[]={
         0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
         0x15BB, 0xF998, 0x8723, 0x9E05,
@@ -1485,12 +1543,12 @@ QByteArray FlashDensoSubaruCan::subaru_denso_transform_32bit_payload(QByteArray 
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = subaru_denso_encrypt_32bit_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray FlashDensoSubaruCan::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashDensoSubaruCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1534,6 +1592,102 @@ QByteArray FlashDensoSubaruCan::subaru_denso_calculate_32bit_payload(QByteArray 
     return encrypted;
 }
 
+QByteArray FlashDensoSubaruCan::subaru_denso_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt)
+{
+    QByteArray kernel_data;
+
+    unsigned short crypto_tableA[4] =
+    {
+        0x7856, 0xCE22, 0xF513, 0x6E86
+    };
+
+    unsigned char crypto_tableB[32] =
+    {
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8,
+    };
+
+    int i,j;
+    unsigned short word1,word2,idx2,temp,key16;
+
+    for (i = 0; i < length; i += 4)
+    {
+
+        if (doencrypt)
+        {
+            word2 = (*(data+0) << 8) + *(data+1);
+            word1 = (*(data+2) << 8) + *(data+3);
+            for (j = 1; j <= 4; j++)
+            {
+                idx2 = word1 ^ crypto_tableA[j-1];
+                key16 =
+                        crypto_tableB[(idx2 >> 0) & 0x1F]
+                    + (crypto_tableB[(idx2 >> 4) & 0x1F] << 4)
+                    + (crypto_tableB[(idx2 >> 8) & 0x1F] << 8)
+                    + (crypto_tableB[(((idx2 & 0x1) << 4) + (idx2 >> 12)) & 0x1F] << 12);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+
+                temp = word1;
+                word1 = key16 ^ word2;
+                word2 = temp;
+
+            }
+            *(data+0) = word1 >> 8;
+            *(data+1) = word1 & 0xFF;
+            *(data+2) = word2 >> 8;
+            *(data+3) = word2 & 0xFF;
+        }
+        else
+        {
+            word1 = (*(data+0) << 8) + *(data+1);
+            word2 = (*(data+2) << 8) + *(data+3);
+            for (j = 4; j > 0; j--)
+            {
+                idx2 = word2 ^ crypto_tableA[j-1];
+                key16 =
+                        crypto_tableB[(idx2 >> 0) & 0x1F]
+                    + (crypto_tableB[(idx2 >> 4) & 0x1F] << 4)
+                    + (crypto_tableB[(idx2 >> 8) & 0x1F] << 8)
+                    + (crypto_tableB[(((idx2 & 0x1) << 4) + (idx2 >> 12)) & 0x1F] << 12);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+                barrel_shift_16_right(&key16);
+                temp = word2;
+                word2 = key16 ^ word1;
+                word1 = temp;
+            }
+            *(data+0) = word2 >> 8;
+            *(data+1) = word2 & 0xFF;
+            *(data+2) = word1 >> 8;
+            *(data+3) = word1 & 0xFF;
+        }
+        kernel_data.append(*(data+0));
+        kernel_data.append(*(data+1));
+        kernel_data.append(*(data+2));
+        kernel_data.append(*(data+3));
+        data += 4;
+    }
+    return kernel_data;
+}
+
+void FlashDensoSubaruCan::barrel_shift_16_right(unsigned short *barrel)
+{
+    if (*barrel & 1)
+        *barrel = (*barrel >> 1) + 0x8000;
+    else
+        *barrel = *barrel >> 1;
+}
+
+
+
+
+
+
+
 /*
  * Request kernel init
  *
@@ -1547,7 +1701,22 @@ QByteArray FlashDensoSubaruCan::request_kernel_init()
     request_denso_kernel_init = true;
 
     output.clear();
-    output.append(SID_KERNEL_INIT);
+    /*
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    */
+    output.append((uint8_t)SID_KERNEL_INIT);
+    /*
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    */
     received = serial->write_serial_data_echo_check(output);
     delay(500);
     received = serial->read_serial_data(100, serial_read_short_timeout);
@@ -1572,33 +1741,32 @@ QByteArray FlashDensoSubaruCan::request_kernel_id()
     request_denso_kernel_id = true;
 
     output.clear();
-    if (serial->is_can_connection || serial->is_iso15765_connection)
-    {
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x0F);
-        output.append((uint8_t)0xFF);
-        output.append((uint8_t)0xFE);
-        output.append((uint8_t)SID_START_COMM_CAN);
-        output.append((uint8_t)0xA0);
-    }
-    else
-        output.append(SID_RECUID);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)SID_START_COMM_CAN);
+    output.append((uint8_t)0xA0);
+    /*
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    */
 
     received = serial->write_serial_data_echo_check(output);
     delay(100);
     received = serial->read_serial_data(100, serial_read_short_timeout);
 
-    received.remove(0, 1);
-    if (serial->is_can_connection || serial->is_iso15765_connection)
-        received.remove(0, 1);
+    received.remove(0, 2);
     kernelid = received;
 
     while (received != "")
     {
         received = serial->read_serial_data(1, serial_read_short_timeout);
-        received.remove(0, 1);
-        if (serial->is_can_connection || serial->is_iso15765_connection)
-            received.remove(0, 1);
+        received.remove(0, 2);
         kernelid.append(received);
     }
 

@@ -22,7 +22,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class BiuOperationsSubaru : public QDialog
+class BiuOperationsSubaru : public QWidget
 {
     Q_OBJECT
 

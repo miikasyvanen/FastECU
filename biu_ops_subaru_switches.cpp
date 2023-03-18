@@ -11,6 +11,7 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
     this->setAttribute(Qt::WA_DeleteOnClose);
 
     this->switch_result = switch_result;
+    switches_window_shown = true;
 
     QFont custom_font("Courier New", 7);
 
@@ -49,8 +50,9 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
 
 BiuOpsSubaruSwitches::~BiuOpsSubaruSwitches()
 {
+    switches_window_shown = false;
     this->close();
-    delete ui;
+    //delete ui;
 }
 
 void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)

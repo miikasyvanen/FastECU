@@ -54,9 +54,12 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
-    modules/flash_denso_can_02.cpp \
-    modules/flash_denso_kline_04.cpp \
+    modules/flash_denso_can02.cpp \
+    modules/flash_denso_fxt02.cpp \
+    modules/flash_denso_sti04.cpp \
     modules/flash_denso_subarucan.cpp \
+    modules/flash_denso_subarucan_diesel.cpp \
+    modules/flash_denso_wrx02.cpp \
     protocol_select.cpp \
     serial_port_actions.cpp \
     settings.cpp \
@@ -80,9 +83,12 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
-    modules/flash_denso_can_02.h \
-    modules/flash_denso_kline_04.h \
+    modules/flash_denso_can02.h \
+    modules/flash_denso_fxt02.h \
+    modules/flash_denso_sti04.h \
     modules/flash_denso_subarucan.h \
+    modules/flash_denso_subarucan_diesel.h \
+    modules/flash_denso_wrx02.h \
     protocol_select.h \
     serial_port_actions.h \
     settings.h \
