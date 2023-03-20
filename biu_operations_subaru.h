@@ -328,6 +328,7 @@ private:
     void update_biu_ops_subaru_switches_window();
     void update_biu_ops_subaru_dtcs_window();
     void close_results_windows();
+    void closeEvent(QCloseEvent *event);
 
     SerialPortActions *serial;
     QStringList *switch_result;

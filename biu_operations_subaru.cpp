@@ -74,6 +74,14 @@ void BiuOperationsSubaru::close_results_windows()
     if (biuOpsSubaruDtcs != nullptr) biuOpsSubaruDtcs->hide();
 }
 
+void BiuOperationsSubaru::closeEvent(QCloseEvent *event)
+{
+    qDebug() << "Closing BIU log window";
+    keep_alive_timer->stop();
+    if (biuOpsSubaruSwitches != nullptr) biuOpsSubaruSwitches->close();
+    if (biuOpsSubaruDtcs != nullptr) biuOpsSubaruDtcs->close();
+}
+
 void BiuOperationsSubaru::keep_alive()
 {
 
