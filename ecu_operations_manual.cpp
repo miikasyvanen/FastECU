@@ -1,5 +1,5 @@
 #include "ecu_operations_manual.h"
-#include <ui_ecumanualoperationswindow.h>
+#include <ui_ecu_manual_operations.h>
 
 EcuManualOperations::EcuManualOperations(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QWidget *parent)
     : QWidget(parent),

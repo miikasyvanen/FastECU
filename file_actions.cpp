@@ -511,6 +511,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QStringList flash_protocol_cal_id_ascii;
     QStringList flash_protocol_cal_id_addr;
     QStringList flash_protocol_cal_id_length;
+    QStringList flash_protocol_kernel;
+    QStringList flash_protocol_kernel_addr;
     QStringList flash_protocol_description;
     QStringList flash_protocol_family;
 
@@ -558,6 +560,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         flash_protocol_cal_id_ascii.append(" ");
                         flash_protocol_cal_id_addr.append(" ");
                         flash_protocol_cal_id_length.append(" ");
+                        flash_protocol_kernel.append(" ");
+                        flash_protocol_kernel_addr.append(" ");
                         flash_protocol_description.append(" ");
                         flash_protocol_family.append(" ");
                         flash_protocol_family.replace(index, protocol.attribute("name","No name"));
@@ -595,6 +599,10 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 flash_protocol_cal_id_addr.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "cal_id_length")
                                 flash_protocol_cal_id_length.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "kernel")
+                                flash_protocol_kernel.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "kernel_addr")
+                                flash_protocol_kernel_addr.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "description")
                                 flash_protocol_description.replace(index, protocol_data.text());
                             //if (protocol_data.tagName() == "family")
@@ -691,24 +699,6 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                     }
                                 }
                             }
-/*
-                            if (car_model_data.tagName() == "ecu")
-                                configValues->flash_protocol_ecu.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "mode")
-                                configValues->flash_protocol_mode.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "checksum")
-                                configValues->flash_protocol_checksum.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "read")
-                                configValues->flash_protocol_read.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "write")
-                                configValues->flash_protocol_write.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "flash_transport")
-                                configValues->flash_protocol_flash_transport.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "log_transport")
-                                configValues->flash_protocol_log_transport.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "log_protocol")
-                                configValues->flash_protocol_log_protocol.replace(index, car_model_data.text());
-*/
                             if (car_model_data.tagName() == "description")
                                 configValues->flash_protocol_description.replace(index, car_model_data.text());
 

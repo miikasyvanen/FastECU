@@ -333,7 +333,7 @@ int FlashDensoSti04::upload_kernel_subaru_denso_kline_04_32bit(QString kernel)
 
     //qDebug() << "Encrypt kernel data before upload";
     //pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
-    pl_encr = subaru_denso_transform_32bit_payload(pl_encr, pl_len);
+    pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_len);
 
     //send_log_window_message("Send 'sid36_transfer_data'", true, true);
     //qDebug() << "Send 'sid36_transfer_data'";
@@ -356,7 +356,7 @@ int FlashDensoSti04::upload_kernel_subaru_denso_kline_04_32bit(QString kernel)
     cks_bypass.append((uint8_t)0x5A);
     cks_bypass.append((uint8_t)0xA5);
 
-    cks_bypass = subaru_denso_transform_32bit_payload(cks_bypass, (uint32_t) 4);
+    cks_bypass = subaru_denso_encrypt_32bit_payload(cks_bypass, (uint32_t) 4);
 
     /* sid36 transferData for checksum bypass */
     //qDebug() << "Send 'sid36_transfer_data' for chksum bypass";
@@ -1456,11 +1456,11 @@ QByteArray FlashDensoSti04::subaru_denso_calculate_seed_key(QByteArray requested
  *
  * @return encrypted data
  */
-QByteArray FlashDensoSti04::subaru_denso_transform_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashDensoSti04::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
-    const uint16_t keytogenerateindex[]={
+    uint16_t keytogenerateindex[]={
         0x7856, 0xCE22, 0xF513, 0x6E86
     };
 
@@ -1471,12 +1471,32 @@ QByteArray FlashDensoSti04::subaru_denso_transform_32bit_payload(QByteArray buf,
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_denso_encrypt_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray FlashDensoSti04::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashDensoSti04::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+{
+    QByteArray decrypted;
+
+    uint16_t keytogenerateindex[]={
+        0x6E86, 0xF513, 0xCE22, 0x7856
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    decrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+
+    return decrypted;
+}
+
+QByteArray FlashDensoSti04::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;

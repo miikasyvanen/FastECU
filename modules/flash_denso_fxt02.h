@@ -100,9 +100,6 @@ private:
     QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
-    QByteArray subaru_denso_transform_fxt02_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_calculate_fxt02_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
-
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     int check_received_message(QByteArray msg, QByteArray received);

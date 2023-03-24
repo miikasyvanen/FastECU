@@ -1,5 +1,5 @@
-#ifndef FLASH_DENSO_KLINE_04_H
-#define FLASH_DENSO_KLINE_04_H
+#ifndef FLASHDENSOSUBARUCANDIESEL_H
+#define FLASHDENSOSUBARUCANDIESEL_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashDensoSti04 : public QDialog
+class FlashDensoSubaruCanDiesel : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashDensoSti04(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashDensoSti04();
+    explicit FlashDensoSubaruCanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashDensoSubaruCanDiesel();
 
 private:
     #define STATUS_SUCCESS	0x00
@@ -63,17 +63,18 @@ private:
     QString flash_method;
     QString kernel;
 
-    void closeEvent(QCloseEvent *bar);
+    void closeEvent(QCloseEvent *event);
 
-    int init_flash_denso_kline_04(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
-    int connect_bootloader_subaru_denso_kline_04_32bit();
-    int upload_kernel_subaru_denso_kline_04_32bit(QString kernel);
-    int read_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
-    int get_changed_blocks_kline_32bit(const uint8_t *src, int *modified);
-    int check_romcrc_kline_32bit(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int flash_block_kline_32bit(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_kline_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
+
+    int connect_bootloader_subaru_denso_subarucan();
+    int upload_kernel_subaru_denso_subarucan(QString kernel);
+    int read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
+    int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
+    int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
+    int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     void init_crc16_tab(void);
@@ -89,8 +90,9 @@ private:
     QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
     QByteArray send_subaru_denso_sid_31_start_routine();
 
-    QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
-    QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray request_kernel_init();
@@ -114,4 +116,4 @@ private:
 
 };
 
-#endif // FLASH_DENSO_KLINE_04_H
+#endif // FLASHDENSOSUBARUCANDIESEL_H
