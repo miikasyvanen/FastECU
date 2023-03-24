@@ -7,11 +7,9 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
 
 {
     ui->setupUi(this);
-    this->setParent(parent);
-    this->setAttribute(Qt::WA_DeleteOnClose);
+    //this->setParent(parent);
 
     this->switch_result = switch_result;
-    switches_window_shown = true;
 
     QFont custom_font("Courier New", 7);
 
@@ -39,7 +37,7 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
         label->setFont(custom_font);
         label->setText(switch_result->at(2 * i + 1));
         label->setAlignment(Qt::AlignCenter);
-        if (switch_result->at(2 * i + 1) == " ON") label->setStyleSheet("QLabel { background-color : green; color : white;}");
+        if (switch_result->at(2 * i + 1) == "ON") label->setStyleSheet("QLabel { background-color : green; color : white;}");
         else label->setStyleSheet("QLabel { background-color : red; color : white;}");
         ui->gridLayout->addWidget(label, row_num, col_num + 1);
 
@@ -50,9 +48,12 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
 
 BiuOpsSubaruSwitches::~BiuOpsSubaruSwitches()
 {
-    switches_window_shown = false;
-    this->close();
-    //delete ui;
+
+}
+
+void BiuOpsSubaruSwitches::closeEvent(QCloseEvent *event)
+{
+    qDebug() << "Closing BIU in/out switches window";
 }
 
 void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)
@@ -67,7 +68,7 @@ void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)
         if (current_label)
         {
             current_label->setText(switch_result->at(2 * i + 1));
-            if (switch_result->at(2 * i + 1) == " ON") current_label->setStyleSheet("QLabel { background-color : green; color : white;}");
+            if (switch_result->at(2 * i + 1) == "ON") current_label->setStyleSheet("QLabel { background-color : green; color : white;}");
             else current_label->setStyleSheet("QLabel { background-color : red; color : white;}");
             //current_label->repaint();
         }

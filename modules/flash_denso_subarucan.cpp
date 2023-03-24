@@ -18,7 +18,19 @@ FlashDensoSubaruCan::FlashDensoSubaruCan(SerialPortActions *serial, FileActions:
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
-
+/*
+    QByteArray seed;
+    QByteArray seed_key;
+    seed.clear();
+    seed.append((uint8_t)0x26);
+    seed.append((uint8_t)0xfa);
+    seed.append((uint8_t)0xa7);
+    seed.append((uint8_t)0xdb);
+    seed_key = subaru_denso_generate_can_seed_key(seed);
+    send_log_window_message("DENSO SEED KEY: " + parse_message_to_hex(seed_key), true, true);
+    seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
+    send_log_window_message("COBB SEED KEY: " + parse_message_to_hex(seed_key), true, true);
+*/
     result = init_flash_denso_subarucan(ecuCalDef, cmd_type);
 
     if (result == STATUS_SUCCESS)
@@ -303,8 +315,16 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
         if (received != "")
         {
             connected = true;
+            QByteArray response = received;
+            response.remove(0, 7);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
             send_log_window_message(QString::number(try_count) + ": 0x09 0x06 response: " + parse_message_to_hex(received), true, true);
             qDebug() << try_count << ": 0x09 0x06 response:" << parse_message_to_hex(received);
+            send_log_window_message("CVN: " + msg, true, true);
+            qDebug() << "CVN:" << msg;
         }
         try_count++;
         //delay(try_timeout);
@@ -517,7 +537,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
     qDebug() << "\nDecrypted kernel wrx04:" << parse_message_to_hex(kernel_data);
     return STATUS_ERROR;
 */
-    pl_encr = subaru_denso_transform_32bit_payload(pl_encr, pl_encr.length());//pl_len);
+    pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_encr.length());//pl_len);
     //qDebug() << "\nEncrypted kernel orig: " << parse_message_to_hex(pl_encr);
 
 
@@ -1458,7 +1478,16 @@ QByteArray FlashDensoSubaruCan::subaru_denso_generate_cobb_can_seed_key(QByteArr
 {
     QByteArray key;
 
+    // 2017 VA model
     const uint16_t keytogenerateindex_1[]={
+        0x9DDB, 0x9CFB, 0x9B9A, 0x6136,
+        0x59E1, 0xBA03, 0xD683, 0x7092,
+        0x9E05, 0x8723, 0xF998, 0x15BB,
+        0xB8D5, 0xFF0C, 0x9D91, 0x24B9
+    };
+
+    // 2012 STi
+    const uint16_t keytogenerateindex_2[]={
         0x77C1, 0x80BB, 0xD5C1, 0x7A94,
         0x11F0, 0x25FF, 0xC365, 0x10B4,
         0x48DA, 0x6720, 0x3255, 0xFA17,
@@ -1530,12 +1559,12 @@ QByteArray FlashDensoSubaruCan::subaru_denso_calculate_seed_key(QByteArray reque
  *
  * @return encrypted data
  */
-QByteArray FlashDensoSubaruCan::subaru_denso_transform_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashDensoSubaruCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
     const uint16_t keytogenerateindex[]={
-        0x7856, 0xCE22, 0xF513, 0x6E86
+        0xC85B, 0x32C0, 0xE282, 0x92A0
     };
 
     const uint8_t indextransformation[]={
@@ -1545,12 +1574,32 @@ QByteArray FlashDensoSubaruCan::subaru_denso_transform_32bit_payload(QByteArray 
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_denso_encrypt_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray FlashDensoSubaruCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashDensoSubaruCan::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+{
+    QByteArray decrypt;
+
+    const uint16_t keytogenerateindex[]={
+        0x92A0, 0xE282, 0x32C0, 0xC85B
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    decrypt = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+
+    return decrypt;
+}
+
+QByteArray FlashDensoSubaruCan::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1594,95 +1643,6 @@ QByteArray FlashDensoSubaruCan::subaru_denso_encrypt_32bit_payload(QByteArray bu
     return encrypted;
 }
 
-QByteArray FlashDensoSubaruCan::subaru_denso_transform_wrx04_kernel(unsigned char *data, int length, bool doencrypt)
-{
-    QByteArray kernel_data;
-
-    unsigned short crypto_tableA[4] =
-    {
-        0x7856, 0xCE22, 0xF513, 0x6E86
-    };
-
-    unsigned char crypto_tableB[32] =
-    {
-        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
-        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
-        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
-        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8,
-    };
-
-    int i,j;
-    unsigned short word1,word2,idx2,temp,key16;
-
-    for (i = 0; i < length; i += 4)
-    {
-
-        if (doencrypt)
-        {
-            word2 = (*(data+0) << 8) + *(data+1);
-            word1 = (*(data+2) << 8) + *(data+3);
-            for (j = 1; j <= 4; j++)
-            {
-                idx2 = word1 ^ crypto_tableA[j-1];
-                key16 =
-                        crypto_tableB[(idx2 >> 0) & 0x1F]
-                    + (crypto_tableB[(idx2 >> 4) & 0x1F] << 4)
-                    + (crypto_tableB[(idx2 >> 8) & 0x1F] << 8)
-                    + (crypto_tableB[(((idx2 & 0x1) << 4) + (idx2 >> 12)) & 0x1F] << 12);
-                barrel_shift_16_right(&key16);
-                barrel_shift_16_right(&key16);
-                barrel_shift_16_right(&key16);
-
-                temp = word1;
-                word1 = key16 ^ word2;
-                word2 = temp;
-
-            }
-            *(data+0) = word1 >> 8;
-            *(data+1) = word1 & 0xFF;
-            *(data+2) = word2 >> 8;
-            *(data+3) = word2 & 0xFF;
-        }
-        else
-        {
-            word1 = (*(data+0) << 8) + *(data+1);
-            word2 = (*(data+2) << 8) + *(data+3);
-            for (j = 4; j > 0; j--)
-            {
-                idx2 = word2 ^ crypto_tableA[j-1];
-                key16 =
-                        crypto_tableB[(idx2 >> 0) & 0x1F]
-                    + (crypto_tableB[(idx2 >> 4) & 0x1F] << 4)
-                    + (crypto_tableB[(idx2 >> 8) & 0x1F] << 8)
-                    + (crypto_tableB[(((idx2 & 0x1) << 4) + (idx2 >> 12)) & 0x1F] << 12);
-                barrel_shift_16_right(&key16);
-                barrel_shift_16_right(&key16);
-                barrel_shift_16_right(&key16);
-                temp = word2;
-                word2 = key16 ^ word1;
-                word1 = temp;
-            }
-            *(data+0) = word2 >> 8;
-            *(data+1) = word2 & 0xFF;
-            *(data+2) = word1 >> 8;
-            *(data+3) = word1 & 0xFF;
-        }
-        kernel_data.append(*(data+0));
-        kernel_data.append(*(data+1));
-        kernel_data.append(*(data+2));
-        kernel_data.append(*(data+3));
-        data += 4;
-    }
-    return kernel_data;
-}
-
-void FlashDensoSubaruCan::barrel_shift_16_right(unsigned short *barrel)
-{
-    if (*barrel & 1)
-        *barrel = (*barrel >> 1) + 0x8000;
-    else
-        *barrel = *barrel >> 1;
-}
 
 
 

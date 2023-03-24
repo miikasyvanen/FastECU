@@ -1026,6 +1026,25 @@ int SerialPortActions::set_j2534_can_filters()
             reportJ2534Error();
             return STATUS_ERROR;
         }
+
+        qDebug() << "msgId" << msgId;
+/*
+        msgPattern.Data[0] = (uint8_t)((0x00 >> 24) & 0xFF);
+        msgPattern.Data[1] = (uint8_t)((0x00 >> 16) & 0xFF);
+        msgPattern.Data[2] = (uint8_t)((0x00 >> 8) & 0xFF);
+        msgPattern.Data[3] = (uint8_t)(0x21 & 0xFF);
+        msgFlow.Data[0] = (uint8_t)((0x00 >> 24) & 0xFF);
+        msgFlow.Data[1] = (uint8_t)((0x0F >> 16) & 0xFF);
+        msgFlow.Data[2] = (uint8_t)((0xFF >> 8) & 0xFF);
+        msgFlow.Data[3] = (uint8_t)(0xFE & 0xFF);
+
+        if (j2534->PassThruStartMsgFilter(chanID, FLOW_CONTROL_FILTER, &msgMask, &msgPattern, &msgFlow, &msgId))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+        qDebug() << "msgId" << msgId;
+*/
     }
     else
         return STATUS_ERROR;

@@ -1,9 +1,12 @@
-#include <modules/flash_denso_can02.h>
+#include "flash_denso_subarucan_diesel.h"
 
-FlashDensoCan02::FlashDensoCan02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashDensoSubaruCanDiesel::FlashDensoSubaruCanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent),
       ui(new Ui::EcuOperationsWindow)
 {
+    // EURO4 0xFFFF4000 0x3000
+    // EURO5 0xFFFEE000 0x2000
+
     ui->setupUi(this);
 
     if (cmd_type == "test_write")
@@ -19,7 +22,7 @@ FlashDensoCan02::FlashDensoCan02(SerialPortActions *serial, FileActions::EcuCalD
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_denso_can_02(ecuCalDef, cmd_type);
+    result = init_flash_denso_subarucan(ecuCalDef, cmd_type);
 
     if (result == STATUS_SUCCESS)
     {
@@ -32,17 +35,17 @@ FlashDensoCan02::FlashDensoCan02(SerialPortActions *serial, FileActions::EcuCalD
     }
 }
 
-FlashDensoCan02::~FlashDensoCan02()
+FlashDensoSubaruCanDiesel::~FlashDensoSubaruCanDiesel()
 {
 
 }
 
-void FlashDensoCan02::closeEvent(QCloseEvent *event)
+void FlashDensoSubaruCanDiesel::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
 
-int FlashDensoCan02::init_flash_denso_can_02(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashDensoSubaruCanDiesel::init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
 {
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -82,51 +85,53 @@ int FlashDensoCan02::init_flash_denso_can_02(FileActions::EcuCalDefStructure *ec
 
     // Set serial port
     serial->is_iso14230_connection = false;
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = true;
+    serial->is_can_connection = false;
+    serial->is_iso15765_connection = true;
+    serial->is_29_bit_id = false;
     serial->can_speed = "500000";
-    serial->can_source_address = 0xFFFFE;
-    serial->can_destination_address = 0x21;
+    serial->iso15765_source_address = 0x7E0;
+    serial->iso15765_destination_address = 0x7E8;
     // Open serial port
     serial->open_serial_port();
 
     QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
     //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
 
-    send_log_window_message("Connecting to Subaru 02+ 32-bit Denso CAN bootloader, please wait...", true, true);
-    result = connect_bootloader_subaru_denso_can_02_32bit();
+    send_log_window_message("Connecting to Subaru 07+ Diesel 32-bit CAN bootloader, please wait...", true, true);
+    result = connect_bootloader_subaru_denso_subarucan();
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
-        send_log_window_message("Initializing Subaru 02+ 32-bit Denso CAN kernel upload, please wait...", true, true);
-        result = upload_kernel_subaru_denso_can_02_32bit(kernel);
+        send_log_window_message("Initializing Subaru 07+ Diesel 32-bit CAN kernel upload, please wait...", true, true);
+        result = upload_kernel_subaru_denso_subarucan(kernel);
     }
     if (result == STATUS_SUCCESS)
     {
         if (cmd_type == "read")
         {
-            send_log_window_message("Reading ROM from Subaru 02+ 32-bit Denso using CAN", true, true);
-            result = read_mem_subaru_denso_can_02_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            send_log_window_message("Reading ROM from Subaru 07+ Diesel 32-bit using CAN", true, true);
+            result = read_mem_subaru_denso_subarucan(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
-            send_log_window_message("Writing ROM to Subaru 02+ 32-bit Denso using CAN", true, true);
-            result = write_mem_subaru_denso_can_02_32bit(ecuCalDef, test_write);
+            send_log_window_message("Writing ROM to Subaru 07+ Diesel 32-bit using CAN", true, true);
+            result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
         }
     }
     return result;
 }
 
 /*
- * Connect to Subaru Denso CAN bootloader 32bit ECUs
+ * Connect to Subaru Denso CAN (iso15765) bootloader 32bit ECUs
  *
  * @return success
  */
-int FlashDensoCan02::connect_bootloader_subaru_denso_can_02_32bit()
+int FlashDensoSubaruCanDiesel::connect_bootloader_subaru_denso_subarucan()
 {
     QByteArray output;
     QByteArray received;
+    QByteArray seed;
+    QByteArray seed_key;
     QByteArray msg;
 
     if (!serial->is_serial_port_open())
@@ -146,9 +151,9 @@ int FlashDensoCan02::connect_bootloader_subaru_denso_can_02_32bit()
     // Check if kernel already alive
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
     output.append((uint8_t)(SID_START_COMM_CAN & 0xFF));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -160,8 +165,6 @@ int FlashDensoCan02::connect_bootloader_subaru_denso_can_02_32bit()
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(20, 10);
-    //qDebug() << "0x7A 0x00 response:" << parse_message_to_hex(received);
-    //send_log_window_message("0x7A 0x00 response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(0) == 0x7F && (uint8_t)received.at(2) == 0x34)
     {
         send_log_window_message("Kernel already running", true, true);
@@ -173,49 +176,292 @@ int FlashDensoCan02::connect_bootloader_subaru_denso_can_02_32bit()
     send_log_window_message("Initializing bootloader", true, true);
     qDebug() << "Initializing bootloader";
 
-    output[4] = (uint8_t)((SID_ENTER_BL_CAN >> 8) & 0xFF);
-    output[5] = (uint8_t)(SID_ENTER_BL_CAN & 0xFF);
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0x00;
-    output[9] = (uint8_t)0x00;
-    output[10] = (uint8_t)0x00;
-    output[11] = (uint8_t)0x00;
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 10);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x01);
 
-    send_log_window_message("Connecting to bootloader", true, true);
-    qDebug() << "Connecting to bootloader";
+    bool connected = false;
+    int try_count = 0;
+    int try_timeout = 250;
+    // Start initialization
 
-    output[4] = (uint8_t)SID_START_COMM_CAN;
-    output[5] = (uint8_t)(SID_CHECK_COMM_BL_CAN & 0xFF);
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0x00;
-    output[9] = (uint8_t)0x00;
-    output[10] = (uint8_t)0x00;
-    output[11] = (uint8_t)0x00;
     serial->write_serial_data_echo_check(output);
-    delay(200);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    //delay(50);
     received = serial->read_serial_data(20, 10);
-    //send_log_window_message("0x7A 0x90 response: " + parse_message_to_hex(received), true, true);
-    //qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
-    if ((uint8_t)(received.at(1) & 0xF8) == 0x90)
+    if (received != "")
     {
-        send_log_window_message("Connected to bootloader, start kernel upload", true, true);
-        return STATUS_SUCCESS;
+        send_log_window_message(QString::number(try_count) + ": 0x01 response: " + parse_message_to_hex(received), true, true);
+        qDebug() << try_count << ": 0x01 response:" << parse_message_to_hex(received);
     }
 
-    return STATUS_ERROR;
+    connected = false;
+    try_count = 0;
+    output.append((uint8_t)0x00);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x01 0x00 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x01 0x00 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x41)
+        return STATUS_ERROR;
+
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x10);
+    output[5] = ((uint8_t)0x03);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x10 0x03 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x10 0x03 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(4) != 0x03)
+    //    return STATUS_ERROR;
+
+    connected = false;
+    try_count = 0;
+    output[5] = ((uint8_t)0x43);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x10 0x43 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x10 0x43 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        delay(try_timeout);
+    }
+    //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
+    //    return STATUS_ERROR;
+
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x09);
+    output[5] = ((uint8_t)0x02);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            QByteArray response = received;
+            QString msg = QString::fromStdString(response.remove(0, 7).toStdString());
+            send_log_window_message(QString::number(try_count) + ": 0x09 0x02 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x09 0x02 response:" << parse_message_to_hex(received) << received;
+            send_log_window_message("VIN: " + msg, true, true);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x49 || (uint8_t)received.at(5) != 0x02)
+        return STATUS_ERROR;
+
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x09);
+    output[5] = ((uint8_t)0x06);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            QByteArray response = received;
+            response.remove(0, 7);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            send_log_window_message(QString::number(try_count) + ": 0x09 0x06 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x09 0x06 response:" << parse_message_to_hex(received);
+            send_log_window_message("CVN: " + msg, true, true);
+            qDebug() << "CVN:" << msg;
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x49 || (uint8_t)received.at(5) != 0x06)
+        return STATUS_ERROR;
+
+    /****************************
+     *
+     * */
+    /*
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x10);
+    output[5] = ((uint8_t)0x03);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x10 0x03 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x10 0x03 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(4) != 0x03)
+    //    return STATUS_ERROR;
+    */
+    /****************************
+     *
+     * */
+
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x27);
+    output[5] = ((uint8_t)0x01);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x27 0x01 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x27 0x01 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
+        return STATUS_ERROR;
+
+    send_log_window_message("Seed request ok", true, true);
+    qDebug() << "Seed request ok";
+
+    seed.append(received.at(6));
+    seed.append(received.at(7));
+    seed.append(received.at(8));
+    seed.append(received.at(9));
+
+    if (flash_method.endsWith("_ecutek"))
+        seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
+    if (flash_method.endsWith("_cobb"))
+        seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
+    else
+        seed_key = subaru_denso_generate_can_seed_key(seed);
+    send_log_window_message("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
+    qDebug() << "Calculated seed key:" << parse_message_to_hex(seed_key);
+    send_log_window_message("Sending seed key", true, true);
+    qDebug() << "Sending seed key";
+
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x27);
+    output[5] = ((uint8_t)0x02);
+    output.append(seed_key);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x27 0x02 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x27 0x02 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
+        return STATUS_ERROR;
+
+    send_log_window_message("Seed key ok", true, true);
+    qDebug() << "Seed key ok";
+
+
+    connected = false;
+    try_count = 0;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x02);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x10 0x02 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x10 0x02 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x50)
+        return STATUS_ERROR;
+
+    return STATUS_SUCCESS;
 }
 
 /*
- * Upload kernel to Subaru Denso CAN 32bit ECUs
+ * Upload kernel to Subaru Denso CAN (iso15765) 32bit ECUs
  *
  * @return success
  */
-int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
+int FlashDensoSubaruCanDiesel::upload_kernel_subaru_denso_subarucan(QString kernel)
 {
     QFile file(kernel);
 
@@ -225,18 +471,18 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
     QByteArray msg;
     QByteArray pl_encr;
     uint32_t file_len = 0;
-    //uint32_t pl_len = 0;
-    uint32_t start_address = 0;
-    uint32_t end_address = 0;
-    //uint32_t len = 0;
+    uint32_t pl_len = 0;
+    uint32_t data_addr = 0;
+    uint32_t end_addr = 0;
     QByteArray cks_bypass;
-    uint8_t chk_sum = 0;
-    int maxblocks = 0;
-    int byte_counter = 0;
+    uint32_t chk_sum = 0;
+    uint32_t blockaddr = 0;
+    uint16_t blockno = 0;
+    uint16_t maxblocks = 0;
 
     QString mcu_name;
 
-    start_address = flashdevices[mcu_type_index].kblocks->start;
+    data_addr = flashdevices[mcu_type_index].kblocks->start;
 
     if (!serial->is_serial_port_open())
     {
@@ -253,99 +499,211 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
         return STATUS_ERROR;
     }
     file_len = file.size();
-    //pl_len = file_len + 6;
+    pl_len = 0x3000;//(file_len + 3) & ~3;
     pl_encr = file.readAll();
-    maxblocks = file_len / 6;
-    if((file_len % 6) != 0) maxblocks++;
-    end_address = (start_address + (maxblocks * 6)) & 0xFFFFFFFF;
+    maxblocks = pl_len / 128;
+    if((pl_len % 128) != 0)
+        maxblocks++;
+    end_addr = (data_addr + (maxblocks * 128)) & 0xFFFFFFFF;
+    uint32_t data_len = end_addr - data_addr;
+    while ((uint32_t)pl_encr.length() < data_len)
+        pl_encr.append((uint8_t)0x00);
+    pl_encr.remove(pl_encr.length() - 4, 4);
+    chk_sum = 0;
+    for (int i = 0; i < pl_encr.length(); i+=4)
+        chk_sum += ((pl_encr.at(i) << 24) & 0xFF000000) | ((pl_encr.at(i + 1) << 16) & 0xFF0000) | ((pl_encr.at(i + 2) << 8) & 0xFF00) | ((pl_encr.at(i + 3)) & 0xFF);
+    chk_sum = 0x5aa5a55a - chk_sum;
 
-    send_log_window_message("Starting kernel upload, please wait...", true, true);
-    qDebug() << "Starting kernel upload, please wait...";
-    // Send kernel address
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_KERNEL_ADDRESS + 0x04));
-    output.append((uint8_t)((start_address >> 24) & 0xFF));
-    output.append((uint8_t)((start_address >> 16) & 0xFF));
-    output.append((uint8_t)((start_address >> 8) & 0xFF));
-    output.append((uint8_t)(start_address & 0xFF));
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    received = serial->write_serial_data_echo_check(output);
-    qDebug() << parse_message_to_hex(output);
-    delay(200);
-    received = serial->read_serial_data(20, 10);
+    pl_encr.append((uint8_t)((chk_sum >> 24) & 0xFF));
+    pl_encr.append((uint8_t)((chk_sum >> 16) & 0xFF));
+    pl_encr.append((uint8_t)((chk_sum >> 8) & 0xFF));
+    pl_encr.append((uint8_t)(chk_sum & 0xFF));
+    pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_encr.length());
+    //pl_encr = subaru_denso_decrypt_32bit_payload(pl_encr, pl_encr.length());
+    //send_log_window_message("Kernel data: " + parse_message_to_hex(pl_encr), true, true);
 
-    output[5] = (uint8_t)(0xA8 + 0x06);
+
+
 
     set_progressbar_value(0);
 
-    send_log_window_message("Uploading kernel, please wait...", true, true);
-    qDebug() << "Uploading kernel, please wait...";
+    bool connected = false;
+    int try_count = 0;
+    int try_timeout = 250;
 
-    for(int blockno = 0; blockno < maxblocks; blockno++)
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x34);
+    output.append((uint8_t)0x04);
+    output.append((uint8_t)0x33);
+    output.append((uint8_t)((data_addr >> 16) & 0xFF));
+    output.append((uint8_t)((data_addr >> 8) & 0xFF));
+    output.append((uint8_t)(data_addr & 0xFF));
+    output.append((uint8_t)((data_len >> 16) & 0xFF));
+    output.append((uint8_t)((data_len >> 8) & 0xFF));
+    output.append((uint8_t)(data_len & 0xFF));
+    while (try_count < 6 && connected == false)
     {
-        for(int j = 0; j < 6; j++){
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x34 0x04 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x34 0x04 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x74)
+        return STATUS_ERROR;
 
-            output[6 + j] = pl_encr.at(byte_counter + j);
-            chk_sum += (pl_encr.at(byte_counter + j) & 0xFF);
-            chk_sum = ((chk_sum >> 8) & 0xFF) + (chk_sum & 0xFF);
+    int data_bytes_sent = 0;
+    for (blockno = 0; blockno <= maxblocks; blockno++)
+    {
+        if (kill_process)
+            return 0;
 
+        blockaddr = data_addr + blockno * 128;
+        output.clear();
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x07);
+        output.append((uint8_t)0xE0);
+        output.append((uint8_t)0xB6);
+        output.append((uint8_t)(blockaddr >> 16) & 0xFF);
+        output.append((uint8_t)(blockaddr >> 8) & 0xFF);
+        output.append((uint8_t)blockaddr & 0xFF);
+        //qDebug() << "Data header:" << parse_message_to_hex(output);
+
+        if (blockno == maxblocks)
+        {
+            for (uint32_t i = 0; i < data_len; i++)
+            {
+                output.append(pl_encr.at(i + blockno * 128));
+                data_bytes_sent++;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 128; i++)
+            {
+                output.append(pl_encr.at(i + blockno * 128));
+                data_bytes_sent++;
+            }
+            data_len -= 128;
         }
 
-        byte_counter += 6;
-        received = serial->write_serial_data_echo_check(output);
-        //qDebug() << "0xA8 message sent to bootloader to load kernel for block:" << i;
-
-        delay(5);
+        serial->write_serial_data_echo_check(output);
+        //qDebug() << "Kernel data:" << parse_message_to_hex(output);
+        //delay(20);
+        received = serial->read_serial_data(5, receive_timeout);
 
         float pleft = (float)blockno / (float)maxblocks * 100;
         set_progressbar_value(pleft);
-
     }
+    qDebug() << "Data bytes sent:" << hex << data_bytes_sent;
+
+    connected = false;
+    try_count = 0;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x37);
+
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x37 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x37 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x77)
+        return STATUS_ERROR;
+
+    connected = false;
+    try_count = 0;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x31);
+    output.append((uint8_t)0x01);
+    output.append((uint8_t)0x02);
+    output.append((uint8_t)0x02);
+    output.append((uint8_t)0x02);
+
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x31 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x71)
+        return STATUS_ERROR;
 
     set_progressbar_value(100);
 
-    //qDebug() << "All 0xA8 messages sent, checksum:" << hex << chk_sum;
+    send_log_window_message("Kernel started, initializing...", true, true);
+    qDebug() << "Kernel started, initializing...";
 
-    // send 0xB0 command to check checksum
-    output[5] = (uint8_t)(SID_KERNEL_CHECKSUM + 0x04);
-    output[6] = (uint8_t)(((end_address + 1) >> 24) & 0xFF);
-    output[7] = (uint8_t)(((end_address + 1) >> 16) & 0xFF);
-    output[8] = (uint8_t)(((end_address + 1) >> 8) & 0xFF);
-    output[9] = (uint8_t)((end_address + 1) & 0xFF);
-    output[10] = (uint8_t)0x00;
-    output[11] = (uint8_t)0x00;
-    serial->write_serial_data_echo_check(output);
-    //qDebug() << parse_message_to_hex(output);
-    //qDebug() << "0xB0 message sent to bootloader to check checksum, waiting for response...";
-    delay(200);
-    received = serial->read_serial_data(20, 10);
-    //qDebug() << "Response to 0xB0 message:" << parse_message_to_hex(received);
-
-    send_log_window_message("Kernel uploaded, starting kernel...", true, true);
-    qDebug() << "Kernel uploaded, starting kernel...";
-
-    // send 0xA0 command to jump into kernel
-    output[5] = (uint8_t)(SID_KERNEL_JUMP + 0x04);
-    output[6] = (uint8_t)((end_address >> 24) & 0xFF);
-    output[7] = (uint8_t)((end_address >> 16) & 0xFF);
-    output[8] = (uint8_t)((end_address >> 8) & 0xFF);
-    output[9] = (uint8_t)(end_address & 0xFF);
-    output[10] = (uint8_t)0x00;
-    output[11] = (uint8_t)0x00;
-    serial->write_serial_data_echo_check(output);
-    //qDebug() << parse_message_to_hex(output);
-    //qDebug() << "0xA0 message sent to bootloader to jump into kernel";
-
-    //qDebug() << "ECU should now be running from kernel";
-
-    send_log_window_message("Request kernel ID: ", true, true);
-    qDebug() << "Request kernel ID";
+    delay(100);
+/*
+    // Set serial port
+    serial->reset_connection();
+    serial->is_iso14230_connection = false;
+    serial->is_can_connection = true;
+    serial->is_iso15765_connection = false;
+    serial->is_29_bit_id = true;
+    serial->can_speed = "500000";
+    serial->can_source_address = 0xFFFFE;
+    serial->can_destination_address = 0x21;
+    // Open serial port
+    serial->open_serial_port();
+*/
+/*
+    // Set serial port
+    serial->reset_connection();
+    serial->is_iso14230_connection = false;
+    serial->is_can_connection = false;
+    serial->is_iso15765_connection = true;
+    serial->is_29_bit_id = false;
+    serial->can_speed = "500000";
+    serial->iso15765_source_address = 0xFFFFE;
+    serial->iso15765_destination_address = 0x21;
+    // Open serial port
+    serial->open_serial_port();
+*/
+    send_log_window_message("Requesting kernel ID...", true, true);
+    qDebug() << "Requesting kernel ID...";
 
     received.clear();
     received = request_kernel_id();
@@ -353,17 +711,31 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
         return STATUS_ERROR;
 
     send_log_window_message("Kernel ID: " + received, true, true);
-    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+    qDebug() << "Kernel ID:" << parse_message_to_hex(received);
+
 
     return STATUS_SUCCESS;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
- * Read memory from Subaru Denso CAN 32bit ECUs, nisprog kernel
+ * Read memory from Subaru Denso CAN (iso15765) 32bit ECUs, nisprog kernel
  *
  * @return success
  */
-int FlashDensoCan02::read_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashDensoSubaruCanDiesel::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -387,9 +759,9 @@ int FlashDensoCan02::read_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefSt
     // send 0xD8 command to kernel to dump the chunk from ROM
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
     output.append((uint8_t)SID_START_COMM_CAN);
     output.append((uint8_t)(SID_DUMP_ROM_CAN + 0x06));
     output.append((uint8_t)0x00);
@@ -504,11 +876,11 @@ int FlashDensoCan02::read_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefSt
 }
 
 /*
- * Write memory to Subaru Denso CAN 32bit ECUs, nisprog kernel
+ * Write memory to Subaru Denso CAN (iso15765) 32bit ECUs, nisprog kernel
  *
  * @return success
  */
-int FlashDensoCan02::write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashDensoSubaruCanDiesel::write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
     QByteArray filedata;
 
@@ -529,7 +901,7 @@ int FlashDensoCan02::write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefS
     send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-    if (get_changed_blocks_denso_can_02_32bit(data_array, block_modified))
+    if (get_changed_blocks_denso_subarucan(data_array, block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -563,7 +935,7 @@ int FlashDensoCan02::write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefS
         {
             if (block_modified[blockno])
             {
-                if (reflash_block_denso_can_02_32bit(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block_denso_subarucan(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
                 {
                     send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -579,7 +951,7 @@ int FlashDensoCan02::write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefS
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-        if (get_changed_blocks_denso_can_02_32bit(data_array, block_modified))
+        if (get_changed_blocks_denso_subarucan(data_array, block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -615,11 +987,11 @@ int FlashDensoCan02::write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefS
 }
 
 /*
- * Compare ROM 32bit CAN ECUs
+ * Compare ROM 32bit (iso15765) CAN ECUs
  *
  * @return
  */
-int FlashDensoCan02::get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified)
+int FlashDensoSubaruCanDiesel::get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified)
 {
     unsigned blockno;
     QByteArray msg;
@@ -640,7 +1012,7 @@ int FlashDensoCan02::get_changed_blocks_denso_can_02_32bit(const uint8_t *src, i
         //qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
-        if (check_romcrc_denso_can_02_32bit(&src[bs], bs, blen, &modified[blockno])) {
+        if (check_romcrc_denso_subarucan(&src[bs], bs, blen, &modified[blockno])) {
             return -1;
         }
     }
@@ -648,11 +1020,11 @@ int FlashDensoCan02::get_changed_blocks_denso_can_02_32bit(const uint8_t *src, i
 }
 
 /*
- * ROM CRC 32bit CAN ECUs
+ * ROM CRC 32bit CAN (iso15765) ECUs
  *
  * @return
  */
-int FlashDensoCan02::check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
+int FlashDensoSubaruCanDiesel::check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
 {
     QByteArray output;
     QByteArray received;
@@ -668,9 +1040,9 @@ int FlashDensoCan02::check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_
 
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
     output.append((uint8_t)SID_START_COMM_CAN);
     output.append((uint8_t)(SID_CONF_CKS1_CAN + 0x06));
     output.append((uint8_t)0x00);
@@ -728,11 +1100,11 @@ int FlashDensoCan02::check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_
 }
 
 /*
- * Reflash ROM 32bit CAN ECUs
+ * Reflash ROM 32bit CAN (iso15765) ECUs
  *
  * @return success
  */
-int FlashDensoCan02::reflash_block_denso_can_02_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashDensoSubaruCanDiesel::reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
     int errval;
 
@@ -760,9 +1132,9 @@ int FlashDensoCan02::reflash_block_denso_can_02_32bit(const uint8_t *newdata, co
 
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
     output.append((uint8_t)SID_START_COMM_CAN);
     output.append((uint8_t)(SID_FLASH_CAN + 0x01));
     if (test_write)
@@ -821,7 +1193,7 @@ int FlashDensoCan02::reflash_block_denso_can_02_32bit(const uint8_t *newdata, co
         return STATUS_ERROR;
     }
 
-    errval = flash_block_denso_can_02_32bit(newdata, block_start, block_len);
+    errval = flash_block_denso_subarucan(newdata, block_start, block_len);
     if (errval) {
         send_log_window_message("Reflash error! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands!", true, true);
         return STATUS_ERROR;
@@ -833,11 +1205,11 @@ int FlashDensoCan02::reflash_block_denso_can_02_32bit(const uint8_t *newdata, co
 }
 
 /*
- * Flash block 32bit CAN ECUs
+ * Flash block 32bit CAN (iso15765) ECUs
  *
  * @return success
  */
-int FlashDensoCan02::flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t start, uint32_t len)
+int FlashDensoSubaruCanDiesel::flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len)
 {
     QByteArray output;
     QByteArray received;
@@ -863,9 +1235,9 @@ int FlashDensoCan02::flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t
 
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -951,7 +1323,7 @@ int FlashDensoCan02::flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t
  *
  * @return
  */
-uint8_t FlashDensoCan02::cks_add8(QByteArray chksum_data, unsigned len)
+uint8_t FlashDensoSubaruCanDiesel::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
     uint8_t data[chksum_data.length()];
@@ -979,7 +1351,7 @@ uint8_t FlashDensoCan02::cks_add8(QByteArray chksum_data, unsigned len)
 #define NPK_CRC16   0xBAAD  //koopman, 2048bits (256B)
 static bool crc_tab16_init = 0;
 static uint16_t crc_tab16[256];
-void FlashDensoCan02::init_crc16_tab(void)
+void FlashDensoSubaruCanDiesel::init_crc16_tab(void)
 {
 
     uint32_t i, j;
@@ -1004,7 +1376,7 @@ void FlashDensoCan02::init_crc16_tab(void)
 
 }
 
-uint16_t FlashDensoCan02::crc16(const uint8_t *data, uint32_t siz)
+uint16_t FlashDensoSubaruCanDiesel::crc16(const uint8_t *data, uint32_t siz)
 {
     uint16_t crc;
 
@@ -1036,245 +1408,143 @@ uint16_t FlashDensoCan02::crc16(const uint8_t *data, uint32_t siz)
 
 
 
+
+
+
+
+
+
+
+
+
 /*
- * ECU init
+ * Generate denso can seed key from received seed bytes
  *
- * @return ECU ID and capabilities
+ * @return seed key (4 bytes)
  */
-QByteArray FlashDensoCan02::send_subaru_sid_bf_ssm_init()
+QByteArray FlashDensoSubaruCanDiesel::subaru_denso_generate_can_seed_key(QByteArray requested_seed)
 {
-    QByteArray output;
-    QByteArray received;
-    uint8_t loop_cnt = 0;
+    QByteArray key;
 
+    const uint16_t keytogenerateindex_1[]={
+        0x78B1, 0x4625, 0x201C, 0x9EA5,
+        0xAD6B, 0x35F4, 0xFD21, 0x5E71,
+        0xB046, 0x7F4A, 0x4B75, 0x93F9,
+        0x1895, 0x8961, 0x3ECC, 0x862B
+    };
 
-    output.append((uint8_t)0xBF);
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
 
-    while (received == "" && loop_cnt < 5)
-    {
-        send_log_window_message("SSM init", true, true);
-        serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        delay(500);
-        received = serial->read_serial_data(100, receive_timeout);
-        loop_cnt++;
-    }
+    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
-    return received;
+    return key;
 }
 
 /*
- * Start diagnostic connection
+ * Generate denso can ecutek seed key from received seed bytes
  *
- * @return received response
+ * @return seed key (4 bytes)
  */
-QByteArray FlashDensoCan02::send_subaru_denso_sid_81_start_communication()
+QByteArray FlashDensoSubaruCanDiesel::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
 {
-    QByteArray output;
-    QByteArray received;
-    uint8_t loop_cnt = 0;
+    QByteArray key;
 
-    output.append((uint8_t)0x81);
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(8, receive_timeout);
+    const uint16_t keytogenerateindex_1[]={
+        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
+        0x15BB, 0xF998, 0x8723, 0x9E05,
+        0x7092, 0xD683, 0xBA03, 0x59E1,
+        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
+    };
 
-    return received;
+    const uint8_t indextransformation[]={
+        0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
+}
+
+/************************************
+ * COBB'd Denso CAN ECUs seed key
+ ***********************************/
+QByteArray FlashDensoSubaruCanDiesel::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
+{
+    QByteArray key;
+
+    const uint16_t keytogenerateindex_1[]={
+        0x77C1, 0x80BB, 0xD5C1, 0x7A94,
+        0x11F0, 0x25FF, 0xC365, 0x10B4,
+        0x48DA, 0x6720, 0x3255, 0xFA17,
+        0x60BF, 0x780E, 0x9C1D, 0x5A28
+    };
+
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+
+    return key;
 }
 
 /*
- * Start diagnostic connection
+ * Calculate denso seed key from received seed bytes
  *
- * @return received response
+ * @return seed key (4 bytes)
  */
-QByteArray FlashDensoCan02::send_subaru_denso_sid_83_request_timings()
+QByteArray FlashDensoSubaruCanDiesel::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
-    QByteArray output;
-    QByteArray received;
-    uint8_t loop_cnt = 0;
+    QByteArray key;
 
-    output.append((uint8_t)0x83);
-    output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(12, receive_timeout);
+    uint32_t seed, index;
+    uint16_t wordtogenerateindex, wordtobeencrypted, encryptionkey;
+    int ki, n;
 
-    return received;
-}
+    seed = (requested_seed.at(0) << 24) & 0xFF000000;
+    seed += (requested_seed.at(1) << 16) & 0x00FF0000;
+    seed += (requested_seed.at(2) << 8) & 0x0000FF00;
+    seed += requested_seed.at(3) & 0x000000FF;
+    //seed = reconst_32(seed8);
 
-/*
- * Request seed
- *
- * @return seed (4 bytes)
- */
-QByteArray FlashDensoCan02::send_subaru_denso_sid_27_request_seed()
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    uint8_t loop_cnt = 0;
+    for (ki = 15; ki >= 0; ki--) {
 
-    output.append((uint8_t)0x27);
-    output.append((uint8_t)0x01);
-    received = serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(11, receive_timeout);
+        wordtogenerateindex = seed;
+        wordtobeencrypted = seed >> 16;
+        index = wordtogenerateindex ^ keytogenerateindex[ki];
+        index += index << 16;
+        encryptionkey = 0;
 
-    return received;
-}
-
-/*
- * Send seed key
- *
- * @return received response
- */
-QByteArray FlashDensoCan02::send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key)
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    uint8_t loop_cnt = 0;
-
-    output.append((uint8_t)0x27);
-    output.append((uint8_t)0x02);
-    output.append(seed_key);
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(8, receive_timeout);
-
-    return received;
-}
-
-/*
- * Request start diagnostic
- *
- * @return received response
- */
-QByteArray FlashDensoCan02::send_subaru_denso_sid_10_start_diagnostic()
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    uint8_t loop_cnt = 0;
-
-    output.append((uint8_t)0x10);
-    output.append((uint8_t)0x85);
-    output.append((uint8_t)0x02);
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(7, receive_timeout);
-    /*
-    while (received == "" && loop_cnt < comm_try_count)
-    {
-        serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        delay(comm_try_timeout);
-        received = serial->read_serial_data(7, receive_timeout);
-        loop_cnt++;
-    }
-*/
-    return received;
-}
-
-/*
- * Request data upload (kernel)
- *
- * @return received response
- */
-QByteArray FlashDensoCan02::send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen)
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    uint8_t loop_cnt = 0;
-
-    output.append((uint8_t)0x34);
-    output.append((uint8_t)(dataaddr >> 16) & 0xFF);
-    output.append((uint8_t)(dataaddr >> 8) & 0xFF);
-    output.append((uint8_t)dataaddr & 0xFF);
-    output.append((uint8_t)0x04);
-    output.append((uint8_t)(datalen >> 16) & 0xFF);
-    output.append((uint8_t)(datalen >> 8) & 0xFF);
-    output.append((uint8_t)datalen & 0xFF);
-
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(7, receive_timeout);
-
-    return received;
-}
-
-/*
- * Transfer data (kernel)
- *
- * @return received response
- */
-QByteArray FlashDensoCan02::send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len)
-{
-    QByteArray output;
-    QByteArray received;
-    uint32_t blockaddr = 0;
-    uint16_t blockno = 0;
-    uint16_t maxblocks = 0;
-    uint8_t loop_cnt = 0;
-
-    len &= ~0x03;
-    if (!buf.length() || !len) {
-        send_log_window_message("Error in kernel data length!", true, true);
-        return NULL;
-    }
-
-    maxblocks = (len - 1) >> 7;  // number of 128 byte blocks - 1
-
-    set_progressbar_value(0);
-
-    for (blockno = 0; blockno <= maxblocks; blockno++)
-    {
-        if (kill_process)
-            return NULL;
-
-        blockaddr = dataaddr + blockno * 128;
-        output.clear();
-        output.append(0x36);
-        output.append((uint8_t)(blockaddr >> 16) & 0xFF);
-        output.append((uint8_t)(blockaddr >> 8) & 0xFF);
-        output.append((uint8_t)blockaddr & 0xFF);
-
-        if (blockno == maxblocks)
-        {
-            for (uint32_t i = 0; i < len; i++)
-            {
-                output.append(buf.at(i + blockno * 128));
-            }
-        }
-        else
-        {
-            for (int i = 0; i < 128; i++)
-            {
-                output.append(buf.at(i + blockno * 128));
-            }
-            len -= 128;
+        for (n = 0; n < 4; n++) {
+            encryptionkey += indextransformation[(index >> (n * 4)) & 0x1F] << (n * 4);
         }
 
-        serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        received = serial->read_serial_data(6, receive_timeout);
-
-        float pleft = (float)blockno / (float)maxblocks * 100;
-        set_progressbar_value(pleft);
+        encryptionkey = (encryptionkey >> 3) + (encryptionkey << 13);
+        seed = (encryptionkey ^ wordtobeencrypted) + (wordtogenerateindex << 16);
     }
 
-    set_progressbar_value(100);
+    seed = (seed >> 16) + (seed << 16);
 
-    return received;
+    key.clear();
+    key.append((uint8_t)(seed >> 24));
+    key.append((uint8_t)(seed >> 16));
+    key.append((uint8_t)(seed >> 8));
+    key.append((uint8_t)seed);
 
-}
+    //write_32b(seed, key);
 
-QByteArray FlashDensoCan02::send_subaru_denso_sid_31_start_routine()
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    uint8_t loop_cnt = 0;
-
-    output.append((uint8_t)0x31);
-    output.append((uint8_t)0x01);
-    output.append((uint8_t)0x01);
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(8, receive_timeout);
-
-    return received;
+    return key;
 }
 
 /*
@@ -1282,12 +1552,12 @@ QByteArray FlashDensoCan02::send_subaru_denso_sid_31_start_routine()
  *
  * @return encrypted data
  */
-QByteArray FlashDensoCan02::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashDensoSubaruCanDiesel::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
-    const uint16_t keytogenerateindex[]={
-        0x7856, 0xCE22, 0xF513, 0x6E86
+    uint16_t keytogenerateindex[]={
+        0xC85B, 0x32C0, 0xE282, 0x92A0
     };
 
     const uint8_t indextransformation[]={
@@ -1302,12 +1572,12 @@ QByteArray FlashDensoCan02::subaru_denso_encrypt_32bit_payload(QByteArray buf, u
     return encrypted;
 }
 
-QByteArray FlashDensoCan02::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashDensoSubaruCanDiesel::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
-    QByteArray decrypted;
+    QByteArray decrypt;
 
-    const uint16_t keytogenerateindex[]={
-        0x6E86, 0xF513, 0xCE22, 0x7856
+    uint16_t keytogenerateindex[]={
+        0x92A0, 0xE282, 0x32C0, 0xC85B
     };
 
     const uint8_t indextransformation[]={
@@ -1317,12 +1587,12 @@ QByteArray FlashDensoCan02::subaru_denso_decrypt_32bit_payload(QByteArray buf, u
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    decrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    decrypt = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
 
-    return decrypted;
+    return decrypt;
 }
 
-QByteArray FlashDensoCan02::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashDensoSubaruCanDiesel::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1366,50 +1636,20 @@ QByteArray FlashDensoCan02::subaru_denso_calculate_32bit_payload(QByteArray buf,
     return encrypted;
 }
 
-/*
- * Request kernel init
- *
- * @return
- */
-QByteArray FlashDensoCan02::request_kernel_init()
-{
-    QByteArray output;
-    QByteArray received;
 
-    request_denso_kernel_init = true;
 
-    output.clear();
-    /*
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
-    */
-    output.append((uint8_t)SID_KERNEL_INIT);
-    /*
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    */
-    received = serial->write_serial_data_echo_check(output);
-    delay(500);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
 
-    request_denso_kernel_init = false;
 
-    return received;
-}
+
+
+
 
 /*
  * Request kernel id
  *
  * @return kernel id
  */
-QByteArray FlashDensoCan02::request_kernel_id()
+QByteArray FlashDensoSubaruCanDiesel::request_kernel_id()
 {
     QByteArray output;
     QByteArray received;
@@ -1419,25 +1659,34 @@ QByteArray FlashDensoCan02::request_kernel_id()
     request_denso_kernel_id = true;
 
     output.clear();
+
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+/*
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x0F);
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
+*/
     output.append((uint8_t)SID_START_COMM_CAN);
     output.append((uint8_t)0xA0);
-    /*
+
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    */
 
     received = serial->write_serial_data_echo_check(output);
+    qDebug() << "Kernel ID request:" << parse_message_to_hex(output);
     delay(100);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    kernelid.clear();
 
+    received = serial->read_serial_data(100, serial_read_extra_long_timeout);
+    qDebug() << "Kernel ID response:" << parse_message_to_hex(received);
     received.remove(0, 2);
     kernelid = received;
 
@@ -1471,17 +1720,12 @@ QByteArray FlashDensoCan02::request_kernel_id()
 
 
 
-
-
-
-
-
 /*
  * Add SSM header to message
  *
  * @return parsed message
  */
-QByteArray FlashDensoCan02::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+QByteArray FlashDensoSubaruCanDiesel::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
 {
     uint8_t length = output.length();
 
@@ -1502,7 +1746,7 @@ QByteArray FlashDensoCan02::add_ssm_header(QByteArray output, uint8_t tester_id,
  *
  * @return 8-bit checksum
  */
-uint8_t FlashDensoCan02::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t FlashDensoSubaruCanDiesel::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -1520,7 +1764,7 @@ uint8_t FlashDensoCan02::calculate_checksum(QByteArray output, bool dec_0x100)
  *
  * @return
  */
-int FlashDensoCan02::connect_bootloader_start_countdown(int timeout)
+int FlashDensoSubaruCanDiesel::connect_bootloader_start_countdown(int timeout)
 {
     for (int i = timeout; i > 0; i--)
     {
@@ -1545,7 +1789,7 @@ int FlashDensoCan02::connect_bootloader_start_countdown(int timeout)
  *
  * @return parsed message
  */
-QString FlashDensoCan02::parse_message_to_hex(QByteArray received)
+QString FlashDensoSubaruCanDiesel::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1562,7 +1806,7 @@ QString FlashDensoCan02::parse_message_to_hex(QByteArray received)
  *
  * @return
  */
-int FlashDensoCan02::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashDensoSubaruCanDiesel::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1586,16 +1830,17 @@ int FlashDensoCan02::send_log_window_message(QString message, bool timestamp, bo
     return STATUS_ERROR;
 }
 
-void FlashDensoCan02::set_progressbar_value(int value)
+void FlashDensoSubaruCanDiesel::set_progressbar_value(int value)
 {
     if (ui->progressbar)
         ui->progressbar->setValue(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashDensoCan02::delay(int timeout)
+void FlashDensoSubaruCanDiesel::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
 }
+

@@ -1,5 +1,5 @@
 #include "ecu_operations_mercedes.h"
-#include <ui_ecuoperationswindow.h>
+#include <ui_ecu_operations.h>
 
 EcuOperationsMercedes::EcuOperationsMercedes(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QWidget(parent),
