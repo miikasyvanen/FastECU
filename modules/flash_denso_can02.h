@@ -68,6 +68,7 @@ private:
     int init_flash_denso_can_02(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
 
     int connect_bootloader_subaru_denso_can_02_32bit();
+    int connect_bootloader_subaru_denso_can_02_32bit_recovery();
     int upload_kernel_subaru_denso_can_02_32bit(QString kernel);
     int read_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
