@@ -35,6 +35,8 @@ linux {
 
 SOURCES += \
     biu_operations_subaru.cpp \
+    biu_ops_subaru_data.cpp \
+    biu_ops_subaru_switches.cpp \
     calibration_maps.cpp \
     calibration_treewidget.cpp \
     definition_file_convert.cpp \
@@ -53,7 +55,6 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
-    modules/flash_denso_kline_04.cpp \
     protocol_select.cpp \
     serial_port_actions.cpp \
     settings.cpp \
@@ -61,6 +62,8 @@ SOURCES += \
 
 HEADERS += \
     biu_operations_subaru.h \
+    biu_ops_subaru_data.h \
+    biu_ops_subaru_switches.h \
     calibration_maps.h \
     calibration_treewidget.h \
     definition_file_convert.h \
@@ -76,7 +79,6 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
-    modules/flash_denso_kline_04.h \
     protocol_select.h \
     serial_port_actions.h \
     settings.h \
@@ -84,6 +86,8 @@ HEADERS += \
 
 FORMS += \
     biu_operations_subaru.ui \
+    biu_ops_subaru_data.ui \
+    biu_ops_subaru_switches.ui \
     calibration_map_table.ui \
     definition_file_convert.ui \
     ecu_manual_operations.ui \

@@ -14,7 +14,7 @@
 
 #include <serial_port_actions.h>
 #include <biu_ops_subaru_switches.h>
-#include <biu_ops_subaru_dtcs.h>
+#include <biu_ops_subaru_data.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -325,16 +325,19 @@ private:
     QString parse_message_to_hex(QByteArray received);
     int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int timeout);
-    void update_biu_ops_subaru_switches_window();
-    void update_biu_ops_subaru_dtcs_window();
+    BiuOpsSubaruSwitches* update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches);
+    BiuOpsSubaruData* update_biu_ops_subaru_data_window(BiuOpsSubaruData *biuOpsSubaruData);
     void close_results_windows();
     void closeEvent(QCloseEvent *event);
 
     SerialPortActions *serial;
     QStringList *switch_result;
-    QStringList *dtc_result;
-    BiuOpsSubaruSwitches *biuOpsSubaruSwitches;
-    BiuOpsSubaruDtcs *biuOpsSubaruDtcs;
+    QStringList *data_result;
+    BiuOpsSubaruSwitches *biuOpsSubaruSwitchesIo;
+    BiuOpsSubaruSwitches *biuOpsSubaruSwitchesLighting;
+
+    BiuOpsSubaruData *biuOpsSubaruDataDtcs;
+    BiuOpsSubaruData *biuOpsSubaruDataBiu;
     int counter;
     uint8_t current_command;
     ConnectionState connection_state;

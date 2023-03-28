@@ -20,7 +20,7 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
     col_num = 0;
     row_num = 0;
 
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < (switch_result->length() / 2); i++) {
         if ((i == 40) || (i == 72))
         {
             col_num += 2;
@@ -57,7 +57,7 @@ void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)
 
     QLabel* current_label;
 
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < (switch_result->length() / 2); i++) {
 
         current_label = ui->gridLayoutWidget->findChild< QLabel* >("Result" + QString::number(i));
 
