@@ -373,6 +373,9 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
 
     for(int blockno = 0; blockno < maxblocks; blockno++)
     {
+        if (kill_process)
+            return STATUS_ERROR;
+
         for(int j = 0; j < 6; j++){
 
             output[6 + j] = pl_encr.at(byte_counter + j);
@@ -428,8 +431,8 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
 
     //qDebug() << "ECU should now be running from kernel";
 
-    send_log_window_message("Request kernel ID: ", true, true);
-    qDebug() << "Request kernel ID";
+    send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
 
     received.clear();
     received = request_kernel_id();
@@ -437,7 +440,7 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
         return STATUS_ERROR;
 
     send_log_window_message("Kernel ID: " + received, true, true);
-    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+    qDebug() << "Kernel ID:" << parse_message_to_hex(received);
 
     return STATUS_SUCCESS;
 }

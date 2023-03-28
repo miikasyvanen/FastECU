@@ -700,8 +700,8 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
 
     set_progressbar_value(100);
 
-    send_log_window_message("Request kernel ID: ", true, true);
-    qDebug() << "Request kernel ID";
+    send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
 
     received.clear();
     received = request_kernel_id();

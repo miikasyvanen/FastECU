@@ -121,7 +121,6 @@ DISTFILES += \
     LICENSE \
     README.md \
     USING.txt \
-    biu_ops_subaru_switches.ui \
     config/fastecu.cfg \
     config/logger.cfg \
     config/menu.cfg \

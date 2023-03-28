@@ -249,17 +249,19 @@ int FlashDensoWrx02::upload_kernel_subaru_denso_kline_wrx02(QString kernel)
     else
         send_log_window_message("Kernel uploaded succesfully", true, true);
 
+    send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
+
     serial->change_port_speed("39473");
     delay(200);
     received.clear();
     while (received == "")
     {
-        //qDebug() << "Request kernel ID";
         received = request_kernel_id();
         delay(500);
     }
-    qDebug() << received;
-    //    return STATUS_ERROR;
+    send_log_window_message("Kernel ID: " + received, true, true);
+    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
 
     delay(200);
 

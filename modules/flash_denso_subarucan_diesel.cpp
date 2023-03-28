@@ -702,8 +702,8 @@ int FlashDensoSubaruCanDiesel::upload_kernel_subaru_denso_subarucan(QString kern
     // Open serial port
     serial->open_serial_port();
 */
-    send_log_window_message("Requesting kernel ID...", true, true);
-    qDebug() << "Requesting kernel ID...";
+    send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
 
     received.clear();
     received = request_kernel_id();
@@ -1680,23 +1680,29 @@ QByteArray FlashDensoSubaruCanDiesel::request_kernel_id()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
 
-    received = serial->write_serial_data_echo_check(output);
-    qDebug() << "Kernel ID request:" << parse_message_to_hex(output);
-    delay(100);
-    kernelid.clear();
-
-    received = serial->read_serial_data(100, serial_read_extra_long_timeout);
-    qDebug() << "Kernel ID response:" << parse_message_to_hex(received);
-    received.remove(0, 2);
-    kernelid = received;
-
-    while (received != "")
+    int loop = 0;
+    while (loop < 5 && received == "")
     {
-        received = serial->read_serial_data(1, serial_read_short_timeout);
-        received.remove(0, 2);
-        kernelid.append(received);
-    }
+        received = serial->write_serial_data_echo_check(output);
+        send_log_window_message("Kernel ID request: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Kernel ID request:" << parse_message_to_hex(output);
+        delay(100);
+        kernelid.clear();
 
+        received = serial->read_serial_data(100, serial_read_long_timeout);
+        send_log_window_message("Kernel ID response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Kernel ID response:" << parse_message_to_hex(received);
+        received.remove(0, 2);
+        kernelid = received;
+
+        while (received != "")
+        {
+            received = serial->read_serial_data(1, serial_read_short_timeout);
+            received.remove(0, 2);
+            kernelid.append(received);
+        }
+        loop++;
+    }
     request_denso_kernel_id = false;
 
     return kernelid;

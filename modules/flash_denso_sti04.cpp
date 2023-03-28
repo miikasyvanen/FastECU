@@ -405,14 +405,15 @@ int FlashDensoSti04::upload_kernel_subaru_denso_kline_04_32bit(QString kernel)
 
     delay(100);
 
-    send_log_window_message("Request kernel ID: ", true, true);
-    qDebug() << "Request kernel ID";
+    send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
 
     received = request_kernel_id();
     if (received == "")
         return STATUS_ERROR;
 
     send_log_window_message("Kernel ID: " + received, true, true);
+    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
 
     return STATUS_SUCCESS;
 }
