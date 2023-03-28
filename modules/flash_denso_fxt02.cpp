@@ -331,6 +331,7 @@ int FlashDensoFxt02::upload_kernel_subaru_denso_kline_fxt02(QString kernel)
     }
 
     send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
 
     delay(100);
 
@@ -339,8 +340,8 @@ int FlashDensoFxt02::upload_kernel_subaru_denso_kline_fxt02(QString kernel)
         return STATUS_ERROR;
 
     received.remove(0, 2);
-    send_log_window_message("Request kernel ID OK" + received, true, true);
-
+    send_log_window_message("Kernel ID: " + received, true, true);
+    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
     return STATUS_SUCCESS;
 }
 
