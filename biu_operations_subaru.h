@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QWidget>
 #include <QDialog>
+#include <QTextEdit>
 
 #include <serial_port_actions.h>
 #include <biu_ops_subaru_switches.h>

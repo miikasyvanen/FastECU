@@ -95,7 +95,10 @@ int FlashDensoCan02::init_flash_denso_can_02(FileActions::EcuCalDefStructure *ec
     //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
 
     send_log_window_message("Connecting to Subaru 02+ 32-bit Denso CAN bootloader, please wait...", true, true);
-    result = connect_bootloader_subaru_denso_can_02_32bit();
+    if (flash_method.endsWith("denso_can_recovery"))
+        result = connect_bootloader_subaru_denso_can_02_32bit_recovery();
+    else
+        result = connect_bootloader_subaru_denso_can_02_32bit();
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
@@ -211,6 +214,117 @@ int FlashDensoCan02::connect_bootloader_subaru_denso_can_02_32bit()
 }
 
 /*
+ * Connect to Subaru Denso CAN bootloader 32bit ECUs in recovery mode
+ *
+ * @return success
+ */
+int FlashDensoCan02::connect_bootloader_subaru_denso_can_02_32bit_recovery()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    serial->add_iso14230_header = false;
+
+    //if (connect_bootloader_start_countdown(bootloader_start_countdown))
+    //    return STATUS_ERROR;
+
+    send_log_window_message("Checking if kernel is already running...", true, true);
+    qDebug() << "Checking if kernel is already running...";
+
+    // Check if kernel already alive
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)(SID_START_COMM_CAN & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    delay(200);
+    received = serial->read_serial_data(20, 10);
+    //qDebug() << "0x7A 0x00 response:" << parse_message_to_hex(received);
+    //send_log_window_message("0x7A 0x00 response: " + parse_message_to_hex(received), true, true);
+    if ((uint8_t)received.at(0) == 0x7F && (uint8_t)received.at(2) == 0x34)
+    {
+        send_log_window_message("Kernel already running", true, true);
+
+        kernel_alive = true;
+        return STATUS_SUCCESS;
+    }
+
+    send_log_window_message("Initializing bootloader", true, true);
+    qDebug() << "Initializing bootloader";
+
+    int pass = 0;
+    int timeout = 10000;
+
+    set_progressbar_value(0);
+
+    QElapsedTimer *elapsed_timer = new QElapsedTimer();
+    elapsed_timer->start();
+
+    while (elapsed_timer->elapsed() < timeout)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        output[4] = (uint8_t)((SID_ENTER_BL_CAN >> 8) & 0xFF);
+        output[5] = (uint8_t)(SID_ENTER_BL_CAN & 0xFF);
+        output[6] = (uint8_t)0x00;
+        output[7] = (uint8_t)0x00;
+        output[8] = (uint8_t)0x00;
+        output[9] = (uint8_t)0x00;
+        output[10] = (uint8_t)0x00;
+        output[11] = (uint8_t)0x00;
+        serial->write_serial_data_echo_check(output);
+        delay(5);
+        received = serial->read_serial_data(20, 5);
+
+        //send_log_window_message("Connecting to bootloader", true, true);
+        //qDebug() << "Connecting to bootloader";
+
+        output[4] = (uint8_t)SID_START_COMM_CAN;
+        output[5] = (uint8_t)(SID_CHECK_COMM_BL_CAN & 0xFF);
+        output[6] = (uint8_t)0x00;
+        output[7] = (uint8_t)0x00;
+        output[8] = (uint8_t)0x00;
+        output[9] = (uint8_t)0x00;
+        output[10] = (uint8_t)0x00;
+        output[11] = (uint8_t)0x00;
+        serial->write_serial_data_echo_check(output);
+        delay(5);
+        received = serial->read_serial_data(20, 5);
+        //send_log_window_message("0x7A 0x90 response: " + parse_message_to_hex(received), true, true);
+        //qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
+        if ((uint8_t)(received.at(1) & 0xF8) == 0x90)
+        {
+            send_log_window_message("Connected to bootloader, start kernel upload", true, true);
+            return STATUS_SUCCESS;
+        }
+
+        set_progressbar_value((float)elapsed_timer->elapsed() / (float)timeout * 100.0f);
+        delay(10);
+    }
+
+    set_progressbar_value(100);
+
+    return STATUS_ERROR;
+}
+
+/*
  * Upload kernel to Subaru Denso CAN 32bit ECUs
  *
  * @return success
@@ -289,6 +403,9 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
 
     for(int blockno = 0; blockno < maxblocks; blockno++)
     {
+        if (kill_process)
+            return STATUS_ERROR;
+
         for(int j = 0; j < 6; j++){
 
             output[6 + j] = pl_encr.at(byte_counter + j);
@@ -344,8 +461,8 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
 
     //qDebug() << "ECU should now be running from kernel";
 
-    send_log_window_message("Request kernel ID: ", true, true);
-    qDebug() << "Request kernel ID";
+    send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
 
     received.clear();
     received = request_kernel_id();
@@ -353,7 +470,7 @@ int FlashDensoCan02::upload_kernel_subaru_denso_can_02_32bit(QString kernel)
         return STATUS_ERROR;
 
     send_log_window_message("Kernel ID: " + received, true, true);
-    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+    qDebug() << "Kernel ID:" << parse_message_to_hex(received);
 
     return STATUS_SUCCESS;
 }

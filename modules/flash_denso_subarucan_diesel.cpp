@@ -702,8 +702,8 @@ int FlashDensoSubaruCanDiesel::upload_kernel_subaru_denso_subarucan(QString kern
     // Open serial port
     serial->open_serial_port();
 */
-    send_log_window_message("Requesting kernel ID...", true, true);
-    qDebug() << "Requesting kernel ID...";
+    send_log_window_message("Requesting kernel ID", true, true);
+    qDebug() << "Requesting kernel ID";
 
     received.clear();
     received = request_kernel_id();
