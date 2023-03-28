@@ -338,6 +338,9 @@ private:
 
     BiuOpsSubaruData *biuOpsSubaruDataDtcs;
     BiuOpsSubaruData *biuOpsSubaruDataBiu;
+    BiuOpsSubaruData *biuOpsSubaruDataCan;
+    BiuOpsSubaruData *biuOpsSubaruDataTt;
+
     int counter;
     uint8_t current_command;
     ConnectionState connection_state;
