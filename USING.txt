@@ -27,6 +27,7 @@ Tested flash methods:
 - sti05 method read/write (K-Line / CAN)
 - Logging of basic ssm values
 - Read Subaru Unisia Jecs ECUs
+- Denso CAN method works on all Subaru 32-bit ECUs
 
 K-Line and CAN read and write succesfully tested - Open port 2.0 and generic OBD-cable (FTDI chip) in Windows 7 64-bit and Linux.
 
