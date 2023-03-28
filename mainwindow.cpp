@@ -625,7 +625,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashDensoSubaruCanDiesel = new FlashDensoSubaruCanDiesel(serial, ecuCalDef[rom_number], cmd_type);
         else if (configValues->flash_protocol_selected_family.startsWith("subarucan"))
             flashDensoSubaruCan = new FlashDensoSubaruCan(serial, ecuCalDef[rom_number], cmd_type);
-        else if (!configValues->flash_protocol_selected_family.endsWith("denso_can_recovery"))
+        else if (configValues->flash_protocol_selected_family.endsWith("denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType.startsWith("SH7058"))
                 ecuCalDef[rom_number]->McuType = "SH7058";
