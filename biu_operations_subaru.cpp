@@ -184,7 +184,7 @@ void BiuOperationsSubaru::send_biu_msg()
 
     received = serial->read_serial_data(100, 100);
 
-
+    /*
     received.clear();
     switch (current_command)
     {
@@ -331,7 +331,7 @@ void BiuOperationsSubaru::send_biu_msg()
         default:
             break;
     }
-
+    */
 
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     parse_biu_message(received);
