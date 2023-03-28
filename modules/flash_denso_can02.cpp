@@ -235,36 +235,6 @@ int FlashDensoCan02::connect_bootloader_subaru_denso_can_02_32bit_recovery()
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
 
-    send_log_window_message("Checking if kernel is already running...", true, true);
-    qDebug() << "Checking if kernel is already running...";
-
-    // Check if kernel already alive
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
-    output.append((uint8_t)(SID_START_COMM_CAN & 0xFF));
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 10);
-    //qDebug() << "0x7A 0x00 response:" << parse_message_to_hex(received);
-    //send_log_window_message("0x7A 0x00 response: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(0) == 0x7F && (uint8_t)received.at(2) == 0x34)
-    {
-        send_log_window_message("Kernel already running", true, true);
-
-        kernel_alive = true;
-        return STATUS_SUCCESS;
-    }
-
     send_log_window_message("Initializing bootloader", true, true);
     qDebug() << "Initializing bootloader";
 
