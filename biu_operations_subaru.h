@@ -16,6 +16,7 @@
 #include <serial_port_actions.h>
 #include <biu_ops_subaru_switches.h>
 #include <biu_ops_subaru_dtcs.h>
+#include <biu_ops_subaru_data.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -46,7 +47,10 @@ private:
         BIU_DATA = 0x40,
         CAN_DATA = 0x41,
         BIU_CUSTOM_TIME_TEMP = 0x52,
-        DEALER_COUNTRY_OPTIONS = 0x53,
+        CAR_OPTIONS = 0x53,
+        VDC_ABS_CONDITION = 0x60,
+        DEST_TOUCH_STATUS = 0x61,
+        FACTORY_STATUS = 0x54,
         TESTER_PRESENT = 0x3E,
     };
 
@@ -64,7 +68,10 @@ private:
                                     "BIU data", "21,40",
                                     "CAN data", "21,41",
                                     "BIU Customisable Times & Temps", "21,52",
-                                    "Dealer / country options", "21,53",
+                                    "Car options", "21,53",
+                                    "VDC/ABC Condition", "21,60",
+                                    "Destination / Touch SW", "21,61",
+                                    "BIU Status", "21,54",
                                     "Custom", "",
                                };
 
@@ -319,24 +326,75 @@ private:
                                  "outside temp offset      ", "degC ",
                                };
 
-    QTimer *keep_alive_timer;
+    QStringList biu_options_names = {"rear defogger op mode       ", "NORMAL", "CONTINUOUS",
+                                     "wiper deicer op mode        ", "NORMAL", "CONTINUOUS",
+                                     "security alarm setup        ", "ON", "OFF",
+                                     "impact sensor setup         ", "ON", "OFF",
+                                     "alarm monitor delay setting ", "30s DELAY", "0s DELAY",
+                                     "lockout prevention          ", "ON", "OFF",
+                                     "impact sensor               ", "YES", "NO",
+                                     "siren installed             ", "YES", "NO",
+                                     "answer back buzzer setup    ", "ON", "OFF",
+                                     "hazard answer back setup    ", "ON", "OFF",
+                                     "automatic locking setup     ", "ON", "OFF",
+                                     "ans-back buzzer             ", "YES", "NO",
+                                     "auto locking                ", "YES", "NO",
+                                     "---- unused ----            ", "-", "-",
+                                     "---- unused ----            ", "-", "-",
+                                     "---- unused ----            ", "-", "-",
+                                     "select unlock switch        ", "ON", "OFF",
+                                     "passive alarm               ", "ON", "OFF",
+                                     "door open warning           ", "ON", "OFF",
+                                     "dome light alarm setting    ", "ON", "OFF",
+                                     "map light setting           ", "ON", "OFF",
+                                     "belt warning switch         ", "ON", "OFF",
+                                     "---- unused ----            ", "-", "-",
+                                     "keyless P/W switch          ", "ON", "OFF",
+                                     "illumination control        ", "ON", "OFF",
+                                     "A/C ECM setting             ", "YES", "NO",
+                                     "P/W ECM setting             ", "YES", "NO",
+                                     "center display failure      ", "YES", "NO",
+                                     "wiper deicer                ", "YES", "NO",
+                                     "rear fog light setting      ", "YES", "NO",
+                                     "UK security setup           ", "ON", "OFF",
+                                     "MT/AT                       ", "AT", "MT",
+                                     "sedan/wagon setting         ", "SEDAN", "WAGON",
+                                     "double lock                 ", "ON", "OFF",
+                                     "6MT setting                 ", "6MT", "NOT 6MT",
+                                     "Destination code            ", "-", "-",
+                                     "Destination code            ", "-", "-",
+                                     "Destination code            ", "-", "-",
+                                     "Destination code            ", "-", "-",
+                                     "EK model                    ", "ON", "OFF",
+                                    };
 
-    void closeEvent(QCloseEvent *event);
+    QTimer *keep_alive_timer;
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     void parse_biu_message(QByteArray message);
     QString parse_message_to_hex(QByteArray received);
     int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int timeout);
-    void update_biu_ops_subaru_switches_window();
-    void update_biu_ops_subaru_dtcs_window();
+    BiuOpsSubaruSwitches* update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches);
+    BiuOpsSubaruData* update_biu_ops_subaru_data_window(BiuOpsSubaruData *biuOpsSubaruData);
     void close_results_windows();
+    void closeEvent(QCloseEvent *event);
 
     SerialPortActions *serial;
     QStringList *switch_result;
-    QStringList *dtc_result;
-    BiuOpsSubaruSwitches *biuOpsSubaruSwitches;
-    BiuOpsSubaruDtcs *biuOpsSubaruDtcs;
+    QStringList *data_result;
+    BiuOpsSubaruSwitches *biuOpsSubaruSwitchesIo;
+    BiuOpsSubaruSwitches *biuOpsSubaruSwitchesLighting;
+    BiuOpsSubaruSwitches *biuOpsSubaruSwitchesOptions;
+
+    BiuOpsSubaruData *biuOpsSubaruDataDtcs;
+    BiuOpsSubaruData *biuOpsSubaruDataBiu;
+    BiuOpsSubaruData *biuOpsSubaruDataCan;
+    BiuOpsSubaruData *biuOpsSubaruDataTt;
+    BiuOpsSubaruData *biuOpsSubaruDataVdcabs;
+    BiuOpsSubaruData *biuOpsSubaruDataDest;
+    BiuOpsSubaruData *biuOpsSubaruDataFactory;
+
     int counter;
     uint8_t current_command;
     ConnectionState connection_state;

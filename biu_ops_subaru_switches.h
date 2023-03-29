@@ -41,8 +41,7 @@ private:
 
     QStringList *switch_result;
 
-    void closeEvent(QCloseEvent *event);
-
+    //SerialPortActions *serial;
     Ui::BiuOpsSubaruSwitchesWindow *ui;
 
 private slots:

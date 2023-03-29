@@ -913,10 +913,6 @@ void MainWindow::show_subaru_biu_window()
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    serial->serial_port_list.clear();
-    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
-
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
