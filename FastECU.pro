@@ -145,7 +145,7 @@ DISTFILES += \
     kernels/ssmk_SH7058_EEPSCI3.bin \
     kernels/ssmk_SH7058_EEPSCI4.bin \
     precompiled/FastECU-Linux.zip \
-    precompiled/FastECU-Win7-32bit.zip \
-    precompiled/FastECU-Win7-64bit.zip
+    precompiled/FastECU-Win7-64bit.zip \
+    precompiled/FastECU-Windows.zip
 
 RC_FILE = fastecu.rc
