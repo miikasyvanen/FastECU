@@ -14,10 +14,14 @@ BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *par
 
     biuOpsSubaruSwitchesIo = nullptr;
     biuOpsSubaruSwitchesLighting = nullptr;
+    biuOpsSubaruSwitchesOptions = nullptr;
     biuOpsSubaruDataDtcs = nullptr;
     biuOpsSubaruDataBiu = nullptr;
     biuOpsSubaruDataCan = nullptr;
     biuOpsSubaruDataTt = nullptr;
+    biuOpsSubaruDataVdcabs = nullptr;
+    biuOpsSubaruDataDest = nullptr;
+    biuOpsSubaruDataFactory = nullptr;
 
     counter = 0;
     switch_result = new QStringList();
@@ -82,10 +86,14 @@ void BiuOperationsSubaru::close_results_windows()
 {
     if (biuOpsSubaruSwitchesIo != nullptr) biuOpsSubaruSwitchesIo->hide();
     if (biuOpsSubaruSwitchesLighting != nullptr) biuOpsSubaruSwitchesLighting->hide();
+    if (biuOpsSubaruSwitchesOptions != nullptr) biuOpsSubaruSwitchesOptions->hide();
     if (biuOpsSubaruDataDtcs != nullptr) biuOpsSubaruDataDtcs->hide();
     if (biuOpsSubaruDataBiu != nullptr) biuOpsSubaruDataBiu->hide();
     if (biuOpsSubaruDataCan != nullptr) biuOpsSubaruDataCan->hide();
     if (biuOpsSubaruDataTt != nullptr) biuOpsSubaruDataTt->hide();
+    if (biuOpsSubaruDataVdcabs != nullptr) biuOpsSubaruDataVdcabs->hide();
+    if (biuOpsSubaruDataDest != nullptr) biuOpsSubaruDataDest->hide();
+    if (biuOpsSubaruDataFactory != nullptr) biuOpsSubaruDataFactory->hide();
 }
 
 void BiuOperationsSubaru::closeEvent(QCloseEvent *event)
@@ -94,10 +102,14 @@ void BiuOperationsSubaru::closeEvent(QCloseEvent *event)
     keep_alive_timer->stop();
     if (biuOpsSubaruSwitchesIo != nullptr) biuOpsSubaruSwitchesIo->close();
     if (biuOpsSubaruSwitchesLighting != nullptr) biuOpsSubaruSwitchesLighting->close();
+    if (biuOpsSubaruSwitchesOptions != nullptr) biuOpsSubaruSwitchesOptions->close();
     if (biuOpsSubaruDataDtcs != nullptr) biuOpsSubaruDataDtcs->close();
     if (biuOpsSubaruDataBiu != nullptr) biuOpsSubaruDataBiu->close();
     if (biuOpsSubaruDataCan != nullptr) biuOpsSubaruDataCan->close();
     if (biuOpsSubaruDataTt != nullptr) biuOpsSubaruDataTt->close();
+    if (biuOpsSubaruDataVdcabs != nullptr) biuOpsSubaruDataVdcabs->close();
+    if (biuOpsSubaruDataDest != nullptr) biuOpsSubaruDataDest->close();
+    if (biuOpsSubaruDataFactory != nullptr) biuOpsSubaruDataFactory->close();
 
 }
 
@@ -328,6 +340,47 @@ void BiuOperationsSubaru::send_biu_msg()
             received.append((uint8_t)0x03);
             received.append((uint8_t)0x6C);
             break;
+        case CAR_OPTIONS:
+            received.append((uint8_t)0x86);
+            received.append((uint8_t)0xf0);
+            received.append((uint8_t)0x40);
+            received.append((uint8_t)0x61);
+            received.append((uint8_t)0x53);
+            received.append((uint8_t)0x30);
+            received.append((uint8_t)0x16);
+            received.append((uint8_t)0x10);
+            received.append((uint8_t)0x02);
+            received.append((uint8_t)0xC2);
+            break;
+        case VDC_ABS_CONDITION:
+            received.append((uint8_t)0x83);
+            received.append((uint8_t)0xf0);
+            received.append((uint8_t)0x40);
+            received.append((uint8_t)0x61);
+            received.append((uint8_t)0x60);
+            received.append((uint8_t)0x00);
+            received.append((uint8_t)0x74);
+            break;
+        case DEST_TOUCH_STATUS:
+            received.append((uint8_t)0x84);
+            received.append((uint8_t)0xf0);
+            received.append((uint8_t)0x40);
+            received.append((uint8_t)0x61);
+            received.append((uint8_t)0x61);
+            received.append((uint8_t)0x08);
+            received.append((uint8_t)0x00);
+            received.append((uint8_t)0x7E);
+            break;
+        case FACTORY_STATUS:
+            received.append((uint8_t)0x83);
+            received.append((uint8_t)0xf0);
+            received.append((uint8_t)0x40);
+            received.append((uint8_t)0x61);
+            received.append((uint8_t)0x54);
+            received.append((uint8_t)0x00);
+            received.append((uint8_t)0x68);
+            break;
+
         default:
             break;
     }
@@ -727,6 +780,102 @@ void BiuOperationsSubaru::parse_biu_message(QByteArray message)
         }
 
         biuOpsSubaruDataTt = update_biu_ops_subaru_data_window(biuOpsSubaruDataTt);
+
+    }
+    else if ((uint8_t)message.at(3) == (INFO_REQUEST + 0x40) && (uint8_t)message.at(4) == CAR_OPTIONS)
+    {
+        /*
+         * index: 0    1    2    3    4    5    6    7
+         * cmd:   fm+l dest src  0x21 0x53 cksm
+         * rsp:   fm+l dest src  rply 0x53 0xB1 0xB2 0xBn cksm
+         */
+
+        //QString biu_options_result;
+
+        current_command = TESTER_PRESENT;
+        switch_result->clear();
+
+        int index = 5;
+        int i;
+
+        if (message.length() >= (index + 2))
+        {
+            for (index = 5; index < (message.length() - 1); index++)
+            {
+                int bit_mask = 1;
+                for (int bit_counter = 0; bit_counter < 8; bit_counter++)
+                {
+                    i = ((index - 5) * 8) + bit_counter;
+                    switch_result->append(biu_options_names.at(i * 3));
+                    if ((uint8_t)message.at(index) & bit_mask) switch_result->append(biu_options_names.at(i * 3 + 1));
+                    else switch_result->append(biu_options_names.at(i * 3 + 2));
+                    //send_log_window_message(switch_result->at(2 * i) + switch_result->at(2 * i + 1), true, true);
+                    bit_mask = bit_mask << 1;
+                }
+            }
+
+        }
+
+        biuOpsSubaruSwitchesOptions = update_biu_ops_subaru_switches_window(biuOpsSubaruSwitchesOptions);
+
+    }
+    else if ((uint8_t)message.at(3) == (INFO_REQUEST + 0x40) && (uint8_t)message.at(4) == VDC_ABS_CONDITION)
+    {
+        /*
+         * index: 0    1    2    3    4    5    6    7
+         * cmd:   fm+l dest src  0x21 0x60 cksm
+         * rsp:   fm+l dest src  rply 0x60 0xB1 cksm
+         */
+
+        current_command = TESTER_PRESENT;
+        data_result->clear();
+
+        int condition = (uint8_t)message.at(5) & 0x07;
+        data_result->append("VDC/ABS Condition: " + QString::number(condition));
+        //send_log_window_message(data_result, true, true);
+
+        biuOpsSubaruDataVdcabs = update_biu_ops_subaru_data_window(biuOpsSubaruDataVdcabs);
+
+    }
+    else if ((uint8_t)message.at(3) == (INFO_REQUEST + 0x40) && (uint8_t)message.at(4) == DEST_TOUCH_STATUS)
+    {
+        /*
+         * index: 0    1    2    3    4    5    6    7
+         * cmd:   fm+l dest src  0x21 0x61 cksm
+         * rsp:   fm+l dest src  rply 0x61 0xB1 0xB2 cksm
+         */
+
+        int condition;
+        current_command = TESTER_PRESENT;
+        data_result->clear();
+
+        condition = (uint8_t)message.at(5) & 0x0F;
+        data_result->append("Destination:    " + QString::number(condition));
+        condition = (uint8_t)message.at(6) & 0x3F;
+        data_result->append("Touchscreen SW: " + QString::number(condition));
+        //send_log_window_message(data_result, true, true);
+
+        biuOpsSubaruDataDest = update_biu_ops_subaru_data_window(biuOpsSubaruDataDest);
+
+    }
+    else if ((uint8_t)message.at(3) == (INFO_REQUEST + 0x40) && (uint8_t)message.at(4) == FACTORY_STATUS)
+    {
+        /*
+         * index: 0    1    2    3    4    5    6    7
+         * cmd:   fm+l dest src  0x21 0x54 cksm
+         * rsp:   fm+l dest src  rply 0x54 0xB1 cksm
+         */
+
+        QString setting;
+        current_command = TESTER_PRESENT;
+        data_result->clear();
+
+        if ((uint8_t)message.at(5) & 0x01) setting = "Factory";
+        else setting = "Market";
+        data_result->append("Factory Initial Setting: " + setting);
+        //send_log_window_message(data_result, true, true);
+
+        biuOpsSubaruDataFactory = update_biu_ops_subaru_data_window(biuOpsSubaruDataFactory);
 
     }
     else if ((uint8_t)message.at(3) == 0x7F)
