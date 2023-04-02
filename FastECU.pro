@@ -56,12 +56,16 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
-    modules/flash_denso_can02.cpp \
-    modules/flash_denso_fxt02.cpp \
-    modules/flash_denso_sti04.cpp \
-    modules/flash_denso_subarucan.cpp \
-    modules/flash_denso_subarucan_diesel.cpp \
-    modules/flash_denso_wrx02.cpp \
+    modules/flash_ecu_subaru_denso_mc68hc16y5_02.cpp \
+    modules/flash_ecu_subaru_denso_sh7055_02.cpp \
+    modules/flash_ecu_subaru_denso_sh7055_04.cpp \
+    modules/flash_ecu_subaru_denso_sh7058_can.cpp \
+    modules/flash_ecu_subaru_denso_sh7058_can_diesel.cpp \
+    modules/flash_ecu_subaru_denso_sh705x_can.cpp \
+    modules/flash_ecu_subaru_hitachi_m32r_02.cpp \
+    modules/flash_ecu_subaru_hitachi_m32r_06.cpp \
+    modules/flash_ecu_subaru_hitachi_m32r_can.cpp \
+    modules/flash_ecu_subaru_uinisia_jecs_m32r.cpp \
     protocol_select.cpp \
     serial_port_actions.cpp \
     settings.cpp \
@@ -87,12 +91,16 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
-    modules/flash_denso_can02.h \
-    modules/flash_denso_fxt02.h \
-    modules/flash_denso_sti04.h \
-    modules/flash_denso_subarucan.h \
-    modules/flash_denso_subarucan_diesel.h \
-    modules/flash_denso_wrx02.h \
+    modules/flash_ecu_subaru_denso_mc68hc16y5_02.h \
+    modules/flash_ecu_subaru_denso_sh7055_02.h \
+    modules/flash_ecu_subaru_denso_sh7055_04.h \
+    modules/flash_ecu_subaru_denso_sh7058_can.h \
+    modules/flash_ecu_subaru_denso_sh7058_can_diesel.h \
+    modules/flash_ecu_subaru_denso_sh705x_can.h \
+    modules/flash_ecu_subaru_hitachi_m32r_02.h \
+    modules/flash_ecu_subaru_hitachi_m32r_06.h \
+    modules/flash_ecu_subaru_hitachi_m32r_can.h \
+    modules/flash_ecu_subaru_uinisia_jecs_m32r.h \
     protocol_select.h \
     serial_port_actions.h \
     settings.h \

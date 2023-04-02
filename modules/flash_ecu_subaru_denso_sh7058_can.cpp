@@ -1,6 +1,6 @@
-#include "flash_denso_subarucan.h"
+#include "flash_ecu_subaru_denso_sh7058_can.h"
 
-FlashDensoSubaruCan::FlashDensoSubaruCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruDensoSH7058Can::FlashEcuSubaruDensoSH7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent),
       ui(new Ui::EcuOperationsWindow)
 {
@@ -44,18 +44,20 @@ FlashDensoSubaruCan::FlashDensoSubaruCan(SerialPortActions *serial, FileActions:
     }
 }
 
-FlashDensoSubaruCan::~FlashDensoSubaruCan()
+FlashEcuSubaruDensoSH7058Can::~FlashEcuSubaruDensoSH7058Can()
 {
 
 }
 
-void FlashDensoSubaruCan::closeEvent(QCloseEvent *event)
+void FlashEcuSubaruDensoSH7058Can::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
 
-int FlashDensoSubaruCan::init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruDensoSH7058Can::init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
 {
+    bool ok = false;
+
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -112,7 +114,7 @@ int FlashDensoSubaruCan::init_flash_denso_subarucan(FileActions::EcuCalDefStruct
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
         send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-        result = upload_kernel_subaru_denso_subarucan(kernel);
+        result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
     }
     if (result == STATUS_SUCCESS)
     {
@@ -135,7 +137,7 @@ int FlashDensoSubaruCan::init_flash_denso_subarucan(FileActions::EcuCalDefStruct
  *
  * @return success
  */
-int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
+int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
 {
     QByteArray output;
     QByteArray received;
@@ -471,7 +473,7 @@ int FlashDensoSubaruCan::connect_bootloader_subaru_denso_subarucan()
  *
  * @return success
  */
-int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
+int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr)
 {
     QFile file(kernel);
 
@@ -482,7 +484,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
     QByteArray pl_encr;
     uint32_t file_len = 0;
     uint32_t pl_len = 0;
-    uint32_t data_addr = 0;
+    uint32_t start_address = 0;
     uint32_t end_addr = 0;
     QByteArray cks_bypass;
     uint8_t chk_sum = 0;
@@ -493,7 +495,8 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
 
     QString mcu_name;
 
-    data_addr = flashdevices[mcu_type_index].kblocks->start;
+    start_address = kernel_start_addr;//flashdevices[mcu_type_index].kblocks->start;
+    qDebug() << "Start address to upload kernel:" << hex << start_address;
 
     if (!serial->is_serial_port_open())
     {
@@ -517,8 +520,8 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
     //if((file_len % 128) != 0)
     if((pl_len % 128) != 0)
         maxblocks++;
-    end_addr = (data_addr + (maxblocks * 128)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - data_addr;
+    end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
+    uint32_t data_len = end_addr - start_address;
     while ((uint32_t)pl_encr.length() < data_len)
     {
         pl_encr.append((uint8_t)0x00);
@@ -556,9 +559,9 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
     output.append((uint8_t)0x34);
     output.append((uint8_t)0x04);
     output.append((uint8_t)0x33);
-    output.append((uint8_t)((data_addr >> 16) & 0xFF));
-    output.append((uint8_t)((data_addr >> 8) & 0xFF));
-    output.append((uint8_t)(data_addr & 0xFF));
+    output.append((uint8_t)((start_address >> 16) & 0xFF));
+    output.append((uint8_t)((start_address >> 8) & 0xFF));
+    output.append((uint8_t)(start_address & 0xFF));
     output.append((uint8_t)((data_len >> 16) & 0xFF));
     output.append((uint8_t)((data_len >> 8) & 0xFF));
     output.append((uint8_t)(data_len & 0xFF));
@@ -598,7 +601,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
         if (kill_process)
             return 0;
 
-        blockaddr = data_addr + blockno * 128;
+        blockaddr = start_address + blockno * 128;
         output.clear();
         output.append((uint8_t)0x00);
         output.append((uint8_t)0x00);
@@ -733,7 +736,7 @@ int FlashDensoSubaruCan::upload_kernel_subaru_denso_subarucan(QString kernel)
  *
  * @return success
  */
-int FlashDensoSubaruCan::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -878,7 +881,7 @@ int FlashDensoSubaruCan::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefS
  *
  * @return success
  */
-int FlashDensoSubaruCan::write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
     QByteArray filedata;
 
@@ -989,7 +992,7 @@ int FlashDensoSubaruCan::write_mem_subaru_denso_subarucan(FileActions::EcuCalDef
  *
  * @return
  */
-int FlashDensoSubaruCan::get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified)
+int FlashEcuSubaruDensoSH7058Can::get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified)
 {
     unsigned blockno;
     QByteArray msg;
@@ -1022,7 +1025,7 @@ int FlashDensoSubaruCan::get_changed_blocks_denso_subarucan(const uint8_t *src, 
  *
  * @return
  */
-int FlashDensoSubaruCan::check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
+int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
 {
     QByteArray output;
     QByteArray received;
@@ -1102,7 +1105,7 @@ int FlashDensoSubaruCan::check_romcrc_denso_subarucan(const uint8_t *src, uint32
  *
  * @return success
  */
-int FlashDensoSubaruCan::reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
     int errval;
 
@@ -1207,7 +1210,7 @@ int FlashDensoSubaruCan::reflash_block_denso_subarucan(const uint8_t *newdata, c
  *
  * @return success
  */
-int FlashDensoSubaruCan::flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len)
+int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len)
 {
     QByteArray output;
     QByteArray received;
@@ -1321,7 +1324,7 @@ int FlashDensoSubaruCan::flash_block_denso_subarucan(const uint8_t *src, uint32_
  *
  * @return
  */
-uint8_t FlashDensoSubaruCan::cks_add8(QByteArray chksum_data, unsigned len)
+uint8_t FlashEcuSubaruDensoSH7058Can::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
     uint8_t data[chksum_data.length()];
@@ -1349,7 +1352,7 @@ uint8_t FlashDensoSubaruCan::cks_add8(QByteArray chksum_data, unsigned len)
 #define NPK_CRC16   0xBAAD  //koopman, 2048bits (256B)
 static bool crc_tab16_init = 0;
 static uint16_t crc_tab16[256];
-void FlashDensoSubaruCan::init_crc16_tab(void)
+void FlashEcuSubaruDensoSH7058Can::init_crc16_tab(void)
 {
 
     uint32_t i, j;
@@ -1374,7 +1377,7 @@ void FlashDensoSubaruCan::init_crc16_tab(void)
 
 }
 
-uint16_t FlashDensoSubaruCan::crc16(const uint8_t *data, uint32_t siz)
+uint16_t FlashEcuSubaruDensoSH7058Can::crc16(const uint8_t *data, uint32_t siz)
 {
     uint16_t crc;
 
@@ -1420,7 +1423,7 @@ uint16_t FlashDensoSubaruCan::crc16(const uint8_t *data, uint32_t siz)
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashDensoSubaruCan::subaru_denso_generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1448,7 +1451,7 @@ QByteArray FlashDensoSubaruCan::subaru_denso_generate_can_seed_key(QByteArray re
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashDensoSubaruCan::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1474,7 +1477,7 @@ QByteArray FlashDensoSubaruCan::subaru_denso_generate_ecutek_can_seed_key(QByteA
 /************************************
  * COBB'd Denso CAN ECUs seed key
  ***********************************/
-QByteArray FlashDensoSubaruCan::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1511,7 +1514,7 @@ QByteArray FlashDensoSubaruCan::subaru_denso_generate_cobb_can_seed_key(QByteArr
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashDensoSubaruCan::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1559,7 +1562,7 @@ QByteArray FlashDensoSubaruCan::subaru_denso_calculate_seed_key(QByteArray reque
  *
  * @return encrypted data
  */
-QByteArray FlashDensoSubaruCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1579,7 +1582,7 @@ QByteArray FlashDensoSubaruCan::subaru_denso_encrypt_32bit_payload(QByteArray bu
     return encrypted;
 }
 
-QByteArray FlashDensoSubaruCan::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1599,7 +1602,7 @@ QByteArray FlashDensoSubaruCan::subaru_denso_decrypt_32bit_payload(QByteArray bu
     return decrypt;
 }
 
-QByteArray FlashDensoSubaruCan::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1655,7 +1658,7 @@ QByteArray FlashDensoSubaruCan::subaru_denso_calculate_32bit_payload(QByteArray 
  *
  * @return
  */
-QByteArray FlashDensoSubaruCan::request_kernel_init()
+QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_init()
 {
     QByteArray output;
     QByteArray received;
@@ -1693,7 +1696,7 @@ QByteArray FlashDensoSubaruCan::request_kernel_init()
  *
  * @return kernel id
  */
-QByteArray FlashDensoSubaruCan::request_kernel_id()
+QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
 {
     QByteArray output;
     QByteArray received;
@@ -1760,7 +1763,7 @@ QByteArray FlashDensoSubaruCan::request_kernel_id()
  *
  * @return parsed message
  */
-QByteArray FlashDensoSubaruCan::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+QByteArray FlashEcuSubaruDensoSH7058Can::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
 {
     uint8_t length = output.length();
 
@@ -1781,7 +1784,7 @@ QByteArray FlashDensoSubaruCan::add_ssm_header(QByteArray output, uint8_t tester
  *
  * @return 8-bit checksum
  */
-uint8_t FlashDensoSubaruCan::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t FlashEcuSubaruDensoSH7058Can::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -1799,7 +1802,7 @@ uint8_t FlashDensoSubaruCan::calculate_checksum(QByteArray output, bool dec_0x10
  *
  * @return
  */
-int FlashDensoSubaruCan::connect_bootloader_start_countdown(int timeout)
+int FlashEcuSubaruDensoSH7058Can::connect_bootloader_start_countdown(int timeout)
 {
     for (int i = timeout; i > 0; i--)
     {
@@ -1824,7 +1827,7 @@ int FlashDensoSubaruCan::connect_bootloader_start_countdown(int timeout)
  *
  * @return parsed message
  */
-QString FlashDensoSubaruCan::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruDensoSH7058Can::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1841,7 +1844,7 @@ QString FlashDensoSubaruCan::parse_message_to_hex(QByteArray received)
  *
  * @return
  */
-int FlashDensoSubaruCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashEcuSubaruDensoSH7058Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1865,14 +1868,14 @@ int FlashDensoSubaruCan::send_log_window_message(QString message, bool timestamp
     return STATUS_ERROR;
 }
 
-void FlashDensoSubaruCan::set_progressbar_value(int value)
+void FlashEcuSubaruDensoSH7058Can::set_progressbar_value(int value)
 {
     if (ui->progressbar)
         ui->progressbar->setValue(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashDensoSubaruCan::delay(int timeout)
+void FlashEcuSubaruDensoSH7058Can::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

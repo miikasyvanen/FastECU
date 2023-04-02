@@ -15,7 +15,7 @@
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
 #include <serial_port_actions.h>
-//#include <ecu_operations.h>
+#include <ui_ecu_operations.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -24,17 +24,17 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashDensoKline04 : public QDialog
+class FlashEcuSubaruDensoSH7055_04 : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashDensoKline04(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashDensoKline04();
+    explicit FlashEcuSubaruDensoSH7055_04(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH7055_04();
 
 private:
-    #define STATUS_SUCCESS							0x00
-    #define STATUS_ERROR							0x01
+    #define STATUS_SUCCESS	0x00
+    #define STATUS_ERROR	0x01
 
     bool kill_process = false;
     bool kernel_alive = false;
@@ -67,7 +67,7 @@ private:
 
     int init_flash_denso_kline_04(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
     int connect_bootloader_subaru_denso_kline_04_32bit();
-    int upload_kernel_subaru_denso_kline_04_32bit(QString kernel);
+    int upload_kernel_subaru_denso_kline_04_32bit(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int write_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int get_changed_blocks_kline_32bit(const uint8_t *src, int *modified);
@@ -91,14 +91,13 @@ private:
 
     QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
     QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_generate_can_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
-    QByteArray subaru_denso_transform_32bit_payload(QByteArray buf, uint32_t len);
+    QByteArray subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len);
+    QByteArray subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len);
     QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);

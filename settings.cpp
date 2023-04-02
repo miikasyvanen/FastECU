@@ -19,7 +19,8 @@ Settings::Settings(FileActions::ConfigValuesStructure *configValues, QWidget *pa
     ui->dir_page->setLayout(create_files_config_page(configValues));
     ui->ui_page->setLayout(create_ui_config_page(configValues));
 
-    connect(ui->save_button, SIGNAL (clicked()), this, SLOT (save_config_file()));
+    ui->save_button->hide();
+    //connect(ui->save_button, SIGNAL (clicked()), this, SLOT (save_config_file()));
 
     connect(ui->close_button, SIGNAL (clicked()), this, SLOT (close()));
 
@@ -34,15 +35,24 @@ Settings::Settings(FileActions::ConfigValuesStructure *configValues, QWidget *pa
 
 Settings::~Settings()
 {
+    qDebug() << "Save config file before exit, bye bye!";
+    save_config_file();
+
     delete ui;
+}
+
+void Settings::closeEvent(QCloseEvent *bar)
+{
+    qDebug() << "Save config file before exit, bye bye!";
+    save_config_file();
 }
 
 int Settings::save_config_file()
 {
     qDebug() << "Save config file";
-
     fileActions = new FileActions();
     fileActions->save_config_file(configValues);
+    qDebug() << "Config file saved";
 
     return 0;
 }
@@ -56,6 +66,11 @@ QVBoxLayout *Settings::create_files_config_page(FileActions::ConfigValuesStructu
     qDebug() << "EcuFlash definition path:" << configValues->ecuflash_definition_files_directory;
     qDebug() << "Log files path:" << configValues->log_files_directory;
 */
+
+    QCheckBox *romraider_defs_enabled = new QCheckBox("Enabled");
+    if (configValues->use_romraider_definitions == "enabled")
+        romraider_defs_enabled->setChecked(true);
+    connect(romraider_defs_enabled, SIGNAL(stateChanged(int)), this, SLOT(romraider_defs_enabled_checkbox(int)));
 
     romraider_definition_files_list = new QListWidget;
 
@@ -87,8 +102,14 @@ QVBoxLayout *Settings::create_files_config_page(FileActions::ConfigValuesStructu
     romraider_def_files_buttons_layout->addWidget(romraider_def_files_remove_button);
 
     QVBoxLayout *romraider_def_files_layout = new QVBoxLayout;
+    romraider_def_files_layout->addWidget(romraider_defs_enabled);
     romraider_def_files_layout->addWidget(romraider_definition_files_list);
     romraider_def_files_layout->addLayout(romraider_def_files_buttons_layout);
+
+    QCheckBox *ecuflash_defs_enabled = new QCheckBox("Enabled");
+    if (configValues->use_ecuflash_definitions == "enabled")
+        ecuflash_defs_enabled->setChecked(true);
+    connect(ecuflash_defs_enabled, SIGNAL(stateChanged(int)), this, SLOT(ecuflash_defs_enabled_checkbox(int)));
 
     QGroupBox *ecuflash_def_dir_group = new QGroupBox(tr("EcuFlash Definition Files Directory"));
     ecuflash_def_dir_lineedit = new QLineEdit;
@@ -144,6 +165,7 @@ QVBoxLayout *Settings::create_files_config_page(FileActions::ConfigValuesStructu
     romraider_definitions_group->setLayout(definition_layout);
 
     QVBoxLayout *ecuflash_def_layout = new QVBoxLayout;
+    ecuflash_def_layout->addWidget(ecuflash_defs_enabled);
     ecuflash_def_layout->addLayout(ecuflash_def_dir_layout);
     ecuflash_def_dir_group->setLayout(ecuflash_def_layout);
 
@@ -218,6 +240,22 @@ void Settings::change_page(QListWidgetItem *current, QListWidgetItem *previous)
     ui->pages_widget->setCurrentIndex(ui->list_widget->row(current));
 }
 
+void Settings::romraider_defs_enabled_checkbox(int state)
+{
+    if (state)
+        configValues->use_romraider_definitions = "enabled";
+    else
+        configValues->use_romraider_definitions = "disabled";
+}
+
+void Settings::ecuflash_defs_enabled_checkbox(int state)
+{
+    if (state)
+        configValues->use_ecuflash_definitions = "enabled";
+    else
+        configValues->use_ecuflash_definitions = "disabled";
+}
+
 void Settings::romraider_as_primary_def_base_checkbox(int state)
 {
     if (state)
@@ -262,14 +300,10 @@ void Settings::set_romraider_logger_file()
     QString filename = QFileDialog::getOpenFileName(this, tr("Add RomRaider logger file"), file_dir, tr("RomRaider logger file (*.xml)"));
 
     if (filename.isEmpty())
-    {
         QMessageBox::information(this, tr("RomRaider logger file"), "No file selected");
-    }
     else
-    {
         configValues->romraider_logger_definition_file.append(filename);
-        save_config_file();
-    }
+
 }
 
 void Settings::set_ecu_cal_dir()

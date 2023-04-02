@@ -38,12 +38,17 @@
 #include <serial_port_actions.h>
 
 // Flash modules
-#include <modules/flash_denso_wrx02.h>
-#include <modules/flash_denso_fxt02.h>
-#include <modules/flash_denso_can02.h>
-#include <modules/flash_denso_sti04.h>
-#include <modules/flash_denso_subarucan.h>
-#include <modules/flash_denso_subarucan_diesel.h>
+#include <modules/flash_ecu_subaru_denso_mc68hc16y5_02.h>
+#include <modules/flash_ecu_subaru_denso_sh7055_02.h>
+#include <modules/flash_ecu_subaru_denso_sh705x_can.h>
+#include <modules/flash_ecu_subaru_denso_sh7055_04.h>
+#include <modules/flash_ecu_subaru_denso_sh7058_can.h>
+#include <modules/flash_ecu_subaru_denso_sh7058_can_diesel.h>
+
+#include <modules/flash_ecu_subaru_uinisia_jecs_m32r.h>
+#include <modules/flash_ecu_subaru_hitachi_m32r_02.h>
+#include <modules/flash_ecu_subaru_hitachi_m32r_06.h>
+#include <modules/flash_ecu_subaru_hitachi_m32r_can.h>
 //
 
 QT_BEGIN_NAMESPACE
@@ -99,12 +104,18 @@ private:
     EcuOperationsSubaru *ecuOperationsSubaru;
     EcuOperationsMercedes *ecuOperationsRenault;
 
-    FlashDensoWrx02 *flashDensoWrx02;
-    FlashDensoFxt02 *flashDensoFxt02;
-    FlashDensoCan02 *flashDensoCan02;
-    FlashDensoSti04 *flashDensoSti04;
-    FlashDensoSubaruCan *flashDensoSubaruCan;
-    FlashDensoSubaruCanDiesel *flashDensoSubaruCanDiesel;
+    /* Flash modules */
+    FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
+    FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
+    FlashEcuSubaruDensoSH705xCan *flashEcuSubaruDensoSH705xCan;
+    FlashEcuSubaruDensoSH7055_04 *flashEcuSubaruDensoSH7055_04;
+    FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
+    FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
+    FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
+    FlashEcuSubaruHitachiM32R_02 *flashEcuSubaruHitachiM32R_02;
+    FlashEcuSubaruHitachiM32R_06 *flashEcuSubaruHitachiM32R_06;
+    FlashEcuSubaruHitachiCan *flashEcuSubaruHitachiCan;
+    /* Flash modules */
 
     SerialPortActions *serial;
     QTimer *serial_poll_timer;
@@ -214,6 +225,7 @@ private:
 
     // mainwindow.c
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
+    void set_flash_arrow_state();
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
     QString check_kernel(QString flash_method);

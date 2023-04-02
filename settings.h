@@ -32,6 +32,8 @@ public:
 private slots:
 
 private:
+    void closeEvent(QCloseEvent *bar);
+
     Ui::Settings *ui;
 
     FileActions::ConfigValuesStructure *configValues;
@@ -58,6 +60,8 @@ private:
     void remove_definition_files();
 
 private slots:
+    void ecuflash_defs_enabled_checkbox(int state);
+    void romraider_defs_enabled_checkbox(int state);
     void romraider_as_primary_def_base_checkbox(int state);
     void toolbar_iconsize_value_changed(int value);
     int save_config_file();
