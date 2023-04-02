@@ -274,11 +274,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 
-
-    //ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
-    //while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
-    //    ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
-    //FlashSti04 *flash_sti04 = new FlashSti04(serial, ecuCalDef[0], "read");
+    set_flash_arrow_state();
 
 }
 
@@ -353,41 +349,43 @@ QString MainWindow::check_kernel(QString flash_method)
     if (prefix.at(prefix.length() - 1) != "/")
         prefix.append("/");
 
-    if (flash_method == "wrx02")
+    if (flash_method.startsWith("sub_mc68hc16y5_02"))
         kernel = prefix + "ssmk_HC16.bin";
-    else if (flash_method == "fxt02")
+    else if (flash_method.startsWith("sub_mc68hc16y5_04"))
+        kernel = prefix + "ssmk_HC16.bin";
+    else if (flash_method.startsWith("sub_sh7055_02"))
     {
         if (serial->is_can_connection)
             kernel = prefix + "ssmk_CAN_SH7055.bin";
         else
             kernel = prefix + "ssmk_SH7055.bin";
     }
-    else if (flash_method.startsWith("sti04"))
+    else if (flash_method.startsWith("sub_sh7055_04"))
     {
         if (serial->is_can_connection)
             kernel = prefix + "ssmk_CAN_SH7055.bin";
         else
             kernel = prefix + "ssmk_SH7055.bin";
     }
-    else if (flash_method.startsWith("sti05"))
+    else if (flash_method.startsWith("sub_sh7058_can_diesel"))
+        if (serial->is_can_connection)
+            kernel = prefix + "ssmk_CAN_SH7058.bin";
+        else
+            kernel = prefix + "ssmk_CAN_SH7058d.bin";
+    else if (flash_method.startsWith("sub_sh7058_can"))
+        kernel = prefix + "ssmk_CAN_SH7058.bin";
+    else if (flash_method.startsWith("sub_sh7058"))
     {
         if (serial->is_can_connection)
             kernel = prefix + "ssmk_CAN_SH7058.bin";
         else
             kernel = prefix + "ssmk_SH7058.bin";
     }
-    else if (flash_method.startsWith("subarucand"))
-        if (serial->is_can_connection)
-            kernel = prefix + "ssmk_CAN_SH7058.bin";
-        else
-            kernel = prefix + "ssmk_CAN_SH7058d.bin";
-    else if (flash_method.startsWith("subarucan"))
-        kernel = prefix + "ssmk_CAN_SH7058.bin";
-    else if (flash_method.startsWith("sh7055_denso_can"))
+    else if (flash_method.startsWith("sub_sh7055_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7055.bin";
-    else if (flash_method.startsWith("sh7058_denso_can"))
+    else if (flash_method.startsWith("sub_sh7058_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
-    else if (flash_method.startsWith("sh7058s_denso_can"))
+    else if (flash_method.startsWith("sub_sh7058s_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
 
     else
@@ -413,10 +411,11 @@ void MainWindow::select_protocol_finished(int result)
 {
    if(result == QDialog::Accepted)
    {
-        //qDebug() << "Dialog is accepted";
         create_flash_transports_list();
         create_log_transports_list();
         fileActions->save_config_file(configValues);
+
+        set_flash_arrow_state();
    }
    else
    {
@@ -424,6 +423,43 @@ void MainWindow::select_protocol_finished(int result)
    }
 
    status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
+}
+
+void MainWindow::set_flash_arrow_state()
+{
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    foreach (QMenu *menu, menus) {
+        foreach (QAction *action, menu->actions()) {
+            if (action->isSeparator()) {
+
+            } else if (action->menu()) {
+
+            } else {
+                if (action->text() == "Read from ecu")
+                {
+                    if (configValues->flash_protocol_read.at(configValues->flash_protocol_selected_id.toInt()) == "yes")
+                        action->setEnabled(true);
+                    else
+                        action->setEnabled(false);
+                }
+                if (action->text() == "Test write to ecu")
+                {
+                    if (configValues->flash_protocol_write.at(configValues->flash_protocol_selected_id.toInt()) == "yes")
+                        action->setEnabled(true);
+                    else
+                        action->setEnabled(false);
+                }
+                if (action->text() == "Write to ecu")
+                {
+                    if (configValues->flash_protocol_write.at(configValues->flash_protocol_selected_id.toInt()) == "yes")
+                        action->setEnabled(true);
+                    else
+                        action->setEnabled(false);
+                }
+
+            }
+        }
+    }
 }
 
 void MainWindow::log_transport_changed()
@@ -579,14 +615,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
-            //ecuCalDef[romNumber] = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[romNumber]);
             fileActions->checksum_correction(ecuCalDef[rom_number]);
 
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
-            //ecuCalDef[romNumber]->RomInfo.replace(fileActions->MemModel,
-            ecuCalDef[rom_number]->Kernel = check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+            ecuCalDef[rom_number]->Kernel = configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+            ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
-            //qDebug() << "Kernel to use:" << ecuCalDef[romNumber]->Kernel;
         }
         else
         {
@@ -597,13 +631,14 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             }
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
             ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_family;
-            ecuCalDef[rom_number]->Kernel = check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
+            ecuCalDef[rom_number]->Kernel = configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
+            ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
         }
 
         qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
 
-        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("denso_can_recovery"))
+        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType == "SH7055")
                 ecuCalDef[rom_number]->FlashMethod = "sh7055_denso_can";
@@ -611,28 +646,38 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDef[rom_number]->FlashMethod = "sh7058_denso_can";
                 ecuCalDef[rom_number]->McuType = "SH7058";
             }
-            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+            flashEcuSubaruDensoSH705xCan = new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this);
         }
-        else if (configValues->flash_protocol_selected_family.startsWith("wrx02"))
-            flashDensoWrx02 = new FlashDensoWrx02(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("fxt02"))
-            flashDensoFxt02 = new FlashDensoFxt02(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("sti04"))
-            flashDensoSti04 = new FlashDensoSti04(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("sti05"))
-            flashDensoSti04 = new FlashDensoSti04(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("subarucand"))
-            flashDensoSubaruCanDiesel = new FlashDensoSubaruCanDiesel(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.startsWith("subarucan"))
-            flashDensoSubaruCan = new FlashDensoSubaruCan(serial, ecuCalDef[rom_number], cmd_type);
-        else if (configValues->flash_protocol_selected_family.endsWith("denso_can_recovery"))
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_mc68hc16y5_02"))
+            flashEcuSubaruDensoMC68HC16Y5_02 = new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_mc68hc16y5_04"))
+            flashEcuSubaruDensoMC68HC16Y5_02 = new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7055_02"))
+            flashEcuSubaruDensoSH7055_02 = new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7055_04"))
+            flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058"))
+            flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058_can_diesel"))
+            flashEcuSubaruDensoSH7058CanDiesel = new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058_can"))
+            flashEcuSubaruDensoSH7058Can = new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs"))
+            flashEcuSubaruUnisiaJecs = new FlashEcuSubaruUnisiaJecs(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_02"))
+            flashEcuSubaruHitachiM32R_02 = new FlashEcuSubaruHitachiM32R_02(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_06"))
+            flashEcuSubaruHitachiM32R_06 = new FlashEcuSubaruHitachiM32R_06(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_can"))
+            flashEcuSubaruHitachiCan = new FlashEcuSubaruHitachiCan(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType.startsWith("SH7058"))
                 ecuCalDef[rom_number]->McuType = "SH7058";
-            flashDensoCan02 = new FlashDensoCan02(serial, ecuCalDef[rom_number], cmd_type);
+            flashEcuSubaruDensoSH705xCan = new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this);
         }
         else
-            ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[rom_number], cmd_type);
+            ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[rom_number], cmd_type, this);
 
         if (cmd_type == "read")
         {

@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashDensoSubaruCan : public QDialog
+class FlashEcuSubaruDensoSH7058Can : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashDensoSubaruCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashDensoSubaruCan();
+    explicit FlashEcuSubaruDensoSH7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH7058Can();
 
 private:
     #define STATUS_SUCCESS	0x00
@@ -68,7 +68,7 @@ private:
     int init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
 
     int connect_bootloader_subaru_denso_subarucan();
-    int upload_kernel_subaru_denso_subarucan(QString kernel);
+    int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);

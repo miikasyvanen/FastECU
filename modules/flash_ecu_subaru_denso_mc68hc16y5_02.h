@@ -25,13 +25,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashDensoWrx02 : public QDialog
+class FlashEcuSubaruDensoMC68HC16Y5_02 : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashDensoWrx02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashDensoWrx02();
+    explicit FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoMC68HC16Y5_02();
 
 private:
     #define STATUS_SUCCESS	0x00
@@ -74,7 +74,7 @@ private:
 
     int init_flash_denso_kline_wrx02(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
     int connect_bootloader_subaru_denso_kline_wrx02();
-    int upload_kernel_subaru_denso_kline_wrx02(QString kernel);
+    int upload_kernel_subaru_denso_kline_wrx02(QString kernel, uint32_t kernel_start_addr);
 
     int read_mem_subaru_denso_kline_16bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     int write_mem_subaru_denso_kline_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);

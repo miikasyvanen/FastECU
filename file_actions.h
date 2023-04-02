@@ -69,7 +69,10 @@ public:
         QString kernel_files;
         QString log_files_directory = log_files_base_directory;
 
+        QString use_romraider_definitions = "enabled";
+        QString use_ecuflash_definitions = "enabled";
         QString primary_definition_base = "ecuflash";
+
         QStringList ecuflash_def_cal_id;
         QStringList ecuflash_def_cal_id_addr;
         QStringList ecuflash_def_ecu_id;
@@ -103,6 +106,8 @@ public:
         QStringList flash_protocol_cal_id_ascii;
         QStringList flash_protocol_cal_id_addr;
         QStringList flash_protocol_cal_id_length;
+        QStringList flash_protocol_kernel;
+        QStringList flash_protocol_kernel_addr;
         QStringList flash_protocol_description;
         QStringList flash_protocol_family;
 
@@ -287,6 +292,7 @@ public:
         QString RomBase;
         QString RomId;
         QString Kernel;
+        QString KernelStartAddr;
         QString FlashMethod;
         QString McuType;
 

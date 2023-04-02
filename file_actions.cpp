@@ -276,6 +276,20 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "RomRaider def files:" << configValues->romraider_definition_files;
                         }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "use_romraider_definitions")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->use_romraider_definitions = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                            qDebug() << "Use RomRaider definitions:" << configValues->use_romraider_definitions;
+                        }
                         else if (reader.name() == "setting" && reader.attributes().value("name") == "ecuflash_definition_files_directory")
                         {
                             while(reader.readNextStartElement())
@@ -289,6 +303,20 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                                     reader.skipCurrentElement();
                             }
                             qDebug() << "EcuFlash def files directory:" << configValues->ecuflash_definition_files_directory;
+                        }
+                        else if (reader.name() == "setting" && reader.attributes().value("name") == "use_ecuflash_definitions")
+                        {
+                            while(reader.readNextStartElement())
+                            {
+                                if (reader.name() == "value")
+                                {
+                                    configValues->use_ecuflash_definitions = reader.attributes().value("data").toString();
+                                    reader.skipCurrentElement();
+                                }
+                                else
+                                    reader.skipCurrentElement();
+                            }
+                            qDebug() << "Use EcuFlash definitions:" << configValues->use_ecuflash_definitions;
                         }
                         else if (reader.name() == "setting" && reader.attributes().value("name") == "logger_definition_file")
                         {
@@ -443,6 +471,13 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeEndElement();
 
     stream.writeStartElement("setting");
+    stream.writeAttribute("name", "use_romraider_definitions");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->use_romraider_definitions);
+    stream.writeEndElement();
+    stream.writeEndElement();
+
+    stream.writeStartElement("setting");
     stream.writeAttribute("name", "romraider_definition_files");
     for (int i = 0; i < configValues->romraider_definition_files.length(); i++)
     {
@@ -450,6 +485,13 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
         stream.writeAttribute("data", configValues->romraider_definition_files.at(i));
         stream.writeEndElement();
     }
+    stream.writeEndElement();
+
+    stream.writeStartElement("setting");
+    stream.writeAttribute("name", "use_ecuflash_definitions");
+    stream.writeStartElement("value");
+    stream.writeAttribute("data", configValues->use_ecuflash_definitions);
+    stream.writeEndElement();
     stream.writeEndElement();
 
     stream.writeStartElement("setting");
@@ -620,14 +662,14 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
             if (root_child.tagName() == "car_models")
             {
                 int index = 0;
-
+                int id = 0;
                 QDomElement car_model = root_child.firstChild().toElement();
                 while (!car_model.isNull())
                 {
                     if (car_model.tagName() == "car_model")
                     {
                         //qDebug() << "Add new list";
-                        configValues->flash_protocol_id.append(car_model.attribute("id","No id"));
+                        configValues->flash_protocol_id.append(QString::number(id));//car_model.attribute("id","No id"));
                         configValues->flash_protocol_make.append(" ");
                         configValues->flash_protocol_model.append(" ");
                         configValues->flash_protocol_version.append(" ");
@@ -651,9 +693,12 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         configValues->flash_protocol_cal_id_ascii.append(" ");
                         configValues->flash_protocol_cal_id_addr.append(" ");
                         configValues->flash_protocol_cal_id_length.append(" ");
+                        configValues->flash_protocol_kernel.append(" ");
+                        configValues->flash_protocol_kernel_addr.append(" ");
                         configValues->flash_protocol_description.append(" ");
                         configValues->flash_protocol_family.append(" ");
 
+                        id++;
                         QDomElement car_model_data = car_model.firstChild().toElement();
                         while (!car_model_data.isNull())
                         {
@@ -696,11 +741,14 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                         configValues->flash_protocol_cal_id_ascii.replace(index, flash_protocol_cal_id_ascii.at(i));
                                         configValues->flash_protocol_cal_id_addr.replace(index, flash_protocol_cal_id_addr.at(i));
                                         configValues->flash_protocol_cal_id_length.replace(index, flash_protocol_cal_id_length.at(i));
+                                        configValues->flash_protocol_kernel.replace(index, flash_protocol_kernel.at(i));
+                                        configValues->flash_protocol_kernel_addr.replace(index, flash_protocol_kernel_addr.at(i));
+                                        configValues->flash_protocol_description.replace(index, flash_protocol_description.at(i));
                                     }
                                 }
                             }
-                            if (car_model_data.tagName() == "description")
-                                configValues->flash_protocol_description.replace(index, car_model_data.text());
+                            //if (car_model_data.tagName() == "description")
+                                //configValues->flash_protocol_description.replace(index, car_model_data.text());
 
                             car_model_data = car_model_data.nextSibling().toElement();
                         }
@@ -1516,16 +1564,18 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
     {
-        parse_ecuid_ecuflash_def_files(ecuCalDef);
-        if (ecuCalDef->RomId != "")
+        if (configValues->use_ecuflash_definitions == "enabled")
         {
-            qDebug() << "Parse EcuFlash def files (primary)" << ecuCalDef->RomId;
-            read_ecuflash_ecu_def(ecuCalDef, ecuCalDef->RomId);
-            //read_ecuflash_ecu_def_test(ecuCalDef, ecuCalDef->RomId);
-            parse_ecuflash_def_scalings(ecuCalDef);
+            parse_ecuid_ecuflash_def_files(ecuCalDef);
+            if (ecuCalDef->RomId != "")
+            {
+                qDebug() << "Parse EcuFlash def files (primary)" << ecuCalDef->RomId;
+                read_ecuflash_ecu_def(ecuCalDef, ecuCalDef->RomId);
+                //read_ecuflash_ecu_def_test(ecuCalDef, ecuCalDef->RomId);
+                parse_ecuflash_def_scalings(ecuCalDef);
+            }
         }
-
-        if (!ecuCalDef->use_ecuflash_definition)
+        if (!ecuCalDef->use_ecuflash_definition && configValues->use_romraider_definitions == "enabled")
         {
             parse_ecuid_romraider_def_files(ecuCalDef);
             if (ecuCalDef->RomId != "")
@@ -1537,13 +1587,16 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
     {
-        parse_ecuid_romraider_def_files(ecuCalDef);
-        if (ecuCalDef->RomId !="")
+        if (configValues->use_romraider_definitions == "enabled")
         {
-            qDebug() << "Parse RomRaider def files (primary)" << ecuCalDef->RomId;
-            read_romraider_ecu_def(ecuCalDef, ecuCalDef->RomId);
+            parse_ecuid_romraider_def_files(ecuCalDef);
+            if (ecuCalDef->RomId !="")
+            {
+                qDebug() << "Parse RomRaider def files (primary)" << ecuCalDef->RomId;
+                read_romraider_ecu_def(ecuCalDef, ecuCalDef->RomId);
+            }
         }
-        if(!ecuCalDef->use_romraider_definition)
+        if(!ecuCalDef->use_romraider_definition && configValues->use_ecuflash_definitions == "enabled")
         {
             parse_ecuid_ecuflash_def_files(ecuCalDef);
             if (ecuCalDef->RomId !="")
