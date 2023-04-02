@@ -5,37 +5,46 @@ already with Qt) and project opened in Qt Creator. All other methods untested.
 
 There is also precompiled versions for Windows 7 32/64bit and Linux.
 
-After software is executed for the first time, it should create folder "FastECU_OEM" in users home folder,
-and copy all config and definition files there that will come with software.
+How to install:
+Download the FastECU zip package for your OS from github https://github.com/miikasyvanen/fastecu-oem/tree/master/precompiled
+and unzip the files into a convenient folder.
 
+How to use:
 In main screen, with right COM-port selected (dropdown in right of toolbar) it will repeatedly send
-init command to ECU to check ECU ID and possible log parameters. Toolbar/Ecu-menu play-button will
-start and stop logging.
+init command to ECU to check ECU ID and possible log parameters. Using 'Play' button in toolbar or in 'Ecu' menu it will
+start and stop logging. With 'Record' button it is possible to start saving log values to file when logging.
 
-Green down-arrow will read ROM from ECU, green up-arrow will test write ROM to ECU and red up-arrow will
-write ROM to ECU. Car/ECU model should be selected prior read/write via toolbar 'Select vehicle'-button.
+'Select vehicle' button opens dialog to select vehicle to read/write.
 
-For tuning, check 'Tune' -menu for possible options and shorcuts. Also copy&paste will work in maps.
+Green 'Down' arrow will read ROM from ECU, green 'Up' arrow will test write ROM to ECU and red 'Up' arrow will
+write ROM to ECU. Car/ECU model should be selected prior read/write via toolbar 'Select vehicle' button.
+
+For tuning, check 'Tune' menu for possible options and shorcuts. Also copy&paste will work in maps.
 
 In lower log parameters area or in map view area, mouse right click opens window to change displayed log
-parameters. Saving parameters state and "gauge view" is not yet implemented in this version.
+parameters. "Gauge view" is not yet implemented in this version.
 
 Tested flash methods:
-- wrx02 method read and compare (K-Line)
-- fxt02 method read/write (K-Line / CAN)
-- sti04 method read/write (K-Line / CAN)
-- sti05 method read/write (K-Line / CAN)
+- sub_mc68hc16y5_02 (wrx02) method read and compare (K-Line)
+- sub_sh7055_02 (fxt02) method read/write (K-Line / CAN)
+- sub_sh7055_04 (sti04) method read/write (K-Line / CAN)
+- sub_sh7058 (sti05) method read/write (K-Line / CAN)
+- sub_sh7055_denso_can (All Subaru Denso 32-bit ECUs with SH7055/SH7058) read/write
 - Logging of basic ssm values
 - Read Subaru Unisia Jecs ECUs
-- Denso CAN method works on all Subaru 32-bit ECUs
 
-K-Line and CAN read and write succesfully tested - Open port 2.0 and generic OBD-cable (FTDI chip) in Windows 7 64-bit and Linux.
+Tested OBD adapters:
+K-Line and CAN read and write succesfully tested - Open port 2.0 and generic OBD-cable (no CAN, FTDI chip, CH340) in Windows 7 64-bit and Linux.
 
+Other notes:
 This is basically test version for reading and writing ECUs. Many of the other options will NOT work yet. Development
 of these options is on the way but due to my limited time, it will not be fast. Be patient! :)
 
-Things that not yet work:
+All liability lies with the user. I am not responsible any harm, laws broken or bricked ECUs that can follow for using this software.
 
+Things that not yet work:
 - Undo / Redo
-- Logger definition file selection/changing from software
+- Gauge view for logging
+- Graph view for logging
+- Possibility to use custom seeds / access methods
 - Many other things that just don't come to mind right now
