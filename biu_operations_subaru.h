@@ -11,12 +11,12 @@
 #include <QTimer>
 #include <QWidget>
 #include <QDialog>
-#include <QTextEdit>
 
 #include <serial_port_actions.h>
 #include <biu_ops_subaru_switches.h>
-#include <biu_ops_subaru_dtcs.h>
 #include <biu_ops_subaru_data.h>
+#include <biu_ops_subaru_input1.h>
+#include <biu_ops_subaru_input2.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -46,12 +46,15 @@ private:
         LIGHTING_SWITCHES = 0x51,
         BIU_DATA = 0x40,
         CAN_DATA = 0x41,
-        BIU_CUSTOM_TIME_TEMP = 0x52,
-        CAR_OPTIONS = 0x53,
+        TIME_TEMP_READ = 0x52,
+        OPTIONS_READ = 0x53,
         VDC_ABS_CONDITION = 0x60,
         DEST_TOUCH_STATUS = 0x61,
         FACTORY_STATUS = 0x54,
         TESTER_PRESENT = 0x3E,
+        WRITE_DATA = 0x3B,
+        TIME_TEMP_WRITE = 0x8A,
+        OPTIONS_WRITE = 0x8C
     };
 
     enum ConnectionState {
@@ -59,20 +62,22 @@ private:
         CONNECTED = 1,
     };
 
-    QStringList biu_messages = {    "Connect", "81",
-                                    "Disconnect", "82",
-                                    "DTC read", "18",
-                                    "DTC clear", "14,40,00",
-                                    "Input/output switches", "21,50",
-                                    "Lighting related switches", "21,51",
-                                    "BIU data", "21,40",
-                                    "CAN data", "21,41",
-                                    "BIU Customisable Times & Temps", "21,52",
-                                    "Car options", "21,53",
-                                    "VDC/ABC Condition", "21,60",
-                                    "Destination / Touch SW", "21,61",
-                                    "BIU Status", "21,54",
-                                    "Custom", "",
+    QStringList biu_messages = {    "COMM: Connect", "81",
+                                    "COMM: Disconnect", "82",
+                                    "READ: DTCs", "18",
+                                    "READ: Input/output switches", "21,50",
+                                    "READ: Lighting switches", "21,51",
+                                    "READ: BIU data", "21,40",
+                                    "READ: CAN data", "21,41",
+                                    "READ: Times & Temps", "21,52",
+                                    "READ: Car options", "21,53",
+                                    "READ: VDC/ABC Condition", "21,60",
+                                    "READ: Destination / Touch SW", "21,61",
+                                    "READ: BIU Status", "21,54",
+                                    "SET:  Clear DTCs", "14,40,00",
+                                    "SET:  Times & Temps", "3B,8A",
+                                    "SET:  Car options", "3B,8C",
+                                    "Custom", ""
                                };
 
     QStringList biu_dtc_list = {    "B0100", "BIU internal error",
@@ -115,11 +120,11 @@ private:
                                     "B0500", "Keyless UART comm error",
                                };
 
-    QStringList biu_switch_names = {"key-lock warning SW                  ",
+    QStringList biu_switch_names = {"Key-lock warning SW                  ",
                                     "Stop Light Switch                    ",
                                     "Front fog lamp SW input              ",
                                     "Rear fog lamp SW input               ",
-                                    "lighting SW input                    ",
+                                    "Lighting SW input                    ",
                                     "Door key-lock SW input               ",
                                     "Door unlock SW input                 ",
                                     "---- unused ----                     ",
@@ -142,7 +147,7 @@ private:
                                     "R wiper ON SW input                  ",
                                     "R wiper INT SW input                 ",
                                     "R washer SW input                    ",
-                                    "wiper deicer SW input                ",
+                                    "Wiper deicer SW input                ",
                                     "Rear Defogger SW                     ",
                                     "Driver’s Seat SW input               ",
                                     "P seatbelt SW input                  ",
@@ -157,7 +162,7 @@ private:
                                     "---- unknown ----                    ",
                                     "Rr defogger output                   ",
                                     "---- unused ----                     ",
-                                    "lock actuat. LOCK output             ",
+                                    "Lock actuat. LOCK output             ",
                                     "All seat UNLOCK output               ",
                                     "D-seat UNLOCK output                 ",
                                     "R gate/trunk UNLK output             ",
@@ -165,7 +170,7 @@ private:
                                     "R wiper output                       ",
                                     "Shift Lock Solenoid                  ",
                                     "Key locking output                   ",
-                                    "wiper deicer output                  ",
+                                    "Wiper deicer output                  ",
                                     "Starter cutting output               ",
                                     "Hazard Output                        ",
                                     "Belt buzzer output                   ",
@@ -175,7 +180,7 @@ private:
                                     "P-belt warning light O/P             ",
                                     "Illumination lamp O/P                ",
                                     "Room lamp output                     ",
-                                    "key illumi. lamp o/p                 ",
+                                    "Key illumi. lamp o/p                 ",
                                     "R fog lamp output                    ",
                                     "R fog lamp monitor                   ",
                                     "Immobilizer lamp output              ",
@@ -201,7 +206,7 @@ private:
                                     "Shift Down indication                ",
                                     "Sport Shift (buzzer 1)               ",
                                     "Sport Shift (buzzer 2)               ",
-                                    "ABS/VDC Judging                      ",
+                                    "ABS/VDC Judging (ON = VDC)           ",
                                     "ADA Existence Judging                ",
                                     "Small Light SW                       ",
                                     "Headlamp                             ",
@@ -211,12 +216,12 @@ private:
                                     "RR Defogger Switch                   ",
                                     "Australia Judging Flag               ",
                                     "Large Diameter Tire                  ",
-                                    "Number of Cylinders                  ",
-                                    "Camshaft Type                        ",
-                                    "Turbo                                ",
+                                    "Number of Cylinders (ON = 6CYL)      ",
+                                    "Camshaft Type (ON = DOHC)            ",
+                                    "Turbo (ON = NA)                      ",
                                     "E/G displacement (2.5L)              ",
                                     "E/G displacement (3.0L)              ",
-                                    "AT Vehicle Signal ID                 ",
+                                    "AT Vehicle Signal ID (ON = MT)       ",
                                     "E/G Cooling Fan                      ",
                                     "Heater Cock V/V Output               ",
                                     "Power Window (Up)                    ",
@@ -231,35 +236,35 @@ private:
                                     "Door lock SW (closed)                ",
                                     "Door Key SW (open)                   ",
                                     "Door Key SW (closed)                 ",
-                                    "under hook registration              ",
-                                    "hook registration end                ",
-                                    "unlock request                       ",
+                                    "Under hook registration              ",
+                                    "Hook registration end                ",
+                                    "Unlock request                       ",
                                     "---- unknown ----                    ",
-                                    "Centre Display Failure               ",
-                                    "Navi Failure                         ",
-                                    "IE Bus Failure                       ",
-                                    "Auto A/C Failure                     ",
+                                    "Centre Display Failure (ON = NG)     ",
+                                    "Navi Failure (ON = NG)               ",
+                                    "IE Bus Failure (ON = NG)             ",
+                                    "Auto A/C Failure (ON = NG)           ",
                                     "EBD Warning Light                    ",
                                     "ABS Warning Light                    ",
                                     "VDC Off Flag                         ",
                                     "VDC/ABS OK                           ",
                                 };
 
-    QStringList biu_lightsw_names = {"lighting I sw input    ",
-                                     "lighting II sw input   ",
+    QStringList biu_lightsw_names = {"Lighting I sw input    ",
+                                     "Lighting II sw input   ",
                                      "---- unused ----       ",
-                                     "dimmer hi sw input     ",
+                                     "Dimmer hi sw input     ",
                                      "---- unused ----       ",
-                                     "dimmer pass sw input   ",
+                                     "Dimmer pass sw input   ",
                                      "---- unused ----       ",
                                      "---- unused ----       ",
-                                     "lighting I lamp output ",
-                                     "lighting II lamp output",
-                                     "lighting hi lamp output",
-                                     "front fog lamp output  ",
+                                     "Lighting I lamp output ",
+                                     "Lighting II lamp output",
+                                     "Lighting hi lamp output",
+                                     "Front fog lamp output  ",
                                      "DRL cancel output      ",
-                                     "power supply transistor",
-                                     "foot lamp output       ",
+                                     "Power supply transistor",
+                                     "Foot lamp output       ",
                                      "---- unused ----       ",
                                      "---- unused ----       ",
                                      "---- unused ----       ",
@@ -268,21 +273,21 @@ private:
                                      "---- unused ----       ",
                                      "---- unused ----       ",
                                      "---- unused ----       ",
-                                     "economy switch         ",
+                                     "Economy switch         ",
                                     };
 
-    QStringList biu_data_names = {  "battery voltage (control) ", "volts",
-                                    "battery voltage (backup)  ", "volts",
-                                    "ignition system voltage   ", "volts",
-                                    "accessory voltage         ", "volts",
-                                    "illumination VR           ", "volts",
-                                    "illumination d-ratio      ", "%    ",
-                                    "ambient temp sensor       ", "volts",
-                                    "ambient temp              ", "degC ",
-                                    "fuel level                ", "volts",
-                                    "fuel level resistance     ", "ohms ",
-                                    "key lock solenoid         ", "volts",
-                                    "number of keys registered ", "keys ",
+    QStringList biu_data_names = {  "Battery voltage (control) ", "volts",
+                                    "Battery voltage (backup)  ", "volts",
+                                    "Ignition system voltage   ", "volts",
+                                    "Accessory voltage         ", "volts",
+                                    "Illumination VR           ", "volts",
+                                    "Illumination d-ratio      ", "%    ",
+                                    "Ambient temp sensor       ", "volts",
+                                    "Ambient temp              ", "degC ",
+                                    "Fuel level                ", "volts",
+                                    "Fuel level resistance     ", "ohms ",
+                                    "Key lock solenoid         ", "volts",
+                                    "Number of keys registered ", "keys ",
                                 };
 
     float biu_data_factors[24] ={   0.0843, 0,
@@ -299,15 +304,15 @@ private:
                                     1,      0
                                 };
 
-    QStringList can_data_names = {  "front wheel speed     ", "km/hr",
+    QStringList can_data_names = {  "Front wheel speed     ", "km/hr",
                                     "VDC/ABS latest f-code ", "     ",
-                                    "blower fan steps      ", "steps",
-                                    "fuel level resistance ", "ohms ",
-                                    "fuel consumption      ", "cc/s ",
-                                    "engine coolant temp   ", "degC ",
-                                    "longitudinal g-force  ", "m/s^2",
-                                    "sport shift stages    ", "step ",
-                                    "shift position        ", "     ",
+                                    "Blower fan steps      ", "steps",
+                                    "Fuel level resistance ", "ohms ",
+                                    "Fuel consumption      ", "cc/s ",
+                                    "Engine coolant temp   ", "degC ",
+                                    "Longitudinal g-force  ", "m/s^2",
+                                    "Sport shift stages    ", "step ",
+                                    "Shift position        ", "     ",
                                 };
 
     float can_data_factors[18] = {  0.0562, 0,
@@ -321,50 +326,50 @@ private:
                                     1,      0
                                 };
 
-    QStringList biu_tt_names = { "room lamp off delay time ", "     ",
-                                 "auto-lock time           ", "secs ",
-                                 "outside temp offset      ", "degC ",
+    QStringList biu_tt_names = { "Room lamp off delay time ", "     ",
+                                 "Auto-lock time           ", "secs ",
+                                 "Outside temp offset      ", "degC ",
                                };
 
-    QStringList biu_options_names = {"rear defogger op mode       ", "NORMAL", "CONTINUOUS",
-                                     "wiper deicer op mode        ", "NORMAL", "CONTINUOUS",
-                                     "security alarm setup        ", "ON", "OFF",
-                                     "impact sensor setup         ", "ON", "OFF",
-                                     "alarm monitor delay setting ", "30s DELAY", "0s DELAY",
-                                     "lockout prevention          ", "ON", "OFF",
-                                     "impact sensor               ", "YES", "NO",
-                                     "siren installed             ", "YES", "NO",
-                                     "answer back buzzer setup    ", "ON", "OFF",
-                                     "hazard answer back setup    ", "ON", "OFF",
-                                     "automatic locking setup     ", "ON", "OFF",
-                                     "ans-back buzzer             ", "YES", "NO",
-                                     "auto locking                ", "YES", "NO",
+    QStringList biu_option_names = { "Rear defogger op mode       ", "NORMAL", "CONTINUOUS",
+                                     "Wiper deicer op mode        ", "NORMAL", "CONTINUOUS",
+                                     "Security alarm setup        ", "ON", "OFF",
+                                     "Impact sensor setup         ", "ON", "OFF",
+                                     "Alarm monitor delay setting ", "30s DELAY", "0s DELAY",
+                                     "Lockout prevention          ", "ON", "OFF",
+                                     "Impact sensor               ", "YES", "NO",
+                                     "Siren installed             ", "YES", "NO",
+                                     "Answer back buzzer setup    ", "ON", "OFF",
+                                     "Hazard answer back setup    ", "ON", "OFF",
+                                     "Automatic locking setup     ", "ON", "OFF",
+                                     "Ans-back buzzer             ", "YES", "NO",
+                                     "Auto locking                ", "YES", "NO",
+                                     "Initial keyless setting     ", "EXEC", "-",
+                                     "Initial button setting      ", "EXEC", "-",
+                                     "Initial security setting    ", "EXEC", "-",
+                                     "Select unlock switch        ", "ON", "OFF",
+                                     "Passive alarm               ", "ON", "OFF",
+                                     "Door open warning           ", "ON", "OFF",
+                                     "Dome light alarm setting    ", "ON", "OFF",
+                                     "Map light setting           ", "ON", "OFF",
+                                     "Belt warning switch         ", "ON", "OFF",
                                      "---- unused ----            ", "-", "-",
-                                     "---- unused ----            ", "-", "-",
-                                     "---- unused ----            ", "-", "-",
-                                     "select unlock switch        ", "ON", "OFF",
-                                     "passive alarm               ", "ON", "OFF",
-                                     "door open warning           ", "ON", "OFF",
-                                     "dome light alarm setting    ", "ON", "OFF",
-                                     "map light setting           ", "ON", "OFF",
-                                     "belt warning switch         ", "ON", "OFF",
-                                     "---- unused ----            ", "-", "-",
-                                     "keyless P/W switch          ", "ON", "OFF",
-                                     "illumination control        ", "ON", "OFF",
+                                     "Keyless P/W switch          ", "ON", "OFF",
+                                     "Illumination control        ", "ON", "OFF",
                                      "A/C ECM setting             ", "YES", "NO",
                                      "P/W ECM setting             ", "YES", "NO",
-                                     "center display failure      ", "YES", "NO",
-                                     "wiper deicer                ", "YES", "NO",
-                                     "rear fog light setting      ", "YES", "NO",
+                                     "Center display failure      ", "YES", "NO",
+                                     "Wiper deicer                ", "YES", "NO",
+                                     "Rear fog light setting      ", "YES", "NO",
                                      "UK security setup           ", "ON", "OFF",
                                      "MT/AT                       ", "AT", "MT",
-                                     "sedan/wagon setting         ", "SEDAN", "WAGON",
-                                     "double lock                 ", "ON", "OFF",
+                                     "Sedan/wagon setting         ", "SEDAN", "WAGON",
+                                     "Double lock                 ", "ON", "OFF",
                                      "6MT setting                 ", "6MT", "NOT 6MT",
-                                     "Destination code            ", "-", "-",
-                                     "Destination code            ", "-", "-",
-                                     "Destination code            ", "-", "-",
-                                     "Destination code            ", "-", "-",
+                                     "Option code b0              ", "1", "0",
+                                     "Option code b1              ", "1", "0",
+                                     "Option code b2              ", "1", "0",
+                                     "Option code b3              ", "1", "0",
                                      "EK model                    ", "ON", "OFF",
                                     };
 
@@ -381,6 +386,8 @@ private:
     void closeEvent(QCloseEvent *event);
 
     SerialPortActions *serial;
+    QByteArray *biu_tt_result;
+    QByteArray *biu_option_result;
     QStringList *switch_result;
     QStringList *data_result;
     BiuOpsSubaruSwitches *biuOpsSubaruSwitchesIo;
@@ -395,17 +402,23 @@ private:
     BiuOpsSubaruData *biuOpsSubaruDataDest;
     BiuOpsSubaruData *biuOpsSubaruDataFactory;
 
+    BiuOpsSubaruInput1 *biuOpsSubaruInput1;
+    BiuOpsSubaruInput2 *biuOpsSubaruInput2;
+
+    QByteArray cmd, output;
     int counter;
     uint8_t current_command;
     ConnectionState connection_state;
-    QByteArray output;
 
     Ui::BiuOperationsSubaruWindow *ui;
 
 private slots:
     void keep_alive();
-    void send_biu_msg();
+    void parse_biu_cmd();
+    void prepare_biu_set_cmd(QByteArray cmd_settings);
     void prepare_biu_msg();
+    void send_biu_msg();
+
 
 signals:
 
