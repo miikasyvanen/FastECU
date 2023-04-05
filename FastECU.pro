@@ -37,6 +37,8 @@ SOURCES += \
     biu_operations_subaru.cpp \
     biu_ops_subaru_dtcs.cpp \
     biu_ops_subaru_data.cpp \
+    biu_ops_subaru_input1.cpp \
+    biu_ops_subaru_input2.cpp \
     biu_ops_subaru_switches.cpp \
     calibration_maps.cpp \
     calibration_treewidget.cpp \
@@ -75,6 +77,8 @@ HEADERS += \
     biu_operations_subaru.h \
     biu_ops_subaru_dtcs.h \
     biu_ops_subaru_data.h \
+    biu_ops_subaru_input1.h \
+    biu_ops_subaru_input2.h \
     biu_ops_subaru_switches.h \
     calibration_maps.h \
     calibration_treewidget.h \
@@ -110,6 +114,8 @@ FORMS += \
     biu_operations_subaru.ui \
     biu_ops_subaru_dtcs.ui \
     biu_ops_subaru_data.ui \
+    biu_ops_subaru_input1.ui \
+    biu_ops_subaru_input2.ui \
     biu_ops_subaru_switches.ui \
     calibration_map_table.ui \
     definition_file_convert.ui \
