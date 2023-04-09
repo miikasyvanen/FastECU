@@ -166,7 +166,7 @@ void MainWindow::inc_dec_value(QString action)
                     lastRow++;
                 }
                 else{
-                    if (mapXSize == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis") {
+                    if (mapXSize == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis" && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static X Axis") {
                         firstRow++;
                         lastRow++;
                     }
@@ -349,7 +349,7 @@ void MainWindow::set_value()
                         lastRow += 1;
                     }
                     else{
-                        if (map_x_size == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis") {
+                        if (map_x_size == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis" && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static X Axis") {
                             firstRow++;
                             lastRow++;
                         }
@@ -535,7 +535,7 @@ void MainWindow::interpolate_value(QString action)
                     lastRow += 1;
                 }
                 else{
-                    if (map_x_size == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis") {
+                    if (map_x_size == 1 && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static Y Axis" && ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) != "Static X Axis") {
                         firstRow++;
                         lastRow++;
                     }
@@ -966,7 +966,7 @@ void MainWindow::set_maptablewidget_items()
 
             if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toInt() > 1)
                 xSizeOffset = 1;
-            if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toInt() > 1 || ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) == "Static Y Axis")
+            if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toInt() > 1 || ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) == "Static Y Axis" || ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) == "Static X Axis")
                 ySizeOffset = 1;
 
             QFont cellFont = mapTableWidget->font();

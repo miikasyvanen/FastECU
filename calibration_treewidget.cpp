@@ -79,40 +79,43 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationDataTree(QTreeWidget *dataTr
 
     for (int j = 0; j < ecuCalDef->NameList.count(); j++)
     {
-        if (ecuCalDef->NameList[j] != "")
+        if (ecuCalDef->CategoryList[j] != "" && ecuCalDef->CategoryList[j] != " ")
         {
-            treeChildCreated = false;
-            for (int i = 0; i < calDataTree->topLevelItemCount(); i++){
-                if (calDataTree->topLevelItem(i)->text(0) == ecuCalDef->CategoryList[j]){
-                    treeChildCreated = true;
-                }
-            }
-            if (!treeChildCreated)
+            if (ecuCalDef->NameList[j] != "")
             {
-                QTreeWidgetItem * topLevelDataTreeItem = new QTreeWidgetItem();
-                topLevelDataTreeItem->setText(0, ecuCalDef->CategoryList[j]);
-                calDataTree->addTopLevelItem(topLevelDataTreeItem);
                 treeChildCreated = false;
-                if (ecuCalDef->CategoryExpandedList.at(j) == "1")
-                    topLevelDataTreeItem->setExpanded(true);
-            }
-            for (int i = 0; i < calDataTree->topLevelItemCount(); i++){
-                if (calDataTree->topLevelItem(i)->text(0) == ecuCalDef->CategoryList[j]){
-                    QTreeWidgetItem * item = new QTreeWidgetItem();
-                    if (ecuCalDef->TypeList[j] == "1D" || ecuCalDef->TypeList[j] == "Selectable" || (ecuCalDef->YSizeList.at(j).toInt() == 1 && ecuCalDef->XSizeList.at(j).toInt() == 1))
-                        item->setIcon(0, QIcon(":/icons/1D-64.png"));
-                    else if (ecuCalDef->TypeList[j] == "2D")
-                        item->setIcon(0, QIcon(":/icons/2D-64.png"));
-                    else if (ecuCalDef->TypeList[j] == "3D")
-                        item->setIcon(0, QIcon(":/icons/3D-64.png"));
-                    if (ecuCalDef->VisibleList.at(j) == "1")
-                        item ->setCheckState(0,Qt::Checked);
-                    else
-                        item ->setCheckState(0,Qt::Unchecked);
-                    item->setText(0, ecuCalDef->NameList[j]);
-                    item->setText(1, QString::number(j));
-                    calDataTree->topLevelItem(i)->addChild(item);
-                    item->setToolTip(0, ecuCalDef->NameList[j] + ecuCalDef->DescriptionList[j]);
+                for (int i = 0; i < calDataTree->topLevelItemCount(); i++){
+                    if (calDataTree->topLevelItem(i)->text(0) == ecuCalDef->CategoryList[j]){
+                        treeChildCreated = true;
+                    }
+                }
+                if (!treeChildCreated)
+                {
+                    QTreeWidgetItem * topLevelDataTreeItem = new QTreeWidgetItem();
+                    topLevelDataTreeItem->setText(0, ecuCalDef->CategoryList[j]);
+                    calDataTree->addTopLevelItem(topLevelDataTreeItem);
+                    treeChildCreated = false;
+                    if (ecuCalDef->CategoryExpandedList.at(j) == "1")
+                        topLevelDataTreeItem->setExpanded(true);
+                }
+                for (int i = 0; i < calDataTree->topLevelItemCount(); i++){
+                    if (calDataTree->topLevelItem(i)->text(0) == ecuCalDef->CategoryList[j]){
+                        QTreeWidgetItem * item = new QTreeWidgetItem();
+                        if (ecuCalDef->TypeList[j] == "1D" || ecuCalDef->TypeList[j] == "Selectable" || (ecuCalDef->YSizeList.at(j).toInt() == 1 && ecuCalDef->XSizeList.at(j).toInt() == 1))
+                            item->setIcon(0, QIcon(":/icons/1D-64.png"));
+                        else if (ecuCalDef->TypeList[j] == "2D")
+                            item->setIcon(0, QIcon(":/icons/2D-64.png"));
+                        else if (ecuCalDef->TypeList[j] == "3D")
+                            item->setIcon(0, QIcon(":/icons/3D-64.png"));
+                        if (ecuCalDef->VisibleList.at(j) == "1")
+                            item ->setCheckState(0,Qt::Checked);
+                        else
+                            item ->setCheckState(0,Qt::Unchecked);
+                        item->setText(0, ecuCalDef->NameList[j]);
+                        item->setText(1, QString::number(j));
+                        calDataTree->topLevelItem(i)->addChild(item);
+                        item->setToolTip(0, ecuCalDef->NameList[j] + ecuCalDef->DescriptionList[j]);
+                    }
                 }
             }
         }
