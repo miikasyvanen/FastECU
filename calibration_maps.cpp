@@ -73,6 +73,8 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
             this->setWindowIcon(QIcon(":/icons/1D-64-W.png"));
         if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
             mapWindowObjectName = mapWindowObjectName + "," + "Static Y Axis";
+        if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
+            mapWindowObjectName = mapWindowObjectName + "," + "Static X Axis";
         else if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1)
             mapWindowObjectName = mapWindowObjectName + "," + "Y Axis";
         else if (ecuCalDef->XSizeList.at(mapIndex).toInt() > 1)
@@ -83,7 +85,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
         ySizeOffset = 0;
         if (ecuCalDef->YSizeList.at(mapIndex).toInt() > 1)
             xSizeOffset = 1;
-        if (ecuCalDef->XSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
+        if (ecuCalDef->XSizeList.at(mapIndex).toInt() > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
             ySizeOffset = 1;
         xSize = ecuCalDef->XSizeList.at(mapIndex).toInt() + xSizeOffset;
         ySize = ecuCalDef->YSizeList.at(mapIndex).toInt() + ySizeOffset;
@@ -195,7 +197,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     cellFont.setFamily("Franklin Gothic");
     //qDebug() << "Cell font size =" << cellFont.pointSize();
 
-    if (xSize > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
+    if (xSize > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
     {
         /*
         if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
@@ -205,7 +207,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             */
 
         QStringList xScaleCellText;
-        if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
+        if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
             xScaleCellText = ecuCalDef->XScaleStaticDataList.at(mapIndex).split(",");
         else
             xScaleCellText = ecuCalDef->XScaleData.at(mapIndex).split(",");
@@ -214,7 +216,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         {
             QTableWidgetItem *cellItem = new QTableWidgetItem;
             QString xScaleCellDataText = xScaleCellText.at(i);
-            if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
+            if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
                 xScaleCellDataText = xScaleCellText.at(i);
             else
                 xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->XScaleFormatList.at(mapIndex)));
@@ -422,7 +424,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             //qDebug() << mapDataCellText.at(i);
             int yPos = 0;
             int xPos = 0;
-            if (ecuCalDef->XSizeList.at(mapIndex) > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
+            if (ecuCalDef->XSizeList.at(mapIndex) > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
                 yPos = i / xSize + ySizeOffset;
             else
                 yPos = i / xSize;
@@ -519,7 +521,7 @@ void CalibrationMaps::cellClicked(int row, int col)
     if (objectName.at(3) == "3D")
         ui->mapDataTableWidget->item(0, 0)->setFlags(Qt::ItemIsEditable);
 
-    if (objectName.at(3) == "Static Y Axis" && rows > 1)
+    if ((objectName.at(3) == "Static Y Axis" || objectName.at(3) == "Static X Axis") && rows > 1)
     {
         for (int j = 0; j < cols; j++)
         {
@@ -549,7 +551,7 @@ void CalibrationMaps::cellPressed(int row, int col)
     if (objectName.at(3) == "3D")
         ui->mapDataTableWidget->item(0, 0)->setFlags(Qt::ItemIsEditable);
 
-    if (objectName.at(3) == "Static Y Axis" && rows > 1)
+    if ((objectName.at(3) == "Static Y Axis" || objectName.at(3) == "Static X Axis") && rows > 1)
     {
         for (int j = 0; j < cols; j++)
         {
@@ -613,7 +615,7 @@ void CalibrationMaps::cellChanged(int curRow, int curCol, int prevRow, int prevC
     if (objectName.at(3) == "3D")
         ui->mapDataTableWidget->item(0, 0)->setFlags(Qt::ItemIsEditable);
 
-    if (objectName.at(3) == "Static Y Axis" && rows > 1)
+    if ((objectName.at(3) == "Static Y Axis" || objectName.at(3) == "Static X Axis") && rows > 1)
     {
         for (int j = 0; j < cols; j++)
         {

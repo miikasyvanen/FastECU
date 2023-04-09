@@ -255,7 +255,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                                     }
                                                 }
                                             }
-                                            else if (ScaleType == "Static Y Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
+                                            else if (ScaleType == "Static Y Axis" || ScaleType == "Static X Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
                                             {
                                                 ecuCalDef->XScaleNameList.replace(i, TableChild.attribute("name"," "));
                                                 ecuCalDef->XScaleTypeList.replace(i, ScaleType);

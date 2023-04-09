@@ -1729,7 +1729,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         }
         if (ecuCalDef->XSizeList.at(i).toUInt() > 1)
         {
-            if (ecuCalDef->XScaleTypeList.at(i) == "Static Y Axis")
+            if (ecuCalDef->XScaleTypeList.at(i) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(i) == "Static Y Axis")
             {
                 ecuCalDef->XScaleData.replace(i, ecuCalDef->XScaleStaticDataList.at(i));
             }
@@ -1935,7 +1935,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
                 }
             }
         }
-        if (ecuCalDef->XSizeList.at(i).toUInt() > 1 && ecuCalDef->XScaleTypeList.at(i) != "Static Y Axis" && ecuCalDef->XScaleNameList.at(i) != " ")
+        if (ecuCalDef->XSizeList.at(i).toUInt() > 1 && ecuCalDef->XScaleTypeList.at(i) != "Static Y Axis" && ecuCalDef->XScaleTypeList.at(i) != "Static X Axis" && ecuCalDef->XScaleNameList.at(i) != " ")
         {
             if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint8")
                 storagesize = 1;
@@ -1982,7 +1982,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
                 }
             }
         }
-        if (ecuCalDef->YSizeList.at(i).toUInt() > 1 && ecuCalDef->YScaleTypeList.at(i) != "Static Y Axis" && ecuCalDef->YScaleNameList.at(i) != " ")
+        if (ecuCalDef->YSizeList.at(i).toUInt() > 1 && ecuCalDef->YScaleTypeList.at(i) != "Static Y Axis" && ecuCalDef->XScaleTypeList.at(i) != "Static X Axis" && ecuCalDef->YScaleNameList.at(i) != " ")
         {
             if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint8")
                 storagesize = 1;
