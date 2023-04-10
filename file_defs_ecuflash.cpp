@@ -611,6 +611,16 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     type = "2D";
                 if (ecuCalDef->NameList.at(def_map_index) == " ")
                     ecuCalDef->NameList.replace(def_map_index, rom_child.attribute("name", " "));
+                if (rom_child.attribute("type"," ") == "X Axis")
+                {
+                    if (ecuCalDef->XSizeList.at(def_map_index) == "" || ecuCalDef->XSizeList.at(def_map_index) == " ")
+                        ecuCalDef->XSizeList.replace(def_map_index, rom_child.attribute("elements", " "));
+                }
+                if (rom_child.attribute("type"," ") == "Y Axis")
+                {
+                    if (ecuCalDef->YSizeList.at(def_map_index) == "" || ecuCalDef->YSizeList.at(def_map_index) == " ")
+                        ecuCalDef->YSizeList.replace(def_map_index, rom_child.attribute("elements", " "));
+                }
                 if (ecuCalDef->AddressList.at(def_map_index) == " ")
                     ecuCalDef->AddressList.replace(def_map_index, rom_child.attribute("address", ""));
                 if (ecuCalDef->TypeList.at(def_map_index) == " ")
@@ -807,8 +817,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 }
                                 ecuCalDef->XScaleStaticDataList.replace(def_map_index, StaticYScaleData);
                             }
-                            ecuCalDef->YSizeList.replace(def_map_index, "1");
-                            ecuCalDef->YScaleAddressList.replace(def_map_index, " ");
                         }
                         else if (rom_scale_child.attribute("name"," ") != " ")
                         {
@@ -829,7 +837,28 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 qDebug() << i << ":" << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
                         }
                     }
+                    else if (rom_scale_child.tagName() == "data")
+                    {
+                        QString StaticYScaleData;
+                        while (!rom_scale_child.isNull())
+                        {
+                            if (rom_scale_child.tagName() == "data"){
+                                qDebug() << "Static data found:" << rom_scale_child.text();
+                                StaticYScaleData.append(rom_scale_child.text());
+                                StaticYScaleData.append(",");
+                            }
+                            rom_scale_child = rom_scale_child.nextSibling().toElement();
+                        }
+                        ecuCalDef->XScaleTypeList.replace(def_map_index, "Static X Axis");
+                        ecuCalDef->XScaleStaticDataList.replace(def_map_index, StaticYScaleData);
+                        ecuCalDef->XSizeList.replace(def_map_index, QString::number(ecuCalDef->XScaleStaticDataList.at(def_map_index).split(",").length() - 1));
+                    }
                     rom_scale_child = rom_scale_child.nextSibling().toElement();
+                }
+                if (ecuCalDef->YSizeList.at(def_map_index) == "" || ecuCalDef->YSizeList.at(def_map_index) == " ")
+                {
+                    ecuCalDef->YSizeList.replace(def_map_index, "1");
+                    ecuCalDef->YScaleAddressList.replace(def_map_index, " ");
                 }
 
                 def_map_index++;
@@ -917,7 +946,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
                 ecuCalDef->YScaleFormatList.replace(def_map_index, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
             }
         }
-        if (ecuCalDef->NameList.at(def_map_index) == "Front Oxygen Sensor Scaling")
+        if (ecuCalDef->NameList.at(def_map_index) == "Injector Capacity")
         {
             qDebug() << "";
             qDebug() << "Map data";
@@ -929,6 +958,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
             qDebug() << ecuCalDef->FromByteList.at(def_map_index);
             qDebug() << ecuCalDef->ToByteList.at(def_map_index);
             qDebug() << ecuCalDef->FormatList.at(def_map_index);
+            qDebug() << ecuCalDef->MapData.at(def_map_index);
             qDebug() << "";
             qDebug() << "X Axis data";
             qDebug() << ecuCalDef->XSizeList.at(def_map_index);
@@ -940,7 +970,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
             qDebug() << ecuCalDef->XScaleUnitsList.at(def_map_index);
             qDebug() << ecuCalDef->XScaleFromByteList.at(def_map_index);
             qDebug() << ecuCalDef->XScaleToByteList.at(def_map_index);
-            qDebug() << ecuCalDef->XScaleFormatList.at(def_map_index);
+            qDebug() << ecuCalDef->XScaleData.at(def_map_index);
             qDebug() << "";
             qDebug() << "Y Axis data";
             qDebug() << ecuCalDef->YSizeList.at(def_map_index);
@@ -952,7 +982,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
             qDebug() << ecuCalDef->YScaleUnitsList.at(def_map_index);
             qDebug() << ecuCalDef->YScaleFromByteList.at(def_map_index);
             qDebug() << ecuCalDef->YScaleToByteList.at(def_map_index);
-            qDebug() << ecuCalDef->YScaleFormatList.at(def_map_index);
+            qDebug() << ecuCalDef->YScaleData.at(def_map_index);
         }
     }
     return ecuCalDef;
