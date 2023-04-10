@@ -855,10 +855,23 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     }
                     rom_scale_child = rom_scale_child.nextSibling().toElement();
                 }
+                if (ecuCalDef->XSizeList.at(def_map_index) == "" || ecuCalDef->XSizeList.at(def_map_index) == " ")
+                {
+                    ecuCalDef->XSizeList.replace(def_map_index, "1");
+                    ecuCalDef->XScaleAddressList.replace(def_map_index, " ");
+                }
                 if (ecuCalDef->YSizeList.at(def_map_index) == "" || ecuCalDef->YSizeList.at(def_map_index) == " ")
                 {
                     ecuCalDef->YSizeList.replace(def_map_index, "1");
                     ecuCalDef->YScaleAddressList.replace(def_map_index, " ");
+                }
+                if (ecuCalDef->XScaleTypeList.at(def_map_index) == "" || ecuCalDef->XScaleTypeList.at(def_map_index) == " ")
+                {
+                    ecuCalDef->XScaleTypeList.replace(def_map_index, "X Axis");
+                }
+                if (ecuCalDef->YScaleTypeList.at(def_map_index) == "" || ecuCalDef->YScaleTypeList.at(def_map_index) == " ")
+                {
+                    ecuCalDef->YScaleTypeList.replace(def_map_index, "Y Axis");
                 }
 
                 def_map_index++;
@@ -946,7 +959,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
                 ecuCalDef->YScaleFormatList.replace(def_map_index, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
             }
         }
-        if (ecuCalDef->NameList.at(def_map_index) == "Injector Capacity")
+        if (ecuCalDef->NameList.at(def_map_index) == "Air Fuel Learning Loads" || ecuCalDef->NameList.at(def_map_index) == "Injector Capacity")
         {
             qDebug() << "";
             qDebug() << "Map data";
