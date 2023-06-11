@@ -18,19 +18,32 @@ FlashEcuSubaruDensoSH7058Can::FlashEcuSubaruDensoSH7058Can(SerialPortActions *se
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
-/*
+
     QByteArray seed;
     QByteArray seed_key;
     seed.clear();
-    seed.append((uint8_t)0x26);
-    seed.append((uint8_t)0xfa);
-    seed.append((uint8_t)0xa7);
-    seed.append((uint8_t)0xdb);
+    seed.append((uint8_t)0xD6);
+    seed.append((uint8_t)0xA8);
+    seed.append((uint8_t)0x32);
+    seed.append((uint8_t)0x41);
+    send_log_window_message("SEED KEY OK: 29 61 47 46", true, true);
     seed_key = subaru_denso_generate_can_seed_key(seed);
     send_log_window_message("DENSO SEED KEY: " + parse_message_to_hex(seed_key), true, true);
+
+    seed.clear();
+    seed.append((uint8_t)0xD3);
+    seed.append((uint8_t)0x80);
+    seed.append((uint8_t)0xE8);
+    seed.append((uint8_t)0x94);
+
+    send_log_window_message("SEED KEY OK: 70 3F CC AC", true, true);
+    seed_key = subaru_denso_generate_can_seed_key(seed);
+    send_log_window_message("DENSO SEED KEY: " + parse_message_to_hex(seed_key), true, true);
+    seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
+    send_log_window_message("ECUTEK SEED KEY: " + parse_message_to_hex(seed_key), true, true);
     seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
     send_log_window_message("COBB SEED KEY: " + parse_message_to_hex(seed_key), true, true);
-*/
+
     result = init_flash_denso_subarucan(ecuCalDef, cmd_type);
 
     if (result == STATUS_SUCCESS)
@@ -232,6 +245,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     if (received == "" || (uint8_t)received.at(4) != 0x41)
         return STATUS_ERROR;
 
+/*
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x10);
@@ -252,11 +266,15 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         try_count++;
         //delay(try_timeout);
     }
-    //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(4) != 0x03)
-    //    return STATUS_ERROR;
+    if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x03)
+        return STATUS_ERROR;
+    delay(50);
+
+
 
     connected = false;
     try_count = 0;
+    output[4] = ((uint8_t)0x10);
     output[5] = ((uint8_t)0x43);
     while (try_count < 6 && connected == false)
     {
@@ -276,6 +294,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     }
     //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
     //    return STATUS_ERROR;
+*/
 
     connected = false;
     try_count = 0;
@@ -316,7 +335,8 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         received = serial->read_serial_data(20, 10);
         if (received != "")
         {
-            connected = true;
+            if ((uint8_t)received.at(4) == 0x49 || (uint8_t)received.at(5) == 0x06)
+                connected = true;
             QByteArray response = received;
             response.remove(0, 7);
             QString msg;
@@ -334,10 +354,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     if (received == "" || (uint8_t)received.at(4) != 0x49 || (uint8_t)received.at(5) != 0x06)
         return STATUS_ERROR;
 
-    /****************************
-     *
-     * */
-    /*
     connected = false;
     try_count = 0;
     output[4] = ((uint8_t)0x10);
@@ -358,12 +374,33 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         try_count++;
         //delay(try_timeout);
     }
-    //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(4) != 0x03)
+    if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x03)
+        return STATUS_ERROR;
+
+/*
+    connected = false;
+    try_count = 0;
+    output[4] = ((uint8_t)0x10);
+    output[5] = ((uint8_t)0x43);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x10 0x43 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x10 0x43 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        delay(try_timeout);
+    }
+    //if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
     //    return STATUS_ERROR;
-    */
-    /****************************
-     *
-     * */
+*/
 
     connected = false;
     try_count = 0;
@@ -392,10 +429,16 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     send_log_window_message("Seed request ok", true, true);
     qDebug() << "Seed request ok";
 
+    seed.clear();
     seed.append(received.at(6));
     seed.append(received.at(7));
     seed.append(received.at(8));
     seed.append(received.at(9));
+
+    seed.append((uint8_t)0xD3);
+    seed.append((uint8_t)0x80);
+    seed.append((uint8_t)0xE8);
+    seed.append((uint8_t)0x94);
 
     if (flash_method.endsWith("_ecutek"))
         seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
@@ -436,7 +479,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     send_log_window_message("Seed key ok", true, true);
     qDebug() << "Seed key ok";
 
-
     connected = false;
     try_count = 0;
     output.clear();
@@ -462,9 +504,37 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         try_count++;
         //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x50)
+    if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x02)
         return STATUS_ERROR;
-
+/*
+    connected = false;
+    try_count = 0;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x42);
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x10 0x42 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x10 0x42 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
+        return STATUS_ERROR;
+*/
     return STATUS_SUCCESS;
 }
 
@@ -487,7 +557,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     uint32_t start_address = 0;
     uint32_t end_addr = 0;
     QByteArray cks_bypass;
-    uint8_t chk_sum = 0;
+    uint32_t chk_sum = 0;
     uint32_t blockaddr = 0;
     uint16_t blockno = 0;
     uint16_t maxblocks = 0;
@@ -514,37 +584,28 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     }
     file_len = file.size();
     pl_len = (file_len + 3) & ~3;
-    //pl_len = file_len + 6;
     pl_encr = file.readAll();
-    maxblocks = file_len / 128;
-    //if((file_len % 128) != 0)
+    maxblocks = pl_len / 128;
     if((pl_len % 128) != 0)
         maxblocks++;
     end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
     uint32_t data_len = end_addr - start_address;
     while ((uint32_t)pl_encr.length() < data_len)
-    {
         pl_encr.append((uint8_t)0x00);
-        pl_encr.append((uint8_t)0x09);
-    }
+    pl_encr.remove(pl_encr.length() - 4, 4);
+    chk_sum = 0;
+    for (int i = 0; i < pl_encr.length(); i+=4)
+        chk_sum += ((pl_encr.at(i) << 24) & 0xFF000000) | ((pl_encr.at(i + 1) << 16) & 0xFF0000) | ((pl_encr.at(i + 2) << 8) & 0xFF00) | ((pl_encr.at(i + 3)) & 0xFF);
+    chk_sum = 0x5aa5a55a - chk_sum;
 
-/*
-    uint32_t len = pl_len;// &= ~3;
-    unsigned char data[file_len];
-    QByteArray kernel_data;
-    kernel_data.clear();
-
-    for (uint32_t i = 0; i < len; i++)
-        data[i] = (uint8_t)pl_encr.at(i);
-    kernel_data = subaru_denso_transform_wrx04_kernel(data, len, false);
-    qDebug() << "\nDecrypted kernel wrx04:" << parse_message_to_hex(kernel_data);
-    return STATUS_ERROR;
-*/
-    pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_encr.length());//pl_len);
+    pl_encr.append((uint8_t)((chk_sum >> 24) & 0xFF));
+    pl_encr.append((uint8_t)((chk_sum >> 16) & 0xFF));
+    pl_encr.append((uint8_t)((chk_sum >> 8) & 0xFF));
+    pl_encr.append((uint8_t)(chk_sum & 0xFF));
+    pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_encr.length());
+    //pl_encr = subaru_denso_decrypt_32bit_payload(pl_encr, pl_encr.length());
     //qDebug() << "\nEncrypted kernel orig: " << parse_message_to_hex(pl_encr);
-
-
-
+    //qDebug() << "Kernel checksum" << hex << chk_sum;
 
     set_progressbar_value(0);
 
@@ -669,6 +730,8 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     if (received == "" || (uint8_t)received.at(4) != 0x77)
         return STATUS_ERROR;
 
+    delay(100);
+
     connected = false;
     try_count = 0;
     output.clear();
@@ -702,17 +765,32 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
         return STATUS_ERROR;
 
     set_progressbar_value(100);
+/*
+    serial->reset_connection();
+    serial->is_iso14230_connection = false;
+    serial->is_can_connection = false;
+    serial->is_iso15765_connection = true;
+    serial->is_29_bit_id = false;
+    serial->can_speed = "500000";
+    serial->iso15765_source_address = 0xFFFFE;
+    serial->iso15765_destination_address = 0x21;
+    // Open serial port
+    serial->open_serial_port();
+*/
+    delay(500);
 
     send_log_window_message("Requesting kernel ID", true, true);
     qDebug() << "Requesting kernel ID";
 
     received.clear();
     received = request_kernel_id();
+    send_log_window_message("Kernel ID: " + received, true, true);
+    qDebug() << "Kernel ID:" << parse_message_to_hex(received);
     if (received == "")
         return STATUS_ERROR;
 
-    send_log_window_message("Kernel ID: " + received, true, true);
-    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+    //send_log_window_message("Kernel ID: " + received, true, true);
+    //qDebug() << "Kernel ID: " << parse_message_to_hex(received);
 
 
     return STATUS_SUCCESS;
@@ -1427,7 +1505,16 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByt
 {
     QByteArray key;
 
+    qDebug() << "Calculate Denso seed key";
+
     const uint16_t keytogenerateindex_1[]={
+        0x78B1, 0x4625, 0x201C, 0x9EA5,
+        0xAD6B, 0x35F4, 0xFD21, 0x5E71,
+        0xB046, 0x7F4A, 0x4B75, 0x93F9,
+        0x1895, 0x8961, 0x3ECC, 0x862B
+    };
+
+    const uint16_t keytogenerateindex_2[]={
         0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
         0x15BB, 0xF998, 0x8723, 0x9E05,
         0x7092, 0xD683, 0xBA03, 0x59E1,
@@ -1456,6 +1543,13 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_k
     QByteArray key;
 
     const uint16_t keytogenerateindex_1[]={
+        0x78B1, 0x4625, 0x201C, 0x9EA5,
+        0xAD6B, 0x35F4, 0xFD21, 0x5E71,
+        0xB046, 0x7F4A, 0x4B75, 0x93F9,
+        0x1895, 0x8961, 0x3ECC, 0x862B
+    };
+
+    const uint16_t keytogenerateindex_2[]={
         0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
         0x15BB, 0xF998, 0x8723, 0x9E05,
         0x7092, 0xD683, 0xBA03, 0x59E1,
@@ -1666,14 +1760,14 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_init()
     request_denso_kernel_init = true;
 
     output.clear();
-    /*
+
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x0F);
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
-    */
+
     output.append((uint8_t)SID_KERNEL_INIT);
-    /*
+
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1681,7 +1775,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_init()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    */
+
     received = serial->write_serial_data_echo_check(output);
     delay(500);
     received = serial->read_serial_data(100, serial_read_short_timeout);
@@ -1707,21 +1801,21 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
 
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
     output.append((uint8_t)SID_START_COMM_CAN);
     output.append((uint8_t)0xA0);
-    /*
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    */
 
     received = serial->write_serial_data_echo_check(output);
+    send_log_window_message("Request kernel id sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Request kernel id sent:" << parse_message_to_hex(output);
     delay(100);
     received = serial->read_serial_data(100, serial_read_short_timeout);
 
@@ -1730,7 +1824,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
 
     while (received != "")
     {
-        received = serial->read_serial_data(1, serial_read_short_timeout);
+        received = serial->read_serial_data(10, serial_read_short_timeout);
         received.remove(0, 2);
         kernelid.append(received);
     }

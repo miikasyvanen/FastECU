@@ -1515,14 +1515,12 @@ QByteArray FlashEcuSubaruDensoSH705xCan::request_kernel_id()
     output.append((uint8_t)0xFE);
     output.append((uint8_t)SID_START_COMM_CAN);
     output.append((uint8_t)0xA0);
-    /*
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    */
 
     received = serial->write_serial_data_echo_check(output);
     delay(100);
