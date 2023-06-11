@@ -229,7 +229,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(FileActions::EcuCalDef
         }
         else
         {
-            //qDebug() << "ERROR IN DATA RECEIVE!";
+            qDebug() << "ERROR IN DATA RECEIVE!" << hex << addr << parse_message_to_hex(received);
         }
 
         cplen = (numblocks * pagesize);

@@ -51,7 +51,7 @@ public:
         QString calibration_files_base_directory = base_directory + "/calibrations";
         QString config_base_directory = base_directory + "/config";
         QString definition_files_base_directory = base_directory + "/definitions";
-        QString kernel_files_base_directory = base_directory + "/kernels";
+        QString kernel_files_base_directory = base_directory + "/kernels/";
         QString log_files_base_directory = base_directory + "/logs";
 
         QString config_file = config_base_directory + "/fastecu.cfg";

@@ -86,8 +86,8 @@ void MainWindow::ssm_kline_init()
         delay(200);
         received = serial->read_serial_data(100, 500);
         //qDebug() << "ECU ID:" << parse_ecuid(received);
-        //qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
-        //qDebug() << "ECU INIT:" << parse_message_to_hex(received);
+        qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
+        qDebug() << "ECU INIT:" << parse_message_to_hex(received);
         if (received.length() > 0)
         {
             if (received.length() == (uint8_t)received.at(3) + 5)

@@ -524,9 +524,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel_subaru_denso_subarucan(QSt
     pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_encr.length());
     //pl_encr = subaru_denso_decrypt_32bit_payload(pl_encr, pl_encr.length());
     //send_log_window_message("Kernel data: " + parse_message_to_hex(pl_encr), true, true);
-
-
-
+    //qDebug() << "Kernel checksum" << hex << chk_sum;
 
     set_progressbar_value(0);
 
@@ -679,32 +677,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel_subaru_denso_subarucan(QSt
     qDebug() << "Kernel started, initializing...";
 
     delay(100);
-/*
-    // Set serial port
-    serial->reset_connection();
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = true;
-    serial->can_speed = "500000";
-    serial->can_source_address = 0xFFFFE;
-    serial->can_destination_address = 0x21;
-    // Open serial port
-    serial->open_serial_port();
-*/
-/*
-    // Set serial port
-    serial->reset_connection();
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->iso15765_source_address = 0xFFFFE;
-    serial->iso15765_destination_address = 0x21;
-    // Open serial port
-    serial->open_serial_port();
-*/
+
     send_log_window_message("Requesting kernel ID", true, true);
     qDebug() << "Requesting kernel ID";
 

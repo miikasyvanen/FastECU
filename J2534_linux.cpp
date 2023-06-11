@@ -76,6 +76,7 @@ QByteArray J2534::read_serial_data(uint32_t datalen, uint16_t timeout)
 
     ReceivedData.clear();
 
+    //timeout *= 1000;
     if (serial->isOpen())
     {
         QTime dieTime = QTime::currentTime().addMSecs(timeout);

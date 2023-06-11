@@ -391,6 +391,8 @@ QString MainWindow::check_kernel(QString flash_method)
     else
         kernel = "N/A";
 
+    qDebug() << "Kernel to use:" << kernel;
+
     return kernel;
 }
 
@@ -618,7 +620,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             fileActions->checksum_correction(ecuCalDef[rom_number]);
 
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
-            ecuCalDef[rom_number]->Kernel = configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+            ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
         }
@@ -631,7 +633,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             }
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
             ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_family;
-            ecuCalDef[rom_number]->Kernel = configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
+            ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
         }
@@ -656,12 +658,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruDensoSH7055_02 = new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7055_04"))
             flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058"))
-            flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058_can_diesel"))
             flashEcuSubaruDensoSH7058CanDiesel = new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058_can"))
             flashEcuSubaruDensoSH7058Can = new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058"))
+            flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs"))
             flashEcuSubaruUnisiaJecs = new FlashEcuSubaruUnisiaJecs(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_02"))

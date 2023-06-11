@@ -175,7 +175,7 @@ const struct kernelblock kblocks_MC68HC16Y5[] = {
 
 const struct flashblock fblocks_M32R_128KB[] = {
     {0x00100000,    0x00010000},
-    {0x00120000,    0x00010000},
+    {0x00110000,    0x00010000},
 };
 
 const struct ramblock rblocks_M32R_128KB[] = {

@@ -98,6 +98,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
     QDomDocument xmlBOM;
     //QFile file(configValues->config_base_directory + "/fastecu.cfg");
     QFile file(configValues->config_file);
+    qDebug() << "Looking config file from:" << configValues->config_file;
     if (!file.open(QIODevice::ReadOnly ))
     {
         QMessageBox::warning(this, tr("Config file"), "Unable to open application config file for reading");
