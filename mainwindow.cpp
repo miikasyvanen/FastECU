@@ -640,7 +640,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
 
-        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
+        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_can"))
         {
             if (ecuCalDef[rom_number]->McuType == "SH7055")
                 ecuCalDef[rom_number]->FlashMethod = "sh7055_denso_can";
@@ -672,6 +672,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruHitachiM32R_06 = new FlashEcuSubaruHitachiM32R_06(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_can"))
             flashEcuSubaruHitachiCan = new FlashEcuSubaruHitachiCan(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_can"))
+            flashTcuSubaruHitachiM32RCan = new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType.startsWith("SH7058"))

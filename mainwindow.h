@@ -49,6 +49,7 @@
 #include <modules/flash_ecu_subaru_hitachi_m32r_02.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_06.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_can.h>
+#include <modules/flash_tcu_subaru_hitachi_m32r_can.h>
 //
 
 QT_BEGIN_NAMESPACE
@@ -115,6 +116,7 @@ private:
     FlashEcuSubaruHitachiM32R_02 *flashEcuSubaruHitachiM32R_02;
     FlashEcuSubaruHitachiM32R_06 *flashEcuSubaruHitachiM32R_06;
     FlashEcuSubaruHitachiCan *flashEcuSubaruHitachiCan;
+    FlashTcuSubaruHitachiM32RCan *flashTcuSubaruHitachiM32RCan;
     /* Flash modules */
 
     SerialPortActions *serial;
