@@ -84,12 +84,12 @@ int FlashTcuSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefS
 
     // Set serial port
     serial->is_iso14230_connection = false;
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = true;
+    serial->is_can_connection = false;
+    serial->is_iso15765_connection = true;
+    serial->is_29_bit_id = false;
     serial->can_speed = "500000";
-    serial->can_source_address = 0x1f21;
-    serial->can_destination_address = 0x1f1f;
+    serial->can_source_address = 0x1f1f;
+    serial->can_destination_address = 0x1f29;
     // Open serial port
     serial->open_serial_port();
 
@@ -129,6 +129,9 @@ int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
     QByteArray seed;
     QByteArray seed_key;
 
+    bool connected = false;
+    int try_count = 0;
+
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -140,6 +143,68 @@ int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
 
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x1F);
+    output.append((uint8_t)0x1F);
+    output.append((uint8_t)0xAA);
+
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            QByteArray response = received;
+            QString msg = QString::fromStdString(response.remove(0, 7).toStdString());
+            send_log_window_message(QString::number(try_count) + ": 0xAA response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0xAA response:" << parse_message_to_hex(received) << received;
+            send_log_window_message("Response: " + msg, true, true);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+
+    connected = false;
+    try_count = 0;
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x1F);
+    output.append((uint8_t)0x1F);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x04);
+
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        received = serial->read_serial_data(20, 10);
+        if (received != "")
+        {
+            connected = true;
+            QByteArray response = received;
+            QString msg = QString::fromStdString(response.remove(0, 7).toStdString());
+            send_log_window_message(QString::number(try_count) + ": 0x09 0x04 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x09 0x04 response:" << parse_message_to_hex(received) << received;
+            send_log_window_message("Response: " + msg, true, true);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+    /*
     send_log_window_message("Checking if already in on board kernel...", true, true);
     qDebug() << "Checking if already in on board kernel...";
 
@@ -253,8 +318,8 @@ int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
     send_log_window_message("Seed key ok", true, true);
     qDebug() << "Seed key ok";
 
-    send_log_window_message("Starting diagnostic session", true, true);
-    qDebug() << "Starting diagnostic session";
+    send_log_window_message("Jumping to onboad kernel", true, true);
+    qDebug() << "Jumping to onboad kernel";
 
     output[4] = (uint8_t)0x02;
     output[5] = (uint8_t)0x10;
@@ -271,28 +336,13 @@ int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(0) != 0x02 || (uint8_t)received.at(1) != 0x50 || (uint8_t)received.at(2) != 0x02)
     {
-        send_log_window_message("Bad response to starting diagnostic session", true, true);
+        send_log_window_message("Bad response to jumping to onboard kernel", true, true);
 
         //return STATUS_ERROR;
     }
 
-    send_log_window_message("Start diagnostic session ok", true, true);
-    qDebug() << "Start diagnostic session ok";
-
-    send_log_window_message("Jumping to onboard kernel", true, true);
-    qDebug() << "Jumping to onboard kernel";
-
-    output[4] = (uint8_t)0x04;
-    output[5] = (uint8_t)0x02;
-    output[6] = (uint8_t)0x50;
-    output[7] = (uint8_t)0x42;
-    output[8] = (uint8_t)0x02;
-    output[9] = (uint8_t)0x00;
-    output[10] = (uint8_t)0x00;
-    output[11] = (uint8_t)0x00;
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
-    serial->write_serial_data_echo_check(output);
-    delay(200);
+    send_log_window_message("Jump to kernel ok", true, true);
+    qDebug() << "Jump to kernel ok";
 
     send_log_window_message("Checking if jump successful and kernel alive", true, true);
     qDebug() << "Checking if jump successful and kernel alive";
@@ -312,15 +362,16 @@ int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(0) == 0x04 && (uint8_t)received.at(1) == 0x31 && (uint8_t)received.at(2) == 0x02 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0x03)
     {
-        send_log_window_message("Kernel running", true, true);
+        send_log_window_message("Kernel verified to be running", true, true);
 
         kernel_alive = true;
-        return STATUS_SUCCESS;
+        //return STATUS_SUCCESS;
     }
 
     send_log_window_message("Kernel not running or bad response", true, true);
     return STATUS_ERROR;
 }
+*/
 
 /*
  * Connect to Subaru Denso CAN bootloader 32bit ECUs in recovery mode
