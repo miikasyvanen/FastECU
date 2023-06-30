@@ -1,4 +1,4 @@
-#include <modules/flash_tcu_subaru_hitachi_m32r_can.h>
+#include "flash_tcu_subaru_hitachi_m32r_can.h"
 
 FlashTcuSubaruHitachiM32RCan::FlashTcuSubaruHitachiM32RCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent),
@@ -82,30 +82,27 @@ int FlashTcuSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefS
         //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
 
-    // Set serial port
-    serial->is_iso14230_connection = false;
     serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->can_source_address = 0x1f1f;
-    serial->can_destination_address = 0x1f29;
-    // Open serial port
+    serial->is_iso15765_connection = false;
+    serial->is_iso14230_connection = true;
     serial->open_serial_port();
+    serial->change_port_speed("4800");
+    serial->add_iso14230_header = false;
+    tester_id = 0xF0;
+    target_id = 0x18;
 
     QMessageBox::information(this, tr("Connecting to TCU"), "Turn ignition ON and press OK to start initializing connection");
     //QMessageBox::information(this, tr("Connecting to TCU"), "Press OK to start countdown!");
 
     send_log_window_message("Connecting to Subaru TCU Hitachi CAN bootloader, please wait...", true, true);
-
-    result = jump_to_kernel_subaru_tcu_hitachi_can();
+    result = connect_bootloader_subaru_tcu_hitachi_kline();
 
     if (result == STATUS_SUCCESS)
     {
         if (cmd_type == "read")
         {
-            send_log_window_message("Not yet implemented: Reading ROM from TCU Subaru Hitachi using CAN", true, true);
-            //result = read_mem_subaru_denso_can_02_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            send_log_window_message("Reading ROM from TCU using K-Line", true, true);
+            result = read_mem_subaru_tcu_hitachi_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
@@ -121,16 +118,14 @@ int FlashTcuSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefS
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
+int FlashTcuSubaruHitachiM32RCan::connect_bootloader_subaru_tcu_hitachi_kline()
 {
-    QByteArray output;
     QByteArray received;
     QByteArray msg;
-    QByteArray seed;
-    QByteArray seed_key;
 
     bool connected = false;
-    int try_count = 0;
+    int try_count = 5;
+    int loop_cnt = 0;
 
     if (!serial->is_serial_port_open())
     {
@@ -138,6 +133,165 @@ int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
         return STATUS_ERROR;
     }
 
+    delay(100);
+
+    send_log_window_message("Initializing k-line communications", true, true);
+
+    received = send_subaru_tcu_sid_bf_ssm_init();
+    if (received == "")
+        return STATUS_ERROR;
+    //qDebug() << "SID_BF received:" << parse_message_to_hex(received);
+    received.remove(0, 8);
+    received.remove(5, received.length() - 5);
+    //qDebug() << "Received length:" << received.length();
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+    }
+    QString tcuid = msg;
+    //QString ecuid = QString("%1%2%3%4%5").arg(received.at(0),2,16,QLatin1Char('0')).toUpper().arg(received.at(1),2,16,QLatin1Char('0')).arg(received.at(2),2,16,QLatin1Char('0')).arg(received.at(3),2,16,QLatin1Char('0')).arg(received.at(4),2,16,QLatin1Char('0'));
+
+    send_log_window_message("Init Success: TCU ID = " + tcuid, true, true);
+    qDebug() << "TCU ID = " << tcuid;
+
+    return STATUS_SUCCESS;
+}
+
+int FlashTcuSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+{
+
+    QByteArray received;
+    QByteArray msg;
+    QByteArray mapdata;
+
+    uint32_t curr_addr, block_count, num_blocks;
+    uint32_t tail_size, block_len, loop_ctr, block_size;
+
+    block_size = 96;
+
+    send_log_window_message("Commencing TCU ROM read", true, true);
+
+    curr_addr = start_addr - 0x00100000;
+    num_blocks = length / block_size;
+    tail_size = length % block_size;
+    if (tail_size != 0) num_blocks++;
+    else tail_size = block_size;
+
+    for (block_count = 0; block_count < num_blocks; block_count++)
+    {
+        if (block_count == (num_blocks - 1))
+            block_len = tail_size;
+        else
+            block_len = block_size;
+
+        msg = QString("ROM read addr: %1 length: %2").arg(curr_addr).arg(block_len).toUtf8();
+        send_log_window_message(msg, true, true);
+
+        for (loop_ctr = 0; loop_ctr < 5; loop_ctr++)
+        {
+            received = send_subaru_tcu_sid_a0_block_read(curr_addr, block_len - 1);
+            if (received.length() > 5) break;
+        }
+
+        if (received.length() > 5)
+        {
+            received.remove(0, 5);
+            mapdata.append(received, (received.length() - 1));
+        }
+
+        curr_addr += block_len;
+    }
+
+    ecuCalDef->FullRomData = mapdata;
+
+    send_log_window_message("Saving TCU ROM to default.bin...", true, true);
+    QString filename = "default.bin";
+    QFile file(filename);
+    QFileInfo fileInfo(file.fileName());
+    QString file_name_str = fileInfo.fileName();
+
+    if (!file.open(QIODevice::WriteOnly ))
+    {
+        //qDebug() << "Unable to open file for writing";
+        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
+        return NULL;
+    }
+
+    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
+    //checksum_correction(ecuCalDef);
+
+    file.write(ecuCalDef->FullRomData);
+    file.close();
+
+    ecuCalDef->FullFileName = filename;
+    ecuCalDef->FileName = file_name_str;
+    send_log_window_message("TCU ROM saved successfully", true, true);
+    return STATUS_SUCCESS;
+}
+
+/*
+ * ECU init
+ *
+ * @return ECU ID and capabilities
+ */
+QByteArray FlashTcuSubaruHitachiM32RCan::send_subaru_tcu_sid_bf_ssm_init()
+{
+    QByteArray output;
+    QByteArray received;
+    uint8_t loop_cnt = 0;
+
+
+    output.append((uint8_t)0xBF);
+
+    while (received == "" && loop_cnt < 5)
+    {
+        if (kill_process)
+            break;
+
+        send_log_window_message("SSM init", true, true);
+        serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
+        send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+        delay(200);
+        received = serial->read_serial_data(100, receive_timeout);
+        //received = QByteArray::fromHex("80f01839ffa61022ada02160000100800400000000a1462c000800000000000000dc06000829c0047e011e003e00000000000080a6e000fefe00002000da");
+        send_log_window_message("Recd: " + parse_message_to_hex(received), true, true);
+        loop_cnt++;
+    }
+
+    return received;
+}
+
+/*
+ * SSM Block Read (K-Line)
+ *
+ * @return received response
+ */
+QByteArray FlashTcuSubaruHitachiM32RCan::send_subaru_tcu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen)
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    output.append((uint8_t)0xa0);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)(dataaddr >> 16) & 0xFF);
+    output.append((uint8_t)(dataaddr >> 8) & 0xFF);
+    output.append((uint8_t)dataaddr & 0xFF);
+    output.append((uint8_t)datalen & 0xFF);
+
+    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
+    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    delay(100);
+    received = serial->read_serial_data(datalen + 2 + 6, receive_timeout);
+    //received = QByteArray::fromHex("80f01861e06000f000a04115ec6000f000a04115f06000f000a04115f46000f000a04115f86000f000a04115fc1fcef0002e7ff000fe00087e6000f000fe00022684ad806060072004fe0003e07e02f0002eef1fce6200f00081c200ff600401407d0e1081ab");
+    delay(100);
+    send_log_window_message("Recd: " + parse_message_to_hex(received), true, true);
+
+    return received;
+}
+
+
+    /*
     serial->add_iso14230_header = false;
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -202,7 +356,7 @@ int FlashTcuSubaruHitachiM32RCan::jump_to_kernel_subaru_tcu_hitachi_can()
     }
 
     return STATUS_SUCCESS;
-}
+}*/
 
     /*
     send_log_window_message("Checking if already in on board kernel...", true, true);
@@ -1216,6 +1370,7 @@ int FlashEcuSubaruDensoSH705xCan::flash_block_denso_can_02_32bit(const uint8_t *
  * @return
  */
 
+/*
 uint8_t FlashTcuSubaruHitachiM32RCan::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
@@ -1226,6 +1381,7 @@ uint8_t FlashTcuSubaruHitachiM32RCan::cks_add8(QByteArray chksum_data, unsigned 
         data[i] = chksum_data.at(i);
     }
 */
+/*
     for (unsigned i = 0; i < len; i++) {
         sum += (uint8_t)chksum_data.at(i);//data[i];
         if (sum & 0x100) {
@@ -1235,6 +1391,7 @@ uint8_t FlashTcuSubaruHitachiM32RCan::cks_add8(QByteArray chksum_data, unsigned 
     }
     return sum;
 }
+*/
 
 /*
  * CRC16 implementation adapted from Lammert Bies
@@ -1906,6 +2063,46 @@ int FlashEcuSubaruDensoSH705xCan::connect_bootloader_start_countdown(int timeout
     return STATUS_ERROR;
 }
 */
+
+/*
+ * Add SSM header to message
+ *
+ * @return parsed message
+ */
+QByteArray FlashTcuSubaruHitachiM32RCan::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+{
+    uint8_t length = output.length();
+
+    output.insert(0, (uint8_t)0x80);
+    output.insert(1, target_id & 0xFF);
+    output.insert(2, tester_id & 0xFF);
+    output.insert(3, length);
+
+    output.append(calculate_checksum(output, dec_0x100));
+
+    //send_log_window_message("Send: " + parse_message_to_hex(output), true, true);
+    //qDebug () << "Send:" << parse_message_to_hex(output);
+    return output;
+}
+
+/*
+ * Calculate SSM checksum to message
+ *
+ * @return 8-bit checksum
+ */
+uint8_t FlashTcuSubaruHitachiM32RCan::calculate_checksum(QByteArray output, bool dec_0x100)
+{
+    uint8_t checksum = 0;
+
+    for (uint16_t i = 0; i < output.length(); i++)
+        checksum += (uint8_t)output.at(i);
+
+    if (dec_0x100)
+        checksum = (uint8_t) (0x100 - checksum);
+
+    return checksum;
+}
+
 
 /*
  * Parse QByteArray to readable form

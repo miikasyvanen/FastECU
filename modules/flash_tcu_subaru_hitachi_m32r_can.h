@@ -67,22 +67,22 @@ private:
 
     int init_flash_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
 
-    int jump_to_kernel_subaru_tcu_hitachi_can();
-    //int connect_bootloader_subaru_denso_can_02_32bit_recovery();
+    int connect_bootloader_subaru_tcu_hitachi_kline();
     //int upload_kernel_subaru_denso_can_02_32bit(QString kernel, uint32_t kernel_start_addr);
-    //int read_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int read_mem_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
     //int write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
     //int get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified);
     //int check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
     //int flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t start, uint32_t len);
     //int reflash_block_denso_can_02_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
-    uint8_t cks_add8(QByteArray chksum_data, unsigned len);
+    //uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     //void init_crc16_tab(void);
     //uint16_t crc16(const uint8_t *data, uint32_t siz);
 
 
-    //QByteArray send_subaru_sid_bf_ssm_init();
+    QByteArray send_subaru_tcu_sid_bf_ssm_init();
+    QByteArray send_subaru_tcu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
     //QByteArray send_subaru_denso_sid_81_start_communication();
     //QByteArray send_subaru_denso_sid_83_request_timings();
     //QByteArray send_subaru_denso_sid_27_request_seed();
@@ -102,8 +102,8 @@ private:
     //QByteArray subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len);
     //QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
-    //QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
-    //uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
+    QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
+    uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
     //int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
