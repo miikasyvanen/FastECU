@@ -1,5 +1,5 @@
-#ifndef FLASH_DENSO_KLINE_04_H
-#define FLASH_DENSO_KLINE_04_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH7055_04_H
+#define FLASH_ECU_SUBARU_DENSO_SH7055_04_H
 
 #include <QApplication>
 #include <QByteArray>

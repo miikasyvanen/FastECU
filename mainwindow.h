@@ -49,6 +49,12 @@
 #include <modules/flash_ecu_subaru_hitachi_m32r_02.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_06.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_can.h>
+
+#include <modules/eeprom_ecu_subaru_denso_kline.h>
+#include <modules/eeprom_ecu_subaru_denso_can.h>
+
+
+#include <modules/flash_ecu_subaru_denso_sh7xxx_can.h>
 //
 
 QT_BEGIN_NAMESPACE
@@ -69,6 +75,7 @@ public:
     void delay(int n);
 
 private:
+    const char *sw_version = "FastECU v0.3b";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
     static const QColor YELLOW_LIGHT_OFF;
@@ -82,6 +89,7 @@ private:
     bool ecu_init_complete = false;
     bool haltech_ic7_display_on = false;
     bool simulate_obd_on = false;
+    bool can_listener_on = false;
 
     int ecuCalDefIndex = 0;
     struct FileActions::EcuCalDefStructure *ecuCalDef[100];
@@ -115,6 +123,13 @@ private:
     FlashEcuSubaruHitachiM32R_02 *flashEcuSubaruHitachiM32R_02;
     FlashEcuSubaruHitachiM32R_06 *flashEcuSubaruHitachiM32R_06;
     FlashEcuSubaruHitachiCan *flashEcuSubaruHitachiCan;
+
+    EepromEcuSubaruDensoKline *eepromEcuSubaruDensoKline;
+    EepromEcuSubaruDensoCan *eepromEcuSubaruDensoCan;
+
+    FlashEcuSubaruDensoSH7xxxCan *flashEcuSubaruDensoSH7xxxCan;
+
+
     /* Flash modules */
 
     SerialPortActions *serial;
@@ -228,7 +243,6 @@ private:
     void set_flash_arrow_state();
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
-    QString check_kernel(QString flash_method);
 
     // menuactions.c
     void inc_dec_value(QString action);
@@ -251,6 +265,7 @@ private:
     void toggle_haltech_ic7_display();
     int test_haltech_ic7_display();
     void toggle_simulate_obd();
+    void toggle_can_listener();
     int simulate_obd();
     void show_subaru_biu_window();
 
@@ -284,6 +299,7 @@ private slots:
     void flash_transport_changed();
     void check_serial_ports();
     void open_serial_port();
+    int can_listener();
     int start_ecu_operations(QString cmd_type);
     int start_manual_ecu_operations();
     void close_calibration();

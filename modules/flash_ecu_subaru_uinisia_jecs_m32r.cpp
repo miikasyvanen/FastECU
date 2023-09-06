@@ -72,14 +72,17 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs(FileActions::EcuCalD
     }
 
     // Set serial port
-    serial->is_iso14230_connection = true;
+    //serial->is_iso14230_connection = true;
+    //serial->add_iso14230_header = true;
     serial->is_can_connection = false;
     serial->is_iso15765_connection = false;
     serial->is_29_bit_id = false;
+    //serial->serial_port_baudrate = "10400";
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
+    //serial->change_port_speed("10400");
 
     QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
     //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");

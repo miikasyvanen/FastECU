@@ -25,10 +25,11 @@ In lower log parameters area or in map view area, mouse right click opens window
 parameters. "Gauge view" is not yet implemented in this version.
 
 Tested flash methods:
-- sub_mc68hc16y5_02 (wrx02) method read and compare (K-Line)
-- sub_sh7055_02 (fxt02) method read/write (K-Line / CAN)
-- sub_sh7055_04 (sti04) method read/write (K-Line / CAN)
-- sub_sh7058 (sti05) method read/write (K-Line / CAN)
+- wrx02 method read and compare (K-Line)
+- fxt02 method read/write (K-Line / Denso CAN)
+- sti04 method read/write (K-Line / Denso CAN)
+- sti05 method read/write (K-Line / Denso CAN)
+- subarucan method read/write (iso15765 / Denso CAN)
 - sub_sh7055_denso_can (All Subaru Denso 32-bit ECUs with SH7055/SH7058) read/write
 - Logging of basic ssm values
 - Read Subaru Unisia Jecs ECUs
