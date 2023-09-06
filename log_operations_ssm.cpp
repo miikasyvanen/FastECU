@@ -74,29 +74,32 @@ void MainWindow::ssm_kline_init()
     QByteArray output;
     QByteArray received;
 
-    //qDebug() << "Check ECU INIT";
+    //qDebug() << "ECU K-Line INIT";
     if (!ecu_init_started)
     {
         ecu_init_started = true;
 
-        //qDebug() << "SSM init with BF";
+        //qDebug() << "K-Line SSM init with BF";
         output.clear();
         output.append((uint8_t)0xBF);
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
+        //qDebug() << "K-Line SSM init sent";
         delay(200);
         received = serial->read_serial_data(100, 500);
-        //qDebug() << "ECU ID:" << parse_ecuid(received);
-        qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
-        qDebug() << "ECU INIT:" << parse_message_to_hex(received);
+        //qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
         if (received.length() > 0)
         {
+            qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
+            qDebug() << "ECU INIT:" << parse_message_to_hex(received);
+
             if (received.length() == (uint8_t)received.at(3) + 5)
             {
-                //qDebug() << "ECU ID:" << parse_ecuid(received);
                 ecu_init_complete = true;
                 //set_status_bar_label(true, true, ecuid);
                 ecuid = parse_ecuid(received);
+                qDebug() << "ECU ID:" << ecuid;
                 parse_log_value_list(received, "SSM");
+                qDebug() << "ECU ID:" << ecuid;
 
                 received = serial->read_serial_data(1, 100);
                 while(received.length() > 0)
@@ -343,18 +346,21 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
     uint16_t log_value_count = logValues->log_value_id.length();
     uint16_t log_switch_count = logValues->log_switch_id.length();
 
+    received.remove(0, 5);
+
     //qDebug() << parse_message_to_hex(received);
 
     logValues->log_values_by_protocol.clear();
 
+    //qDebug() << "Parsing log values list";
     for (int i = 0; i < log_value_count; i++)
     {
         if (logValues->log_value_protocol.at(i) == protocol)
         {
             logValues->log_values_by_protocol.append(logValues->log_value_name.at(i));
 
-            uint16_t ecu_byte_index = logValues->log_value_ecu_byte_index.at(i).toUInt() + 5;
-            if (ecu_byte_index <= received.length() && logValues->log_value_ecu_byte_index.at(i) != "No byte index")
+            uint16_t ecu_byte_index = logValues->log_value_ecu_byte_index.at(i).toUInt();
+            if (ecu_byte_index < received.length() && logValues->log_value_ecu_byte_index.at(i) != "No byte index")
             {
                 //qDebug() << "Value: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i);
                 uint8_t ecu_bit = logValues->log_value_ecu_bit.at(i).toUInt();
@@ -376,16 +382,21 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
 
         }
     }
+    //qDebug() << "Log values list ready";
 
+    //qDebug() << "Parsing log switches list";
     for (int i = 0; i < log_switch_count; i++)
     {
         if (logValues->log_switch_protocol.at(i) == protocol)
         {
-            uint16_t switch_byte_index = logValues->log_switch_ecu_byte_index.at(i).toUInt() + 5;
-            if (switch_byte_index <= received.length())
+            // 'switch_byte_index' is byte index in SSM init response
+            uint16_t switch_byte_index = logValues->log_switch_ecu_byte_index.at(i).toUInt();
+            if (switch_byte_index < received.length())
             {
                 uint8_t switch_bit = logValues->log_switch_ecu_bit.at(i).toUInt();
+                qDebug() << "1" << switch_byte_index;
                 uint8_t value = (uint8_t)received.at(switch_byte_index);
+                qDebug() << "2";
                 if (((value) & (1 << (switch_bit))))
                 {
                     logValues->log_switch_enabled.replace(i, "1");
@@ -398,6 +409,7 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
         }
     }
     fileActions->read_logger_conf(logValues, ecuid, false);
+    //qDebug() << "Log switches list ready";
 
     update_logboxes(protocol);
 }

@@ -60,13 +60,15 @@ void MainWindow::menu_action_triggered(QString action)
         toggle_haltech_ic7_display();
     if (action == "simulate_obd")
         toggle_simulate_obd();
+    if (action == "can_listener")
+        toggle_can_listener();
 
     if (action == "biu_communication")
         show_subaru_biu_window();
 
     // HELP MENU
     if (action == "about")
-        QMessageBox::information(this, tr("FastECU v0.2b"), "FastECU is open source tuning software for Subaru ECUs and\n"
+        QMessageBox::information(this, tr(sw_version), "FastECU is open source tuning software for Subaru ECUs and\n"
                                                             "later also modifying BIU and ECUs of other car makes.\n"
                                                             "\n"
                                                             "This is the first test version for read and write ECU ROM\n"
@@ -899,6 +901,25 @@ void MainWindow::toggle_simulate_obd()
     }
     if (simulate_obd_on)
         simulate_obd();
+}
+
+void MainWindow::toggle_can_listener()
+{
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    foreach (QMenu *menu, menus) {
+        foreach (QAction *action, menu->actions()) {
+            if (action->isSeparator()) {
+
+            } else if (action->menu()) {
+
+            } else {
+                if (action->text() == "CAN listener")
+                    can_listener_on = action->isChecked();
+            }
+        }
+    }
+    if (can_listener_on)
+        can_listener();
 }
 
 void MainWindow::show_preferences_window()

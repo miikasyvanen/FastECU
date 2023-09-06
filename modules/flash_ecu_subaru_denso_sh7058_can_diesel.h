@@ -1,5 +1,5 @@
-#ifndef FLASHDENSOSUBARUCANDIESEL_H
-#define FLASHDENSOSUBARUCANDIESEL_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH7058_CAN_DIESEL_H
+#define FLASH_ECU_SUBARU_DENSO_SH7058_CAN_DIESEL_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -50,6 +50,7 @@ private:
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
@@ -116,4 +117,4 @@ private:
 
 };
 
-#endif // FLASHDENSOSUBARUCANDIESEL_H
+#endif // FLASH_ECU_SUBARU_DENSO_SH7058_CAN_DIESEL_H

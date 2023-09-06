@@ -47,8 +47,11 @@
 #define SID_TP                      0x3E	/* TesterPresent; not required but available. */
 
 #define SID_DUMP                    0xBD	/* format : 0xBD <AS> <BH BL> <AH AL>  ; AS=0 for EEPROM, =1 for ROM */
-    #define SID_DUMP_EEPROM         0
-    #define SID_DUMP_ROM            1
+#define SID_DUMP_EEPROM             0x00
+#define SID_DUMP_ROM                0x01
+#define SID_DUMP_SUB_EEPSCI3_PJ2    0x02
+#define SID_DUMP_SUB_EEPSCI3_PJ3    0x03
+#define SID_DUMP_SUB_EEPSCI4_PF10   0x04
 
 /* SID_FLASH and subcommands */
 #define SID_FLASH                   0xBC	/* low-level reflash commands; only available after successful RequestDownload */
@@ -91,13 +94,14 @@
 #define SID_RESET                   0x11	/* restart ECU */
 
 /*************************************
- * NisProg based kernels can commands
+ * NisProg based kernels CAN commands
  * **********************************/
 #define SID_START_COMM_CAN          0x7A
 #define SID_ENTER_BL_CAN            0xFF86
 #define SID_CHECK_COMM_BL_CAN       0x90
 
 #define SID_DUMP_ROM_CAN            0xD8
+#define SID_DUMP_EEPROM_CAN         0xB8
 
 #define SID_KERNEL_ADDRESS          0x98
 #define SID_KERNEL_CHECKSUM         0xB0

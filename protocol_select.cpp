@@ -61,6 +61,7 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
 
     QStringList car_makes;
     QStringList car_makes_sorted;
+    bool car_make_changed_saved = false;
 
     for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
     {
@@ -85,9 +86,16 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
         item->setFirstColumnSpanned(true);
         ui->car_make_tree_widget->addTopLevelItem(item);
         if (car_makes_sorted.at(i) == configValues->flash_protocol_selected_make)
+        {
+            car_make_changed_saved = true;
             ui->car_make_tree_widget->setCurrentItem(item);
-        else if (i == 0)
-            ui->car_make_tree_widget->setCurrentItem(item);
+        }
+    }
+    if (!car_make_changed_saved)
+    {
+        qDebug() << "Car make changed to first item, no make selected previously";
+        QTreeWidgetItem *item = ui->car_model_tree_widget->topLevelItem(0);
+        ui->car_model_tree_widget->setCurrentItem(item);
     }
 
     connect(ui->car_make_tree_widget, SIGNAL(itemSelectionChanged()), this, SLOT(car_make_treewidget_item_selected()));
@@ -101,6 +109,7 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
     const QModelIndex make_index = ui->car_make_tree_widget->selectionModel()->currentIndex();
     ui->car_make_tree_widget->setCurrentIndex(make_index);
     emit ui->car_make_tree_widget->itemSelectionChanged();
+
 /*
     const QModelIndex model_index = ui->car_model_tree_widget->selectionModel()->currentIndex();
     ui->car_model_tree_widget->setCurrentIndex(model_index);
@@ -127,6 +136,7 @@ void ProtocolSelect::car_model_selected()
     configValues->flash_protocol_selected_description = flash_protocol_description;
     configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(configValues->flash_protocol_selected_id.toInt());
 
     qDebug() << "Selected MCU:" << configValues->flash_protocol_selected_mcu;
     accept();
@@ -136,8 +146,9 @@ void ProtocolSelect::car_model_selected()
 
 void ProtocolSelect::car_make_treewidget_item_selected()
 {
+    qDebug() << "Car make selection changed";
     QTreeWidgetItem *item = ui->car_make_tree_widget->selectedItems().at(0);
-    if (item)//ui->car_make_tree_widget->topLevelItemCount())
+    if (item)
     {
         QTreeWidgetItem *item = ui->car_make_tree_widget->selectedItems().at(0);
         QString selected_text = item->text(0);
@@ -152,9 +163,21 @@ void ProtocolSelect::car_make_treewidget_item_selected()
 
         QStringList car_models;
         QStringList car_models_sorted;
+        bool car_model_changed_saved = false;
 
-        ui->car_model_tree_widget->clear();
+        // To delete treewidget items, disconnect itemSelectionChanged() signal first
+        disconnect(ui->car_model_tree_widget, SIGNAL(itemSelectionChanged()), 0, 0);
+        qDebug() << "Delete car_model_tree_widget items";
+        int item_count = ui->car_model_tree_widget->topLevelItemCount();
+        for (int i = 0; i < item_count; i++)
+        {
+            QTreeWidgetItem *item = ui->car_model_tree_widget->topLevelItem(0);
+            delete item;
+        }
+        // Connect itemSelectionChanged() signal again
+        connect(ui->car_model_tree_widget, SIGNAL(itemSelectionChanged()), this, SLOT(car_model_treewidget_item_selected()));
 
+        qDebug() << "Add models data based on selected make";
         for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
         {
             if (!car_models.contains(configValues->flash_protocol_model.at(i)) && configValues->flash_protocol_make.at(i) == car_make && configValues->flash_protocol_model.at(i) != "")
@@ -163,8 +186,11 @@ void ProtocolSelect::car_make_treewidget_item_selected()
                 car_models.append(configValues->flash_protocol_model.at(i));
             }
         }
+        qDebug() << "Sort models data items alphabetically";
         car_models_sorted = car_models;
         sort(car_models_sorted.begin(), car_models_sorted.end(), less<QString>());
+
+        qDebug() << "Add models data items to select";
         for (int i = 0; i < car_models_sorted.length(); i++)
         {
             QTreeWidgetItem *item = new QTreeWidgetItem();
@@ -172,17 +198,27 @@ void ProtocolSelect::car_make_treewidget_item_selected()
             item->setFirstColumnSpanned(true);
             ui->car_model_tree_widget->addTopLevelItem(item);
             if (car_models_sorted.at(i) == configValues->flash_protocol_selected_model)
+            {
+                qDebug() << "Car model changed to saved model";
+                car_model_changed_saved = true;
                 ui->car_model_tree_widget->setCurrentItem(item);
-            else if (i == 0)
-                ui->car_model_tree_widget->setCurrentItem(item);
+            }
+        }
+        if (!car_model_changed_saved)
+        {
+            qDebug() << "Car model changed to first item, no model selected previously";
+            QTreeWidgetItem *item = ui->car_model_tree_widget->topLevelItem(0);
+            ui->car_model_tree_widget->setCurrentItem(item);
         }
     }
+    qDebug() << "Car make selection applied";
 }
 
 void ProtocolSelect::car_model_treewidget_item_selected()
 {
+    qDebug() << "Car model selection changed";
     QTreeWidgetItem *item = ui->car_model_tree_widget->selectedItems().at(0);
-    if (item)//ui->car_model_tree_widget->topLevelItemCount())
+    if (item)
     {
         QTreeWidgetItem *item = ui->car_model_tree_widget->selectedItems().at(0);
         QString selected_text = item->text(0);
@@ -190,6 +226,10 @@ void ProtocolSelect::car_model_treewidget_item_selected()
         //qDebug() << "Check versions for model:" << selected_text;
 
         QString car_model = selected_text;
+        QStringList car_versions;
+        QStringList car_versions_sorted;
+        bool car_version_changed_saved = false;
+
         flash_protocol_id.clear();
         flash_protocol_model = car_model;
         flash_protocol_version.clear();
@@ -210,8 +250,19 @@ void ProtocolSelect::car_model_treewidget_item_selected()
         QStringList family;
         QStringList description;
 
-        ui->car_version_tree_widget->clear();
+        // To delete treewidget items, disconnect itemSelectionChanged() signal first
+        disconnect(ui->car_version_tree_widget, SIGNAL(itemSelectionChanged()), 0, 0);
+        qDebug() << "Delete car_version_tree_widget items";
+        int item_count = ui->car_version_tree_widget->topLevelItemCount();
+        for (int i = 0; i < item_count; i++)
+        {
+            QTreeWidgetItem *item = ui->car_version_tree_widget->topLevelItem(0);
+            delete item;
+        }
+        // Connect itemSelectionChanged() signal again
+        connect(ui->car_version_tree_widget, SIGNAL(itemSelectionChanged()), this, SLOT(car_version_treewidget_item_selected()));
 
+        qDebug() << "Add versions data based on selected model";
         for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
         {
             if (configValues->flash_protocol_model.at(i) == car_model && configValues->flash_protocol_make.at(i) == flash_protocol_make)
@@ -234,6 +285,8 @@ void ProtocolSelect::car_model_treewidget_item_selected()
                 description.append(configValues->flash_protocol_description.at(i));
             }
         }
+
+        qDebug() << "Add versions data items to select";
         for (int i = 0; i < version.length(); i++)
         {
             QTreeWidgetItem *item = new QTreeWidgetItem();
@@ -268,19 +321,28 @@ void ProtocolSelect::car_model_treewidget_item_selected()
             //topLevelCarVersionTreeItem->setFirstColumnSpanned(true);
             ui->car_version_tree_widget->addTopLevelItem(item);
 
+            qDebug() << "Check if car version selected";
             if (id.at(i) == configValues->flash_protocol_selected_id)
+            {
+                qDebug() << "Car version changed to saved model";
+                car_version_changed_saved = true;
                 ui->car_version_tree_widget->setCurrentItem(item);
-            else if (i == 0)
-                ui->car_version_tree_widget->setCurrentItem(item);
-
+            }
+        }
+        if (!car_version_changed_saved)
+        {
+            qDebug() << "Car version changed to first item, no version selected previously";
+            QTreeWidgetItem *item = ui->car_version_tree_widget->topLevelItem(0);
+            ui->car_version_tree_widget->setCurrentItem(item);
         }
     }
+    qDebug() << "Car model selection applied";
 }
 
 void ProtocolSelect::car_version_treewidget_item_selected()
 {
     QTreeWidgetItem *item = ui->car_version_tree_widget->selectedItems().at(0);
-    if (item)//ui->car_version_tree_widget->topLevelItemCount())
+    if (item)
     {
         QTreeWidgetItem *item = ui->car_version_tree_widget->selectedItems().at(0);
         QString selected_text = item->text(0);
@@ -300,4 +362,5 @@ void ProtocolSelect::car_version_treewidget_item_selected()
 
         //qDebug() << "Protocol ID:" << flash_protocol_id;
     }
+    qDebug() << "Car version selection applied";
 }

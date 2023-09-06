@@ -38,6 +38,8 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
         {
             filename = it.next();
 
+            //qDebug() << "Reading EcuFlash ID's from file:" << filename;
+
             QFile file(filename);
             if (!file.open(QIODevice::ReadOnly ))
             {
@@ -120,282 +122,7 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
 
     return configValues;
 }
-/*
-FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_base_def(EcuCalDefStructure *ecuCalDef)
-{
-    ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
-    bool OemEcuDefBaseFileFound = false;
-
-    QString rombase;
-    QString xmlid;
-
-    QString filename;
-
-    int scaling_index = 0;
-
-    int file_index = 0;
-    while (configValues->ecuflash_def_cal_id.at(file_index) != ecuCalDef->RomInfo[RomBase])
-        file_index++;
-
-    filename = configValues->ecuflash_def_filename.at(file_index);
-
-    QFile file(filename);
-    if (!file.open(QIODevice::ReadOnly ))
-    {
-        QMessageBox::warning(this, tr("Ecu definitions file"), "Unable to open OEM ecu base definitions file " + filename + " for reading");
-        ecuCalDef = NULL;
-        return NULL;
-    }
-
-    QDomDocument xmlBOM;
-    xmlBOM.setContent(&file);
-    file.close();
-
-    QDomElement root = xmlBOM.documentElement();
-
-    int i = 0;
-    while (root.tagName() != "rom" && i < 5)
-    {
-        root = root.firstChild().toElement();
-        i++;
-    }
-    while (!root.isNull())
-    {
-        if (root.tagName() == "rom")
-        {
-            rombase = root.attribute("base","No base");
-            if (rombase == "No base")
-            {
-                QDomElement child = root.firstChild().toElement();
-                while (!child.isNull())
-                {
-                    if (child.tagName() == "romid")
-                    {
-                        QDomElement sub_child = child.firstChild().toElement();
-                        while (!sub_child.tagName().isNull())
-                        {
-
-                            if (sub_child.tagName() == "xmlid")
-                                xmlid = sub_child.text();
-
-                            sub_child = sub_child.nextSibling().toElement();
-                        }
-                    }
-                    if (xmlid == ecuCalDef->RomInfo[RomBase])
-                    {
-
-                        OemEcuDefBaseFileFound = true;
-                        if (child.tagName() == "scaling")
-                        {
-                            ecuCalDef->ScalingNameList.append(child.attribute("name"," "));
-                            ecuCalDef->ScalingUnitsList.append(child.attribute("units"," "));
-                            ecuCalDef->ScalingFromByteList.append(child.attribute("toexpr"," "));
-                            ecuCalDef->ScalingToByteList.append(child.attribute("frexpr"," "));
-                            ecuCalDef->ScalingFormatList.append(child.attribute("format"," "));
-                            ecuCalDef->ScalingMinValueList.append(child.attribute("min"," "));
-                            ecuCalDef->ScalingMaxValueList.append(child.attribute("max"," "));
-                            ecuCalDef->ScalingCoarseIncList.append(child.attribute("inc"," "));
-                            ecuCalDef->ScalingFineIncList.append(QString::number(ecuCalDef->ScalingCoarseIncList.at(scaling_index).toFloat() / 10.0f));
-                            ecuCalDef->ScalingStorageTypeList.append(child.attribute("storagetype"," "));
-                            ecuCalDef->ScalingEndianList.append(child.attribute("endian"," "));
-                            QString selection_name;
-                            QString selection_value;
-                            if (child.attribute("storagetype"," ") == "bloblist")
-                            {
-                                QDomElement sub_child = child.firstChild().toElement();
-                                while (!sub_child.isNull())
-                                {
-                                    if (sub_child.tagName() == "data"){
-                                        selection_name.append(sub_child.attribute("name"," ") + ",");
-                                        selection_value.append(sub_child.attribute("value"," ") + ",");
-                                    }
-                                    sub_child = sub_child.nextSibling().toElement();
-                                }
-                            }
-                            if (selection_name == NULL)
-                                selection_name.append(" ");
-                            if (selection_value == NULL)
-                                selection_value.append(" ");
-                            ecuCalDef->ScalingSelectionsNameList.append(selection_name);
-                            ecuCalDef->ScalingSelectionsValueList.append(selection_value);
-                            scaling_index++;
-                        }
-
-                        else if (child.tagName() == "table")
-                        {
-                            for (int i = 0; i < ecuCalDef->NameList.length(); i++)
-                            {
-                                if (child.attribute("name","No name") == ecuCalDef->NameList.at(i))
-                                {
-                                    QString type = child.attribute("type"," ");
-                                    if (type == "1D")
-                                        type = "2D";
-                                    ecuCalDef->TypeList.replace(i, type);
-                                    ecuCalDef->CategoryList.replace(i, child.attribute("category"," "));
-                                    ecuCalDef->MapScalingNameList.replace(i, child.attribute("scaling"," "));
-                                    for (int k = 0; k < ecuCalDef->ScalingNameList.length(); k++)
-                                    {
-                                        if (ecuCalDef->ScalingNameList.at(k) == ecuCalDef->MapScalingNameList.at(i))
-                                        {
-                                            if (ecuCalDef->ScalingStorageTypeList.at(k) == "bloblist")
-                                                ecuCalDef->TypeList.replace(i, "Selectable");
-                                            ecuCalDef->StorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
-                                            ecuCalDef->UnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
-                                            ecuCalDef->FineIncList.replace(i, ecuCalDef->ScalingFineIncList.at(k));
-                                            ecuCalDef->CoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
-                                            ecuCalDef->MinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
-                                            ecuCalDef->MaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
-                                            ecuCalDef->EndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
-                                            ecuCalDef->FromByteList.replace(i, ecuCalDef->ScalingFromByteList.at(k));
-                                            ecuCalDef->ToByteList.replace(i, ecuCalDef->ScalingToByteList.at(k));
-                                            ecuCalDef->FormatList.replace(i, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
-                                        }
-                                    }
-
-                                    QDomElement sub_child = child.firstChild().toElement();
-                                    QString TableDescription;
-                                    QString TableStates;
-
-                                    while (!sub_child.isNull())
-                                    {
-                                        if (sub_child.tagName() == "table")
-                                        {
-                                            QString ScaleType = sub_child.attribute("type"," ");
-                                            if (ScaleType == "X Axis")
-                                            {
-                                                if (ecuCalDef->XSizeList.at(i) == "" || ecuCalDef->XSizeList.at(i) == " ")
-                                                    ecuCalDef->XSizeList.replace(i, sub_child.attribute("elements", "1"));
-                                                ecuCalDef->XScaleNameList.replace(i, sub_child.attribute("name"," "));
-                                                ecuCalDef->XScaleTypeList.replace(i, ScaleType);
-                                                ecuCalDef->XScaleScalingNameList.replace(i, sub_child.attribute("scaling"," "));
-                                                ecuCalDef->XScaleLogParamList.replace(i, sub_child.attribute("logparam"," "));
-
-                                                for (int k = 0; k < ecuCalDef->ScalingNameList.length(); k++)
-                                                {
-                                                    if (ecuCalDef->ScalingNameList.at(k) == ecuCalDef->XScaleScalingNameList.at(i))
-                                                    {
-                                                        ecuCalDef->XScaleStorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
-                                                        ecuCalDef->XScaleUnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
-                                                        ecuCalDef->XScaleFineIncList.replace(i, ecuCalDef->ScalingFineIncList.at(k));
-                                                        ecuCalDef->XScaleCoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
-                                                        ecuCalDef->XScaleMinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
-                                                        ecuCalDef->XScaleMaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
-                                                        ecuCalDef->XScaleEndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
-                                                        ecuCalDef->XScaleFromByteList.replace(i, ecuCalDef->ScalingFromByteList.at(k));
-                                                        ecuCalDef->XScaleToByteList.replace(i, ecuCalDef->ScalingToByteList.at(k));
-                                                        ecuCalDef->XScaleFormatList.replace(i, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
-                                                     }
-                                                }
-                                            }
-                                            else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "3D")
-                                            {
-                                                if (ecuCalDef->YSizeList.at(i) == "" || ecuCalDef->YSizeList.at(i) == " ")
-                                                    ecuCalDef->YSizeList.replace(i, sub_child.attribute("elements", "1"));
-                                                ecuCalDef->YScaleNameList.replace(i, sub_child.attribute("name"," "));
-                                                ecuCalDef->YScaleTypeList.replace(i, ScaleType);
-                                                ecuCalDef->YScaleScalingNameList.replace(i, sub_child.attribute("scaling"," "));
-                                                ecuCalDef->YScaleLogParamList.replace(i, sub_child.attribute("logparam"," "));
-
-                                                for (int k = 0; k < ecuCalDef->ScalingNameList.length(); k++)
-                                                {
-                                                    if (ecuCalDef->ScalingNameList.at(k) == ecuCalDef->YScaleScalingNameList.at(i))
-                                                    {
-                                                        ecuCalDef->YScaleStorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
-                                                        ecuCalDef->YScaleUnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
-                                                        ecuCalDef->YScaleFineIncList.replace(i, ecuCalDef->ScalingFineIncList.at(k));
-                                                        ecuCalDef->YScaleCoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
-                                                        ecuCalDef->YScaleMinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
-                                                        ecuCalDef->YScaleMaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
-                                                        ecuCalDef->YScaleEndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
-                                                        ecuCalDef->YScaleFromByteList.replace(i, ecuCalDef->ScalingFromByteList.at(k));
-                                                        ecuCalDef->YScaleToByteList.replace(i, ecuCalDef->ScalingToByteList.at(k));
-                                                        ecuCalDef->YScaleFormatList.replace(i, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
-                                                     }
-                                                }
-                                            }
-                                            else if (ScaleType == "Static Y Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
-                                            {
-                                                ecuCalDef->XSizeList.replace(i, sub_child.attribute("elements", "1"));
-                                                ecuCalDef->XScaleNameList.replace(i, sub_child.attribute("name"," "));
-                                                ecuCalDef->XScaleTypeList.replace(i, ScaleType);
-                                                ecuCalDef->XScaleScalingNameList.replace(i, sub_child.attribute("scaling"," "));
-                                                ecuCalDef->XScaleLogParamList.replace(i, sub_child.attribute("logparam"," "));
-
-                                                for (int k = 0; k < ecuCalDef->ScalingNameList.length(); k++)
-                                                {
-                                                    if (ecuCalDef->ScalingNameList.at(k) == ecuCalDef->XScaleScalingNameList.at(i))
-                                                    {
-                                                        ecuCalDef->XScaleStorageTypeList.replace(i, ecuCalDef->ScalingStorageTypeList.at(k));
-                                                        ecuCalDef->XScaleUnitsList.replace(i, ecuCalDef->ScalingUnitsList.at(k));
-                                                        ecuCalDef->XScaleFormatList.replace(i, ecuCalDef->ScalingFormatList.at(k));
-                                                        ecuCalDef->XScaleFineIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
-                                                        ecuCalDef->XScaleCoarseIncList.replace(i, ecuCalDef->ScalingCoarseIncList.at(k));
-                                                        ecuCalDef->XScaleMinValueList.replace(i, ecuCalDef->ScalingMinValueList.at(k));
-                                                        ecuCalDef->XScaleMaxValueList.replace(i, ecuCalDef->ScalingMaxValueList.at(k));
-                                                        ecuCalDef->XScaleEndianList.replace(i, ecuCalDef->ScalingEndianList.at(k));
-                                                        ecuCalDef->XScaleFromByteList.replace(i, ecuCalDef->ScalingFromByteList.at(k));
-                                                        ecuCalDef->XScaleToByteList.replace(i, ecuCalDef->ScalingToByteList.at(k));
-                                                        QString value_format;
-                                                        value_format = ecuCalDef->ScalingFormatList.at(k);
-                                                        ecuCalDef->XScaleFormatList.replace(i, convert_value_format(value_format));
-
-                                                        ecuCalDef->XScaleStaticDataList.replace(i, " ");
-                                                    }
-                                                }
-
-                                                QDomElement sub_child_data = sub_child.firstChild().toElement();
-                                                QString StaticYScaleData;
-                                                while (!sub_child_data.isNull())
-                                                {
-                                                    if (sub_child_data.tagName() == "data"){
-                                                        StaticYScaleData.append(sub_child_data.text());
-                                                        StaticYScaleData.append(",");
-                                                    }
-                                                    sub_child_data = sub_child_data.nextSibling().toElement();
-                                                }
-                                                ecuCalDef->YSizeList[i] = "1";
-                                                ecuCalDef->YScaleAddressList[i] = " ";
-
-                                                ecuCalDef->XScaleStaticDataList.replace(i, StaticYScaleData);
-                                            }
-                                        }
-                                        else if (sub_child.tagName() == "description"){
-                                            TableDescription = sub_child.text();
-                                            if (!TableDescription.isEmpty())
-                                                ecuCalDef->DescriptionList.replace(i, "\n\n" + TableDescription);
-                                            else
-                                                ecuCalDef->DescriptionList.replace(i, " ");
-                                        }
-                                        else if (sub_child.tagName() == "state"){
-                                            TableStates.append(sub_child.attribute("name"," ") + ",");
-                                            TableStates.append(sub_child.attribute("data"," ") + ",");
-
-                                        }
-                                        else
-                                        {
-                                        }
-                                        sub_child = sub_child.nextSibling().toElement();
-                                    }
-                                    ecuCalDef->StateList.replace(i, TableStates);
-
-                                }
-                            }
-                        }
-                    }
-                    child = child.nextSibling().toElement();
-                }
-            }
-        }
-        root = root.nextSibling().toElement();
-    }
-
-    if (!OemEcuDefBaseFileFound)
-        return NULL;
-
-    return ecuCalDef;
-}
-*/
 FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStructure *ecuCalDef, QString cal_id)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -435,8 +162,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     {
         if (configValues->ecuflash_def_cal_id.at(index) == cal_id)
         {
-            //qDebug() << "ID found:" << configValues->ecuflash_def_cal_id.at(index) << cal_id;
-            //qDebug() << "File name:" << configValues->ecuflash_def_filename.at(index);
+            //qDebug() << "EcuFlash ID found:" << configValues->ecuflash_def_cal_id.at(index) << cal_id;
+            //qDebug() << "EcuFlash def file name:" << configValues->ecuflash_def_filename.at(index);
             cal_id_file_found = true;
             file_index = index;
             continue;
@@ -478,10 +205,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     }
     else
         base_defined = false;
-
-    qDebug() << "***";
-    qDebug() << "*** ROM" << cal_id;
-    qDebug() << "***";
 
     QDomNodeList rom_childs = xmlBOM.elementsByTagName("rom");
     QDomElement rom_child = rom_childs.at(0).toElement().firstChild().toElement();
@@ -621,6 +344,10 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     if (ecuCalDef->YSizeList.at(def_map_index) == "" || ecuCalDef->YSizeList.at(def_map_index) == " ")
                         ecuCalDef->YSizeList.replace(def_map_index, rom_child.attribute("elements", " "));
                 }
+                if (ecuCalDef->StartPosList.at(def_map_index) == " ")
+                    ecuCalDef->StartPosList.replace(def_map_index, rom_child.attribute("startpos", "1"));
+                if (ecuCalDef->IntervalList.at(def_map_index) == " ")
+                    ecuCalDef->IntervalList.replace(def_map_index, rom_child.attribute("interval", "1"));
                 if (ecuCalDef->AddressList.at(def_map_index) == " ")
                     ecuCalDef->AddressList.replace(def_map_index, rom_child.attribute("address", ""));
                 if (ecuCalDef->TypeList.at(def_map_index) == " ")
@@ -699,6 +426,10 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ecuCalDef->XScaleTypeList.replace(def_map_index, ScaleType);
                             if (ecuCalDef->XScaleScalingNameList.at(def_map_index) == " ")
                                 ecuCalDef->XScaleScalingNameList.replace(def_map_index, rom_scale_child.attribute("scaling"," "));
+                            if (ecuCalDef->XScaleStartPosList.at(def_map_index) == " ")
+                                ecuCalDef->XScaleStartPosList.replace(def_map_index, rom_scale_child.attribute("startpos", "1"));
+                            if (ecuCalDef->XScaleIntervalList.at(def_map_index) == " ")
+                                ecuCalDef->XScaleIntervalList.replace(def_map_index, rom_scale_child.attribute("interval", "1"));
 
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
@@ -738,6 +469,13 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ecuCalDef->YScaleTypeList.replace(def_map_index, ScaleType);
                             if (ecuCalDef->YScaleScalingNameList.at(def_map_index) == " ")
                                 ecuCalDef->YScaleScalingNameList.replace(def_map_index, rom_scale_child.attribute("scaling"," "));
+                            if (ecuCalDef->YScaleStartPosList.at(def_map_index) == " ")
+                                ecuCalDef->YScaleStartPosList.replace(def_map_index, rom_scale_child.attribute("startpos", "1"));
+                            if (ecuCalDef->YScaleIntervalList.at(def_map_index) == " ")
+                                ecuCalDef->YScaleIntervalList.replace(def_map_index, rom_scale_child.attribute("interval", "1"));
+
+                            if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
+                                qDebug() << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
 
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
@@ -767,6 +505,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         }
                         else if (ScaleType == "Static Y Axis" || ScaleType == "Static X Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "2D"))
                         {
+                            if (ScaleType == "Static Y Axis")
+                                ScaleType = "Static X Axis";
                             if (ecuCalDef->XSizeList.at(def_map_index) == " " || ecuCalDef->XSizeList.at(def_map_index) == "")
                                 ecuCalDef->XSizeList.replace(def_map_index, rom_scale_child.attribute("elements", " "));
                             if (ecuCalDef->XScaleNameList.at(def_map_index) == " ")
@@ -777,6 +517,10 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ecuCalDef->XScaleTypeList.replace(def_map_index, ScaleType);
                             if (ecuCalDef->XScaleScalingNameList.at(def_map_index) == " ")
                                 ecuCalDef->XScaleScalingNameList.replace(def_map_index, rom_scale_child.attribute("scaling"," "));
+                            if (ecuCalDef->XScaleStartPosList.at(def_map_index) == " ")
+                                ecuCalDef->XScaleStartPosList.replace(def_map_index, rom_scale_child.attribute("startpos", "1"));
+                            if (ecuCalDef->XScaleIntervalList.at(def_map_index) == " ")
+                                ecuCalDef->XScaleIntervalList.replace(def_map_index, rom_scale_child.attribute("interval", "1"));
 
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
@@ -832,9 +576,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ecuCalDef->YScaleAddressList.replace(def_map_index, rom_scale_child.attribute("address", " "));
                                 ecuCalDef->YSizeList.replace(def_map_index, rom_scale_child.attribute("elements", " "));
                             }
-                            i++;
-                            if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling (Failsafe)")
+                            if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
                                 qDebug() << i << ":" << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
+                            i++;
                         }
                     }
                     else if (rom_scale_child.tagName() == "data")
@@ -855,6 +599,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     }
                     rom_scale_child = rom_scale_child.nextSibling().toElement();
                 }
+                /*
                 if (ecuCalDef->XSizeList.at(def_map_index) == "" || ecuCalDef->XSizeList.at(def_map_index) == " ")
                 {
                     ecuCalDef->XSizeList.replace(def_map_index, "1");
@@ -873,7 +618,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 {
                     ecuCalDef->YScaleTypeList.replace(def_map_index, "Y Axis");
                 }
-
+*/
                 def_map_index++;
             }
         }
@@ -881,7 +626,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         rom_child = rom_child.nextSibling().toElement();
     }
 
-    qDebug() << "CAL ID" << cal_id << "read";
+    //qDebug() << "CAL ID" << cal_id << "read";
     //qDebug() << "Scale types" << ecuCalDef->ScaleTypeList[0];
     read_ecuflash_ecu_def(ecuCalDef, inherits_cal_id);
     //ecuCalDef->use_ecuflash_definition = true;
@@ -904,11 +649,13 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         }
     }
 
+    //qDebug() << "Definition for CAL ID" << cal_id << "succesfully read, start parsing definition scalings...";
     return ecuCalDef;
 }
 
 FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCalDefStructure *ecuCalDef)
 {
+    //qDebug() << "Parse EcuFlash definition scalings...";
     for (def_map_index = 0; def_map_index < ecuCalDef->NameList.length(); def_map_index++)
     {
         for (int k = 0; k < ecuCalDef->ScalingNameList.length(); k++)
@@ -961,6 +708,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
         }
         if (ecuCalDef->NameList.at(def_map_index) == "Air Fuel Learning Loads" || ecuCalDef->NameList.at(def_map_index) == "Injector Capacity")
         {
+/*
             qDebug() << "";
             qDebug() << "Map data";
             qDebug() << ecuCalDef->NameList.at(def_map_index);
@@ -996,8 +744,10 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
             qDebug() << ecuCalDef->YScaleFromByteList.at(def_map_index);
             qDebug() << ecuCalDef->YScaleToByteList.at(def_map_index);
             qDebug() << ecuCalDef->YScaleData.at(def_map_index);
+            */
         }
     }
+    //qDebug() << "EcuFlash scalings parsed, start parsing calibration maps";
     return ecuCalDef;
 }
 
@@ -1011,6 +761,8 @@ FileActions::EcuCalDefStructure *FileActions::add_ecuflash_def_list_item(EcuCalD
     ecuCalDef->CategoryExpandedList.append(" ");
     ecuCalDef->XSizeList.append(" ");
     ecuCalDef->YSizeList.append(" ");
+    ecuCalDef->StartPosList.append(" ");
+    ecuCalDef->IntervalList.append(" ");
     ecuCalDef->MinValueList.append(" ");
     ecuCalDef->MaxValueList.append(" ");
     ecuCalDef->UnitsList.append(" ");
@@ -1064,6 +816,8 @@ FileActions::EcuCalDefStructure *FileActions::add_ecuflash_def_list_item(EcuCalD
     ecuCalDef->XScaleTypeList.append(" ");
     ecuCalDef->XScaleNameList.append(" ");
     ecuCalDef->XScaleAddressList.append(" ");
+    ecuCalDef->XScaleStartPosList.append(" ");
+    ecuCalDef->XScaleIntervalList.append(" ");
     ecuCalDef->XScaleMinValueList.append(" ");
     ecuCalDef->XScaleMaxValueList.append(" ");
     ecuCalDef->XScaleUnitsList.append(" ");
@@ -1082,6 +836,8 @@ FileActions::EcuCalDefStructure *FileActions::add_ecuflash_def_list_item(EcuCalD
     ecuCalDef->YScaleTypeList.append(" ");
     ecuCalDef->YScaleNameList.append(" ");
     ecuCalDef->YScaleAddressList.append(" ");
+    ecuCalDef->YScaleStartPosList.append(" ");
+    ecuCalDef->YScaleIntervalList.append(" ");
     ecuCalDef->YScaleMinValueList.append(" ");
     ecuCalDef->YScaleMaxValueList.append(" ");
     ecuCalDef->YScaleUnitsList.append(" ");
@@ -1101,6 +857,7 @@ FileActions::EcuCalDefStructure *FileActions::add_ecuflash_def_list_item(EcuCalD
     ecuCalDef->LogParamList.append(" ");
     ecuCalDef->FromByteList.append(" ");
     ecuCalDef->ToByteList.append(" ");
+    ecuCalDef->MapDefined.append(" ");
 
     return ecuCalDef;
 }
