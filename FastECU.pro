@@ -164,6 +164,14 @@ DISTFILES += \
     kernels/ssmk_SH7058.bin \
     kernels/ssmk_SH7058_EEPSCI3.bin \
     kernels/ssmk_SH7058_EEPSCI4.bin \
+    kernels/ssmk_can_sh7055.bin \
+    kernels/ssmk_can_sh7058.bin \
+    kernels/ssmk_can_tp_sh7058.bin \
+    kernels/ssmk_can_tp_sh7058d_euro4.bin \
+    kernels/ssmk_hc16.bin \
+    kernels/ssmk_hc16_decryp.bin \
+    kernels/ssmk_kline_sh7055.bin \
+    kernels/ssmk_kline_sh7058.bin \
     precompiled/FastECU-Linux.zip \
     precompiled/FastECU-Win7-64bit.zip \
     precompiled/FastECU-Windows.zip
