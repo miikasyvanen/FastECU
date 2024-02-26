@@ -1,6 +1,7 @@
 QT       += core gui xml serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += charts
 
 CONFIG += c++11
 
@@ -68,6 +69,9 @@ SOURCES += \
     modules/flash_ecu_subaru_hitachi_m32r_06.cpp \
     modules/flash_ecu_subaru_hitachi_m32r_can.cpp \
     modules/flash_ecu_subaru_uinisia_jecs_m32r.cpp \
+    modules/flash_tcu_subaru_denso_sh705x_can.cpp \
+    modules/flash_tcu_subaru_hitachi_m32r_can.cpp \
+    modules/flash_tcu_subaru_hitachi_m32r_kline.cpp \
     protocol_select.cpp \
     serial_port_actions.cpp \
     settings.cpp \
@@ -105,6 +109,9 @@ HEADERS += \
     modules/flash_ecu_subaru_hitachi_m32r_06.h \
     modules/flash_ecu_subaru_hitachi_m32r_can.h \
     modules/flash_ecu_subaru_uinisia_jecs_m32r.h \
+    modules/flash_tcu_subaru_denso_sh705x_can.h \
+    modules/flash_tcu_subaru_hitachi_m32r_can.h \
+    modules/flash_tcu_subaru_hitachi_m32r_kline.h \
     protocol_select.h \
     serial_port_actions.h \
     settings.h \
