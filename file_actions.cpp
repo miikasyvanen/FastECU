@@ -1434,7 +1434,8 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_ecuflash_def_files(Fil
         int addr = configValues->ecuflash_def_cal_id_addr.at(i).toUInt(&bStatus, 16);
         int ecuid_length = configValues->ecuflash_def_cal_id.at(i).length();
         for (int j = addr; j < addr + ecuid_length; j++)
-            cal_id.append((uint8_t)ecuCalDef->FullRomData.at(j));
+            if (ecuCalDef->FullRomData.length() > addr + ecuid_length)
+                cal_id.append((uint8_t)ecuCalDef->FullRomData.at(j));
 
         if (cal_id == configValues->ecuflash_def_cal_id.at(i))
             cal_id_confirmed = true;
@@ -1467,7 +1468,8 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(Fi
         int addr = configValues->romraider_def_cal_id_addr.at(i).toUInt(&bStatus, 16);
         int ecuid_length = configValues->romraider_def_cal_id.at(i).length();
         for (int j = addr; j < addr + ecuid_length; j++)
-            cal_id.append((uint8_t)ecuCalDef->FullRomData.at(j));
+            if (ecuCalDef->FullRomData.length() > addr + ecuid_length)
+                cal_id.append((uint8_t)ecuCalDef->FullRomData.at(j));
 
         if (cal_id == configValues->romraider_def_cal_id.at(i))
             cal_id_confirmed = true;
@@ -1526,6 +1528,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (!ecuCalDef->FullRomData.length())
     {
+
         if (filename.isEmpty())
         {
             QFileDialog openDialog;
@@ -1553,6 +1556,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
+        if (filename == "") filename = "default.bin";
+
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());
         file_name_str = fileInfo.fileName();

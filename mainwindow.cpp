@@ -388,6 +388,9 @@ QString MainWindow::check_kernel(QString flash_method)
     else if (flash_method.startsWith("sub_sh7058s_denso_can"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
 
+    else if (flash_method.startsWith("sub_tcu_denso_can"))
+        kernel = prefix + "ssmk_tcu_SH7055_35.bin";
+
     else
         kernel = "N/A";
 
@@ -567,7 +570,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 {
     int rom_number = 0;
 
-    QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
+    QTreeWidgetItem *selectedItem = NULL;
+    if (ui->calibrationFilesTreeWidget->selectedItems().count())
+        selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
     if (!selectedItem && cmd_type != "read")
     {
         QMessageBox::warning(this, tr("Write ROM"), "No file selected!");
@@ -591,6 +596,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->serial_port_list.clear();
     serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
     serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+
+    if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != "/")
+        configValues->kernel_files_directory.append("/");
 
     if (configValues->flash_protocol_selected_make == "Subaru")
     {
@@ -640,7 +648,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
 
-        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_can"))
+        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_can") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_kline") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_denso_kline"))
         {
             if (ecuCalDef[rom_number]->McuType == "SH7055")
                 ecuCalDef[rom_number]->FlashMethod = "sh7055_denso_can";
@@ -668,12 +676,16 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruUnisiaJecs = new FlashEcuSubaruUnisiaJecs(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_02"))
             flashEcuSubaruHitachiM32R_02 = new FlashEcuSubaruHitachiM32R_02(serial,ecuCalDef[rom_number], cmd_type, this);
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_06"))
+         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_06"))
             flashEcuSubaruHitachiM32R_06 = new FlashEcuSubaruHitachiM32R_06(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_can"))
             flashEcuSubaruHitachiCan = new FlashEcuSubaruHitachiCan(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_kline"))
+            flashTcuSubaruHitachiM32RKline = new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_can"))
             flashTcuSubaruHitachiM32RCan = new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_denso_can"))
+            flashTcuSubaruDensoSH705xCan = new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType.startsWith("SH7058"))

@@ -86,22 +86,25 @@ void MainWindow::ssm_kline_init()
         delay(200);
         received = serial->read_serial_data(100, 500);
         //qDebug() << "ECU ID:" << parse_ecuid(received);
-        qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
-        qDebug() << "ECU INIT:" << parse_message_to_hex(received);
-        if (received.length() > 0)
+        if (received.length())
         {
-            if (received.length() == (uint8_t)received.at(3) + 5)
+            qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
+            qDebug() << "ECU INIT:" << parse_message_to_hex(received);
+            if (received.length() > 0)
             {
-                //qDebug() << "ECU ID:" << parse_ecuid(received);
-                ecu_init_complete = true;
-                //set_status_bar_label(true, true, ecuid);
-                ecuid = parse_ecuid(received);
-                parse_log_value_list(received, "SSM");
-
-                received = serial->read_serial_data(1, 100);
-                while(received.length() > 0)
+                if (received.length() == (uint8_t)received.at(3) + 5)
                 {
+                    //qDebug() << "ECU ID:" << parse_ecuid(received);
+                    ecu_init_complete = true;
+                    //set_status_bar_label(true, true, ecuid);
+                    ecuid = parse_ecuid(received);
+                    parse_log_value_list(received, "SSM");
+
                     received = serial->read_serial_data(1, 100);
+                    while(received.length() > 0)
+                    {
+                        received = serial->read_serial_data(1, 100);
+                    }
                 }
             }
         }
