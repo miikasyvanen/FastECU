@@ -1,8 +1,8 @@
-#include "flash_tcu_subaru_hitachi_m32r_can.h"
+#include "flash_tcu_cvt_subaru_hitachi_m32r_can.h"
 
 QT_CHARTS_USE_NAMESPACE
 
-FlashTcuSubaruHitachiM32RCan::FlashTcuSubaruHitachiM32RCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashTcuCvtSubaruHitachiM32RCan::FlashTcuCvtSubaruHitachiM32RCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent),
       ui(new Ui::EcuOperationsWindow)
 {
@@ -34,17 +34,17 @@ FlashTcuSubaruHitachiM32RCan::FlashTcuSubaruHitachiM32RCan(SerialPortActions *se
     }
 }
 
-FlashTcuSubaruHitachiM32RCan::~FlashTcuSubaruHitachiM32RCan()
+FlashTcuCvtSubaruHitachiM32RCan::~FlashTcuCvtSubaruHitachiM32RCan()
 {
 
 }
 
-void FlashTcuSubaruHitachiM32RCan::closeEvent(QCloseEvent *event)
+void FlashTcuCvtSubaruHitachiM32RCan::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
 
-int FlashTcuSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashTcuCvtSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
 {
     bool ok = false;
 
@@ -100,7 +100,8 @@ int FlashTcuSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefS
     //QMessageBox::information(this, tr("Connecting to TCU"), "Press OK to start countdown!");
 
     send_log_window_message("Connecting to Subaru TCU Hitachi CAN bootloader, please wait...", true, true);
-    result = connect_bootloader_subaru_tcu_hitachi_can();
+    //result = connect_bootloader_subaru_tcu_hitachi_can();
+    result = hack_words();
 
     if (result == STATUS_SUCCESS)
     {
@@ -123,7 +124,7 @@ int FlashTcuSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefS
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::connect_bootloader_subaru_tcu_hitachi_can()
+int FlashTcuCvtSubaruHitachiM32RCan::connect_bootloader_subaru_tcu_hitachi_can()
 {
     QByteArray output;
     QByteArray received;
@@ -319,7 +320,7 @@ int FlashTcuSubaruHitachiM32RCan::connect_bootloader_subaru_tcu_hitachi_can()
     {
         send_log_window_message("Bad response to jumping to onboard kernel", true, true);
 
-        //return STATUS_ERROR;
+        return STATUS_ERROR;
     }
 
     send_log_window_message("Jump to kernel ok", true, true);
@@ -350,11 +351,95 @@ int FlashTcuSubaruHitachiM32RCan::connect_bootloader_subaru_tcu_hitachi_can()
 }
 
 /*
+ *
+ * Hack encryption words
+ *
+ */
+int FlashTcuCvtSubaruHitachiM32RCan::hack_words()
+{
+    QByteArray pagedata, romdata;
+    char indata[0x100];
+    uint16_t i, j, k, l, m;
+
+    pagedata = QByteArray::fromHex("082130ce27bbf3091f96fb444d5568947d98bdbd7d98bdbd28b4cb2801c872d47d98bdbd3a2126c77d98bdbd4cd5f99796c04d3e7d98bdbd7d98bdbd2bed7d8a164ae44523ab68e87d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd7d98bdbd2a810a7c7d98bdbd878611f70e1d2bf79e14ec64488d31557d285047d1952a6a6df5709f6e2cb12f5cb39a30bb287a381b2bd4314e943d9875e2bb391a0ac0d31f66e710e734f7aa8aa9e9687202926105e6775afcd1154f9d28e6e61283b231a815935a9310a5456007cc252cb53c7136276f9836276f9836276f9836276f9836276f98");
+
+    send_log_window_message("Loading TCU ROM from default.bin...", true, true);
+    QString filename = "default.bin";
+    QFile file(filename);
+    QDataStream inStream(&file);
+    //QFileInfo fileInfo(file.fileName());
+    //QString file_name_str = fileInfo.fileName();
+
+    if (!file.open(QIODevice::ReadOnly ))
+    {
+        //qDebug() << "Unable to open file for reading";
+        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for reading");
+        return NULL;
+    }
+
+    inStream.skipRawData(0x8000);
+    inStream.readRawData(indata, 0x100);
+    file.close();
+
+    for(i = 0; i < 0x100; i++) romdata.append(indata[i]);
+
+    send_log_window_message("Send msg: " + parse_message_to_hex(pagedata), true, true);
+    send_log_window_message("Send msg: " + parse_message_to_hex(romdata), true, true);
+
+    QByteArray decrypt, testpage, testrom;
+    uint16_t keytogenerateindex[4];
+    //const uint16_t keytogenerateindex[]={
+    //    0x1075, 0x9E51, 0x8BEF, 0x3B61
+    //};
+    const uint8_t indextransformation[]={
+        0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
+        0xA, 0xD, 0x2, 0xB, 0xF, 0x4, 0x0, 0x3,
+        0xB, 0x4, 0x6, 0x0, 0xF, 0x2, 0xD, 0x9,
+        0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
+    };
+
+    for(i = 0; i < 0xf; i++)
+    {
+        for(j = 0; j < 0xf; j++)
+        {
+            for(k = 0; k < 0xf; k++)
+            {
+                for(l = 0; l < 0xf; l++)
+                {
+                    keytogenerateindex[0] = i;
+                    keytogenerateindex[1] = j;
+                    keytogenerateindex[2] = k;
+                    keytogenerateindex[3] = l;
+
+
+                    for(m = 4; m <= 0x10; m += 4)
+                    {
+                        testpage = pagedata.chopped(0x100 - m);
+                        testrom = pagedata.chopped(0x100 - m);
+                        send_log_window_message("Attempt: " + QString::number(i) + " " + QString::number(j) + " " + QString::number(k) + " " + QString::number(l) + " " + QString::number(m), true, true);
+                        decrypt = subaru_tcu_hitachi_calculate_32bit_payload(testpage, m, keytogenerateindex, indextransformation);
+                        send_log_window_message("Decrypted: " + parse_message_to_hex(decrypt), true, true);
+                        if (decrypt != testrom) break;
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
+
+    return STATUS_ERROR;
+}
+
+
+/*
  * Read memory from Subaru TCU Hitachi CAN bootloader
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashTcuCvtSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -366,6 +451,7 @@ int FlashTcuSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(FileActions::E
     uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
+
 
     start_addr = start_addr - 0x00100000;          // manual adjustment for starting address
     if (start_addr < 0x8000)                       // TCU code does not allow dumping below 0x8000
@@ -638,7 +724,7 @@ int FlashTcuSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(FileActions::E
  * @return success
  */
 
-int FlashTcuSubaruHitachiM32RCan::write_mem_subaru_tcu_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashTcuCvtSubaruHitachiM32RCan::write_mem_subaru_tcu_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
 {
     QByteArray filedata;
 
@@ -881,7 +967,7 @@ int FlashEcuSubaruDensoSH705xCan::check_romcrc_denso_can_02_32bit(const uint8_t 
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::reflash_block_subaru_tcu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashTcuCvtSubaruHitachiM32RCan::reflash_block_subaru_tcu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -1074,7 +1160,7 @@ int FlashTcuSubaruHitachiM32RCan::reflash_block_subaru_tcu_hitachi_can(const uin
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::erase_subaru_tcu_hitachi_can()
+int FlashTcuCvtSubaruHitachiM32RCan::erase_subaru_tcu_hitachi_can()
 {
     QByteArray output;
     QByteArray received;
@@ -1471,21 +1557,25 @@ QByteArray FlashEcuSubaruDensoSH705xCan::send_subaru_denso_sid_31_start_routine(
 }
 */
 
+// CVT version
+//
+//
+//
 
 /*
- * Generate tcu hitachi can seed key from received seed bytes
+ * Generate cvt tcu hitachi can seed key from received seed bytes
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashTcuCvtSubaruHitachiM32RCan::subaru_tcu_hitachi_generate_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
     const uint16_t keytogenerateindex[]={
-        0xF2CA, 0x2417, 0x21DE, 0x8475,
-        0x39AB, 0xF767, 0x6204, 0x6BE0,
-        0xBC63, 0x5988, 0x2845, 0x9846,
-        0xEB97, 0x99DE, 0xC7DB, 0xEFAE
+        0x9E99, 0x685C, 0x874D, 0xF11E,
+        0x27D4, 0xA967, 0xB63B, 0x7A37,
+        0xE23B, 0xA8D0, 0x9B82, 0xAC43,
+        0xE874, 0x7FC5, 0x7141, 0x8B44
     };
 
     const uint8_t indextransformation[]={
@@ -1505,7 +1595,7 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_generate_can_seed_ke
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuCvtSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1547,13 +1637,24 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_seed_key(Q
 
     return key;
 }
+
+
+//
+//
+//
+// end CVT version
+
+
+
+
+
 /*
  * Encrypt upload data
  *
  * @return encrypted data
  */
 
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuCvtSubaruHitachiM32RCan::subaru_tcu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1573,7 +1674,7 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_encrypt_32bit_payloa
     return encrypted;
 }
 
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuCvtSubaruHitachiM32RCan::subaru_tcu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1593,7 +1694,7 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_decrypt_32bit_payloa
     return decrypt;
 }
 
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuCvtSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1827,7 +1928,7 @@ int FlashEcuSubaruDensoSH705xCan::connect_bootloader_start_countdown(int timeout
  *
  * @return parsed message
  */
-QString FlashTcuSubaruHitachiM32RCan::parse_message_to_hex(QByteArray received)
+QString FlashTcuCvtSubaruHitachiM32RCan::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1845,7 +1946,7 @@ QString FlashTcuSubaruHitachiM32RCan::parse_message_to_hex(QByteArray received)
  *
  * @return
  */
-int FlashTcuSubaruHitachiM32RCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashTcuCvtSubaruHitachiM32RCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1884,14 +1985,14 @@ int FlashTcuSubaruHitachiM32RCan::send_log_window_message(QString message, bool 
     return STATUS_ERROR;
 }
 
-void FlashTcuSubaruHitachiM32RCan::set_progressbar_value(int value)
+void FlashTcuCvtSubaruHitachiM32RCan::set_progressbar_value(int value)
 {
     if (ui->progressbar)
         ui->progressbar->setValue(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashTcuSubaruHitachiM32RCan::delay(int timeout)
+void FlashTcuCvtSubaruHitachiM32RCan::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)
