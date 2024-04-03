@@ -684,6 +684,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashTcuSubaruHitachiM32RKline = new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_can"))
             flashTcuSubaruHitachiM32RCan = new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_hitachi_can"))
+            flashTcuCvtSubaruHitachiM32RCan = new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_denso_can"))
             flashTcuSubaruDensoSH705xCan = new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
