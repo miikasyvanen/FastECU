@@ -53,6 +53,7 @@ SOURCES += \
     file_actions.cpp \
     file_defs_ecuflash.cpp \
     file_defs_romraider.cpp \
+    get_key_operations_subaru.cpp \
     log_operations_ssm.cpp \
     logbox.cpp \
     logvalues.cpp \
@@ -96,6 +97,7 @@ HEADERS += \
     ecu_operations_nissan.h \
     ecu_operations_subaru.h \
     file_actions.h \
+    get_key_operations_subaru.h \
     kernelcomms.h \
     kernelmemorymodels.h \
     logbox.h \
