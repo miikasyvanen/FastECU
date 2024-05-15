@@ -63,6 +63,8 @@ void MainWindow::menu_action_triggered(QString action)
 
     if (action == "biu_communication")
         show_subaru_biu_window();
+    if (action == "get_key")
+        show_subaru_get_key_window();
 
     // HELP MENU
     if (action == "about")
@@ -932,6 +934,15 @@ void MainWindow::show_subaru_biu_window()
     serial->add_iso14230_header = false;
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
+}
+
+void MainWindow::show_subaru_get_key_window()
+{
+
+    GetKeyOperationsSubaru *getKeyOperationsSubaru = new GetKeyOperationsSubaru(this);
+    getKeyOperationsSubaru->show();
+
+
 }
 
 void MainWindow::winols_csv_to_romraider_xml()
