@@ -28,6 +28,7 @@
 #include <protocol_select.h>
 #include <definition_file_convert.h>
 #include <biu_operations_subaru.h>
+#include <get_key_operations_subaru.h>
 #include <ecu_operations_nissan.h>
 #include <ecu_operations_mercedes.h>
 #include <ecu_operations_subaru.h>
@@ -261,6 +262,7 @@ private:
     void toggle_simulate_obd();
     int simulate_obd();
     void show_subaru_biu_window();
+    void show_subaru_get_key_window();
 
     //#include <modules/flash_sti04.h>
 
