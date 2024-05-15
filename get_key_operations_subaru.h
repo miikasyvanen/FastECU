@@ -27,7 +27,7 @@ private:
     bool kill_process = false;
 
     int linear_approx_test(void);
-    int encrypt_and_apply_linear_approx();
+    int load_and_apply_linear_approx();
     uint8_t get_bit(uint32_t value, int bit_num);
     uint16_t applyMask(uint16_t value, uint16_t mask);
     uint16_t sBox(uint16_t sBoxInput);

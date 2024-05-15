@@ -15,7 +15,7 @@ GetKeyOperationsSubaru::GetKeyOperationsSubaru(QWidget *parent)
 
     ui->progressbar->setValue(0);
 
-    result = encrypt_and_apply_linear_approx();
+    result = load_and_apply_linear_approx();
 
     if (result == STATUS_SUCCESS)
     {
@@ -40,7 +40,7 @@ void GetKeyOperationsSubaru::closeEvent(QCloseEvent *bar)
     //ecuOperations->kill_process = true;
 }
 
-int GetKeyOperationsSubaru::encrypt_and_apply_linear_approx()
+int GetKeyOperationsSubaru::load_and_apply_linear_approx()
 {
     //QFileDialog openDialog;
     QString unencryptedFilename = QFileDialog::getOpenFileName(this, tr("Select unencrypted ROM"));
