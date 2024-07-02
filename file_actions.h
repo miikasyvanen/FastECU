@@ -116,6 +116,7 @@ public:
         QString flash_protocol_selected_model;
         QString flash_protocol_selected_version;
         QString flash_protocol_selected_mcu;
+        QString flash_protocol_selected_checksum;
         QString flash_protocol_selected_flash_transport;
         QString flash_protocol_selected_log_transport;
         QString flash_protocol_selected_log_protocol;
@@ -204,6 +205,8 @@ public:
         QStringList CategoryExpandedList;
         QStringList XSizeList;
         QStringList YSizeList;
+        QStringList StartPosList;
+        QStringList IntervalList;
         QStringList MinValueList;
         QStringList MaxValueList;
         QStringList UnitsList;
@@ -222,6 +225,8 @@ public:
         QStringList ScaleNameList[2];
         QStringList ScaleAddressList[2];
         QStringList ScaleSizeList[2];
+        QStringList ScaleStartPosList[2];
+        QStringList ScaleIntervalList[2];
         QStringList ScaleMinValueList[2];
         QStringList ScaleMaxValueList[2];
         QStringList ScaleUnitsList[2];
@@ -240,6 +245,8 @@ public:
         QStringList XScaleTypeList;
         QStringList XScaleNameList;
         QStringList XScaleAddressList;
+        QStringList XScaleStartPosList;
+        QStringList XScaleIntervalList;
         QStringList XScaleMinValueList;
         QStringList XScaleMaxValueList;
         QStringList XScaleUnitsList;
@@ -258,6 +265,8 @@ public:
         QStringList YScaleTypeList;
         QStringList YScaleNameList;
         QStringList YScaleAddressList;
+        QStringList YScaleStartPosList;
+        QStringList YScaleIntervalList;
         QStringList YScaleMinValueList;
         QStringList YScaleMaxValueList;
         QStringList YScaleUnitsList;
@@ -301,6 +310,7 @@ public:
         QStringList LogParamList;
         QStringList FromByteList;
         QStringList ToByteList;
+        QStringList MapDefined;
 
         QByteArray FullRomData;
         bool OemEcuFile;
@@ -403,8 +413,9 @@ public:
 
     //EcuCalDefStructure *read_ecuflash_ecu_def_test(FileActions::EcuCalDefStructure *ecuCalDef, QString cal_id);
 
-    EcuCalDefStructure *parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef);
-    EcuCalDefStructure *parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef);
+    QString parse_hex_ecuid(uint8_t byte);
+    EcuCalDefStructure *parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii);
+    EcuCalDefStructure *parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii);
 
     /***********************************************
      * Open ECU ROM file, including possible

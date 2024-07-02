@@ -1,5 +1,5 @@
-#ifndef FLASHDENSOFXT02_H
-#define FLASHDENSOFXT02_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH7055_02_H
+#define FLASH_ECU_SUBARU_DENSO_SH7055_02_H
 
 #include <QApplication>
 #include <QByteArray>

@@ -264,7 +264,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
     //qDebug() << "Read received message from J2534 device in channel:" << ChannelID;
 
     received = read_serial_data(3, Timeout);
-    //qDebug() << "Message block" << received.length();
+    //qDebug() << "Message block length:" << received.length() << "data:" << parseMessageToHex(received);
     while (received.length() > 0 && is_serial_port_open())
     {
         //qDebug() << "RECEIVED:" << received << parseMessageToHex(received);
@@ -596,7 +596,7 @@ long J2534::PassThruStartMsgFilter(unsigned long ChannelID, unsigned long Filter
             output.append(pFlowControlMsg->Data[i]);
         }
     }
-    qDebug() << "Send data:" << parseMessageToHex(output);
+    //qDebug() << "Send data:" << parseMessageToHex(output);
     write_serial_data(output);
     received = read_serial_data(100, 50);
     //qDebug() << "Received:" << received;
