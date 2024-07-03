@@ -314,11 +314,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x41 || (uint8_t)received.at(1) == 0x00)
+        if ((uint8_t)received.at(0+4) == 0x41 || (uint8_t)received.at(1+4) == 0x00)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -345,11 +345,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x49 || (uint8_t)received.at(1) == 0x02)
+        if ((uint8_t)received.at(0+4) == 0x49 || (uint8_t)received.at(1+4) == 0x02)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -377,11 +377,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x49 || (uint8_t)received.at(1) == 0x06)
+        if ((uint8_t)received.at(0+4) == 0x49 || (uint8_t)received.at(1+4) == 0x06)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -414,12 +414,12 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x50 || (uint8_t)received.at(1) == 0x03)
+        if ((uint8_t)received.at(0+4) == 0x50 || (uint8_t)received.at(1+4) == 0x03)
         {
             req_10_03_connected = true;
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -446,12 +446,12 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x50 || (uint8_t)received.at(1) == 0x43)
+        if ((uint8_t)received.at(0+4) == 0x50 || (uint8_t)received.at(1+4) == 0x43)
         {
             req_10_43_connected = true;
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -478,11 +478,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x67 || (uint8_t)received.at(1) == 0x01)
+        if ((uint8_t)received.at(0+4) == 0x67 || (uint8_t)received.at(1+4) == 0x01)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -502,10 +502,10 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Seed request ok";
 
     seed.clear();
-    seed.append(received.at(2));
-    seed.append(received.at(3));
-    seed.append(received.at(4));
-    seed.append(received.at(5));
+    seed.append(received.at(2+4));
+    seed.append(received.at(3+4));
+    seed.append(received.at(4+4));
+    seed.append(received.at(5+4));
 
     seed.append((uint8_t)0xD3);
     seed.append((uint8_t)0x80);
@@ -536,11 +536,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x67 || (uint8_t)received.at(1) == 0x02)
+        if ((uint8_t)received.at(0+4) == 0x67 || (uint8_t)received.at(1+4) == 0x02)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -578,11 +578,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x50 || (uint8_t)received.at(1) == 0x02)
+        if ((uint8_t)received.at(0+4) == 0x50 || (uint8_t)received.at(1+4) == 0x02)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -695,11 +695,11 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     received = serial->read_serial_data(20, 10);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x34 || (uint8_t)received.at(1) == 0x20)
+        if ((uint8_t)received.at(0+4) == 0x34 || (uint8_t)received.at(1+4) == 0x20)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -785,11 +785,11 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     received = serial->read_serial_data(20, 10);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x77)
+        if ((uint8_t)received.at(0+4) == 0x77)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -823,11 +823,11 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     received = serial->read_serial_data(20, 10);
     if (received.length())
     {
-        if ((uint8_t)received.at(0) == 0x71)
+        if ((uint8_t)received.at(0+4) == 0x71)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2);
+            response.remove(0, 2+4);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)

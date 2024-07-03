@@ -724,16 +724,8 @@ QByteArray SerialPortActions::read_j2534_data(unsigned long timeout)
             if (rxmsg.RxStatus & RX_MSG_END_IND){
                 //qDebug() << "END_OF_MESSAGE" << rxmsg.Data;
             }
-            if (is_iso15765_connection)
-            {
-                for (unsigned long i = 4; i < rxmsg.DataSize; i++)
-                    received.append((uint8_t)rxmsg.Data[i]);
-            }
-            else
-            {
-                for (unsigned long i = 0; i < rxmsg.DataSize; i++)
-                    received.append((uint8_t)rxmsg.Data[i]);
-            }
+            for (unsigned long i = 0; i < rxmsg.DataSize; i++)
+                received.append((uint8_t)rxmsg.Data[i]);
         }
     }
     //qDebug() << "RECEIVED:" << parse_message_to_hex(received);
