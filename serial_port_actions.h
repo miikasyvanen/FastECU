@@ -131,7 +131,9 @@ public:
     int init_j2534_connection();
     //int set_j2534_can_bl_connection();
     int set_j2534_can();
+    int unset_j2534_can();
     int set_j2534_can_filters();
+    int set_j2534_stmin_tx();
     int set_j2534_can_timings();
     //int set_j2534_can_filters();
     int set_j2534_iso9141();
