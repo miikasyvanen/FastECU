@@ -1,6 +1,8 @@
 #include "serial_port_actions.h"
 
-SerialPortActions::SerialPortActions()
+SerialPortActions::SerialPortActions(QObject *parent)
+    : QObject(parent)
+    , serial(new QSerialPort(this))
 {
     j2534 = new J2534();
 }
@@ -104,26 +106,26 @@ int SerialPortActions::fast_init(QByteArray output)
         QByteArray init;
         QByteArray received;
         double seconds = (double)350 / (double)1000;
-        auto spin_start = high_resolution_clock::now();
+        auto spin_start = std::chrono::high_resolution_clock::now();
 
         //serial->setBaudRate(10400);
 
         /* Set timeout to 350ms before init */
         seconds = (double)350 / (double)1000;
-        spin_start = high_resolution_clock::now();
-        while ((high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
+        spin_start = std::chrono::high_resolution_clock::now();
+        while ((std::chrono::high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
         /* Set break to set seril line low */
         serial->setBreakEnabled(true);
         /* Set timeout to 25ms to generate 25ms low pulse  */
         seconds = (double)25.1 / (double)1000;
-        spin_start = high_resolution_clock::now();
-        while ((high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
+        spin_start = std::chrono::high_resolution_clock::now();
+        while ((std::chrono::high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
         /* Unset break to set seril line high */
         serial->setBreakEnabled(false);
         /* Set timeout to 25ms to generate 25ms high pulse before init data is sent */
         seconds = (double)24.7 / (double)1000;
-        spin_start = high_resolution_clock::now();
-        while ((high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
+        spin_start = std::chrono::high_resolution_clock::now();
+        while ((std::chrono::high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
         /* Send init data */
         received = write_serial_data_echo_check(output);
         received.append(read_serial_data(1, 10));
@@ -275,14 +277,7 @@ int SerialPortActions::line_end_check_2_toggled(int state)
 
     return STATUS_SUCCESS;
 }
-/*
-QStringList SerialPortActions::check_win_serial_ports()
-{
-    QStringList list;
 
-    return list;
-}
-*/
 QStringList SerialPortActions::check_serial_ports()
 {
     const auto serialPortsInfo = QSerialPortInfo::availablePorts();
@@ -303,7 +298,7 @@ QStringList SerialPortActions::check_serial_ports()
         j2534->PassThruClose(devID);
     #endif
 
-    sort(serial_ports.begin(), serial_ports.end(), less<QString>());
+    std::sort(serial_ports.begin(), serial_ports.end(), std::less<QString>());
 
     return serial_ports;
 }
@@ -1264,8 +1259,8 @@ void SerialPortActions::handle_error(QSerialPort::SerialPortError error)
 void SerialPortActions::accurate_delay(int timeout)
 {
     double seconds = (double)timeout / 1000.0;
-    auto spinStart = high_resolution_clock::now();
-    while ((high_resolution_clock::now() - spinStart).count() / 1e9 < seconds);
+    auto spinStart = std::chrono::high_resolution_clock::now();
+    while ((std::chrono::high_resolution_clock::now() - spinStart).count() / 1e9 < seconds);
 }
 
 void SerialPortActions::fast_delay(int timeout)

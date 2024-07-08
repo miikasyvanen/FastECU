@@ -20,13 +20,6 @@
 
 #include <thread>
 #include <chrono>
-using namespace std;
-using namespace std::chrono;
-
-//#include <functional>
-//#include <iostream>
-//#include <algorithm>
-using namespace std;
 
 #if defined(Q_OS_LINUX)
     #include "J2534_linux.h"
@@ -34,12 +27,12 @@ using namespace std;
     #include "J2534_win.h"
 #endif
 
-class SerialPortActions : public QWidget
+class SerialPortActions : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit SerialPortActions();
+    explicit SerialPortActions(QObject *parent=nullptr);
     ~SerialPortActions();
 
     bool serialPortAvailable = false;
@@ -47,7 +40,6 @@ public:
     bool setDataTerminalReady = true;
 
     bool add_iso14230_header = false;
-    //bool is_checksum = false;
     bool is_iso14230_connection = false;
     bool is_can_connection = false;
     bool is_iso15765_connection = false;
@@ -63,8 +55,6 @@ public:
     uint8_t iso14230_startbyte = 0;
     uint8_t iso14230_tester_id = 0;
     uint8_t iso14230_target_id = 0;
-
-    QElapsedTimer *lec_pulse_timer = new QElapsedTimer();
 
     QByteArray ssm_receive_header_start = { "\x80\xf0\x10" };
 
@@ -91,7 +81,6 @@ public:
     QString serial_port_prefix;
     QString serial_port_prefix_linux = "/dev/";
     QString serial_port_prefix_win;
-    QSerialPort *serial = new QSerialPort();
 
     uint32_t can_source_address = 0;
     uint32_t can_destination_address = 0;
@@ -107,12 +96,20 @@ public:
 
     void reset_connection();
 
-    //QStringList check_win_serial_ports();
     QByteArray read_serial_data(uint32_t datalen, unsigned long timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);
-    int set_j2534_ioctl(unsigned long parameter, int value);
 
+    int clear_rx_buffer();
+    int clear_tx_buffer();
+
+    int send_periodic_j2534_data(QByteArray output, int timeout);
+    int stop_periodic_j2534_data();
+
+    QStringList check_serial_ports();
+    QString open_serial_port();
+
+private:
     long PassThruOpen(const void *pName, unsigned long *pDeviceID);
     long PassThruClose(unsigned long DeviceID);
     long PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, unsigned long Flags, unsigned long Baudrate, unsigned long *pChannelID);
@@ -128,25 +125,18 @@ public:
     long PassThruGetLastError(char *pErrorDescription);
     long PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const void *pInput, void *pOutput);
 
+    int set_j2534_ioctl(unsigned long parameter, int value);
     int init_j2534_connection();
-    //int set_j2534_can_bl_connection();
     int set_j2534_can();
     int unset_j2534_can();
     int set_j2534_can_filters();
     int set_j2534_stmin_tx();
     int set_j2534_can_timings();
-    //int set_j2534_can_filters();
     int set_j2534_iso9141();
     int set_j2534_iso9141_filters();
     int set_j2534_iso9141_timings();
-    int clear_rx_buffer();
-    int clear_tx_buffer();
-
-    int send_periodic_j2534_data(QByteArray output, int timeout);
-    int stop_periodic_j2534_data();
     unsigned long msgID = 0;
 
-private:
     enum rx_msg_type {
         NORM_MSG,
         TX_DONE_MSG = 0x10,
@@ -162,6 +152,7 @@ private:
     #define STATUS_ERROR							0x01
 
     J2534 *j2534;
+    QSerialPort *serial;
 
     unsigned int baudrate = 4800;
     unsigned long devID;
@@ -200,9 +191,9 @@ private:
     QByteArray read_j2534_data(unsigned long timeout);
     QString parse_message_to_hex(QByteArray received);
 
-public slots:
+/*public slots:
     QStringList check_serial_ports();
-    QString open_serial_port();
+    QString open_serial_port();*/
 
 private slots:
 
