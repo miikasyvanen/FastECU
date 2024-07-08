@@ -36,7 +36,7 @@
 #include <file_actions.h>
 #include <logbox.h>
 #include <settings.h>
-#include <serial_port_actions.h>
+#include <serial_port/serial_port_actions.h>
 
 // Flash modules
 #include <modules/flash_ecu_subaru_denso_mc68hc16y5_02.h>

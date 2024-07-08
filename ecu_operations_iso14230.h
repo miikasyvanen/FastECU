@@ -7,7 +7,7 @@
 #include <QVBoxLayout>
 
 #include <file_actions.h>
-#include <serial_port_actions.h>
+#include <serial_port/serial_port_actions.h>
 
 class EcuOperationsIso14230 : public QWidget
 {

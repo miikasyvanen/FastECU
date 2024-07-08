@@ -19,19 +19,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 win32 {
     LIBS += -LC:\Qt\5.9.9\mingw53_32\lib\libQt5OpenGL.a -lopengl32
     SOURCES += \
-    J2534_win.cpp
+    serial_port/J2534_win.cpp
     HEADERS += \
-    J2534_win.h
+    serial_port/J2534_win.h
     HEADERS += \
-    J2534_tactrix_win.h
+    serial_port/J2534_tactrix_win.h
 }
 linux {
     SOURCES += \
-    J2534_linux.cpp
+    serial_port/J2534_linux.cpp
     HEADERS += \
-    J2534_linux.h
+    serial_port/J2534_linux.h
     HEADERS += \
-    J2534_tatrix_linux.h \
+    serial_port/J2534_tatrix_linux.h \
 }
 
 SOURCES += \
@@ -78,7 +78,7 @@ SOURCES += \
     modules/flash_tcu_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_subaru_hitachi_m32r_kline.cpp \
     protocol_select.cpp \
-    serial_port_actions.cpp \
+    serial_port/serial_port_actions.cpp \
     settings.cpp \
     verticallabel.cpp
 
@@ -123,7 +123,7 @@ HEADERS += \
     modules/flash_tcu_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_subaru_hitachi_m32r_kline.h \
     protocol_select.h \
-    serial_port_actions.h \
+    serial_port/serial_port_actions.h \
     settings.h \
     verticallabel.h
 

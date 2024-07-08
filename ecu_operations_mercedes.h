@@ -12,7 +12,7 @@
 #include <QWidget>
 
 #include <file_actions.h>
-#include <serial_port_actions.h>
+#include <serial_port/serial_port_actions.h>
 #include <ecu_operations.h>
 #include <ecu_operations_iso14230.h>
 
