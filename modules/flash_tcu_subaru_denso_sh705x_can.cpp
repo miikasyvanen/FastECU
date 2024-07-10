@@ -130,13 +130,13 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan(FileActions::EcuCal
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->iso15765_source_address = 0x7E1;
-    serial->iso15765_destination_address = 0x7E9;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_iso15765_source_address(0x7E1);
+    serial->set_iso15765_destination_address(0x7E9);
     // Open serial port
     serial->open_serial_port();
 
@@ -205,12 +205,12 @@ int FlashTcuSubaruDensoSH705xCan::tcu_setparam_subaru_ssm()
 
     send_log_window_message("Changing to K-Line comms...", true, true);
     serial->reset_connection();
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_iso14230_connection = true;
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_iso14230_connection(true);
     serial->open_serial_port();
     serial->change_port_speed("4800");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
     tester_id = 0xF0;
     target_id = 0x18;
 
@@ -358,13 +358,13 @@ int FlashTcuSubaruDensoSH705xCan::tcu_setparam_subaru_ssm()
     send_log_window_message("Changing back to CAN comms...", true, true);
     // Set serial port
     serial->reset_connection();
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->iso15765_source_address = 0x7E1;
-    serial->iso15765_destination_address = 0x7E9;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_iso15765_source_address(0x7E1);
+    serial->set_iso15765_destination_address(0x7E9);
     // Open serial port
     serial->open_serial_port();
 
@@ -391,7 +391,7 @@ int FlashTcuSubaruDensoSH705xCan::tcu_readparam_subaru_ssm()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     send_log_window_message("Reading TCU parameters...", true, true);
     output.clear();
@@ -487,7 +487,7 @@ int FlashTcuSubaruDensoSH705xCan::tcu_relearn_subaru_ssm()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     QMessageBox::information(this, tr("TCU Relearn"), "Engine must be at operating temperature. Car must be off the ground! Start with Engine off, Ignition on, stick in P, press OK to continue");
 
@@ -601,7 +601,7 @@ int FlashTcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_subarucan()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
@@ -885,7 +885,7 @@ int FlashTcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_subarucan(QString k
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1071,24 +1071,24 @@ int FlashTcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_subarucan(QString k
 
     //switch to simple CAN comms for kernel (kernel has no iso15765 support)
     serial->reset_connection();
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->can_source_address = 0x7e1;
-    serial->can_destination_address = 0x7e9;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(true);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_can_source_address(0x7e1);
+    serial->set_can_destination_address(0x7e9);
     // Open serial port
     serial->open_serial_port();
 
     delay(500);
 
     /*
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = true;
-    serial->can_source_address = 0x7E1;
-    serial->can_destination_address = 0x7E9;
+    serial->set_is_can_connection(true);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(true);
+    serial->set_can_source_address(0x7E1);
+    serial->set_can_destination_address(0x7E9);
 
     delay(100);
     */

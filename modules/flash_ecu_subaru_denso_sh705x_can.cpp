@@ -83,13 +83,13 @@ int FlashEcuSubaruDensoSH705xCan::init_flash_denso_can_02(FileActions::EcuCalDef
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = true;
-    serial->can_speed = "500000";
-    serial->can_source_address = 0x000FFFFE;
-    serial->can_destination_address = 0x21;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(true);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(true);
+    serial->set_can_speed("500000");
+    serial->set_can_source_address(0x000FFFFE);
+    serial->set_can_destination_address(0x21);
     // Open serial port
     serial->open_serial_port();
 
@@ -140,7 +140,7 @@ int FlashEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_can_02_32bit()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
@@ -234,7 +234,7 @@ int FlashEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_can_02_32bit_r
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
@@ -334,7 +334,7 @@ int FlashEcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_can_02_32bit(QStrin
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))

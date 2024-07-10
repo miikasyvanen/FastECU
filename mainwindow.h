@@ -22,6 +22,7 @@
 #include <QCheckBox>
 #include <QStandardItemModel>
 #include <QStackedWidget>
+#include <QSplashScreen>
 
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
@@ -74,12 +75,14 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QString peerAddress = "", QWidget *parent = nullptr);
     ~MainWindow();
 
     void delay(int n);
 
 private:
+    QString peerAddress;
+    QSplashScreen *splash;
     const char *sw_version = "FastECU v0.3b";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
@@ -225,6 +228,8 @@ private:
     QSize toolbar_item_size = QSize(24, 24);
 
     Ui::MainWindow *ui;
+
+    bool eventFilter(QObject *target, QEvent *event);
 
     // fileactions.c
     bool open_calibration_file(QString filename);

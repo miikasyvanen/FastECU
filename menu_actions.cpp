@@ -941,8 +941,8 @@ void MainWindow::show_subaru_biu_window()
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    serial->add_iso14230_header = false;
-    serial->is_iso14230_connection = true;
+    serial->set_add_iso14230_header(false);
+    serial->set_is_iso14230_connection(true);
     open_serial_port();
     serial->change_port_speed("10400");
     //serial->change_port_speed("4800");
@@ -952,7 +952,7 @@ void MainWindow::show_subaru_biu_window()
 
     qDebug() << "BIU stopped";
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
 }
@@ -1239,10 +1239,10 @@ int MainWindow::test_haltech_ic7_display()
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    serial->is_iso15765_connection = true;
-    //serial->is_can_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "1000000";
+    serial->set_is_iso15765_connection(true);
+    //serial->set_is_can_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("1000000");
 
     serial->reset_connection();
     ecuid.clear();
@@ -1382,7 +1382,7 @@ int MainWindow::test_haltech_ic7_display()
     output.append((uint8_t)0x03);
     output.append((uint8_t)0xE2);
 */
-    serial->can_speed = "500000";
+    serial->set_can_speed("500000");
     serial_poll_timer->start();
     ssm_init_poll_timer->start();
 
@@ -1427,7 +1427,7 @@ int MainWindow::simulate_obd()
     ecuid.clear();
     ecu_init_complete = false;
 
-    serial->add_iso14230_header = true;
+    serial->set_add_iso14230_header(true);
     open_serial_port();
     serial->change_port_speed("10400");
 

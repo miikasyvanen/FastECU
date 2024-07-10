@@ -72,10 +72,10 @@ int FlashEcuSubaruHitachiM32R_02::init_flash_subaru_hitachi(FileActions::EcuCalD
     }
 
     // Set serial port
-    serial->is_iso14230_connection = true;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
+    serial->set_is_iso14230_connection(true);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port

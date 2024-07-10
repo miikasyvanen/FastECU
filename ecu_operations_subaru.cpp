@@ -223,14 +223,14 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.startsWith("fxt02"))
     {
-        if (serial->is_can_connection)
+        if (serial->get_is_can_connection())
         {
-            serial->is_can_connection = true;
-            serial->is_iso15765_connection = false;
-            serial->is_29_bit_id = true;
-            serial->can_speed = "500000";
-            serial->can_source_address = 0xFFFFE;
-            serial->can_destination_address = 0x21;
+            serial->set_is_can_connection(true);
+            serial->set_is_iso15765_connection(false);
+            serial->set_is_29_bit_id(true);
+            serial->set_can_speed("500000");
+            serial->set_can_source_address(0xFFFFE);
+            serial->set_can_destination_address(0x21);
             serial->open_serial_port();
 
             send_log_window_message("Connecting to Subaru 02 32-bit CAN bootloader, please wait...", true, true);
@@ -238,9 +238,9 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         else
         {
-            serial->is_can_connection = false;
-            serial->is_iso15765_connection = false;
-            serial->is_iso14230_connection = true;
+            serial->set_is_can_connection(false);
+            serial->set_is_iso15765_connection(false);
+            serial->set_is_iso14230_connection(true);
             serial->open_serial_port();
 
             send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
@@ -248,7 +248,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
-            if (serial->is_can_connection)
+            if (serial->get_is_can_connection())
             {
                 send_log_window_message("Initializing Subaru 02 32-bit CAN kernel upload, please wait...", true, true);
                 result = upload_kernel_subaru_denso_can_32bit(kernel);
@@ -263,7 +263,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         {
             if (cmd_type == "read")
             {
-                if (serial->is_can_connection)
+                if (serial->get_is_can_connection())
                 {
                     send_log_window_message("Reading ROM from Subaru 02 32-bit using CAN", true, true);
                     result = read_rom_subaru_denso_can_32bit(ecuCalDef);
@@ -276,7 +276,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
             }
             else if (cmd_type == "test_write" || cmd_type == "write")
             {
-                if (serial->is_can_connection)
+                if (serial->get_is_can_connection())
                 {
                     send_log_window_message("Writing ROM to Subaru 02 32-bit using CAN", true, true);
                     result = write_rom_subaru_denso_can_32bit(ecuCalDef, test_write);
@@ -292,14 +292,14 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.startsWith("sti04"))
     {
-        if (serial->is_can_connection)
+        if (serial->get_is_can_connection())
         {
-            serial->is_can_connection = true;
-            serial->is_iso15765_connection = false;
-            serial->is_29_bit_id = true;
-            serial->can_speed = "500000";
-            serial->can_source_address = 0xFFFFE;
-            serial->can_destination_address = 0x21;
+            serial->set_is_can_connection(true);
+            serial->set_is_iso15765_connection(false);
+            serial->set_is_29_bit_id(true);
+            serial->set_can_speed("500000");
+            serial->set_can_source_address(0xFFFFE);
+            serial->set_can_destination_address(0x21);
             serial->open_serial_port();
 
             send_log_window_message("Connecting to Subaru 04 32-bit CAN bootloader, please wait...", true, true);
@@ -307,9 +307,9 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         else
         {
-            serial->is_can_connection = false;
-            serial->is_iso15765_connection = false;
-            serial->is_iso14230_connection = true;
+            serial->set_is_can_connection(false);
+            serial->set_is_iso15765_connection(false);
+            serial->set_is_iso14230_connection(true);
             serial->open_serial_port();
 
             send_log_window_message("Connecting to Subaru 04 32-bit K-line bootloader, please wait...", true, true);
@@ -317,7 +317,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
-            if (serial->is_can_connection)
+            if (serial->get_is_can_connection())
             {
                 send_log_window_message("Initializing Subaru 04 32-bit CAN kernel upload, please wait...", true, true);
                 result = upload_kernel_subaru_denso_can_32bit(kernel);
@@ -332,7 +332,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         {
             if (cmd_type == "read")
             {
-                if (serial->is_can_connection)
+                if (serial->get_is_can_connection())
                 {
                     send_log_window_message("Reading ROM from Subaru 04 32-bit using CAN", true, true);
                     result = read_rom_subaru_denso_can_32bit(ecuCalDef);
@@ -345,7 +345,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
             }
             else if (cmd_type == "test_write" || cmd_type == "write")
             {
-                if (serial->is_can_connection)
+                if (serial->get_is_can_connection())
                 {
                     send_log_window_message("Writing ROM to Subaru 04 32-bit using CAN", true, true);
                     result = write_rom_subaru_denso_can_32bit(ecuCalDef, test_write);
@@ -361,14 +361,14 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method.startsWith("sti05"))
     {
-        if (serial->is_can_connection)
+        if (serial->get_is_can_connection())
         {
-            serial->is_can_connection = true;
-            serial->is_iso15765_connection = false;
-            serial->is_29_bit_id = true;
-            serial->can_speed = "500000";
-            serial->can_source_address = 0xFFFFE;
-            serial->can_destination_address = 0x21;
+            serial->set_is_can_connection(true);
+            serial->set_is_iso15765_connection(false);
+            serial->set_is_29_bit_id(true);
+            serial->set_can_speed("500000");
+            serial->set_can_source_address(0xFFFFE);
+            serial->set_can_destination_address(0x21);
             serial->open_serial_port();
 
             send_log_window_message("Connecting to Subaru 05 32-bit CAN bootloader, please wait...", true, true);
@@ -376,9 +376,9 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         else
         {
-            serial->is_can_connection = false;
-            serial->is_iso15765_connection = false;
-            serial->is_iso14230_connection = true;
+            serial->set_is_can_connection(false);
+            serial->set_is_iso15765_connection(false);
+            serial->set_is_iso14230_connection(true);
             serial->open_serial_port();
 
             send_log_window_message("Connecting to Subaru 05 32-bit K-line bootloader, please wait...", true, true);
@@ -386,7 +386,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         }
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
-            if (serial->is_can_connection)
+            if (serial->get_is_can_connection())
             {
                 send_log_window_message("Initializing Subaru 05 32-bit CAN kernel upload, please wait...", true, true);
                 result = upload_kernel_subaru_denso_can_32bit(kernel);
@@ -401,7 +401,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         {
             if (cmd_type == "read")
             {
-                if (serial->is_can_connection)
+                if (serial->get_is_can_connection())
                 {
                     send_log_window_message("Reading ROM from Subaru 05 32-bit using CAN", true, true);
                     result = read_rom_subaru_denso_can_32bit(ecuCalDef);
@@ -414,7 +414,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
             }
             else if (cmd_type == "test_write" || cmd_type == "write")
             {
-                if (serial->is_can_connection)
+                if (serial->get_is_can_connection())
                 {
                     send_log_window_message("Writing ROM to Subaru 05 32-bit using CAN", true, true);
                     result = write_rom_subaru_denso_can_32bit(ecuCalDef, test_write);
@@ -433,20 +433,20 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
         send_log_window_message("Connecting to Subaru 32-bit CAN bootloader, please wait...", true, true);
 
         bool denso_can_bootloader = false;
-        serial->is_29_bit_id = false;
-        serial->iso15765_source_address = 0x7E0;
-        serial->iso15765_destination_address = 0x7E8;
-        serial->can_speed = "500000";
-        if (serial->is_can_connection)
+        serial->set_is_29_bit_id(false);
+        serial->set_iso15765_source_address(0x7E0);
+        serial->set_iso15765_destination_address(0x7E8);
+        serial->set_can_speed("500000");
+        if (serial->get_is_can_connection())
         {
             denso_can_bootloader = true;
-            serial->is_29_bit_id = true;
-            serial->is_can_connection = true;
-            serial->is_iso15765_connection = false;
-            //serial->iso15765_source_address = 0xFFFFFFFF;
-            //serial->iso15765_destination_address = 0x00000021;
-            serial->can_source_address = 0xFFFFFFFF;
-            serial->can_destination_address = 0x00000021;
+            serial->set_is_29_bit_id(true);
+            serial->set_is_can_connection(true);
+            serial->set_is_iso15765_connection(false);
+            //serial->set_iso15765_source_address(0xFFFFFFFF);
+            //serial->set_iso15765_destination_address(0x00000021);
+            serial->set_can_source_address(0xFFFFFFFF);
+            serial->set_can_destination_address(0x00000021);
         }
         serial->open_serial_port();
 
@@ -485,7 +485,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj20")
     {
-        serial->is_iso14230_connection = true;
+        serial->set_is_iso14230_connection(true);
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -512,7 +512,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj30")
     {
-        serial->is_iso14230_connection = true;
+        serial->set_is_iso14230_connection(true);
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -540,7 +540,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj40")
     {
-        serial->is_iso14230_connection = true;
+        serial->set_is_iso14230_connection(true);
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -568,7 +568,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "uj70")
     {
-        serial->is_iso14230_connection = true;
+        serial->set_is_iso14230_connection(true);
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -596,7 +596,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else if (flash_method == "mitsubootloader")
     {
-        serial->is_iso14230_connection = true;
+        serial->set_is_iso14230_connection(true);
         serial->open_serial_port();
 
         if (cmd_type == "read")
@@ -626,13 +626,13 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     {
         send_log_window_message("Connecting to Subaru Denso 32-bit CAN bootloader, please wait...", true, true);
 
-        serial->is_iso14230_connection = false;
-        serial->is_can_connection = true;
-        serial->is_iso15765_connection = false;
-        serial->is_29_bit_id = true;
-        serial->can_speed = "500000";
-        serial->can_source_address = 0xFFFFE;
-        serial->can_destination_address = 0x21;
+        serial->set_is_iso14230_connection(false);
+        serial->set_is_can_connection(true);
+        serial->set_is_iso15765_connection(false);
+        serial->set_is_29_bit_id(true);
+        serial->set_can_speed("500000");
+        serial->set_can_source_address(0xFFFFE);
+        serial->set_can_destination_address(0x21);
         serial->open_serial_port();
 
         result = connect_bootloader_subaru_denso_can_recovery_32bit();
@@ -679,7 +679,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_16bit()
 
     // Change serial speed and set 'line end checks' to low level
     serial->change_port_speed("9600");
-    serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -759,7 +759,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
 
     // Change serial speed and set 'line end checks' to low level
     serial->change_port_speed("9600");
-    serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     //delay(10);
 
@@ -802,10 +802,10 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
     send_log_window_message("Cannot connect to bootloader, testing if kernel is alive", true, true);
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     //delay(100);
 
@@ -828,7 +828,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_02_32bit()
         }
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     return STATUS_ERROR;
 }
@@ -852,10 +852,10 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_04_32bit()
         return STATUS_ERROR;
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     delay(100);
 
@@ -880,7 +880,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_kline_04_32bit()
     }
 
     serial->change_port_speed("4800");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
     delay(100);
 
     // SSM init
@@ -968,7 +968,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_32bit()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1054,7 +1054,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_iso15765_32bit()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1134,7 +1134,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_32bit()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1350,7 +1350,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_can_recovery_32bit()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
@@ -1430,7 +1430,7 @@ int EcuOperationsSubaru::connect_bootloader_subaru_denso_iso15765_recovery_32bit
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
@@ -1509,7 +1509,7 @@ int EcuOperationsSubaru::initialize_read_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -1580,7 +1580,7 @@ int EcuOperationsSubaru::uninitialize_read_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     received = send_subaru_hitachi_sid_b8_change_baudrate_4800();
     qDebug() << "SID_B8 received:" << parse_message_to_hex(received);
@@ -1622,7 +1622,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj20_30_40_70_kline()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -1666,7 +1666,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_uj70_kline()
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -1749,7 +1749,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_kline()
     QByteArray received;
     QString msg;
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     return STATUS_ERROR;
 }
@@ -1760,7 +1760,7 @@ int EcuOperationsSubaru::initialize_flash_mode_subaru_hitachi_70_can()
     QByteArray received;
     QString msg;
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     return STATUS_ERROR;
 }
@@ -1786,7 +1786,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_16bit(QString kerne
     }
 
     //serial->change_port_speed("9600");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1856,7 +1856,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_16bit(QString kerne
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     return STATUS_ERROR;
 }
@@ -1883,7 +1883,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
     }
 
     //serial->change_port_speed("9600");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -1962,10 +1962,10 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_02_32bit(QString kerne
     send_log_window_message("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     delay(100);
 
@@ -2028,7 +2028,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -2116,10 +2116,10 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_kline_04_32bit(QString kerne
     send_log_window_message("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     //serial->reset_connection();
     //serial->open_serial_port();
@@ -2187,7 +2187,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_can_32bit(QString kernel)
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -2317,7 +2317,7 @@ int EcuOperationsSubaru::upload_kernel_subaru_denso_iso15765_32bit(QString kerne
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))

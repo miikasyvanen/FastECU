@@ -197,7 +197,7 @@ void MainWindow::read_log_serial_data()
     {
         logparams_read_active = true;
         //qDebug() << "Read logger data from ECU";
-        if (serial->use_openport2_adapter)
+        if (serial->get_use_openport2_adapter())
             received = serial->read_serial_data(1, 100);
         else
         {

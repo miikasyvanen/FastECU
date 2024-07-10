@@ -58,11 +58,11 @@ FlashEcuSubaruDensoSH7055_02::FlashEcuSubaruDensoSH7055_02(SerialPortActions *se
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    serial->serial_port_baudrate = "4800";
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_serial_port_baudrate("4800");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -172,10 +172,10 @@ int FlashEcuSubaruDensoSH7055_02::init_flash_denso_kline_fxt02(FileActions::EcuC
     }
 
     // Set serial port
-    serial->is_iso14230_connection = true;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
+    serial->set_is_iso14230_connection(true);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -221,7 +221,7 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader_subaru_denso_kline_fxt02()
 
     // Change serial speed and set 'line end checks' to low level
     serial->change_port_speed("9600");
-    serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     //delay(10);
 
@@ -264,10 +264,10 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader_subaru_denso_kline_fxt02()
     send_log_window_message("Cannot connect to bootloader, testing if kernel is alive", true, true);
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     //delay(100);
 
@@ -290,7 +290,7 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader_subaru_denso_kline_fxt02()
         }
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     return STATUS_ERROR;
 }
@@ -321,7 +321,7 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel_subaru_denso_kline_fxt02(QString
     }
 
     //serial->change_port_speed("9600");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -400,10 +400,10 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel_subaru_denso_kline_fxt02(QString
     send_log_window_message("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     delay(100);
 
@@ -474,7 +474,7 @@ int FlashEcuSubaruDensoSH7055_02::read_mem_subaru_denso_kline_32bit(FileActions:
     uint32_t len_done = 0;  //total data written to file
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
-    serial->add_iso14230_header = true;
+    serial->set_add_iso14230_header(true);
 
     output.append(SID_DUMP);
     output.append(SID_DUMP_ROM);

@@ -61,13 +61,13 @@ FlashEcuSubaruDensoSH7058CanDiesel::FlashEcuSubaruDensoSH7058CanDiesel(SerialPor
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->iso15765_source_address = 0x7E0;
-    serial->iso15765_destination_address = 0x7E8;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_iso15765_source_address(0x7E0);
+    serial->set_iso15765_destination_address(0x7E8);
     // Open serial port
     serial->open_serial_port();
 
@@ -175,13 +175,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_denso_subarucan(FileActions::
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->iso15765_source_address = 0x7E0;
-    serial->iso15765_destination_address = 0x7E8;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_iso15765_source_address(0x7E0);
+    serial->set_iso15765_destination_address(0x7E8);
     // Open serial port
     serial->open_serial_port();
 
@@ -231,17 +231,17 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader_subaru_denso_subaruca
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
     serial->reset_connection();
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->can_source_address = 0x7E0;
-    serial->can_destination_address = 0x7E8;
-    serial->iso15765_source_address = 0x7E0;
-    serial->iso15765_destination_address = 0x7E8;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(true);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_can_source_address(0x7E0);
+    serial->set_can_destination_address(0x7E8);
+    serial->set_iso15765_source_address(0x7E0);
+    serial->set_iso15765_destination_address(0x7E8);
     // Open serial port
     serial->open_serial_port();
 
@@ -284,15 +284,15 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader_subaru_denso_subaruca
         send_log_window_message("No response from kernel, continue bootloader initialization...", true, true);
 
     serial->reset_connection();
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->can_source_address = 0x7E0;
-    serial->can_destination_address = 0x7E8;
-    serial->iso15765_source_address = 0x7E0;
-    serial->iso15765_destination_address = 0x7E8;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_can_source_address(0x7E0);
+    serial->set_can_destination_address(0x7E8);
+    serial->set_iso15765_source_address(0x7E0);
+    serial->set_iso15765_destination_address(0x7E8);
     // Open serial port
     serial->open_serial_port();
 
@@ -641,7 +641,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel_subaru_denso_subarucan(QSt
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -848,15 +848,15 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel_subaru_denso_subarucan(QSt
     set_progressbar_value(100);
 
     serial->reset_connection();
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = true;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->can_source_address = 0x7E0;
-    serial->can_destination_address = 0x7E8;
-    serial->iso15765_source_address = 0x7E0;
-    serial->iso15765_destination_address = 0x7E8;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(true);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_can_source_address(0x7E0);
+    serial->set_can_destination_address(0x7E8);
+    serial->set_iso15765_source_address(0x7E0);
+    serial->set_iso15765_destination_address(0x7E8);
     // Open serial port
     serial->open_serial_port();
 

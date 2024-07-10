@@ -1,4 +1,4 @@
-QT       += core gui xml serialport
+QT       += core gui xml serialport remoteobjects websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += charts
@@ -33,6 +33,8 @@ linux {
     HEADERS += \
     serial_port/J2534_tatrix_linux.h \
 }
+
+REPC_REPLICA = serial_port/serial_port_actions.rep
 
 SOURCES += \
     biu_operations_subaru.cpp \
@@ -79,6 +81,8 @@ SOURCES += \
     modules/flash_tcu_subaru_hitachi_m32r_kline.cpp \
     protocol_select.cpp \
     serial_port/serial_port_actions.cpp \
+    serial_port/serial_port_actions_direct.cpp \
+    serial_port/websocketiodevice.cpp \
     settings.cpp \
     verticallabel.cpp
 
@@ -123,7 +127,10 @@ HEADERS += \
     modules/flash_tcu_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_subaru_hitachi_m32r_kline.h \
     protocol_select.h \
+    serial_port/qtrohelper.hpp \
     serial_port/serial_port_actions.h \
+    serial_port/serial_port_actions_direct.h \
+    serial_port/websocketiodevice.h \
     settings.h \
     verticallabel.h
 

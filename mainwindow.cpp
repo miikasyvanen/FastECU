@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QSplashScreen>
 
 const QColor MainWindow::RED_LIGHT_OFF = QColor(96, 32, 32);
 const QColor MainWindow::YELLOW_LIGHT_OFF = QColor(96, 96, 32);
@@ -8,9 +9,11 @@ const QColor MainWindow::RED_LIGHT_ON = QColor(255, 64, 64);
 const QColor MainWindow::YELLOW_LIGHT_ON = QColor(223, 223, 64);
 const QColor MainWindow::GREEN_LIGHT_ON = QColor(64, 255, 64);
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , peerAddress(peerAddress)
+    , splash(new QSplashScreen(this))
 {
     ui->setupUi(this);
     qApp->installEventFilter(this);
@@ -157,7 +160,44 @@ MainWindow::MainWindow(QWidget *parent)
     //ui->splitter->setStretchFactor(2, 1);
     ui->splitter->setSizes(QList<int>({125, INT_MAX}));
 
-    serial = new SerialPortActions();
+    //Splash screen
+    QVBoxLayout *layout = new QVBoxLayout(splash);
+    layout->setAlignment(Qt::AlignCenter);
+    QLabel *label1 = new QLabel(QString("Waiting for peer "+peerAddress+"..."), splash);
+    QPushButton *button1 = new QPushButton("Close app", splash);
+    layout->addWidget(label1);
+    layout->addWidget(button1);
+    splash->setLayout(layout);
+    splash->resize(350,50);
+    //Show it in remote mode only
+    if (!peerAddress.isEmpty())
+    {
+        splash->show();
+    }
+
+    //Init may take a long time due to network
+    //Do it in a non-blocking way - move to a thread
+    QThread *serial_create_thread = QThread::create([&]()
+        {
+            serial = new SerialPortActions(peerAddress);
+        });
+    serial_create_thread->start();
+    //Add option to close app while waiting for network connection
+    QObject::connect(button1, &QPushButton::released, this, [&]()
+        {
+            label1->setText("Closing app, please wait...");
+            serial_create_thread->terminate();
+            serial_create_thread->wait();
+            exit(1);
+        });
+    //Process events while waiting for thread to finish
+    while (serial_create_thread->isRunning())
+    {
+        QApplication::processEvents();
+        serial_create_thread->wait(10);
+    }
+    splash->close();
+    serial_create_thread->deleteLater();
 
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -244,8 +284,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     serial_port = serial_port_prefix + configValues->serial_port;
     serial_port_baudrate = default_serial_port_baudrate;
-    serial->serial_port_baudrate = serial_port_baudrate;
-    serial->serial_port = serial_port;
+    serial->set_serial_port_baudrate(serial_port_baudrate);
+    serial->set_serial_port(serial_port);
 
     serial_poll_timer = new QTimer(this);
     serial_poll_timer->setInterval(serial_poll_timer_timeout);
@@ -359,20 +399,20 @@ QString MainWindow::check_kernel(QString flash_method)
         kernel = prefix + "ssmk_HC16.bin";
     else if (flash_method.startsWith("sub_sh7055_02"))
     {
-        if (serial->is_can_connection)
+        if (serial->get_is_can_connection())
             kernel = prefix + "ssmk_CAN_SH7055.bin";
         else
             kernel = prefix + "ssmk_SH7055.bin";
     }
     else if (flash_method.startsWith("sub_sh7055_04"))
     {
-        if (serial->is_can_connection)
+        if (serial->get_is_can_connection())
             kernel = prefix + "ssmk_CAN_SH7055.bin";
         else
             kernel = prefix + "ssmk_SH7055.bin";
     }
     else if (flash_method.startsWith("sub_sh7058_can_diesel"))
-        if (serial->is_can_connection)
+        if (serial->get_is_can_connection())
             kernel = prefix + "ssmk_CAN_SH7058.bin";
         else
             kernel = prefix + "ssmk_CAN_SH7058d.bin";
@@ -380,7 +420,7 @@ QString MainWindow::check_kernel(QString flash_method)
         kernel = prefix + "ssmk_CAN_SH7058.bin";
     else if (flash_method.startsWith("sub_sh7058"))
     {
-        if (serial->is_can_connection)
+        if (serial->get_is_can_connection())
             kernel = prefix + "ssmk_CAN_SH7058.bin";
         else
             kernel = prefix + "ssmk_SH7058.bin";
@@ -476,21 +516,21 @@ void MainWindow::log_transport_changed()
     //qDebug() << "Change log transport";
     QComboBox *log_transport_list = ui->toolBar->findChild<QComboBox*>("log_transport_list");
 
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
     if (log_transport_list->currentText() == "CAN")
     {
-        serial->is_can_connection = true;
-        serial->is_iso15765_connection = false;
-        serial->is_29_bit_id = false;
-        serial->can_speed = "500000";
+        serial->set_is_can_connection(true);
+        serial->set_is_iso15765_connection(false);
+        serial->set_is_29_bit_id(false);
+        serial->set_can_speed("500000");
     }
     else if (log_transport_list->currentText() == "iso15765")
     {
-        serial->is_can_connection = false;
-        serial->is_iso15765_connection = true;
-        serial->is_29_bit_id = true;
-        serial->can_speed = "500000";
+        serial->set_is_can_connection(false);
+        serial->set_is_iso15765_connection(true);
+        serial->set_is_29_bit_id(true);
+        serial->set_can_speed("500000");
     }
     else if (log_transport_list->currentText() == "K-Line")
     {
@@ -544,7 +584,7 @@ void MainWindow::open_serial_port()
         serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
         serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
 
-        serial->serial_port_list = serial_port;
+        serial->set_serial_port_list(serial_port);
         QString opened_serial_port = serial->open_serial_port();
         if (opened_serial_port != NULL)
         {
@@ -589,34 +629,39 @@ int MainWindow::can_listener()
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    serial->serial_port_list.clear();
-    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    //serial->serial_port_list.clear();
+    //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+    //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    QStringList spl = serial->get_serial_port_list();
+    spl.clear();
+    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    serial->set_serial_port_list(spl);
 
     if (flash_transport_list->currentText() == "CAN")
     {
-        serial->is_can_connection = true;
-        serial->is_iso15765_connection = false;
-        serial->is_29_bit_id = true;
-        serial->can_speed = "500000";
+        serial->set_is_can_connection(true);
+        serial->set_is_iso15765_connection(false);
+        serial->set_is_29_bit_id(true);
+        serial->set_can_speed("500000");
     }
     else if (flash_transport_list->currentText() == "iso15765")
     {
-        serial->is_can_connection = false;
-        serial->is_iso15765_connection = true;
-        serial->is_29_bit_id = false;
-        serial->can_speed = "500000";
+        serial->set_is_can_connection(false);
+        serial->set_is_iso15765_connection(true);
+        serial->set_is_29_bit_id(false);
+        serial->set_can_speed("500000");
     }
 
-    serial->iso15765_source_address = 0x00;//0xFFFFFFFF;
-    serial->iso15765_destination_address = 0x00;//0xFFFFFFFF;
-    serial->can_source_address = serial->iso15765_source_address;
-    serial->can_destination_address = serial->iso15765_destination_address;
+    serial->set_iso15765_source_address(0x00);//0xFFFFFFFF;
+    serial->set_iso15765_destination_address(0x00);//0xFFFFFFFF;
+    serial->set_can_source_address(serial->get_iso15765_source_address());
+    serial->set_can_destination_address(serial->get_iso15765_destination_address());
     // Open serial port
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
     open_serial_port();
 
     uint8_t id = 0xE0;
@@ -677,9 +722,14 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    serial->serial_port_list.clear();
-    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-    serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    //serial->serial_port_list.clear();
+    //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+    //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    QStringList spl = serial->get_serial_port_list();
+    spl.clear();
+    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    serial->set_serial_port_list(spl);
 
     if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != "/")
         configValues->kernel_files_directory.append("/");
@@ -688,23 +738,23 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     {
         if (flash_transport_list->currentText() == "CAN")
         {
-            serial->is_can_connection = true;
-            serial->is_iso15765_connection = false;
-            serial->is_29_bit_id = true;
-            serial->can_speed = "500000";
+            serial->set_is_can_connection(true);
+            serial->set_is_iso15765_connection(false);
+            serial->set_is_29_bit_id(true);
+            serial->set_can_speed("500000");
         }
         else if (flash_transport_list->currentText() == "iso15765")
         {
-            serial->is_can_connection = false;
-            serial->is_iso15765_connection = true;
-            serial->is_29_bit_id = false;
-            serial->can_speed = "500000";
+            serial->set_is_can_connection(false);
+            serial->set_is_iso15765_connection(true);
+            serial->set_is_29_bit_id(false);
+            serial->set_can_speed("500000");
         }
 
         serial->reset_connection();
         ecuid.clear();
         ecu_init_complete = false;
-        serial->add_iso14230_header = false;
+        serial->set_add_iso14230_header(false);
         //open_serial_port();
 
         if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != "/")
@@ -835,20 +885,20 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         // For CAN comms
         if (flash_transport_list->currentText() == "CAN")
-            serial->is_can_connection = true;
+            serial->set_is_can_connection(true);
         if (flash_transport_list->currentText() == "iso15765")
-            serial->is_iso15765_connection = true;
+            serial->set_is_iso15765_connection(true);
 
-        if (serial->is_can_connection || serial->is_iso15765_connection)
+        if (serial->get_is_can_connection() || serial->get_is_iso15765_connection())
         {
-            serial->is_29_bit_id = false;
-            serial->can_speed = "500000";
+            serial->set_is_29_bit_id(false);
+            serial->set_can_speed("500000");
             open_serial_port();
         }
         // For K-Line comms
         else
         {
-            serial->add_iso14230_header = true;
+            serial->set_add_iso14230_header(true);
             open_serial_port();
             serial->change_port_speed("10400");
         }
@@ -859,12 +909,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    serial->is_iso14230_connection = false;
-    serial->is_29_bit_id = false;
-    serial->add_iso14230_header = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->serial_port_baudrate = "4800";
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_add_iso14230_header(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_serial_port_baudrate("4800");
     emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     serial_poll_timer->start();
@@ -1591,4 +1641,19 @@ QString MainWindow::parse_ecuid(QByteArray received)
     }
 
     return msg;
+}
+
+bool MainWindow::eventFilter(QObject *target, QEvent *event)
+{
+    Q_UNUSED(target)
+    //Filter all mouse and keyboard events for splashscreen
+    if (target == splash)
+        if(     (event->type() == QEvent::MouseButtonPress) ||
+                (event->type() == QEvent::MouseButtonDblClick) ||
+                (event->type() == QEvent::MouseButtonRelease) ||
+                (event->type() == QEvent::KeyPress) ||
+                (event->type() == QEvent::KeyRelease))
+            return true;
+
+    return false;
 }

@@ -72,12 +72,12 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs(FileActions::EcuCalD
     }
 
     // Set serial port
-    //serial->is_iso14230_connection = true;
-    //serial->add_iso14230_header = true;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    //serial->serial_port_baudrate = "10400";
+    //serial->set_is_iso14230_connection(true);
+    //serial->set_add_iso14230_header(true);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    //serial->set_serial_port_baudrate("10400");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -128,7 +128,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(FileActions::EcuCalDef
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Start countdown
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -285,7 +285,7 @@ int FlashEcuSubaruUnisiaJecs::write_mem_subaru_unisia_jecs(FileActions::EcuCalDe
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Start countdown
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))

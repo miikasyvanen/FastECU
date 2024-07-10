@@ -85,14 +85,14 @@ int FlashTcuSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefS
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->add_iso14230_header = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "500000";
-    serial->iso15765_source_address = 0x7E1;
-    serial->iso15765_destination_address = 0x7E9;
+    serial->set_is_iso14230_connection(false);
+    serial->set_add_iso14230_header(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->set_iso15765_source_address(0x7E1);
+    serial->set_iso15765_destination_address(0x7E9);
     // Open serial port
     serial->open_serial_port();
 

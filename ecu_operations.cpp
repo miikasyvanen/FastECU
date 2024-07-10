@@ -94,7 +94,7 @@ QByteArray EcuOperations::request_kernel_id()
         request_denso_kernel_id = true;
 
         output.clear();
-        if (serial->is_can_connection || serial->is_iso15765_connection)
+        if (serial->get_is_can_connection() || serial->get_is_iso15765_connection())
         {
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x0F);
@@ -111,7 +111,7 @@ QByteArray EcuOperations::request_kernel_id()
         received = serial->read_serial_data(100, serial_read_short_timeout);
 
         received.remove(0, 1);
-        if (serial->is_can_connection || serial->is_iso15765_connection)
+        if (serial->get_is_can_connection() || serial->get_is_iso15765_connection())
             received.remove(0, 1);
         kernelid = received;
 
@@ -119,7 +119,7 @@ QByteArray EcuOperations::request_kernel_id()
         {
             received = serial->read_serial_data(1, serial_read_short_timeout);
             received.remove(0, 1);
-            if (serial->is_can_connection || serial->is_iso15765_connection)
+            if (serial->get_is_can_connection() || serial->get_is_iso15765_connection())
                 received.remove(0, 1);
             kernelid.append(received);
         }
@@ -274,7 +274,7 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
     uint32_t len_done = 0;  //total data written to file
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
-    serial->add_iso14230_header = true;
+    serial->set_add_iso14230_header(true);
     //serial->iso14230_checksum = true;
 
     output.append(SID_DUMP);

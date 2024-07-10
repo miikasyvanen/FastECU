@@ -58,11 +58,11 @@ EepromEcuSubaruDensoKline::EepromEcuSubaruDensoKline(SerialPortActions *serial, 
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    serial->serial_port_baudrate = "4800";
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_serial_port_baudrate("4800");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -215,10 +215,10 @@ int EepromEcuSubaruDensoKline::init_flash_denso_kline_04(FileActions::EcuCalDefS
     }
 
     // Set serial port
-    serial->is_iso14230_connection = true;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
+    serial->set_is_iso14230_connection(true);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -276,10 +276,10 @@ int EepromEcuSubaruDensoKline::connect_bootloader_subaru_denso_kline_04_32bit()
     //    return STATUS_ERROR;
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     delay(100);
 
@@ -308,7 +308,7 @@ int EepromEcuSubaruDensoKline::connect_bootloader_subaru_denso_kline_04_32bit()
     send_log_window_message("Kernel NOT running, requesting access", true, true);
 
     serial->change_port_speed("4800");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
     delay(100);
 
     send_log_window_message("Initializing bootloader", true, true);
@@ -425,7 +425,7 @@ int EepromEcuSubaruDensoKline::upload_kernel_subaru_denso_kline_04_32bit(QString
         return STATUS_ERROR;
     }
 
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -515,10 +515,10 @@ int EepromEcuSubaruDensoKline::upload_kernel_subaru_denso_kline_04_32bit(QString
     qDebug() << "Kernel started, initializing...";
 
     serial->change_port_speed("62500");
-    serial->add_iso14230_header = true;
-    serial->iso14230_startbyte = 0x80;
-    serial->iso14230_tester_id = 0xFC;
-    serial->iso14230_target_id = 0x10;
+    serial->set_add_iso14230_header(true);
+    serial->set_iso14230_startbyte(0x80);
+    serial->set_iso14230_tester_id(0xFC);
+    serial->set_iso14230_target_id(0x10);
 
     delay(100);
 
@@ -583,7 +583,7 @@ int EepromEcuSubaruDensoKline::read_mem_subaru_denso_kline_32bit(FileActions::Ec
     qDebug() << "Read EEPROM start at:" << start_addr << "and size of" << length;
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
-    serial->add_iso14230_header = true;
+    serial->set_add_iso14230_header(true);
 
     output.clear();
     output.append((uint8_t)SID_DUMP);
