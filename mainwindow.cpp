@@ -174,30 +174,33 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     {
         splash->show();
     }
-
-    //Init may take a long time due to network
-    //Do it in a non-blocking way - move to a thread
-    QThread *serial_create_thread = QThread::create([&]()
-        {
-            serial = new SerialPortActions(peerAddress);
-        });
-    serial_create_thread->start();
     //Add option to close app while waiting for network connection
     QObject::connect(button1, &QPushButton::released, this, [&]()
-        {
-            label1->setText("Closing app, please wait...");
-            serial_create_thread->terminate();
-            serial_create_thread->wait();
-            exit(1);
-        });
-    //Process events while waiting for thread to finish
-    while (serial_create_thread->isRunning())
-    {
-        QApplication::processEvents();
-        serial_create_thread->wait(10);
-    }
+                     {
+                         label1->setText("Closing app, please wait...");
+                         exit(1);
+                     });
+
+    //Init may take a long time due to network
+    //Do it in a non-blocking way
+    //This timer will timeout as fast as possible
+    //processing events
+    QTimer *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [&]()
+            {
+                QApplication::processEvents();
+            });
+    timer->start();
+
+    serial = new SerialPortActions(peerAddress);
+
+    timer->stop();
     splash->close();
-    serial_create_thread->deleteLater();
+    timer->deleteLater();
+    QString wt = this->windowTitle();
+    if (peerAddress.length() > 0)
+        wt += " - Remote Connection to " + peerAddress;
+    this->setWindowTitle(wt);
 
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
