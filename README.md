@@ -14,14 +14,13 @@ The code, unless otherwise specified, is licensed under GPLv3 which has certain 
 
 Source: https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)
 
-You may copy, distribute and modify the software as long as you track changes/dates in source files.
-Any modifications to or **software including (via compiler) GPL-licensed code** must also be made available under the GPL along with build & install instructions.
+You may copy, distribute and modify the software as long as you track changes/dates in source files. Any modifications to or **software including (via compiler) GPL-licensed code** must also be made available under the GPL along with build & install instructions.
 
 Commercial uses is possible, but **all code linked with GPL 3.0 source code must be disclosed under a GPL 3.0 compatible license.**
 
-If you find all or parts of **FastECU** useful, please consider supporting me via paypal https://www.paypal.com/paypalme/miikasyvanen . Thanks!
-Also you can support fenugrec via https://liberapay.com/fenugrec/
-and rimwall via his paypal account rimwall@gmail.com
+If you **FastECU** useful, please consider supporting us as this software is developed on our free time and will always be open source and free of charge. Donations will be used to aquire new hardware and software to help reverse engineer ROMs and software development.
+
+https://www.paypal.com/paypalme/miikasyvanen
 
 I can also be reached via email: info@fastecu.fi
-Support forum found here: https://www.syvanenmotorsport.fi/forum/index.php
+Support forum found here: https://www.fastecu.fi/forum/
