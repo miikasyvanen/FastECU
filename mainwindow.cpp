@@ -819,6 +819,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruDensoSH7058Can = new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sti04"))
             flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs_0x27Kline"))
+            flashEcuSubaruUnisiaJecs0x27Kline = new FlashEcuSubaruUnisiaJecs0x27Kline(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs"))
             flashEcuSubaruUnisiaJecs = new FlashEcuSubaruUnisiaJecs(serial,ecuCalDef[rom_number], cmd_type, this);
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_02"))
