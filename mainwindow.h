@@ -47,6 +47,7 @@
 #include <modules/flash_ecu_subaru_denso_sh7058_can_diesel.h>
 
 #include <modules/flash_ecu_subaru_uinisia_jecs_m32r.h>
+#include <modules/flash_ecu_subaru_unisia_jecs_0x27.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_02.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_06.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_can.h>
@@ -125,6 +126,7 @@ private:
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
     FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
+    FlashEcuSubaruUnisiaJecs0x27Kline *flashEcuSubaruUnisiaJecs0x27Kline;
     FlashEcuSubaruHitachiM32R_02 *flashEcuSubaruHitachiM32R_02;
     FlashEcuSubaruHitachiM32R_06 *flashEcuSubaruHitachiM32R_06;
     FlashEcuSubaruHitachiCan *flashEcuSubaruHitachiCan;
