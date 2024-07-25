@@ -434,7 +434,7 @@ void SerialPortActionsDirect::close_j2534_serial_port()
     j2534 = new J2534;
 }
 
-QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, unsigned long timeout)
+QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t timeout)
 {
     QByteArray ReceivedData;
     QByteArray PayloadData;
