@@ -82,16 +82,16 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline(FileActions::Ecu
         //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
 
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
     serial->change_port_speed("4800");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
     //QMessageBox::information(this, tr("Connecting to TCU"), "Press OK to start countdown!");
