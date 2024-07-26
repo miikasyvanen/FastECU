@@ -84,6 +84,7 @@ public:
 private:
     QString peerAddress;
     QSplashScreen *splash;
+    QWebSocket *clientWebSocket;
     const char *sw_version = "FastECU v0.3b";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;

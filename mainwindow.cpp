@@ -170,9 +170,15 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     splash->setLayout(layout);
     splash->resize(350,50);
     //Show it in remote mode only
+    //Prepare for remote mode
     if (!peerAddress.isEmpty())
     {
         splash->show();
+        clientWebSocket = new QWebSocket("",QWebSocketProtocol::VersionLatest,this);
+        QString wt = this->windowTitle();
+        if (peerAddress.length() > 0)
+            wt += " - Remote Connection to " + peerAddress;
+        this->setWindowTitle(wt);
     }
     //Add option to close app while waiting for network connection
     QObject::connect(button1, &QPushButton::released, this, [&]()
@@ -192,15 +198,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
             });
     timer->start();
 
-    serial = new SerialPortActions(peerAddress);
+    serial = new SerialPortActions(peerAddress, clientWebSocket);
 
     timer->stop();
     splash->close();
     timer->deleteLater();
-    QString wt = this->windowTitle();
-    if (peerAddress.length() > 0)
-        wt += " - Remote Connection to " + peerAddress;
-    this->setWindowTitle(wt);
 
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

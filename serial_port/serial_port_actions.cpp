@@ -1,10 +1,13 @@
 #include "serial_port_actions.h"
 #include "qtrohelper.hpp"
 
-SerialPortActions::SerialPortActions(QString peerAddress, QObject *parent)
+SerialPortActions::SerialPortActions(QString peerAddress, QWebSocket *web_socket, QObject *parent)
     : QObject{parent}
     , peerAddress(peerAddress)
-    , webSocket(new QWebSocket("",QWebSocketProtocol::VersionLatest,this))
+    , webSocket(web_socket == nullptr ?
+                    new QWebSocket("",QWebSocketProtocol::VersionLatest,this)
+                    :
+                    web_socket)
     , socket(new WebSocketIoDevice(webSocket, webSocket))
 {
     if (isDirectConnection())
@@ -21,7 +24,6 @@ SerialPortActions::~SerialPortActions()
 
 void SerialPortActions::startRemote(void)
 {
-    //TODO Need a kind of splash screen while user is waiting
     if (peerAddress.startsWith("local:"))
     {
         startLocal();
@@ -37,7 +39,7 @@ void SerialPortActions::startOverNetwok(void)
     QSslConfiguration sslConfiguration;
     sslConfiguration.setPeerVerifyMode(QSslSocket::VerifyNone);
     webSocket->setSslConfiguration(sslConfiguration);
-    QObject::connect(webSocket, &QWebSocket::connected, &node,
+    QObject::connect(webSocket, &QWebSocket::connected, this,
                      [&]()
                      {
                          //Run client node after socket is up

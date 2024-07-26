@@ -10,7 +10,7 @@ class SerialPortActions : public QObject
 {
     Q_OBJECT
 public:
-    explicit SerialPortActions(QString peerAddress="", QObject *parent=nullptr);
+    explicit SerialPortActions(QString peerAddress="", QWebSocket *web_socket=nullptr, QObject *parent=nullptr);
     ~SerialPortActions();
 
     bool get_serialPortAvailable();
