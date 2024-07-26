@@ -222,7 +222,8 @@ long J2534::PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, un
     }
 
     output.clear();
-    output.append("ato" + QString::number(ProtocolID) + " " + QString::number(Flags) + " " + QString::number(Baudrate) + " " + QString::number(ProtocolID) + "\r\n");
+    QString str = "ato" + QString::number(ProtocolID) + " " + QString::number(Flags) + " " + QString::number(Baudrate) + " " + QString::number(ProtocolID) + "\r\n";
+    output.append(str.toUtf8());
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
     received = read_serial_data(100, 50);
@@ -240,7 +241,8 @@ long J2534::PassThruDisconnect(unsigned long ChannelID)
     //qDebug() << "Disconnect J2534 device in channel:" << ChannelID;
 
     output.clear();
-    output.append("atc" + QString::number(ChannelID) + "\r\n");
+    QString str = "atc" + QString::number(ChannelID) + "\r\n";
+    output.append(str.toUtf8());
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
     received = read_serial_data(100, 50);
@@ -515,7 +517,8 @@ long J2534::PassThruWriteMsgs(unsigned long ChannelID, const PASSTHRU_MSG *pMsg,
     for (unsigned long msg_index = 0; msg_index < *pNumMsgs; msg_index++)
     {
         output.clear();
-        output.append("att" + QString::number(ChannelID) + " " + QString::number(pMsg->DataSize) + " " + QString::number(pMsg->TxFlags) + "\r\n");
+        QString str = "att" + QString::number(ChannelID) + " " + QString::number(pMsg->DataSize) + " " + QString::number(pMsg->TxFlags) + "\r\n";
+        output.append(str.toUtf8());
         for (unsigned long i = 0; i < pMsg->DataSize; i++)
         {
             output.append(pMsg->Data[i]);
@@ -540,7 +543,8 @@ long J2534::PassThruStartPeriodicMsg(unsigned long ChannelID, const PASSTHRU_MSG
     long result = STATUS_NOERROR;
 
     output.clear();
-    output.append("atm" + QString::number(ChannelID) + " " + QString::number(TimeInterval * 1000) + " 0 " + QString::number(pMsg->TxFlags) + " " + QString::number(pMsg->DataSize) + "\r\n");
+    QString str = "atm" + QString::number(ChannelID) + " " + QString::number(TimeInterval * 1000) + " 0 " + QString::number(pMsg->TxFlags) + " " + QString::number(pMsg->DataSize) + "\r\n";
+    output.append(str.toUtf8());
     for (unsigned long i = 0; i < pMsg->DataSize; i++)
     {
         output.append(pMsg->Data[i]);
@@ -559,7 +563,8 @@ long J2534::PassThruStopPeriodicMsg(unsigned long ChannelID, unsigned long MsgID
     QByteArray output;
     long result = STATUS_NOERROR;
 
-    output.append("atn" + QString::number(ChannelID) + " " + QString::number(MsgID) + "\r\n");
+    QString str = "atn" + QString::number(ChannelID) + " " + QString::number(MsgID) + "\r\n";
+    output.append(str.toUtf8());
 
     write_serial_data(output);
 
@@ -573,7 +578,8 @@ long J2534::PassThruStartMsgFilter(unsigned long ChannelID, unsigned long Filter
     long result = STATUS_NOERROR;
 
     output.clear();
-    output.append("atf" + QString::number(ChannelID) + " " + QString::number(FilterType) + " " + QString::number(pMaskMsg->TxFlags) + " " + QString::number(pMaskMsg->DataSize));
+    QString str = "atf" + QString::number(ChannelID) + " " + QString::number(FilterType) + " " + QString::number(pMaskMsg->TxFlags) + " " + QString::number(pMaskMsg->DataSize);
+    output.append(str.toUtf8());
     //if (pPatternMsg->DataSize > 0)
         //output.append(" " + QString::number(pPatternMsg->DataSize));
     //if (pFlowControlMsg != NULL)
@@ -618,7 +624,8 @@ long J2534::PassThruSetProgrammingVoltage(unsigned long DeviceID, unsigned long 
     long result = STATUS_NOERROR;
 
     output.clear();
-    output.append("atv" + QString::number(Pin) + " " + QString::number(Voltage) + "\r\n");
+    QString str = "atv" + QString::number(Pin) + " " + QString::number(Voltage) + "\r\n";
+    output.append(str.toUtf8());
     write_serial_data(output);
     //received = read_serial_data(5, 50);
 
@@ -926,7 +933,8 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         {
             cfgitem = &scl->ConfigPtr[i];
             output.clear();
-            output.append("ats" + QString::number(ChannelID) + " " + QString::number(cfgitem->Parameter) + " " + QString::number(cfgitem->Value) + "\r\n");
+            QString str = "ats" + QString::number(ChannelID) + " " + QString::number(cfgitem->Parameter) + " " + QString::number(cfgitem->Value) + "\r\n";
+            output.append(str.toUtf8());
             //qDebug() << "Send data:" << output;
             write_serial_data(output);
             received = read_serial_data(100, 50);
@@ -941,7 +949,8 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         PASSTHRU_MSG *msg = (PASSTHRU_MSG*)pInput;
 
         output.clear();
-        output.append("aty" + QString::number(ChannelID) + " " + QString::number(msg->DataSize) + " 0\r\n");
+        QString str = "aty" + QString::number(ChannelID) + " " + QString::number(msg->DataSize) + " 0\r\n";
+        output.append(str.toUtf8());
         for (i = 0; i < msg->DataSize; i++)
         {
             //qDebug() << "Value:" << hex << msg->Data[i];
@@ -997,6 +1006,7 @@ void J2534::handle_error(QSerialPort::SerialPortError error)
     {
         close_serial_port();
     }
+    /*
     else if (error == QSerialPort::ParityError)
     {
     }
@@ -1006,6 +1016,7 @@ void J2534::handle_error(QSerialPort::SerialPortError error)
     else if (error == QSerialPort::BreakConditionError)
     {
     }
+*/
     else if (error == QSerialPort::WriteError)
     {
         close_serial_port();

@@ -13,7 +13,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , peerAddress(peerAddress)
-    , splash(new QSplashScreen(this))
 {
     ui->setupUi(this);
     qApp->installEventFilter(this);
@@ -98,7 +97,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     }
 
     QSignalMapper *mapper = fileActions->read_menu_file(ui->menubar, ui->toolBar);
-    connect(mapper, SIGNAL(mapped   (QString)), this, SLOT(menu_action_triggered(QString)));
+    connect(mapper, SIGNAL(mappedString(QString)), this, SLOT(menu_action_triggered(QString)));
 
 
 /*
@@ -161,6 +160,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     ui->splitter->setSizes(QList<int>({125, INT_MAX}));
 
     //Splash screen
+    splash = new QSplashScreen();
     QVBoxLayout *layout = new QVBoxLayout(splash);
     layout->setAlignment(Qt::AlignCenter);
     QLabel *label1 = new QLabel(QString("Waiting for peer "+peerAddress+"..."), splash);
@@ -395,7 +395,7 @@ QString MainWindow::check_kernel(QString flash_method)
     QString kernel;
     QString prefix = configValues->kernel_files_directory;
 
-    if (prefix.at(prefix.length() - 1) != "/")
+    if (prefix.at(prefix.length() - 1) != '/')
         prefix.append("/");
 
     if (flash_method.startsWith("sub_mc68hc16y5_02"))
@@ -591,7 +591,7 @@ void MainWindow::open_serial_port()
 
         serial->set_serial_port_list(serial_port);
         QString opened_serial_port = serial->open_serial_port();
-        if (opened_serial_port != NULL)
+        if (opened_serial_port != "")
         {
             if (opened_serial_port != previous_serial_port)
             {
@@ -736,7 +736,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
     serial->set_serial_port_list(spl);
 
-    if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != "/")
+    if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != '/')
         configValues->kernel_files_directory.append("/");
 
     if (configValues->flash_protocol_selected_make == "Subaru")
@@ -762,7 +762,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         serial->set_add_iso14230_header(false);
         //open_serial_port();
 
-        if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != "/")
+        if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != '/')
             configValues->kernel_files_directory.append("/");
 
         if (cmd_type == "test_write" || cmd_type == "write")
@@ -1087,7 +1087,7 @@ void MainWindow::checkbox_state_changed(int state)
             {
                 QStringList switch_data = switch_states.at(i + 1).split(" ");
                 uint32_t byte_address = ecuCalDef[map_rom_number]->AddressList.at(map_number).toUInt(&bStatus, 16);
-                if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < (170 * 1024) && byte_address > 0x27FFF)
+                if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize.toUInt() < (170 * 1024) && byte_address > 0x27FFF)
                     byte_address -= 0x8000;
                 if ((switch_states.at(i) == "off" || switch_states.at(i) == "disabled") && state == 0)
                 {

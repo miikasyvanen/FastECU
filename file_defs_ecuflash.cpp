@@ -299,9 +299,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     sub_child = sub_child.nextSibling().toElement();
                 }
             }
-            if (selection_name == NULL)
+            if (selection_name == "")
                 selection_name.append(" ");
-            if (selection_value == NULL)
+            if (selection_value == "")
                 selection_value.append(" ");
             ecuCalDef->ScalingSelectionsNameList.append(selection_name);
             ecuCalDef->ScalingSelectionsValueList.append(selection_value);
@@ -401,9 +401,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 rom_scale_sub_child = rom_scale_sub_child.nextSibling().toElement();
                             }
                         }
-                        if (selection_name == NULL)
+                        if (selection_name == "")
                             selection_name.append(" ");
-                        if (selection_value == NULL)
+                        if (selection_value == "")
                             selection_value.append(" ");
                         if (ecuCalDef->SelectionsNameList.at(def_map_index) == " ")
                             ecuCalDef->SelectionsNameList.replace(def_map_index, selection_name);

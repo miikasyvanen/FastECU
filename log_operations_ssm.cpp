@@ -460,7 +460,7 @@ void MainWindow::log_to_file(){
             QString dateTimeString = dateTime.toString("yyyy-MM-dd hh'h'mm'm'ss's'");
 
             QString log_file_name = configValues->log_files_base_directory;
-            if (configValues->log_files_base_directory.at(configValues->log_files_base_directory.length() - 1) != "/")
+            if (configValues->log_files_base_directory.at(configValues->log_files_base_directory.length() - 1) != '/')
                 log_file_name.append("/");
             log_file_name.append("fastecu_" + dateTimeString + ".csv");
 

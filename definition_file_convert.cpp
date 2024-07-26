@@ -134,18 +134,18 @@ int DefinitionFileConvert::convert_mappack_csv_file()
                 column_data.clear();
                 for (int i = 0; i < line.length(); i++)
                 {
-                    if (line.at(i) == "\"" && index == 0) {
+                    if (line.at(i) == '\"' && index == 0) {
                         is_comment = true;
                         continue;
                     }
-                    if (line.at(i) == "\"" && is_comment && index != 0) {
+                    if (line.at(i) == '\"' && is_comment && index != 0) {
                         is_comment = false;
                         continue;
                     }
 
                     index++;
 
-                    if (line.at(i) != ";" || is_comment)
+                    if (line.at(i) != ';' || is_comment)
                         column_data.append(line.at(i));
                     else {
                         line_data.append(column_data);
@@ -484,18 +484,18 @@ int DefinitionFileConvert::convert_mappack_csv_file()
                 column_data.clear();
                 for (int i = 0; i < line.length(); i++)
                 {
-                    if (line.at(i) == "\"" && index == 0) {
+                    if (line.at(i) =='\"' && index == 0) {
                         is_comment = true;
                         continue;
                     }
-                    if (line.at(i) == "\"" && is_comment && index != 0) {
+                    if (line.at(i) == '\"' && is_comment && index != 0) {
                         is_comment = false;
                         continue;
                     }
 
                     index++;
 
-                    if (line.at(i) != ";" || is_comment)
+                    if (line.at(i) != ';' || is_comment)
                         column_data.append(line.at(i));
                     else {
                         line_data.append(column_data);

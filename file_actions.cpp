@@ -110,24 +110,24 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
 
     if (reader.readNextStartElement())
     {
-        if (reader.name() == "ecu" && reader.attributes().value("name") == "FastECU")
+        if (reader.name().toUtf8() == "ecu" && reader.attributes().value("name").toUtf8() == "FastECU")
         {
             if (reader.readNextStartElement())
             {
-                if (reader.name() == "software_settings")
+                if (reader.name().toUtf8() == "software_settings")
                 {
                     while (reader.readNextStartElement())
                     {
-                        if (reader.name() == "setting" && reader.attributes().value("name") == "window_size")
+                        if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "window_size")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value" && reader.attributes().value("width") != "")
+                                if (reader.name().toUtf8() == "value" && reader.attributes().value("width").toUtf8() != "")
                                 {
                                     configValues->window_width = reader.attributes().value("width").toString();
                                     reader.skipCurrentElement();
                                 }
-                                else if (reader.name() == "value" && reader.attributes().value("height") != "")
+                                else if (reader.name().toUtf8() == "value" && reader.attributes().value("height").toUtf8() != "")
                                 {
                                     configValues->window_height = reader.attributes().value("height").toString();
                                     reader.skipCurrentElement();
@@ -137,11 +137,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Width:" << configValues->window_width << "Height:" << configValues->window_height;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "toolbar_iconsize")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "toolbar_iconsize")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->toolbar_iconsize = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -151,11 +151,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Serial port:" << configValues->serial_port;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "serial_port")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "serial_port")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->serial_port = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -165,11 +165,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Serial port:" << configValues->serial_port;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "protocol_id")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "protocol_id")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->flash_protocol_selected_id = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -179,11 +179,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Protocol ID:" << configValues->flash_protocol_selected_id;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "flash_transport")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "flash_transport")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->flash_protocol_selected_flash_transport = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -193,11 +193,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Flash transport:" << configValues->flash_protocol_selected_flash_transport;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "log_transport")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "log_transport")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->flash_protocol_selected_log_transport = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -207,11 +207,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Log transport:" << configValues->flash_protocol_selected_log_transport;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "log_protocol")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "log_protocol")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->flash_protocol_selected_log_protocol = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -221,11 +221,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Log protocol:" << configValues->flash_protocol_selected_log_protocol;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "primary_definition_base")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "primary_definition_base")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->primary_definition_base = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -235,11 +235,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Primary def base:" << configValues->primary_definition_base;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "calibration_files")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "calibration_files")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->calibration_files.append(reader.attributes().value("data").toString());
                                     reader.skipCurrentElement();
@@ -249,11 +249,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Calibration files:" << configValues->calibration_files;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "calibration_files_directory")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "calibration_files_directory")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->calibration_files_directory = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -263,11 +263,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Calibration files directory:" << configValues->calibration_files_directory;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "romraider_definition_files")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "romraider_definition_files")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->romraider_definition_files.append(reader.attributes().value("data").toString());
                                     reader.skipCurrentElement();
@@ -277,11 +277,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "RomRaider def files:" << configValues->romraider_definition_files;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "use_romraider_definitions")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "use_romraider_definitions")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->use_romraider_definitions = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -291,11 +291,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Use RomRaider definitions:" << configValues->use_romraider_definitions;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "ecuflash_definition_files_directory")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "ecuflash_definition_files_directory")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->ecuflash_definition_files_directory = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -305,11 +305,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "EcuFlash def files directory:" << configValues->ecuflash_definition_files_directory;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "use_ecuflash_definitions")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "use_ecuflash_definitions")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->use_ecuflash_definitions = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -319,11 +319,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Use EcuFlash definitions:" << configValues->use_ecuflash_definitions;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "logger_definition_file")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "logger_definition_file")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->romraider_logger_definition_file = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -333,11 +333,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Logger def file:" << configValues->romraider_logger_definition_file;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "kernel_files_directory")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "kernel_files_directory")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->kernel_files_directory = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -347,11 +347,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Kernel files directory:" << configValues->kernel_files_directory;
                         }
-                        else if (reader.name() == "setting" && reader.attributes().value("name") == "logfiles_directory")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "logfiles_directory")
                         {
                             while(reader.readNextStartElement())
                             {
-                                if (reader.name() == "value")
+                                if (reader.name().toUtf8() == "value")
                                 {
                                     configValues->log_files_directory = reader.attributes().value("data").toString();
                                     reader.skipCurrentElement();
@@ -1424,8 +1424,8 @@ QString FileActions::parse_hex_ecuid(uint8_t byte)
     QString ecuid_byte;
     unsigned char chars[] = "0123456789ABCDEF";
 
-    ecuid_byte = chars[(byte >> 4) & 0xF];
-    ecuid_byte.append(chars[(byte >> 0) & 0xF]);
+    ecuid_byte = (QChar)chars[(byte >> 4) & 0xF];
+    ecuid_byte.append((QChar)chars[(byte >> 0) & 0xF]);
     //qDebug() << "Constructed byte:" << ecuid_byte;
 
     return ecuid_byte;
@@ -1457,7 +1457,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_ecuflash_def_files(Fil
                 uint8_t byte = (uint8_t)ecuCalDef->FullRomData.at(j);
                 if (cal_id_hex.length() < ecuid_length)
                     cal_id_hex.append(parse_hex_ecuid(byte));
-                cal_id_ascii.append(byte);
+                cal_id_ascii.append((QChar)byte);
             }
         }
 
@@ -1512,7 +1512,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(Fi
                 uint8_t byte = (uint8_t)ecuCalDef->FullRomData.at(j);
                 if (cal_id_hex.length() < ecuid_length)
                     cal_id_hex.append(parse_hex_ecuid(byte));
-                cal_id_ascii.append(byte);
+                cal_id_ascii.append((QChar)byte);
             }
         }
 
@@ -2242,13 +2242,13 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
         QString number;
         //qDebug() << "Expression stringlist index:" << i << expression.at(i);
 
-        if (expression.at(i) == "x")
+        if (expression.at(i) == 'x')
         {
             isOperator = false;
             numbers.append(x);
             output++;
         }
-        else if ((isOperator && expression.at(i) == "-" && expression.at(i + 1) == "x") || (expression.at(i) == "-" && expression.at(i + 1) == "x" && i == 0))
+        else if ((isOperator && expression.at(i) == '-' && expression.at(i + 1) == 'x') || (expression.at(i) == '-' && expression.at(i + 1) == 'x' && i == 0))
         {
             isOperator = false;
             number.append(expression.at(i));
@@ -2258,12 +2258,12 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             output+=2;
 
         }
-        else if (expression.at(i).isNumber() || expression.at(i) == "." || (isOperator && expression.at(i) == "-"))
+        else if (expression.at(i).isNumber() || expression.at(i) == '.' || (isOperator && expression.at(i) == '-'))
         {
             isOperator = false;
             number.append(expression.at(i));
             i++;
-            while (i < expression.length() && (expression.at(i).isNumber() || expression.at(i) == "."))
+            while (i < expression.length() && (expression.at(i).isNumber() || expression.at(i) == '.'))
             {
                 number.append(expression.at(i));
                 i++;
@@ -2272,13 +2272,13 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             numbers.append(number);
             output++;
         }
-        else if (expression.at(i) == "(")
+        else if (expression.at(i) == '(')
         {
             isOperator = true;
             operators.append(expression.at(i));
             stack++;
         }
-        else if (expression.at(i) == ")")
+        else if (expression.at(i) == ')')
         {
             stack--;
             while (operators.at(stack) != "(")
@@ -2289,22 +2289,22 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             }
             operators.removeAt(stack);
         }
-        else if (expression.at(i) == "*")
+        else if (expression.at(i) == '*')
         {
             isOperator = true;
             operators.append(expression.at(i));
             stack++;
         }
-        else if (expression.at(i) == "/")
+        else if (expression.at(i) == '/')
         {
             isOperator = true;
             operators.append(expression.at(i));
             stack++;
         }
-        else if (expression.at(i) == "+")
+        else if (expression.at(i) == '+')
         {
             isOperator = true;
-            if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == "/" || operators.at(stack - 1) == "*"))
+            if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == '/' || operators.at(stack - 1) == '*'))
             {
                 numbers.append(operators.at(stack - 1));
                 output++;
@@ -2316,10 +2316,10 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
                 stack++;
             }
         }
-        else if (expression.at(i) == "-")
+        else if (expression.at(i) == '-')
         {
             isOperator = true;
-            if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == "/" || operators.at(stack - 1) == "*"))
+            if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == '/' || operators.at(stack - 1) == '*'))
             {
                 numbers.append(operators.at(stack - 1));
                 output++;
