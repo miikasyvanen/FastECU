@@ -1215,6 +1215,7 @@ void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
     {
         reset_connection();
     }
+    /*
     else if (error == QSerialPort::ParityError)
     {
     }
@@ -1224,6 +1225,7 @@ void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
     else if (error == QSerialPort::BreakConditionError)
     {
     }
+*/
     else if (error == QSerialPort::WriteError)
     {
         reset_connection();

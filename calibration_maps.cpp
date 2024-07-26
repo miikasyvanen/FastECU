@@ -282,7 +282,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             QString switch_data = switch_states.at(i + 1);
             QString map_data;
             uint32_t byte_address = ecuCalDef->AddressList.at(mapIndex).toUInt(&bStatus, 16);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize < (170 * 1024) && byte_address > 0x27FFF)
+            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < (170 * 1024) && byte_address > 0x27FFF)
                 byte_address -= 0x8000;
             for (int j = 0; j < switch_data_length.length(); j++)
             {
@@ -424,11 +424,11 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             //qDebug() << mapDataCellText.at(i);
             int yPos = 0;
             int xPos = 0;
-            if (ecuCalDef->XSizeList.at(mapIndex) > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
+            if (ecuCalDef->XSizeList.at(mapIndex).toUInt() > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
                 yPos = i / xSize + ySizeOffset;
             else
                 yPos = i / xSize;
-            if (ecuCalDef->YSizeList.at(mapIndex) > 1)
+            if (ecuCalDef->YSizeList.at(mapIndex).toUInt() > 1)
                 xPos = i - (yPos - ySizeOffset) * xSize + xSizeOffset;
             else
                 xPos = i - (yPos - ySizeOffset) * xSize;

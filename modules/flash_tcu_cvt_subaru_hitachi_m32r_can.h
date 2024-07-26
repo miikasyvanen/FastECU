@@ -11,7 +11,7 @@
 #include <QTimer>
 #include <QWidget>
 #include <QtCharts/QChartView>
-#include <QTCharts/QLineSeries>
+#include <QLineSeries>
 
 #include <kernelcomms.h>
 #include <kernelmemorymodels.h>

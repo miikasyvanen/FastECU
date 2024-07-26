@@ -1,6 +1,6 @@
 #include "flash_tcu_cvt_subaru_hitachi_m32r_can.h"
 
-QT_CHARTS_USE_NAMESPACE
+//QT_CHARTS_USE_NAMESPACE
 
 FlashTcuCvtSubaruHitachiM32RCan::FlashTcuCvtSubaruHitachiM32RCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent),

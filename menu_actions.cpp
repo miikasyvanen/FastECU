@@ -1054,11 +1054,11 @@ void MainWindow::set_maptablewidget_items()
                     cellItem->setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
                 int yPos = 0;
                 int xPos = 0;
-                if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber) > 1)
+                if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toUInt() > 1)
                     yPos = i / xSize + ySizeOffset;
                 else
                     yPos = i / xSize;
-                if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber) > 1)
+                if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toUInt() > 1)
                     xPos = i - (yPos - ySizeOffset) * xSize + xSizeOffset;
                 else
                     xPos = i - (yPos - ySizeOffset) * xSize;
@@ -1098,7 +1098,7 @@ QString MainWindow::get_rom_data_value(uint8_t map_rom_number, uint32_t map_data
 
     uint32_t data_byte = 0;
     uint32_t byte_address = map_data_address + (map_value_index * map_value_storagesize);
-    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < byte_address)
+    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize.toUInt() < byte_address)
         byte_address -= 0x8000;
 
     for (int k = 0; k < map_value_storagesize; k++)
@@ -1145,7 +1145,7 @@ void MainWindow::set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_ad
         map_value_storagesize = 4;
 
     uint32_t byte_address = map_data_address + (map_value_index * map_value_storagesize);
-    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < (170 * 1024) && byte_address > 0x27FFF)
+    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize.toUInt() < (170 * 1024) && byte_address > 0x27FFF)
         byte_address -= 0x8000;
 
     for (int k = 0; k < map_value_storagesize; k++)

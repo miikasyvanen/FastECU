@@ -1,7 +1,7 @@
 #ifndef CARMODELSELECT_H
 #define CARMODELSELECT_H
 
-#include <QDesktopWidget>
+//#include <QDesktopWidget>
 #include <QWidget>
 #include <QStringListModel>
 #include <QTreeWidget>
