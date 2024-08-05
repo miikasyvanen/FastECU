@@ -1,8 +1,10 @@
 #include "flash_tcu_subaru_hitachi_m32r_kline.h"
 
 FlashTcuSubaruHitachiM32RKline::FlashTcuSubaruHitachiM32RKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,12 +16,16 @@ FlashTcuSubaruHitachiM32RKline::FlashTcuSubaruHitachiM32RKline(SerialPortActions
         this->setWindowTitle("Read ROM from TCU");
 
     this->serial = serial;
+}
+
+void FlashTcuSubaruHitachiM32RKline::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_hitachi_can(ecuCalDef, cmd_type);
+    result = init_flash_hitachi_can();
 
     if (result == STATUS_SUCCESS)
     {
@@ -42,7 +48,7 @@ void FlashTcuSubaruHitachiM32RKline::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashTcuSubaruHitachiM32RKline::init_flash_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashTcuSubaruHitachiM32RKline::init_flash_hitachi_can()
 {
     bool ok = false;
 
@@ -63,6 +69,8 @@ int FlashTcuSubaruHitachiM32RKline::init_flash_hitachi_can(FileActions::EcuCalDe
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -101,18 +109,21 @@ int FlashTcuSubaruHitachiM32RKline::init_flash_hitachi_can(FileActions::EcuCalDe
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Reading ROM from TCU using K-Line", true, true);
-            result = read_a0_rom_subaru_tcu_hitachi_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-            //result = read_a0_ram_subaru_tcu_hitachi_kline(ecuCalDef, 0x80000, 0x100000);
-            //result = read_b8_subaru_tcu_hitachi_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-            //result = read_b0_subaru_tcu_hitachi_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            result = read_a0_rom_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            //result = read_a0_ram_subaru_tcu_hitachi_kline(0x80000, 0x100000);
+            //result = read_b8_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            //result = read_b0_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Not yet implemented: Writing ROM to TCU Subaru Hitachi using CAN", true, true);
-            //result = write_mem_subaru_denso_can_02_32bit(ecuCalDef, test_write);
+            //result = write_mem_subaru_denso_can_02_32bit(test_write);
         }
     }
+    emit external_logger("Finished");
     return result;
 }
 
@@ -220,7 +231,7 @@ int FlashTcuSubaruHitachiM32RKline::connect_bootloader_subaru_tcu_hitachi_kline(
  * For reading a portion of ROM using a0 command
  *
  *
- */int FlashTcuSubaruHitachiM32RKline::read_a0_rom_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+ */int FlashTcuSubaruHitachiM32RKline::read_a0_rom_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length)
 {
 
     QByteArray received;
@@ -297,7 +308,7 @@ int FlashTcuSubaruHitachiM32RKline::connect_bootloader_subaru_tcu_hitachi_kline(
  * For reading a portion of ROM using b8 command
  *
  *
- */int FlashTcuSubaruHitachiM32RKline::read_b8_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+ */int FlashTcuSubaruHitachiM32RKline::read_b8_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length)
 {
 
     QByteArray received;
@@ -374,7 +385,7 @@ int FlashTcuSubaruHitachiM32RKline::connect_bootloader_subaru_tcu_hitachi_kline(
  * For reading a portion of ROM using b0 command
  *
  *
- */int FlashTcuSubaruHitachiM32RKline::read_b0_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+ */int FlashTcuSubaruHitachiM32RKline::read_b0_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length)
 {
 
     QByteArray received;
@@ -452,7 +463,7 @@ int FlashTcuSubaruHitachiM32RKline::connect_bootloader_subaru_tcu_hitachi_kline(
  *
  *
  */
-int FlashTcuSubaruHitachiM32RKline::read_a0_ram_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashTcuSubaruHitachiM32RKline::read_a0_ram_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length)
 {
 
     QByteArray received;
@@ -965,8 +976,14 @@ int FlashTcuSubaruHitachiM32RKline::send_log_window_message(QString message, boo
 
 void FlashTcuSubaruHitachiM32RKline::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

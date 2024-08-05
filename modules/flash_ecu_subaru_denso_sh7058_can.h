@@ -32,7 +32,16 @@ public:
     explicit FlashEcuSubaruDensoSH7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
     ~FlashEcuSubaruDensoSH7058Can();
 
+    void run();
+
+signals:
+    void external_logger(QString message);
+    void external_logger(int value);
+
 private:
+    FileActions::EcuCalDefStructure *ecuCalDef;
+    QString cmd_type;
+
     #define STATUS_SUCCESS	0x00
     #define STATUS_ERROR	0x01
 
@@ -66,12 +75,12 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
+    int init_flash_denso_subarucan();
 
     int connect_bootloader_subaru_denso_subarucan();
     int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
+    int write_mem_subaru_denso_subarucan(bool test_write);
     int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
     int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
     int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);

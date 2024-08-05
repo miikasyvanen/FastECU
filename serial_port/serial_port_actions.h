@@ -13,6 +13,8 @@ public:
     explicit SerialPortActions(QString peerAddress="", QWebSocket *web_socket=nullptr, QObject *parent=nullptr);
     ~SerialPortActions();
 
+    bool isDirectConnection(void);
+
     bool get_serialPortAvailable();
     bool set_serialPortAvailable(bool value);
     bool get_setRequestToSend();
@@ -128,12 +130,14 @@ public:
     QStringList check_serial_ports(void);
     QString open_serial_port(void);
 
+public slots:
+    void websocket_connected(void);
+    void waitForSource(void);
+
 private:
     SerialPortActionsDirect        *serial_direct;
     SerialPortActionsRemoteReplica *serial_remote;
     QString peerAddress;
-
-    bool isDirectConnection(void);
 
     const QString autodiscoveryMessage = "FastECU_PTP_Autodiscovery";
     const QString remoteObjectName = "FastECU";
@@ -146,6 +150,8 @@ private:
     void startLocal(void);
     void sendAutoDiscoveryMessage();
 
+private slots:
+    void serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
 };
 
 #endif // SERIAL_PORT_ACTIONS_H

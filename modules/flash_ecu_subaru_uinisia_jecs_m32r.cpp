@@ -1,8 +1,10 @@
 #include "flash_ecu_subaru_uinisia_jecs_m32r.h"
 
 FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,11 +16,15 @@ FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, Fi
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruUnisiaJecs::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
 
-    result = init_flash_subaru_unisia_jecs(ecuCalDef, cmd_type);
+    result = init_flash_subaru_unisia_jecs();
 
     if (result == STATUS_SUCCESS)
     {
@@ -41,7 +47,7 @@ void FlashEcuSubaruUnisiaJecs::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs()
 {
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -59,6 +65,8 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs(FileActions::EcuCalD
     int result = STATUS_ERROR;
 
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -89,16 +97,18 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs(FileActions::EcuCalD
 
     if (cmd_type == "read")
     {
+        emit external_logger("Reading ROM, please wait...");
         send_log_window_message("Reading ROM from Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
-        result = read_mem_subaru_unisia_jecs(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+        result = read_mem_subaru_unisia_jecs(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
     }
     else if (cmd_type == "test_write" || cmd_type == "write")
     {
+        emit external_logger("Writing ROM, please wait...");
         send_log_window_message("Writing ROM to Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
-        result = write_mem_subaru_unisia_jecs(ecuCalDef, test_write);
+        result = write_mem_subaru_unisia_jecs(test_write);
     }
+    emit external_logger("Finished");
     return result;
-
 }
 
 /*
@@ -106,7 +116,7 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs(FileActions::EcuCalD
  *
  * @return success
  */
-int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
 
@@ -273,7 +283,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(FileActions::EcuCalDef
  *
  * @return success
  */
-int FlashEcuSubaruUnisiaJecs::write_mem_subaru_unisia_jecs(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruUnisiaJecs::write_mem_subaru_unisia_jecs(bool test_write)
 {
     QByteArray output;
     QByteArray received;
@@ -611,8 +621,14 @@ int FlashEcuSubaruUnisiaJecs::send_log_window_message(QString message, bool time
 
 void FlashEcuSubaruUnisiaJecs::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

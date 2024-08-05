@@ -1,8 +1,10 @@
 #include <modules/flash_ecu_subaru_denso_sh705x_can.h>
 
 FlashEcuSubaruDensoSH705xCan::FlashEcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,12 +16,16 @@ FlashEcuSubaruDensoSH705xCan::FlashEcuSubaruDensoSH705xCan(SerialPortActions *se
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruDensoSH705xCan::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_denso_can_02(ecuCalDef, cmd_type);
+    result = init_flash_denso_can_02();
 
     if (result == STATUS_SUCCESS)
     {
@@ -42,7 +48,7 @@ void FlashEcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashEcuSubaruDensoSH705xCan::init_flash_denso_can_02(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruDensoSH705xCan::init_flash_denso_can_02()
 {
     bool ok = false;
 
@@ -63,6 +69,8 @@ int FlashEcuSubaruDensoSH705xCan::init_flash_denso_can_02(FileActions::EcuCalDef
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -104,6 +112,7 @@ int FlashEcuSubaruDensoSH705xCan::init_flash_denso_can_02(FileActions::EcuCalDef
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
+        emit external_logger("Preparing, please wait...");
         send_log_window_message("Initializing Subaru 02+ 32-bit Denso CAN kernel upload, please wait...", true, true);
         result = upload_kernel_subaru_denso_can_02_32bit(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
     }
@@ -111,15 +120,18 @@ int FlashEcuSubaruDensoSH705xCan::init_flash_denso_can_02(FileActions::EcuCalDef
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Reading ROM from Subaru 02+ 32-bit Denso using CAN", true, true);
-            result = read_mem_subaru_denso_can_02_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            result = read_mem_subaru_denso_can_02_32bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Writing ROM to Subaru 02+ 32-bit Denso using CAN", true, true);
-            result = write_mem_subaru_denso_can_02_32bit(ecuCalDef, test_write);
+            result = write_mem_subaru_denso_can_02_32bit(test_write);
         }
     }
+    emit external_logger("Finished");
     return result;
 }
 
@@ -465,7 +477,7 @@ int FlashEcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_can_02_32bit(QStrin
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH705xCan::read_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoSH705xCan::read_mem_subaru_denso_can_02_32bit(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -614,7 +626,7 @@ int FlashEcuSubaruDensoSH705xCan::read_mem_subaru_denso_can_02_32bit(FileActions
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH705xCan::write_mem_subaru_denso_can_02_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruDensoSH705xCan::write_mem_subaru_denso_can_02_32bit(bool test_write)
 {
     QByteArray filedata;
 
@@ -1706,8 +1718,14 @@ int FlashEcuSubaruDensoSH705xCan::send_log_window_message(QString message, bool 
 
 void FlashEcuSubaruDensoSH705xCan::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

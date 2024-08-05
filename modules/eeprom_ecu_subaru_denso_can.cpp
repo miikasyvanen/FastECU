@@ -1,8 +1,10 @@
 #include "eeprom_ecu_subaru_denso_can.h"
 
 EepromEcuSubaruDensoCan::EepromEcuSubaruDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,6 +16,10 @@ EepromEcuSubaruDensoCan::EepromEcuSubaruDensoCan(SerialPortActions *serial, File
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void EepromEcuSubaruDensoCan::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
@@ -40,6 +46,8 @@ EepromEcuSubaruDensoCan::EepromEcuSubaruDensoCan(SerialPortActions *serial, File
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -73,94 +81,98 @@ EepromEcuSubaruDensoCan::EepromEcuSubaruDensoCan(SerialPortActions *serial, File
     serial->open_serial_port();
 
     int ret = QMessageBox::information(this, tr("Connecting to ECU"),
-                                   tr("Downloading EEPROM content. There is 3 different option depends on "
-                                      "ECU. All 3 option shows content on screen and you can save it when "
-                                      "it looks ok.\n\n"
-                                      "Turn ignition ON and press OK to start initializing connection to ECU"),
-                                   QMessageBox::Ok | QMessageBox::Cancel,
-                                   QMessageBox::Ok);
+                                       tr("Downloading EEPROM content. There is 3 different option depends on "
+                                          "ECU. All 3 option shows content on screen and you can save it when "
+                                          "it looks ok.\n\n"
+                                          "Turn ignition ON and press OK to start initializing connection to ECU"),
+                                       QMessageBox::Ok | QMessageBox::Cancel,
+                                       QMessageBox::Ok);
 
     switch (ret)
     {
-        case QMessageBox::Ok:
-            for (int i = 2; i < 5; i++)
+    case QMessageBox::Ok:
+        for (int i = 2; i < 5; i++)
+        {
+            bool save_and_exit = false;
+
+            emit external_logger("Preparing, please wait...");
+            send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
+            result = connect_bootloader_subaru_denso_subarucan();
+
+            if (result == STATUS_SUCCESS && !kernel_alive)
             {
-                bool save_and_exit = false;
-
-                send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-                result = connect_bootloader_subaru_denso_subarucan();
-
-                if (result == STATUS_SUCCESS && !kernel_alive)
+                send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
+                result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+            }
+            if (result == STATUS_SUCCESS)
+            {
+                if (cmd_type == "read")
                 {
-                    send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-                    result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                    emit external_logger("Reading EEPROM, please wait...");
+                    send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
+                    qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
+                    result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
                 }
-                if (result == STATUS_SUCCESS)
+                else if (cmd_type == "test_write" || cmd_type == "write")
                 {
-                    if (cmd_type == "read")
-                    {
-                        send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
-                        qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
-                        result = read_mem_subaru_denso_subarucan(ecuCalDef, flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
-                    }
-                    else if (cmd_type == "test_write" || cmd_type == "write")
-                    {
-                        send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-                        //result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
-                    }
+                    emit external_logger("Writing EEPROM, please wait...");
+                    send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
+                    //result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
                 }
-                if (result == STATUS_SUCCESS)
-                {
-                    int ret = QMessageBox::information(this, tr("Downloaded EEPROM content"),
+            }
+            emit external_logger("Finished");
+            if (result == STATUS_SUCCESS)
+            {
+                int ret = QMessageBox::information(this, tr("Downloaded EEPROM content"),
                                                    tr("If downloaded content looks ok, click 'Save' to save content and exit, otherwise click 'discard' and continue with next method."),
                                                    QMessageBox::Save | QMessageBox::Ignore,
                                                    QMessageBox::Save);
 
+                switch (ret)
+                {
+                case QMessageBox::Save:
+                    save_and_exit = true;
+                    break;
+                case QMessageBox::Ignore: {
+                    result = STATUS_ERROR;
+                    ecuCalDef->FullRomData.clear();
+                    EEPROM_MODE++;
+                    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                                   tr("Turn ignition OFF and back ON and press OK to start initializing connection to ECU"),
+                                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                                   QMessageBox::Ok);
+
                     switch (ret)
                     {
-                        case QMessageBox::Save:
-                            save_and_exit = true;
-                            break;
-                        case QMessageBox::Ignore: {
-                            result = STATUS_ERROR;
-                            ecuCalDef->FullRomData.clear();
-                            EEPROM_MODE++;
-                            int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
-                                                           tr("Turn ignition OFF and back ON and press OK to start initializing connection to ECU"),
-                                                           QMessageBox::Ok | QMessageBox::Cancel,
-                                                           QMessageBox::Ok);
+                    case QMessageBox::Ok:
 
-                            switch (ret)
-                            {
-                                case QMessageBox::Ok:
-
-                                    break;
-                                case QMessageBox::Cancel:
-                                    save_and_exit = true;
-                                    break;
-                                default:
-                                    // should never be reached
-                                    break;
-                            }
-                            break;
-                        }
-                        default:
-                            // should never be reached
-                            break;
+                        break;
+                    case QMessageBox::Cancel:
+                        save_and_exit = true;
+                        break;
+                    default:
+                        // should never be reached
+                        break;
                     }
-                }
-                if (save_and_exit)
                     break;
+                }
+                default:
+                    // should never be reached
+                    break;
+                }
             }
-        case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
-            this->close();
-            break;
-        default:
-            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
-            this->close();
-            break;
+            if (save_and_exit)
+                break;
+        }
+    case QMessageBox::Cancel:
+        qDebug() << "Operation canceled";
+        this->close();
+        break;
+    default:
+        QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+        qDebug() << "Unknown operation selected!";
+        this->close();
+        break;
     }
     if (result != STATUS_SUCCESS)
     {
@@ -178,7 +190,7 @@ void EepromEcuSubaruDensoCan::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int EepromEcuSubaruDensoCan::init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int EepromEcuSubaruDensoCan::init_flash_denso_subarucan()
 {
     bool ok = false;
 
@@ -199,6 +211,8 @@ int EepromEcuSubaruDensoCan::init_flash_denso_subarucan(FileActions::EcuCalDefSt
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -239,6 +253,7 @@ int EepromEcuSubaruDensoCan::init_flash_denso_subarucan(FileActions::EcuCalDefSt
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
+        emit external_logger("Preparing, please wait...");
         send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
         result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
     }
@@ -246,16 +261,19 @@ int EepromEcuSubaruDensoCan::init_flash_denso_subarucan(FileActions::EcuCalDefSt
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
             qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
-            result = read_mem_subaru_denso_subarucan(ecuCalDef, flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
+            result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
             //result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
         }
     }
+    emit external_logger("Finished");
     return result;
 }
 
@@ -929,7 +947,7 @@ int EepromEcuSubaruDensoCan::upload_kernel_subaru_denso_subarucan(QString kernel
  *
  * @return success
  */
-int EepromEcuSubaruDensoCan::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int EepromEcuSubaruDensoCan::read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -1661,9 +1679,15 @@ int EepromEcuSubaruDensoCan::send_log_window_message(QString message, bool times
 
 void EepromEcuSubaruDensoCan::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 void EepromEcuSubaruDensoCan::delay(int timeout)

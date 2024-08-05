@@ -32,7 +32,16 @@ public:
     EepromEcuSubaruDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
     ~EepromEcuSubaruDensoCan();
 
+    void run();
+
+signals:
+    void external_logger(QString message);
+    void external_logger(int value);
+
 private:
+    FileActions::EcuCalDefStructure *ecuCalDef;
+    QString cmd_type;
+
     #define STATUS_SUCCESS	0x00
     #define STATUS_ERROR	0x01
 
@@ -68,10 +77,10 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
+    int init_flash_denso_subarucan();
     int connect_bootloader_subaru_denso_subarucan();
     int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
 
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);

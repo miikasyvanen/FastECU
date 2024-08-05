@@ -3,8 +3,10 @@
 //QT_CHARTS_USE_NAMESPACE
 
 FlashTcuCvtSubaruHitachiM32RCan::FlashTcuCvtSubaruHitachiM32RCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -16,12 +18,16 @@ FlashTcuCvtSubaruHitachiM32RCan::FlashTcuCvtSubaruHitachiM32RCan(SerialPortActio
         this->setWindowTitle("Read ROM from TCU");
 
     this->serial = serial;
+}
+
+void FlashTcuCvtSubaruHitachiM32RCan::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_hitachi_can(ecuCalDef, cmd_type);
+    result = init_flash_hitachi_can();
 
     if (result == STATUS_SUCCESS)
     {
@@ -44,7 +50,7 @@ void FlashTcuCvtSubaruHitachiM32RCan::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashTcuCvtSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashTcuCvtSubaruHitachiM32RCan::init_flash_hitachi_can()
 {
     bool ok = false;
 
@@ -65,6 +71,8 @@ int FlashTcuCvtSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalD
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -107,13 +115,15 @@ int FlashTcuCvtSubaruHitachiM32RCan::init_flash_hitachi_can(FileActions::EcuCalD
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Not yet implemented: Reading ROM from TCU Subaru Hitachi using CAN", true, true);
-            result = read_mem_subaru_tcu_hitachi_can(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            result = read_mem_subaru_tcu_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Not yet implemented: Writing ROM to TCU Subaru Hitachi using CAN", true, true);
-            result = write_mem_subaru_tcu_hitachi_can(ecuCalDef, test_write);
+            result = write_mem_subaru_tcu_hitachi_can(test_write);
         }
     }
     return result;
@@ -439,7 +449,7 @@ int FlashTcuCvtSubaruHitachiM32RCan::hack_words()
  *
  * @return success
  */
-int FlashTcuCvtSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashTcuCvtSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -724,7 +734,7 @@ int FlashTcuCvtSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(FileActions
  * @return success
  */
 
-int FlashTcuCvtSubaruHitachiM32RCan::write_mem_subaru_tcu_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashTcuCvtSubaruHitachiM32RCan::write_mem_subaru_tcu_hitachi_can(bool test_write)
 {
     QByteArray filedata;
 
@@ -1987,8 +1997,14 @@ int FlashTcuCvtSubaruHitachiM32RCan::send_log_window_message(QString message, bo
 
 void FlashTcuCvtSubaruHitachiM32RCan::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

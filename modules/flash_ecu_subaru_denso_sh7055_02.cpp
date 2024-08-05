@@ -1,8 +1,10 @@
 #include "flash_ecu_subaru_denso_sh7055_02.h"
 
 FlashEcuSubaruDensoSH7055_02::FlashEcuSubaruDensoSH7055_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,6 +16,10 @@ FlashEcuSubaruDensoSH7055_02::FlashEcuSubaruDensoSH7055_02(SerialPortActions *se
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruDensoSH7055_02::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
@@ -75,49 +81,49 @@ FlashEcuSubaruDensoSH7055_02::FlashEcuSubaruDensoSH7055_02(SerialPortActions *se
 
     switch (ret)
     {
-        case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
-            result = connect_bootloader_subaru_denso_kline_fxt02();
+    case QMessageBox::Ok:
+        send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
+        result = connect_bootloader_subaru_denso_kline_fxt02();
 
-            if (result == STATUS_SUCCESS && !kernel_alive)
+        if (result == STATUS_SUCCESS && !kernel_alive)
+        {
+            send_log_window_message("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
+            result = upload_kernel_subaru_denso_kline_fxt02(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+        }
+        if (result == STATUS_SUCCESS)
+        {
+            if (cmd_type == "read")
             {
-                send_log_window_message("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
-                result = upload_kernel_subaru_denso_kline_fxt02(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
+                result = read_mem_subaru_denso_kline_32bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
             }
-            if (result == STATUS_SUCCESS)
+            else if (cmd_type == "test_write" || cmd_type == "write")
             {
-                if (cmd_type == "read")
-                {
-                    send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
-                    result = read_mem_subaru_denso_kline_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-                }
-                else if (cmd_type == "test_write" || cmd_type == "write")
-                {
-                    send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
-                    result = write_mem_subaru_denso_kline_32bit(ecuCalDef, test_write);
-                }
+                send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
+                result = write_mem_subaru_denso_kline_32bit(test_write);
             }
+        }
 
-            if (result == STATUS_SUCCESS)
-            {
-                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-                this->close();
-            }
-            else
-            {
-                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-            }
-
-            break;
-        case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
+        if (result == STATUS_SUCCESS)
+        {
+            QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
             this->close();
-            break;
-        default:
-            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
-            this->close();
-            break;
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+        }
+
+        break;
+    case QMessageBox::Cancel:
+        qDebug() << "Operation canceled";
+        this->close();
+        break;
+    default:
+        QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+        qDebug() << "Unknown operation selected!";
+        this->close();
+        break;
     }
 }
 
@@ -131,7 +137,7 @@ void FlashEcuSubaruDensoSH7055_02::closeEvent(QCloseEvent *bar)
     kill_process = true;
 }
 
-int FlashEcuSubaruDensoSH7055_02::init_flash_denso_kline_fxt02(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruDensoSH7055_02::init_flash_denso_kline_fxt02()
 {
     bool ok = false;
 
@@ -152,6 +158,8 @@ int FlashEcuSubaruDensoSH7055_02::init_flash_denso_kline_fxt02(FileActions::EcuC
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -189,6 +197,7 @@ int FlashEcuSubaruDensoSH7055_02::init_flash_denso_kline_fxt02(FileActions::EcuC
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
+        emit external_logger("Preparing, please wait...");
         send_log_window_message("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
         result = upload_kernel_subaru_denso_kline_fxt02(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
     }
@@ -196,15 +205,18 @@ int FlashEcuSubaruDensoSH7055_02::init_flash_denso_kline_fxt02(FileActions::EcuC
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
-            result = read_mem_subaru_denso_kline_32bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            result = read_mem_subaru_denso_kline_32bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
-            result = write_mem_subaru_denso_kline_32bit(ecuCalDef, test_write);
+            result = write_mem_subaru_denso_kline_32bit(test_write);
         }
     }
+    emit external_logger("Finished");
     return result;
 }
 
@@ -459,7 +471,7 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel_subaru_denso_kline_fxt02(QString
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7055_02::read_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoSH7055_02::read_mem_subaru_denso_kline_32bit(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -585,7 +597,7 @@ int FlashEcuSubaruDensoSH7055_02::read_mem_subaru_denso_kline_32bit(FileActions:
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7055_02::write_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruDensoSH7055_02::write_mem_subaru_denso_kline_32bit(bool test_write)
 {
     QByteArray filedata;
 
@@ -1539,8 +1551,14 @@ int FlashEcuSubaruDensoSH7055_02::send_log_window_message(QString message, bool 
 
 void FlashEcuSubaruDensoSH7055_02::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

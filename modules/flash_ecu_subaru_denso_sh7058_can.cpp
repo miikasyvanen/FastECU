@@ -1,8 +1,10 @@
 #include "flash_ecu_subaru_denso_sh7058_can.h"
 
 FlashEcuSubaruDensoSH7058Can::FlashEcuSubaruDensoSH7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,6 +16,10 @@ FlashEcuSubaruDensoSH7058Can::FlashEcuSubaruDensoSH7058Can(SerialPortActions *se
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruDensoSH7058Can::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
@@ -38,6 +44,8 @@ FlashEcuSubaruDensoSH7058Can::FlashEcuSubaruDensoSH7058Can(SerialPortActions *se
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -75,48 +83,53 @@ FlashEcuSubaruDensoSH7058Can::FlashEcuSubaruDensoSH7058Can(SerialPortActions *se
 
     switch (ret)
     {
-        case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-            result = connect_bootloader_subaru_denso_subarucan();
+    case QMessageBox::Ok:
+        send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
+        result = connect_bootloader_subaru_denso_subarucan();
 
-            if (result == STATUS_SUCCESS && !kernel_alive)
+        if (result == STATUS_SUCCESS && !kernel_alive)
+        {
+            emit external_logger("Preparing, please wait...");
+            send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
+            result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+        }
+        if (result == STATUS_SUCCESS)
+        {
+            if (cmd_type == "read")
             {
-                send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-                result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                emit external_logger("Reading ROM, please wait...");
+                send_log_window_message("Reading ROM from Subaru 07+ 32-bit using CAN", true, true);
+                result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
             }
-            if (result == STATUS_SUCCESS)
+            else if (cmd_type == "test_write" || cmd_type == "write")
             {
-                if (cmd_type == "read")
-                {
-                    send_log_window_message("Reading ROM from Subaru 07+ 32-bit using CAN", true, true);
-                    result = read_mem_subaru_denso_subarucan(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-                }
-                else if (cmd_type == "test_write" || cmd_type == "write")
-                {
-                    send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-                    result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
-                }
+                emit external_logger("Writing ROM, please wait...");
+                send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
+                result = write_mem_subaru_denso_subarucan(test_write);
             }
-            if (result == STATUS_SUCCESS)
-            {
-                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-                this->close();
-            }
-            else
-            {
-                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-            }
+        }
+        emit external_logger("Finished");
 
-            break;
-        case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
+        if (result == STATUS_SUCCESS)
+        {
+            QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
             this->close();
-            break;
-        default:
-            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
-            this->close();
-            break;
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+        }
+
+        break;
+    case QMessageBox::Cancel:
+        qDebug() << "Operation canceled";
+        this->close();
+        break;
+    default:
+        QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+        qDebug() << "Unknown operation selected!";
+        this->close();
+        break;
     }
 }
 
@@ -130,7 +143,7 @@ void FlashEcuSubaruDensoSH7058Can::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashEcuSubaruDensoSH7058Can::init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruDensoSH7058Can::init_flash_denso_subarucan()
 {
     bool ok = false;
 
@@ -151,6 +164,8 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_denso_subarucan(FileActions::EcuCal
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -189,6 +204,7 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_denso_subarucan(FileActions::EcuCal
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
+        emit external_logger("Preparing, please wait...");
         send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
         result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
     }
@@ -196,15 +212,18 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_denso_subarucan(FileActions::EcuCal
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Reading ROM from Subaru 07+ 32-bit using CAN", true, true);
-            result = read_mem_subaru_denso_subarucan(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-            result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
+            result = write_mem_subaru_denso_subarucan(test_write);
         }
     }
+    emit external_logger("Finished");
     return result;
 }
 
@@ -893,7 +912,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -1202,7 +1221,7 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(FileActions::E
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_write)
 {
     QByteArray filedata;
 
@@ -2232,9 +2251,15 @@ int FlashEcuSubaruDensoSH7058Can::send_log_window_message(QString message, bool 
 
 void FlashEcuSubaruDensoSH7058Can::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 void FlashEcuSubaruDensoSH7058Can::delay(int timeout)

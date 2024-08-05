@@ -1,8 +1,10 @@
 #include "flash_tcu_subaru_denso_sh705x_can.h"
 
 FlashTcuSubaruDensoSH705xCan::FlashTcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     // TCU 0xFFFF3000 0x2000
 
@@ -16,12 +18,16 @@ FlashTcuSubaruDensoSH705xCan::FlashTcuSubaruDensoSH705xCan(SerialPortActions *se
         this->setWindowTitle("Read ROM from TCU");
 
     this->serial = serial;
+}
+
+void FlashTcuSubaruDensoSH705xCan::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_denso_subarucan(ecuCalDef, cmd_type);
+    result = init_flash_denso_subarucan();
 
     if (result == STATUS_SUCCESS)
     {
@@ -44,7 +50,7 @@ void FlashTcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan()
 {
     bool ok = false;
     //int tcuRead;
@@ -67,6 +73,8 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan(FileActions::EcuCal
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -151,6 +159,7 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan(FileActions::EcuCal
 
         if (result == STATUS_SUCCESS && !kernel_alive)
         {
+            emit external_logger("Preparing, please wait...");
             send_log_window_message("Initializing Subaru Denso CAN kernel upload, please wait...", true, true);
             result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
         }
@@ -158,13 +167,15 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan(FileActions::EcuCal
         {
             if (cmd_type == "read")
             {
+                emit external_logger("Reading ROM, please wait...");
                 send_log_window_message("Reading ROM from Subaru Denso using CAN", true, true);
-                result = read_mem_subaru_denso_subarucan(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
             }
             else if (cmd_type == "test_write" || cmd_type == "write")
             {
+                emit external_logger("Writing ROM, please wait...");
                 send_log_window_message("Writing ROM to Subaru Denso using CAN (beta status)", true, true);
-                result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
+                result = write_mem_subaru_denso_subarucan(test_write);
             }
         }
     }
@@ -185,6 +196,7 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan(FileActions::EcuCal
         result = tcu_setparam_subaru_ssm();
     }
 
+    emit external_logger("Finished");
     return result;
 }
 
@@ -1115,7 +1127,7 @@ int FlashTcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_subarucan(QString k
  *
  * @return success
  */
-int FlashTcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashTcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -1260,7 +1272,7 @@ int FlashTcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(FileActions::E
  *
  * @return success
  */
-int FlashTcuSubaruDensoSH705xCan::write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashTcuSubaruDensoSH705xCan::write_mem_subaru_denso_subarucan(bool test_write)
 {
     QByteArray filedata;
 
@@ -2180,8 +2192,14 @@ int FlashTcuSubaruDensoSH705xCan::send_log_window_message(QString message, bool 
 
 void FlashTcuSubaruDensoSH705xCan::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
         ui->progressbar->setValue(value);
+        valueChanged = ui->progressbar->value() != value;
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

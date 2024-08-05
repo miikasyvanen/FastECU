@@ -32,7 +32,16 @@ public:
     explicit FlashEcuSubaruUnisiaJecs0x27Kline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
     ~FlashEcuSubaruUnisiaJecs0x27Kline();
 
+    void run();
+
+signals:
+    void external_logger(QString message);
+    void external_logger(int value);
+
 private:
+    FileActions::EcuCalDefStructure *ecuCalDef;
+    QString cmd_type;
+
     #define STATUS_SUCCESS							0x00
     #define STATUS_ERROR							0x01
 
@@ -65,13 +74,13 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
+    int init_flash_hitachi_kline();
 
     int connect_bootloader_subaru_ecu_hitachi_kline();
-    int read_a0_rom_subaru_ecu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int read_a0_ram_subaru_ecu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int read_b8_subaru_ecu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int read_b0_subaru_ecu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int read_a0_rom_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length);
+    int read_a0_ram_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length);
+    int read_b8_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length);
+    int read_b0_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length);
 
     QByteArray send_subaru_ecu_sid_bf_ssm_init();
     QByteArray send_subaru_ecu_sid_81_start_communication();
@@ -86,7 +95,7 @@ private:
     QByteArray subaru_ecu_generate_kline_seed_key(QByteArray seed);
     QByteArray subaru_ecu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
-    int write_mem_subaru_ecu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int write_mem_subaru_ecu_hitachi_kline(bool test_write);
     int reflash_block_subaru_ecu_hitachi_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
     QByteArray subaru_ecu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len);
     QByteArray subaru_ecu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len);
