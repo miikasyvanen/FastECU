@@ -1900,8 +1900,8 @@ void FlashTcuSubaruHitachiM32RCan::set_progressbar_value(int value)
     bool valueChanged = true;
     if (ui->progressbar)
     {
-        ui->progressbar->setValue(value);
         valueChanged = ui->progressbar->value() != value;
+        ui->progressbar->setValue(value);
     }
     if (valueChanged)
         emit external_logger(value);
