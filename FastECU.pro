@@ -34,7 +34,9 @@ linux {
     serial_port/J2534_tatrix_linux.h \
 }
 
-REPC_REPLICA = serial_port/serial_port_actions.rep
+REPC_REPLICA = \
+    serial_port/serial_port_actions.rep \
+    remote_utility/remote_utility.rep
 
 SOURCES += \
     biu_operations_subaru.cpp \
@@ -81,6 +83,7 @@ SOURCES += \
     modules/flash_tcu_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_subaru_hitachi_m32r_kline.cpp \
     protocol_select.cpp \
+    remote_utility/remote_utility.cpp \
     serial_port/serial_port_actions.cpp \
     serial_port/serial_port_actions_direct.cpp \
     serial_port/websocketiodevice.cpp \
@@ -129,6 +132,7 @@ HEADERS += \
     modules/flash_tcu_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_subaru_hitachi_m32r_kline.h \
     protocol_select.h \
+    remote_utility/remote_utility.h \
     serial_port/qtrohelper.hpp \
     serial_port/serial_port_actions.h \
     serial_port/serial_port_actions_direct.h \

@@ -31,7 +31,16 @@ public:
     explicit FlashEcuSubaruHitachiM32R_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent);
     ~FlashEcuSubaruHitachiM32R_02();
 
+    void run();
+
+signals:
+    void external_logger(QString message);
+    void external_logger(int value);
+
 private:
+    FileActions::EcuCalDefStructure *ecuCalDef;
+    QString cmd_type;
+
     #define STATUS_SUCCESS	0x00
     #define STATUS_ERROR	0x01
 
@@ -59,10 +68,10 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_subaru_hitachi(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
+    int init_flash_subaru_hitachi();
 
-    int read_mem_subaru_hitachi(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_hitachi(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int read_mem_subaru_hitachi(uint32_t start_addr, uint32_t length);
+    int write_mem_subaru_hitachi(bool test_write);
 
     QByteArray send_subaru_hitachi_sid_bf_ssm_init();
     QByteArray send_subaru_hitachi_sid_81_start_communication();

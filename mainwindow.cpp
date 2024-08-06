@@ -13,6 +13,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , peerAddress(peerAddress)
+    , clientWebSocket(nullptr)
 {
     ui->setupUi(this);
     qApp->installEventFilter(this);
@@ -170,9 +171,15 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     splash->setLayout(layout);
     splash->resize(350,50);
     //Show it in remote mode only
+    //Prepare for remote mode
     if (!peerAddress.isEmpty())
     {
         splash->show();
+        clientWebSocket = new QWebSocket("",QWebSocketProtocol::VersionLatest,this);
+        QString wt = this->windowTitle();
+        if (peerAddress.length() > 0)
+            wt += " - Remote Connection to " + peerAddress;
+        this->setWindowTitle(wt);
     }
     //Add option to close app while waiting for network connection
     QObject::connect(button1, &QPushButton::released, this, [&]()
@@ -192,15 +199,24 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
             });
     timer->start();
 
-    serial = new SerialPortActions(peerAddress);
+    //WebSocket now initializes and connects in constructor
+    //It would be right to init WebSocket outside
+    //and pass it already initialized ...
+    serial = new SerialPortActions(peerAddress, clientWebSocket);
+    remote_utility = new RemoteUtility(peerAddress, clientWebSocket);
+    //... and connect it here. Refactor it when you'll need 3rd remote object.
+    if (!serial->isDirectConnection())
+    {
+        //Connection over single Web Socket should be established simultaneously
+        //Then it is possible to run several remote objects over single Web Socket
+        serial->waitForSource();
+        remote_utility->waitForSource();
+    }
+    external_logger("Connection successfull.");
 
     timer->stop();
     splash->close();
     timer->deleteLater();
-    QString wt = this->windowTitle();
-    if (peerAddress.length() > 0)
-        wt += " - Remote Connection to " + peerAddress;
-    this->setWindowTitle(wt);
 
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -801,62 +817,62 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDef[rom_number]->FlashMethod = "sh7058_denso_can";
                 ecuCalDef[rom_number]->McuType = "SH7058";
             }
-            flashEcuSubaruDensoSH705xCan = new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
         }
         else if (configValues->flash_protocol_selected_family.startsWith("wrx02"))
-            flashEcuSubaruDensoMC68HC16Y5_02 = new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("wrx04"))
-            flashEcuSubaruDensoMC68HC16Y5_02 = new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("fxt02"))
-            flashEcuSubaruDensoSH7055_02 = new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH7055_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sti04"))
-            flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sti05"))
-            flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("subarucand"))
-            flashEcuSubaruDensoSH7058CanDiesel = new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("subarucan"))
-            flashEcuSubaruDensoSH7058Can = new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sti04"))
-            flashEcuSubaruDensoSH7055_04 = new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs_0x27Kline"))
-            flashEcuSubaruUnisiaJecs0x27Kline = new FlashEcuSubaruUnisiaJecs0x27Kline(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruUnisiaJecs0x27Kline = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs0x27Kline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs"))
-            flashEcuSubaruUnisiaJecs = new FlashEcuSubaruUnisiaJecs(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_02"))
-            flashEcuSubaruHitachiM32R_02 = new FlashEcuSubaruHitachiM32R_02(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruHitachiM32R_02 = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32R_02(serial,ecuCalDef[rom_number], cmd_type, this));
          else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_06"))
-            flashEcuSubaruHitachiM32R_06 = new FlashEcuSubaruHitachiM32R_06(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruHitachiM32R_06 = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32R_06(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_can"))
-            flashEcuSubaruHitachiCan = new FlashEcuSubaruHitachiCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruHitachiCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_kline"))
-            flashTcuSubaruHitachiM32RKline = new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashTcuSubaruHitachiM32RKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_can"))
-            flashTcuSubaruHitachiM32RCan = new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashTcuSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_hitachi_can"))
-            flashTcuCvtSubaruHitachiM32RCan = new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashTcuCvtSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_denso_can"))
-            flashTcuSubaruDensoSH705xCan = new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7055_eeprom"))
-            eepromEcuSubaruDensoKline = new EepromEcuSubaruDensoKline(serial,ecuCalDef[rom_number], cmd_type, this);
+            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoKline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7058_eeprom"))
-            eepromEcuSubaruDensoKline = new EepromEcuSubaruDensoKline(serial,ecuCalDef[rom_number], cmd_type, this);
+            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoKline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_can_sh7055_eeprom"))
-            eepromEcuSubaruDensoCan = new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_can_sh7058_eeprom"))
-            eepromEcuSubaruDensoCan = new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_eeprom"))
-            eepromEcuSubaruDensoCan = new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_diesel_eeprom"))
-            eepromEcuSubaruDensoCan = new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this);
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType.startsWith("SH7058"))
                 ecuCalDef[rom_number]->McuType = "SH7058";
-            flashEcuSubaruDensoSH705xCan = new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
         }
         else if (configValues->flash_protocol_selected_family.startsWith("dev_subarucan"))
-            flashEcuSubaruDensoSH7xxxCan = new FlashEcuSubaruDensoSH7xxxCan(serial, ecuCalDef[rom_number], cmd_type, this);
+            flashEcuSubaruDensoSH7xxxCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7xxxCan(serial, ecuCalDef[rom_number], cmd_type, this));
         else
             QMessageBox::warning(this, tr("Unknown flashmethod"), "Unknown flashmethod! Flashmethod not yet implemented!");
             //ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[rom_number], cmd_type, this);
@@ -1661,4 +1677,33 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
             return true;
 
     return false;
+}
+
+template <typename FLASH_CLASS>
+FLASH_CLASS* MainWindow::connect_signals_and_run_module(FLASH_CLASS *object)
+{
+    //To successfully connect an overloaded signal,
+    //one should provide a suitable template parameter to connect()
+    QObject::connect<void (FLASH_CLASS::*)(QString)>(object, &FLASH_CLASS::external_logger,
+                                                     this, &MainWindow::external_logger);
+    QObject::connect<void (FLASH_CLASS::*)(int)>(object, &FLASH_CLASS::external_logger,
+                                                 this, &MainWindow::external_logger_set_progressbar_value);
+    object->run();
+    return object;
+}
+
+//External logger slot for string messages
+void MainWindow::external_logger(QString message)
+{
+    qDebug() << Q_FUNC_INFO << message;
+    if (remote_utility->isValid())
+        remote_utility->send_log_window_message(message);
+}
+
+//External progress bar slot
+void MainWindow::external_logger_set_progressbar_value(int value)
+{
+    qDebug() << Q_FUNC_INFO << value;
+    if (remote_utility->isValid())
+        remote_utility->set_progressbar_value(value);
 }

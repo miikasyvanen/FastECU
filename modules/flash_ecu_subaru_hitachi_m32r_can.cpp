@@ -1,8 +1,10 @@
 #include "flash_ecu_subaru_hitachi_m32r_can.h"
 
 FlashEcuSubaruHitachiCan::FlashEcuSubaruHitachiCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,11 +16,15 @@ FlashEcuSubaruHitachiCan::FlashEcuSubaruHitachiCan(SerialPortActions *serial, Fi
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruHitachiCan::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
 
-    result = init_flash_subaru_hitachi_can(ecuCalDef, cmd_type);
+    result = init_flash_subaru_hitachi_can();
 
     if (result == STATUS_SUCCESS)
     {
@@ -41,7 +47,7 @@ void FlashEcuSubaruHitachiCan::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can()
 {
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -59,6 +65,8 @@ int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can(FileActions::EcuCalD
     int result = STATUS_ERROR;
 
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -86,16 +94,18 @@ int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can(FileActions::EcuCalD
 
     if (cmd_type == "read")
     {
+        emit external_logger("Preparing, please wait...");
         send_log_window_message("Reading ROM from Subaru Hitachi WA12212970WWW using CAN", true, true);
-        result = read_mem_subaru_hitachi_can(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+        result = read_mem_subaru_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
     }
     else if (cmd_type == "test_write" || cmd_type == "write")
     {
+        emit external_logger("Reading ROM, please wait...");
         send_log_window_message("Writing ROM to Subaru Hitachi WA12212970WWW using CAN", true, true);
-        result = write_mem_subaru_hitachi_can(ecuCalDef, test_write);
+        result = write_mem_subaru_hitachi_can(test_write);
     }
+    emit external_logger("Finished");
     return result;
-
 }
 
 /*
@@ -103,7 +113,7 @@ int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can(FileActions::EcuCalD
  *
  * @return success
  */
-int FlashEcuSubaruHitachiCan::read_mem_subaru_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruHitachiCan::read_mem_subaru_hitachi_can(uint32_t start_addr, uint32_t length)
 {
 
     return STATUS_ERROR;
@@ -114,7 +124,7 @@ int FlashEcuSubaruHitachiCan::read_mem_subaru_hitachi_can(FileActions::EcuCalDef
  *
  * @return success
  */
-int FlashEcuSubaruHitachiCan::write_mem_subaru_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruHitachiCan::write_mem_subaru_hitachi_can(bool test_write)
 {
 
     return STATUS_ERROR;
@@ -252,8 +262,14 @@ int FlashEcuSubaruHitachiCan::send_log_window_message(QString message, bool time
 
 void FlashEcuSubaruHitachiCan::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
+        valueChanged = ui->progressbar->value() != value;
         ui->progressbar->setValue(value);
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

@@ -14,6 +14,10 @@ EepromEcuSubaruDensoKline::EepromEcuSubaruDensoKline(SerialPortActions *serial, 
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void EepromEcuSubaruDensoKline::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
@@ -38,6 +42,8 @@ EepromEcuSubaruDensoKline::EepromEcuSubaruDensoKline(SerialPortActions *serial, 
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -69,94 +75,99 @@ EepromEcuSubaruDensoKline::EepromEcuSubaruDensoKline(SerialPortActions *serial, 
     serial->open_serial_port();
 
     int ret = QMessageBox::information(this, tr("Connecting to ECU"),
-                                   tr("Downloading EEPROM content. There is 3 different option depends on "
-                                      "ECU. All 3 option shows content on screen and you can save it when "
-                                      "it looks ok.\n\n"
-                                      "Turn ignition ON and press OK to start initializing connection to ECU"),
-                                   QMessageBox::Ok | QMessageBox::Cancel,
-                                   QMessageBox::Ok);
+                                       tr("Downloading EEPROM content. There is 3 different option depends on "
+                                          "ECU. All 3 option shows content on screen and you can save it when "
+                                          "it looks ok.\n\n"
+                                          "Turn ignition ON and press OK to start initializing connection to ECU"),
+                                       QMessageBox::Ok | QMessageBox::Cancel,
+                                       QMessageBox::Ok);
 
     switch (ret)
     {
-        case QMessageBox::Ok:
-            for (int i = 2; i < 5; i++)
+    case QMessageBox::Ok:
+        for (int i = 2; i < 5; i++)
+        {
+            bool save_and_exit = false;
+
+            send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
+            result = connect_bootloader_subaru_denso_kline_04_32bit();
+
+            if (result == STATUS_SUCCESS && !kernel_alive)
             {
-                bool save_and_exit = false;
-
-                send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-                result = connect_bootloader_subaru_denso_kline_04_32bit();
-
-                if (result == STATUS_SUCCESS && !kernel_alive)
+                emit external_logger("Preparing, please wait...");
+                send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
+                result = upload_kernel_subaru_denso_kline_04_32bit(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+            }
+            if (result == STATUS_SUCCESS)
+            {
+                if (cmd_type == "read")
                 {
-                    send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-                    result = upload_kernel_subaru_denso_kline_04_32bit(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                    emit external_logger("Reading ROM, please wait...");
+                    send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
+                    qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
+                    result = read_mem_subaru_denso_kline_32bit(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
                 }
-                if (result == STATUS_SUCCESS)
+                else if (cmd_type == "test_write" || cmd_type == "write")
                 {
-                    if (cmd_type == "read")
-                    {
-                        send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
-                        qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
-                        result = read_mem_subaru_denso_kline_32bit(ecuCalDef, flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
-                    }
-                    else if (cmd_type == "test_write" || cmd_type == "write")
-                    {
-                        send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-                        //result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
-                    }
+                    emit external_logger("Writing ROM, please wait...");
+                    send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
+                    //result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
                 }
-                if (result == STATUS_SUCCESS)
-                {
-                    int ret = QMessageBox::information(this, tr("Downloaded EEPROM content"),
+            }
+            emit external_logger("Finished");
+
+            if (result == STATUS_SUCCESS)
+            {
+                int ret = QMessageBox::information(this, tr("Downloaded EEPROM content"),
                                                    tr("If downloaded content looks ok, click 'Save' to save content and exit, otherwise click 'discard' and continue with next method."),
                                                    QMessageBox::Save | QMessageBox::Ignore,
                                                    QMessageBox::Save);
 
+                switch (ret)
+                {
+                case QMessageBox::Save:
+                    save_and_exit = true;
+                    break;
+                case QMessageBox::Ignore: {
+                    result = STATUS_ERROR;
+                    ecuCalDef->FullRomData.clear();
+                    EEPROM_MODE++;
+                    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                                   tr("Turn ignition OFF and back ON and press OK to start initializing connection to ECU"),
+                                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                                   QMessageBox::Ok);
+
                     switch (ret)
                     {
-                        case QMessageBox::Save:
-                            save_and_exit = true;
-                            break;
-                        case QMessageBox::Ignore: {
-                            result = STATUS_ERROR;
-                            ecuCalDef->FullRomData.clear();
-                            EEPROM_MODE++;
-                            int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
-                                                           tr("Turn ignition OFF and back ON and press OK to start initializing connection to ECU"),
-                                                           QMessageBox::Ok | QMessageBox::Cancel,
-                                                           QMessageBox::Ok);
+                    case QMessageBox::Ok:
 
-                            switch (ret)
-                            {
-                                case QMessageBox::Ok:
-
-                                    break;
-                                case QMessageBox::Cancel:
-                                    save_and_exit = true;
-                                    break;
-                                default:
-                                    // should never be reached
-                                    break;
-                            }
-                            break;
-                        }
-                        default:
-                            // should never be reached
-                            break;
+                        break;
+                    case QMessageBox::Cancel:
+                        save_and_exit = true;
+                        break;
+                    default:
+                        // should never be reached
+                        break;
                     }
-                }
-                if (save_and_exit)
                     break;
+                }
+                default:
+                    // should never be reached
+                    break;
+                }
             }
-        case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
-            this->close();
-            break;
-        default:
-            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
-            this->close();
-            break;
+            if (save_and_exit)
+                break;
+        }
+    case QMessageBox::Cancel:
+        qDebug() << "Operation canceled";
+        this->close();
+        break;
+    default:
+        QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+        qDebug() << "Unknown operation selected!";
+        this->close();
+        break;
     }
     if (result != STATUS_SUCCESS)
     {
@@ -174,7 +185,7 @@ void EepromEcuSubaruDensoKline::closeEvent(QCloseEvent *bar)
     kill_process = true;
 }
 
-int EepromEcuSubaruDensoKline::init_flash_denso_kline_04(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int EepromEcuSubaruDensoKline::init_flash_denso_kline_04()
 {
     bool ok = false;
 
@@ -195,6 +206,8 @@ int EepromEcuSubaruDensoKline::init_flash_denso_kline_04(FileActions::EcuCalDefS
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -232,6 +245,7 @@ int EepromEcuSubaruDensoKline::init_flash_denso_kline_04(FileActions::EcuCalDefS
 
     if (result == STATUS_SUCCESS && !kernel_alive)
     {
+        emit external_logger("Preparing, please wait...");
         send_log_window_message("Initializing Subaru 04 32-bit K-Line kernel upload, please wait...", true, true);
         result = upload_kernel_subaru_denso_kline_04_32bit(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
     }
@@ -239,16 +253,19 @@ int EepromEcuSubaruDensoKline::init_flash_denso_kline_04(FileActions::EcuCalDefS
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Reading EEPROM from Subaru 04 32-bit using K-Line", true, true);
             qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
-            result = read_mem_subaru_denso_kline_32bit(ecuCalDef, flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
+            result = read_mem_subaru_denso_kline_32bit(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Writing EEPROM to Subaru 04 32-bit using K-Line", true, true);
             //result = write_mem_subaru_denso_kline_32bit(ecuCalDef, test_write);
         }
     }
+    emit external_logger("Finished");
     return result;
 }
 
@@ -559,7 +576,7 @@ int EepromEcuSubaruDensoKline::upload_kernel_subaru_denso_kline_04_32bit(QString
  *
  * @return success
  */
-int EepromEcuSubaruDensoKline::read_mem_subaru_denso_kline_32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int EepromEcuSubaruDensoKline::read_mem_subaru_denso_kline_32bit(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -1459,8 +1476,14 @@ int EepromEcuSubaruDensoKline::send_log_window_message(QString message, bool tim
 
 void EepromEcuSubaruDensoKline::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
+        valueChanged = ui->progressbar->value() != value;
         ui->progressbar->setValue(value);
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

@@ -63,6 +63,7 @@
 
 #include <modules/flash_ecu_subaru_denso_sh7xxx_can.h>
 //
+#include <remote_utility/remote_utility.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -84,6 +85,8 @@ public:
 private:
     QString peerAddress;
     QSplashScreen *splash;
+    QWebSocket *clientWebSocket;
+    RemoteUtility *remote_utility;
     const char *sw_version = "FastECU v0.3b";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
@@ -255,6 +258,9 @@ private:
     void change_log_values(int tabIndex, QString protocol);
 
     // mainwindow.c
+    //Connect signals for any flash class and execute ::run() method
+    template <typename FLASH_CLASS>
+    FLASH_CLASS* connect_signals_and_run_module(FLASH_CLASS *object);
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
     void set_flash_arrow_state();
     QStringList create_flash_transports_list();
@@ -296,6 +302,11 @@ protected:
     void resizeEvent( QResizeEvent * event);
 
 private slots:
+    //External logger slot for string messages
+    void external_logger(QString message);
+    //External progress bar slot
+    void external_logger_set_progressbar_value(int value);
+
     // calibrationtreewidget.c
     void calibration_files_treewidget_item_selected(QTreeWidgetItem* item);
     void calibration_data_treewidget_item_selected(QTreeWidgetItem* item);

@@ -32,7 +32,16 @@ public:
     explicit FlashTcuSubaruHitachiM32RKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
     ~FlashTcuSubaruHitachiM32RKline();
 
+    void run();
+
+signals:
+    void external_logger(QString message);
+    void external_logger(int value);
+
 private:
+    FileActions::EcuCalDefStructure *ecuCalDef;
+    QString cmd_type;
+
     #define STATUS_SUCCESS							0x00
     #define STATUS_ERROR							0x01
 
@@ -65,13 +74,13 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_hitachi_can(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
+    int init_flash_hitachi_can();
 
     int connect_bootloader_subaru_tcu_hitachi_kline();
-    int read_a0_rom_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int read_a0_ram_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int read_b8_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int read_b0_subaru_tcu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
+    int read_a0_rom_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
+    int read_a0_ram_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
+    int read_b8_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
+    int read_b0_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
 
     QByteArray send_subaru_tcu_sid_bf_ssm_init();
     QByteArray send_subaru_tcu_sid_81_start_communication();

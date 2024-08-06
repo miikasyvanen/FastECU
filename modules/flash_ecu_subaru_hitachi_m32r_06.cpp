@@ -1,8 +1,10 @@
 #include "flash_ecu_subaru_hitachi_m32r_06.h"
 
 FlashEcuSubaruHitachiM32R_06::FlashEcuSubaruHitachiM32R_06(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,11 +16,15 @@ FlashEcuSubaruHitachiM32R_06::FlashEcuSubaruHitachiM32R_06(SerialPortActions *se
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruHitachiM32R_06::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
 
-    result = init_flash_subaru_hitachi(ecuCalDef, cmd_type);
+    result = init_flash_subaru_hitachi();
 
     if (result == STATUS_SUCCESS)
     {
@@ -41,7 +47,7 @@ void FlashEcuSubaruHitachiM32R_06::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashEcuSubaruHitachiM32R_06::init_flash_subaru_hitachi(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruHitachiM32R_06::init_flash_subaru_hitachi()
 {
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -59,6 +65,8 @@ int FlashEcuSubaruHitachiM32R_06::init_flash_subaru_hitachi(FileActions::EcuCalD
     int result = STATUS_ERROR;
 
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -86,16 +94,18 @@ int FlashEcuSubaruHitachiM32R_06::init_flash_subaru_hitachi(FileActions::EcuCalD
 
     if (cmd_type == "read")
     {
+        emit external_logger("Reading ROM, please wait...");
         send_log_window_message("Reading ROM from Subaru Hitachi WA12212970WWW using K-Line", true, true);
-        result = read_mem_subaru_hitachi(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+        result = read_mem_subaru_hitachi(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
     }
     else if (cmd_type == "test_write" || cmd_type == "write")
     {
+        emit external_logger("Writing ROM, please wait...");
         send_log_window_message("Writing ROM to Subaru Hitachi WA12212970WWW using K-Line", true, true);
-        result = write_mem_subaru_hitachi(ecuCalDef, test_write);
+        result = write_mem_subaru_hitachi(test_write);
     }
+    emit external_logger("Finished");
     return result;
-
 }
 
 /*
@@ -103,7 +113,7 @@ int FlashEcuSubaruHitachiM32R_06::init_flash_subaru_hitachi(FileActions::EcuCalD
  *
  * @return success
  */
-int FlashEcuSubaruHitachiM32R_06::read_mem_subaru_hitachi(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruHitachiM32R_06::read_mem_subaru_hitachi(uint32_t start_addr, uint32_t length)
 {
 
     return STATUS_ERROR;
@@ -114,7 +124,7 @@ int FlashEcuSubaruHitachiM32R_06::read_mem_subaru_hitachi(FileActions::EcuCalDef
  *
  * @return success
  */
-int FlashEcuSubaruHitachiM32R_06::write_mem_subaru_hitachi(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruHitachiM32R_06::write_mem_subaru_hitachi(bool test_write)
 {
 
     return STATUS_ERROR;
@@ -249,8 +259,14 @@ int FlashEcuSubaruHitachiM32R_06::send_log_window_message(QString message, bool 
 
 void FlashEcuSubaruHitachiM32R_06::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
+        valueChanged = ui->progressbar->value() != value;
         ui->progressbar->setValue(value);
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

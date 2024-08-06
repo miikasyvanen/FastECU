@@ -1,8 +1,10 @@
 #include "flash_ecu_subaru_unisia_jecs_0x27.h"
 
 FlashEcuSubaruUnisiaJecs0x27Kline::FlashEcuSubaruUnisiaJecs0x27Kline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,12 +16,16 @@ FlashEcuSubaruUnisiaJecs0x27Kline::FlashEcuSubaruUnisiaJecs0x27Kline(SerialPortA
         this->setWindowTitle("Read ROM from TCU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruUnisiaJecs0x27Kline::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_hitachi_kline(ecuCalDef, cmd_type);
+    result = init_flash_hitachi_kline();
 
     if (result == STATUS_SUCCESS)
     {
@@ -30,6 +36,7 @@ FlashEcuSubaruUnisiaJecs0x27Kline::FlashEcuSubaruUnisiaJecs0x27Kline(SerialPortA
     {
         QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
     }
+
 }
 
 FlashEcuSubaruUnisiaJecs0x27Kline::~FlashEcuSubaruUnisiaJecs0x27Kline()
@@ -42,7 +49,7 @@ void FlashEcuSubaruUnisiaJecs0x27Kline::closeEvent(QCloseEvent *event)
     kill_process = true;
 }
 
-int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
+int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline()
 {
     bool ok = false;
 
@@ -63,6 +70,8 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline(FileActions::Ecu
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -104,17 +113,19 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline(FileActions::Ecu
     {
         if (cmd_type == "read")
         {
+            emit external_logger("Reading ROM, please wait...");
             send_log_window_message("Reading ROM from ECU using K-Line", true, true);
-            result = read_a0_rom_subaru_ecu_hitachi_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-            //result = read_a0_ram_subaru_ecu_hitachi_kline(ecuCalDef, 0x80000, 0x100000);
-            //result = read_b8_subaru_ecu_hitachi_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-            //result = read_b0_subaru_ecu_hitachi_kline(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            result = read_a0_rom_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            //result = read_a0_ram_subaru_ecu_hitachi_kline(0x80000, 0x100000);
+            //result = read_b8_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            //result = read_b0_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
+            emit external_logger("Writing ROM, please wait...");
             send_log_window_message("Writing ROM to ECU Subaru Hitachi using K-Line", true, true);
-            //result = write_mem_subaru_denso_can_02_32bit(ecuCalDef, test_write);
-            result = write_mem_subaru_ecu_hitachi_kline(ecuCalDef, test_write);
+            //result = write_mem_subaru_denso_can_02_32bit(test_write);
+            result = write_mem_subaru_ecu_hitachi_kline(test_write);
         }
     }
     return result;
@@ -225,7 +236,7 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::connect_bootloader_subaru_ecu_hitachi_kli
  *
  *
  */
-int FlashEcuSubaruUnisiaJecs0x27Kline::read_a0_rom_subaru_ecu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruUnisiaJecs0x27Kline::read_a0_rom_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length)
 {
 
     QByteArray received;
@@ -485,7 +496,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_generate_kline_seed_key
     return key;
 }
 
-int FlashEcuSubaruUnisiaJecs0x27Kline::write_mem_subaru_ecu_hitachi_kline(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruUnisiaJecs0x27Kline::write_mem_subaru_ecu_hitachi_kline(bool test_write)
 {
     QByteArray received;
     QByteArray filedata;
@@ -1035,8 +1046,14 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::send_log_window_message(QString message, 
 
 void FlashEcuSubaruUnisiaJecs0x27Kline::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
+        valueChanged = ui->progressbar->value() != value;
         ui->progressbar->setValue(value);
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
