@@ -22,9 +22,9 @@
 #include <chrono>
 
 #if defined(Q_OS_LINUX)
-    #include "J2534_linux.h"
+#include "J2534_linux.h"
 #elif defined(Q_OS_WIN32)
-    #include "J2534_win.h"
+#include "J2534_win.h"
 #endif
 
 class SerialPortActionsDirect : public QObject
@@ -130,7 +130,7 @@ private:
     int set_j2534_can();
     int unset_j2534_can();
     int set_j2534_can_filters();
-    int set_j2534_stmin_tx();
+    //    int set_j2534_stmin_tx();
     int set_j2534_can_timings();
     int set_j2534_iso9141();
     int set_j2534_iso9141_filters();
@@ -148,8 +148,8 @@ private:
         TX_LB_START_IND = 0xA0,
     };
 
-    #define STATUS_SUCCESS							0x00
-    #define STATUS_ERROR							0x01
+#define STATUS_SUCCESS							0x00
+#define STATUS_ERROR							0x01
 
     J2534 *j2534;
     QSerialPort *serial;
@@ -191,7 +191,7 @@ private:
     QByteArray read_j2534_data(unsigned long timeout);
     QString parse_message_to_hex(QByteArray received);
 
-/*public slots:
+    /*public slots:
     QStringList check_serial_ports();
     QString open_serial_port();*/
 

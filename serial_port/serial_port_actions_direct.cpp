@@ -1,3 +1,7 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
 #include "serial_port_actions_direct.h"
 
 SerialPortActionsDirect::SerialPortActionsDirect(QObject *parent)
@@ -10,6 +14,7 @@ SerialPortActionsDirect::SerialPortActionsDirect(QObject *parent)
 SerialPortActionsDirect::~SerialPortActionsDirect()
 {
     delete j2534;
+    delete serial;
 }
 
 bool SerialPortActionsDirect::is_serial_port_open()
@@ -217,9 +222,9 @@ int SerialPortActionsDirect::line_end_check_1_toggled(int state)
         if (use_openport2_adapter)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 12000);
-            #ifdef Q_OS_LINUX
-                delay(17);
-            #endif
+#ifdef Q_OS_LINUX
+            delay(17);
+#endif
         }
         else
         {
@@ -252,9 +257,9 @@ int SerialPortActionsDirect::line_end_check_2_toggled(int state)
         if (use_openport2_adapter)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
-            #ifdef Q_OS_LINUX
-                delay(17);
-            #endif
+#ifdef Q_OS_LINUX
+            delay(17);
+#endif
         }
         else
         {
@@ -291,12 +296,18 @@ QStringList SerialPortActionsDirect::check_serial_ports()
         serial_ports.append(serialPortInfo.portName() + " - " + serialPortInfo.description());
         //qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
-    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-        if (j2534->init())
-            if (!j2534->PassThruOpen(NULL, &devID))
-                serial_ports.append("J2534 - OpenPort 2.0");
-        j2534->PassThruClose(devID);
-    #endif
+#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+    j2534->
+    op20pt32.dll
+    if (j2534->init())
+    {
+        if (!j2534->PassThruOpen(NULL, &devID))
+        {
+            serial_ports.append("J2534 - API DLL");
+        }
+    }
+    j2534->PassThruClose(devID);
+#endif
 
     std::sort(serial_ports.begin(), serial_ports.end(), std::less<QString>());
 
@@ -307,14 +318,16 @@ QString SerialPortActionsDirect::open_serial_port()
 {
     //qDebug() << "Serial port =" << serial_port_list;
     QString serial_port_text = serial_port_list.at(1);
-    #ifdef Q_OS_LINUX
-        serial_port = serial_port_prefix_linux + serial_port_list.at(0);
-    #endif
-    #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-        serial_port = serial_port_prefix_win + serial_port_list.at(0);
-    #endif
+#ifdef Q_OS_LINUX
+    serial_port = serial_port_prefix_linux + serial_port_list.at(0);
+#endif
+#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+    serial_port = serial_port_prefix_win + serial_port_list.at(0);
+#endif
 
-    if (serial_port_text == "OpenPort 2.0")
+    //    if (serial_port_text == "OpenPort 2.0")
+    if (serial_port_text != "")
+
     {
         close_serial_port();
         use_openport2_adapter = true;
@@ -346,12 +359,12 @@ QString SerialPortActionsDirect::open_serial_port()
     {
         close_serial_port();
 
-        #ifdef Q_OS_LINUX
+#ifdef Q_OS_LINUX
             //serial_port = serial_port_prefix_linux + serial_port;
-        #endif
-        #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#endif
+#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
             //serial_port = serial_port_prefix_win + serial_port;
-        #endif
+#endif
 
         if (!(serial->isOpen() && serial->isWritable())){
             serial->setPortName(serial_port);
@@ -370,7 +383,7 @@ QString SerialPortActionsDirect::open_serial_port()
                 openedSerialPort = serial_port;
                 //connect(serial, SIGNAL(readyRead()), this, SLOT(ReadSerialDataSlot()), Qt::DirectConnection);
                 qRegisterMetaType<QSerialPort::SerialPortError>();
-                connect(serial, SIGNAL(errorOccurred(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
+                connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
                 //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
                 //qDebug() << "Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
@@ -506,6 +519,7 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
     {
         if (add_iso14230_header)
             output = add_packet_header(output);
+
         if (use_openport2_adapter)
         {
             write_j2534_data(output);
@@ -513,8 +527,7 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
         }
         for (int i = 0; i < output.length(); i++)
         {
-            msg.clear();
-            msg.append(output.at(i));
+            msg[0] = output.at(i);
             serial->write(msg, 1);
             // Add serial echo read during transmit to speed up a little
             if (serial->bytesAvailable())
@@ -786,11 +799,11 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
 
     outbuf.length = sizeof(outbuf.data);
 
-    if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
-    {
-        serial[0] = 0;
-        return false;
-    }
+    //    if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
+    //    {
+    //        serial[0] = 0;
+    //        return false;
+    //    }
 
     memcpy(serial,outbuf.data,outbuf.length);
     serial[outbuf.length] = 0;
@@ -799,11 +812,11 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
 
 int SerialPortActionsDirect::init_j2534_connection()
 {
-    // If Linux, open serial port
-    #ifdef Q_OS_LINUX
-        if (j2534->open_serial_port(serial_port) != serial_port)
-            return STATUS_ERROR;
-    #endif
+// If Linux, open serial port
+#ifdef Q_OS_LINUX
+    if (j2534->open_serial_port(serial_port) != serial_port)
+        return STATUS_ERROR;
+#endif
 
     // Init J2534 connection (in windows, load DLL etc.)
     if (!j2534->init())
@@ -928,9 +941,9 @@ int SerialPortActionsDirect::set_j2534_can()
     }
     else
     {
-        #ifdef Q_OS_LINUX
-            chanID = protocol;
-        #endif
+#ifdef Q_OS_LINUX
+        chanID = protocol;
+#endif
         //qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
     }
 
@@ -948,13 +961,13 @@ int SerialPortActionsDirect::unset_j2534_can()
     return STATUS_SUCCESS;
 }
 
-int SerialPortActionsDirect::set_j2534_stmin_tx()
+/*int SerialPortActionsDirect::set_j2534_stmin_tx()
 {
     // Set timeouts etc.
     SCONFIG_LIST scl;
     SCONFIG scp[1] = {{STMIN_TX,0}};
     scl.NumOfParams = 1;
-    scp[0].Value = 242;
+    scp[0].Value = 65535;
     scl.ConfigPtr = scp;
     if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
     {
@@ -967,7 +980,7 @@ int SerialPortActionsDirect::set_j2534_stmin_tx()
     }
 
     return STATUS_SUCCESS;
-}
+}*/
 
 int SerialPortActionsDirect::set_j2534_can_timings()
 {
@@ -1014,7 +1027,7 @@ int SerialPortActionsDirect::set_j2534_can_filters()
         msgMask = msgPattern = txmsg;
         memset(msgMask.Data, 0xFF, txmsg.DataSize);
         memset(msgPattern.Data, 0xFF, txmsg.DataSize);
-/*
+        /*
         msgMask.Data[0] = (can_destination_address >> 24) & 0xFF;
         msgMask.Data[1] = (can_destination_address >> 16) & 0xFF;
         msgMask.Data[2] = (can_destination_address >> 8) & 0xFF;
@@ -1043,7 +1056,7 @@ int SerialPortActionsDirect::set_j2534_can_filters()
         memset(msgMask.Data, 0xFF, txmsg.DataSize);
         memset(msgPattern.Data, 0xFF, txmsg.DataSize);
         memset(msgFlow.Data, 0xFF, txmsg.DataSize);
-/*
+        /*
         msgMask.Data[0] = (iso15765_destination_address >> 24) & 0xFF;
         msgMask.Data[1] = (iso15765_destination_address >> 16) & 0xFF;
         msgMask.Data[2] = (iso15765_destination_address >> 8) & 0xFF;
@@ -1064,7 +1077,7 @@ int SerialPortActionsDirect::set_j2534_can_filters()
             return STATUS_ERROR;
         }
         qDebug() << "msgId" << msgId;
-/*
+        /*
         msgPattern.Data[0] = (iso15765_source_address >> 24) & 0xFF;
         msgPattern.Data[1] = (iso15765_source_address >> 16) & 0xFF;
         msgPattern.Data[2] = (iso15765_source_address >> 8) & 0xFF;
@@ -1116,10 +1129,10 @@ int SerialPortActionsDirect::set_j2534_iso9141()
     else
     {
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
-        //qDebug() << "J2534 connected";
-        #ifdef Q_OS_LINUX
-            chanID = protocol;
-        #endif
+//qDebug() << "J2534 connected";
+#ifdef Q_OS_LINUX
+        chanID = protocol;
+#endif
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
     }
 
@@ -1215,7 +1228,6 @@ void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
     {
         reset_connection();
     }
-    /*
     else if (error == QSerialPort::ParityError)
     {
     }
@@ -1225,7 +1237,6 @@ void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
     else if (error == QSerialPort::BreakConditionError)
     {
     }
-*/
     else if (error == QSerialPort::WriteError)
     {
         reset_connection();

@@ -9,9 +9,9 @@
 // "OP2.0:" refers to items that may have special relevance to the Tactrix OpenPort 2.0
 
 #ifdef __cplusplus
-   #define EXTERN_C     extern "C"
+#define EXTERN_C     extern "C"
 #else
-   #define EXTERN_C     extern
+#define EXTERN_C     extern
 #endif
 
 /////////////////
@@ -19,7 +19,7 @@
 /////////////////
 
 #ifdef OP20PT32_LIB
-#define PT_CALL 
+#define PT_CALL
 #define PT_API EXTERN_C
 #else
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
@@ -53,16 +53,17 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 ////////////////
 
 // J2534-1
-#define J1850VPW						1
-#define J1850PWM						2
-#define ISO9141							3
-#define ISO14230						4
-#define CAN								5
-#define ISO15765						6
-#define SCI_A_ENGINE					7	// OP2.0: Not supported
-#define SCI_A_TRANS						8	// OP2.0: Not supported
-#define SCI_B_ENGINE					9	// OP2.0: Not supported
-#define SCI_B_TRANS						10	// OP2.0: Not supported
+#define		J1850VPW				0x01
+#define		J1850PWM				0x02
+#define		ISO9141					0x03
+#define		ISO14230				0x04
+#define		CAN					0x05
+#define		ISO15765				0x06
+#define		SCI_A_ENGINE				0x07
+#define		SCI_A_TRANS				0x08
+#define		SCI_B_ENGINE				0x09
+#define		SCI_B_TRANS				0x0A
+
 
 // J2534-2
 #define CAN_CH1							0x00009000
@@ -86,36 +87,36 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 /////////////
 
 // J2534-1
-#define GET_CONFIG								0x01
-#define SET_CONFIG								0x02
-#define READ_VBATT								0x03
-#define FIVE_BAUD_INIT							0x04
-#define FAST_INIT								0x05
-#define CLEAR_TX_BUFFER							0x07
-#define CLEAR_RX_BUFFER							0x08
-#define CLEAR_PERIODIC_MSGS						0x09
-#define CLEAR_MSG_FILTERS						0x0A
-#define CLEAR_FUNCT_MSG_LOOKUP_TABLE			0x0B	// OP2.0: Not yet supported
-#define ADD_TO_FUNCT_MSG_LOOKUP_TABLE			0x0C 	// OP2.0: Not yet supported
-#define DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE		0x0D 	// OP2.0: Not yet supported
-#define READ_PROG_VOLTAGE						0x0E	// OP2.0: Several pins are supported
+#define		GET_CONFIG				0x01	// SCONFIG_LIST		NULL
+#define		SET_CONFIG				0x02	// SCONFIG_LIST		NULL
+#define		READ_VBATT				0x03	// NULL			unsigned long
+#define		FIVE_BAUD_INIT				0x04	// SBYTE_ARRAY		SBYTE_ARRAY
+#define		FAST_INIT				0x05	// PASSTHRU_MSG		PASSTHRU_MSG
+#define		CLEAR_TX_BUFFER				0x07	// NULL			NULL
+#define		CLEAR_RX_BUFFER				0x08	// NULL			NULL
+#define		CLEAR_PERIODIC_MSGS			0x09	// NULL			NULL
+#define		CLEAR_MSG_FILTERS			0x0A	// NULL			NULL
+#define		CLEAR_FUNCT_MSG_LOOKUP_TABLE		0x0B	// NULL			NULL
+#define		ADD_TO_FUNCT_MSG_LOOKUP_TABLE		0x0C	// SBYTE_ARRAY		NULL
+#define		DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE	0x0D	// SBYTE_ARRAY		NULL
+#define		READ_PROG_VOLTAGE			0x0E	// NULL			unsigned long
 
 // J2534-2
 #define SW_CAN_NS								0x8000 // OP2.0: Not supported
 #define SW_CAN_HS								0x8001 // OP2.0: Not supported
 
 // Tactrix specific IOCTLs
-#define TX_IOCTL_BASE							0x70000
+//#define TX_IOCTL_BASE							0x70000
 // OP2.0: The IOCTL below supports application-specific functions
 // that can be built into the hardware
-#define TX_IOCTL_APP_SERVICE					(TX_IOCTL_BASE+0)
-#define TX_IOCTL_SET_DLL_DEBUG_FLAGS			(TX_IOCTL_BASE+1)
-#define TX_IOCTL_DLL_DEBUG_FLAG_J2534_CALLS		0x00000001
-#define TX_IOCTL_DLL_DEBUG_FLAG_ALL_DEV_COMMS	0x00000002
-#define TX_IOCTL_SET_DEV_DEBUG_FLAGS			(TX_IOCTL_BASE+2)
-#define TX_IOCTL_DEV_DEBUG_FLAG_USB_COMMS		0x00000001
-#define TX_IOCTL_SET_DLL_STATUS_CALLBACK		(TX_IOCTL_BASE+3)
-#define TX_IOCTL_GET_DEVICE_INSTANCES    		(TX_IOCTL_BASE+4)
+//#define TX_IOCTL_APP_SERVICE					(TX_IOCTL_BASE+0)
+//#define TX_IOCTL_SET_DLL_DEBUG_FLAGS			(TX_IOCTL_BASE+1)
+//#define TX_IOCTL_DLL_DEBUG_FLAG_J2534_CALLS		0x00000001
+//#define TX_IOCTL_DLL_DEBUG_FLAG_ALL_DEV_COMMS	0x00000002
+//#define TX_IOCTL_SET_DEV_DEBUG_FLAGS			(TX_IOCTL_BASE+2)
+//#define TX_IOCTL_DEV_DEBUG_FLAG_USB_COMMS		0x00000001
+//#define TX_IOCTL_SET_DLL_STATUS_CALLBACK		(TX_IOCTL_BASE+3)
+//#define TX_IOCTL_GET_DEVICE_INSTANCES    		(TX_IOCTL_BASE+4)
 
 /////////////////
 // Pin numbering
@@ -191,7 +192,7 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 #define ISO15765_WFT_MAX				0x25
 
 // J2534-2
-#define CAN_MIXED_FORMAT				0x8000 
+#define CAN_MIXED_FORMAT				0x8000
 #define J1962_PINS						0x8001 // OP2.0: Not supported
 #define SW_CAN_HS_DATA_RATE				0x8010 // OP2.0: Not supported
 #define SW_CAN_SPEEDCHANGE_ENABLE		0x8011 // OP2.0: Not supported
@@ -206,8 +207,8 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 #define INPUT_RANGE_HIGH				0x8027 // OP2.0: Not supported
 
 // Tactrix specific parameter IDs
-#define TX_PARAM_BASE					0x9000
-#define TX_PARAM_STOP_BITS				(TX_PARAM_BASE_BASE+0)
+//#define TX_PARAM_BASE					0x9000
+//#define TX_PARAM_STOP_BITS				(TX_PARAM_BASE_BASE+0)
 
 
 //////////////////////
@@ -262,8 +263,8 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 #define ERR_INVALID_DEVICE_ID				0x1A
 
 // OP2.0 Tactrix specific
-#define ERR_OEM_VOLTAGE_TOO_LOW				0x78 // OP2.0: the requested output voltage is lower than the OP2.0 capabilities
-#define ERR_OEM_VOLTAGE_TOO_HIGH			0x77 // OP2.0: the requested output voltage is higher than the OP2.0 capabilities
+//#define ERR_OEM_VOLTAGE_TOO_LOW				0x78 // OP2.0: the requested output voltage is lower than the OP2.0 capabilities
+//#define ERR_OEM_VOLTAGE_TOO_HIGH			0x77 // OP2.0: the requested output voltage is higher than the OP2.0 capabilities
 
 
 /////////////////////////
@@ -274,7 +275,7 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 #define ISO9141_NO_CHECKSUM					0x00000200
 #define CAN_ID_BOTH							0x00000800
 #define ISO9141_K_LINE_ONLY					0x00001000
-#define SNIFF_MODE							0x10000000 // OP2.0: listens to a bus (e.g. CAN) without acknowledging
+//#define SNIFF_MODE							0x10000000 // OP2.0: listens to a bus (e.g. CAN) without acknowledging
 
 //////////////////
 // RxStatus flags
@@ -320,12 +321,12 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 
 typedef struct
 {
-	unsigned long ProtocolID;
-	unsigned long RxStatus;
-	unsigned long TxFlags;
-	unsigned long Timestamp;
-	unsigned long DataSize;
-	unsigned long ExtraDataIndex;
+    unsigned long ProtocolID;
+    unsigned long RxStatus;
+    unsigned long TxFlags;
+    unsigned long Timestamp;
+    unsigned long DataSize;
+    unsigned long ExtraDataIndex;
     unsigned char Data[PASSTHRU_MSG_DATA_SIZE];
 } PASSTHRU_MSG;
 
@@ -336,20 +337,20 @@ typedef struct
 
 typedef struct
 {
-	unsigned long Parameter;
-	unsigned long Value;
+    unsigned long Parameter;
+    unsigned long Value;
 } SCONFIG;
 
 typedef struct
 {
-	unsigned long NumOfParams;
-	SCONFIG *ConfigPtr;
+    unsigned long NumOfParams;
+    SCONFIG *ConfigPtr;
 } SCONFIG_LIST;
 
 typedef struct
 {
-	unsigned long NumOfBytes;
-	unsigned char *BytePtr;
+    unsigned long NumOfBytes;
+    unsigned char *BytePtr;
 } SBYTE_ARRAY;
 
 
