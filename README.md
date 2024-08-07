@@ -1,6 +1,6 @@
 # FastECU
 
-Open source software to work on and modify Subaru ECUs!
+Open source software to work on and modify Subaru ECUs and TCUs!
 
 Software contains some modified source code and kernels from nisprog by fenugrec:
 https://github.com/fenugrec
@@ -34,15 +34,18 @@ I can also be reached via email: info@fastecu.fi
 Support forum found here: https://www.fastecu.fi/forum/
 
 ### Flashing with OBD
-- **Supported models**
+- **Supported ECU models**
   - JDM Subaru Forester Cross Sports (SH7055)
   - JDM Subaru Legacy GT (SH7055)
-  - Subaru Impreza MY05-07 (SH7058)
-  - Subaru Impreza MY08+ (SH7058S)
+  - Subaru Impreza WRX/STi MY05-07 (SH7058)
+  - Subaru Impreza WRX/STi MY08+ (SH7058S)
   - Subaru Impreza/Legacy Diesel MY08+ EURO4 (SH7058S)
 
-- **Currently under development**
-  - Subaru Forester Turbo/Impreza Turbo/Legacy B4 Twin Turbo (WA12212920WWW / UJ20)
+- **Supported TCU models**
+
+- **ECU models currently under development**
+  - Subaru Forester/Impreza/Legacy Turbo MY99-00 (WA12212920WWW / UJ20)
+  - Subaru Forester/Impreza/Legacy N/A MY99+ (WA122129x0WWW / UJx0)
   - Subaru Impreza/Legacy Diesel EURO5 (SH7059)
 
 ### Unbricking with FastECU-m32r-flasher (bench flash)
@@ -50,6 +53,6 @@ Support forum found here: https://www.fastecu.fi/forum/
   - Subaru Forester Turbo/Impreza Turbo/Legacy B4 Twin Turbo (WA12212920WWW / UJ20)
   - WA12212930WWW / UJ30
 
-- **Currently under development**
+- **ECU models currently under development**
   - WA12212970WWW / UJ40
   - WA12212970WWW / UJ70
