@@ -35,24 +35,32 @@ Support forum found here: https://www.fastecu.fi/forum/
 
 ### Flashing with OBD
 - **Supported ECU models**
-  - JDM Subaru Forester Cross Sports (SH7055)
-  - JDM Subaru Legacy GT (SH7055)
+  - Subaru Forester JDM Cross Sports (SH7055)
+  - Subaru Legacy JDM GT (SH7055)
   - Subaru Impreza WRX/STi MY05-07 (SH7058)
   - Subaru Impreza WRX/STi MY08+ (SH7058S)
-  - Subaru Impreza/Legacy Diesel MY08+ EURO4 (SH7058S)
+  - Subaru Impreza, Legacy Diesel MY08+ EURO4 (SH7058S)
 
 - **Supported TCU models**
 
 - **ECU models currently under development**
-  - Subaru Forester/Impreza/Legacy Turbo MY99-00 (WA12212920WWW / UJ20)
-  - Subaru Forester/Impreza/Legacy N/A MY99+ (WA122129x0WWW / UJx0)
-  - Subaru Impreza/Legacy Diesel EURO5 (SH7059)
+  - Subaru Forester, Impreza, Legacy Turbo 1999-2000 K-Line (UJ WA12212920/128KB)
+  - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
+
+- **ECU models planned**
+  - Subaru Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)
+  - Subaru Impreza, Legacy Diesel EURO5 CAN (SH7059)
+  - Subaru Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)
+  - Subaru Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)
+  - Subaru Forester 2013+ CAN (Hitachi SH7059/1.5MB)
+  - Subaru Forester 2013+ CAN (Hitachi SH7254/2MB)
 
 ### Unbricking with FastECU-m32r-flasher (bench flash)
 - **Supported models**
-  - Subaru Forester Turbo/Impreza Turbo/Legacy B4 Twin Turbo (WA12212920WWW / UJ20)
-  - WA12212930WWW / UJ30
+  - Subaru Forester, Impreza, Legacy Turbo MY99-00 (UJ WA12212920/128KB)
+  - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB) 
+  - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
 
 - **ECU models currently under development**
-  - WA12212970WWW / UJ40
-  - WA12212970WWW / UJ70
+  - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB) 
+  - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)
