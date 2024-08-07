@@ -1,6 +1,6 @@
 # FastECU
 
-Open source software to work on and modify Subaru (and later some others too) ECUs!
+Open source software to work on and modify Subaru ECUs!
 
 Software contains some modified source code and kernels from nisprog by fenugrec:
 https://github.com/fenugrec
@@ -8,7 +8,15 @@ https://github.com/fenugrec
 And from forked nisprog/npkernel project by rimwall (modified for Subaru):
 https://github.com/rimwall
 
-Huge thanks to fenugrec and rimwall, without their efforts this project would not be started!
+Huge thanks to following:
+- rimwall
+- SergArb
+- alesv
+
+Also big thanks to:
+- fenugrec, whos kernel development with rimwall for Renesas SH-processors made this project to start at the first place.
+
+**Without all mentioned efforts this project would not be succeeded so far!**
 
 The code, unless otherwise specified, is licensed under GPLv3 which has certain restrictions. Here is a short summary:
 
@@ -24,3 +32,14 @@ https://www.paypal.com/paypalme/miikasyvanen
 
 I can also be reached via email: info@fastecu.fi
 Support forum found here: https://www.fastecu.fi/forum/
+
+### Supported models
+- JDM Subaru Forester Cross Sports (SH7055)
+- JDM Subaru Legacy GT (SH7055 K_Line)
+- Subaru Impreza MY05-06 (SH7055 K_Line)
+- Subaru Impreza MY06-07 (SH7058 K_Line)
+- Subaru Impreza MY08+ (SH7058 CAN)
+- Subaru Legacy Diesel / Impreza Diesel MY07+ EURO4 (SH7058 CAN)
+
+### Currently under development
+- Subaru Forester Turbo/Impreza Turbo/Legacy B4 Twin Turbo (WA12212920WWW)
