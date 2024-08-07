@@ -33,13 +33,23 @@ https://www.paypal.com/paypalme/miikasyvanen
 I can also be reached via email: info@fastecu.fi
 Support forum found here: https://www.fastecu.fi/forum/
 
-### Supported models
-- JDM Subaru Forester Cross Sports (SH7055)
-- JDM Subaru Legacy GT (SH7055 K_Line)
-- Subaru Impreza MY05-06 (SH7055 K_Line)
-- Subaru Impreza MY06-07 (SH7058 K_Line)
-- Subaru Impreza MY08+ (SH7058 CAN)
-- Subaru Legacy Diesel / Impreza Diesel MY07+ EURO4 (SH7058 CAN)
+### Flashing with OBD
+- **Supported models**
+  - JDM Subaru Forester Cross Sports (SH7055)
+  - JDM Subaru Legacy GT (SH7055)
+  - Subaru Impreza MY05-07 (SH7058)
+  - Subaru Impreza MY08+ (SH7058S)
+  - Subaru Impreza/Legacy Diesel MY08+ EURO4 (SH7058S)
 
-### Currently under development
-- Subaru Forester Turbo/Impreza Turbo/Legacy B4 Twin Turbo (WA12212920WWW)
+- **Currently under development**
+  - Subaru Forester Turbo/Impreza Turbo/Legacy B4 Twin Turbo (WA12212920WWW / UJ20)
+  - Subaru Impreza/Legacy Diesel EURO5 (SH7059)
+
+### Unbricking with FastECU-m32r-flasher (bench flash)
+- **Supported models**
+  - Subaru Forester Turbo/Impreza Turbo/Legacy B4 Twin Turbo (WA12212920WWW / UJ20)
+  - WA12212930WWW / UJ30
+
+- **Currently under development**
+  - WA12212970WWW / UJ40
+  - WA12212970WWW / UJ70
