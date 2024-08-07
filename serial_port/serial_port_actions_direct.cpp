@@ -370,7 +370,7 @@ QString SerialPortActionsDirect::open_serial_port()
                 openedSerialPort = serial_port;
                 //connect(serial, SIGNAL(readyRead()), this, SLOT(ReadSerialDataSlot()), Qt::DirectConnection);
                 qRegisterMetaType<QSerialPort::SerialPortError>();
-                connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
+                connect(serial, SIGNAL(errorOccurred(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
                 //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
                 //qDebug() << "Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
@@ -506,7 +506,6 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
     {
         if (add_iso14230_header)
             output = add_packet_header(output);
-
         if (use_openport2_adapter)
         {
             write_j2534_data(output);
@@ -514,7 +513,8 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
         }
         for (int i = 0; i < output.length(); i++)
         {
-            msg[0] = output.at(i);
+            msg.clear();
+            msg.append(output.at(i));
             serial->write(msg, 1);
             // Add serial echo read during transmit to speed up a little
             if (serial->bytesAvailable())

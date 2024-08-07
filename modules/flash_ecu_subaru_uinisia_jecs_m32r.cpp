@@ -172,7 +172,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
     output.append((uint8_t)0xBF);
     received = serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(50);
-    received = serial->read_serial_data(20, 1000);
+    received = serial->read_serial_data(100, 1000);
     send_log_window_message("SSM init response: " + parse_message_to_hex(received), true, true);
     qDebug() << "SSM init response:" << parse_message_to_hex(received);
     if (received == "")
