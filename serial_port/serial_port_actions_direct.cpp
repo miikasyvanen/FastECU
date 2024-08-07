@@ -287,6 +287,7 @@ QStringList SerialPortActionsDirect::check_serial_ports()
 {
     const auto serialPortsInfo = QSerialPortInfo::availablePorts();
     QStringList serial_ports;
+    QString j2534DllName = "j2534.dll";
 
     serialPortAvailable = false;
 
@@ -297,15 +298,26 @@ QStringList SerialPortActionsDirect::check_serial_ports()
         //qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-    j2534->
-    op20pt32.dll
+    qDebug() << "Testing for " + j2534DllName;
+    j2534->setDllName(j2534DllName.toLocal8Bit().data());
+    if (!j2534->init())
+    {
+        qDebug() << "j2534.dll not found, testing for op20pt32.dll";
+        j2534DllName.clear();
+        j2534DllName.append("op20pt32.dll");
+        j2534->setDllName(j2534DllName.toLocal8Bit().data());
+    }
     if (j2534->init())
     {
+        qDebug() << "Found " + j2534DllName;
         if (!j2534->PassThruOpen(NULL, &devID))
         {
             serial_ports.append("J2534 - API DLL");
         }
     }
+    else
+        qDebug() << "No j2534 dll´s found";
+
     j2534->PassThruClose(devID);
 #endif
 
