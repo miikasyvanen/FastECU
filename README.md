@@ -26,7 +26,7 @@ You may copy, distribute and modify the software as long as you track changes/da
 
 Commercial uses is possible, but **all code linked with GPL 3.0 source code must be disclosed under a GPL 3.0 compatible license.**
 
-If you **FastECU** useful, please consider supporting us as this software is developed on our free time and will always be open source and free of charge. Donations will be used to aquire new hardware and software to help reverse engineer ROMs and software development.
+If you find **FastECU** useful, please consider supporting us as this software is developed on our free time and will always be open source and free of charge. Donations will be used to aquire new hardware and software to help reverse engineer ROMs and software development. Also lots of coffee plays important role!
 
 https://www.paypal.com/paypalme/miikasyvanen
 
