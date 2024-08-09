@@ -27,6 +27,20 @@ void J2534::setDllName(const char* name)
     strcpy(dllName,name);
 }
 
+void J2534::getDllName(char* name)
+{
+    strcpy(name,dllName);
+}
+
+void J2534::disable()
+{
+    if (hDLL)
+    {
+        FreeLibrary(hDLL);
+        hDLL=NULL;
+    }
+}
+
 char* J2534::getLastError()
 {
     return lastError;

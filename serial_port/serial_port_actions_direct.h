@@ -12,6 +12,7 @@
 #include <QTime>
 #include <QTimer>
 #include <QWidget>
+#include <QSettings>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -194,6 +195,11 @@ private:
     /*public slots:
     QStringList check_serial_ports();
     QString open_serial_port();*/
+
+#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+    QMap<QString, QString> getAllJ2534DriversNames();
+#endif
+    QStringList check_j2534_devices(QMap<QString, QString> installed_drivers);
 
 private slots:
 
