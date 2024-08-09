@@ -302,7 +302,7 @@ QStringList SerialPortActionsDirect::check_serial_ports()
     j2534->setDllName(j2534DllName.toLocal8Bit().data());
     if (!j2534->init())
     {
-        qDebug() << "j2534.dll not found, testing for op20pt32.dll";
+        qDebug() << j2534DllName + " not found, testing for op20pt32.dll";
         j2534DllName.clear();
         j2534DllName.append("op20pt32.dll");
         j2534->setDllName(j2534DllName.toLocal8Bit().data());
@@ -312,15 +312,18 @@ QStringList SerialPortActionsDirect::check_serial_ports()
         qDebug() << "Found " + j2534DllName;
         if (!j2534->PassThruOpen(NULL, &devID))
         {
+            qDebug() << "Check ports: Port open succesful with ID " << devID;
             serial_ports.append("J2534 - API DLL");
         }
+        else
+            qDebug() << "Check ports: Port open failed with ID " << devID;
+
     }
     else
         qDebug() << "No j2534 dll´s found";
 
     j2534->PassThruClose(devID);
 #endif
-
     std::sort(serial_ports.begin(), serial_ports.end(), std::less<QString>());
 
     return serial_ports;
@@ -329,7 +332,7 @@ QStringList SerialPortActionsDirect::check_serial_ports()
 QString SerialPortActionsDirect::open_serial_port()
 {
     //qDebug() << "Serial port =" << serial_port_list;
-    QString serial_port_text = serial_port_list.at(1);
+    //QString serial_port_text = serial_port_list.at(1);
 #ifdef Q_OS_LINUX
     serial_port = serial_port_prefix_linux + serial_port_list.at(0);
 #endif
@@ -337,9 +340,7 @@ QString SerialPortActionsDirect::open_serial_port()
     serial_port = serial_port_prefix_win + serial_port_list.at(0);
 #endif
 
-    //    if (serial_port_text == "OpenPort 2.0")
-    if (serial_port_text != "")
-
+    if (serial_port_list.at(0) == "J2534" && serial_port_list.at(1) == "API DLL")
     {
         close_serial_port();
         use_openport2_adapter = true;
@@ -361,6 +362,7 @@ QString SerialPortActionsDirect::open_serial_port()
         {
             close_j2534_serial_port();
         }
+        j2534->debug(false);
     }
     else if (J2534_init_ok)
     {
@@ -403,21 +405,18 @@ QString SerialPortActionsDirect::open_serial_port()
             }
             else
             {
-                //SendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
+                //sendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
                 //qDebug() << "Couldn't open serial port '" + serial_port + "'";
                 return NULL;
             }
 
         }
         else{
-            //SendLogWindowMessage("Serial port '" + serialPort + "' is already opened", true, true);
+            //sendLogWindowMessage("Serial port '" + serialPort + "' is already opened", true, true);
             //qDebug() << "Serial port '" + serial_port + "' is already opened";
             return openedSerialPort;
         }
     }
-
-    //if (J2534_init_ok)
-    //    ssm_init();
 
     return openedSerialPort;
 }
@@ -453,10 +452,6 @@ void SerialPortActionsDirect::close_j2534_serial_port()
     J2534_init_ok = false;
     j2534->J2534_init_ok = false;
     openedSerialPort.clear();
-    //j2534->close();
-    //J2534 *j2534;
-    delete j2534;
-    j2534 = new J2534;
 }
 
 QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t timeout)
@@ -833,12 +828,12 @@ int SerialPortActionsDirect::init_j2534_connection()
     // Init J2534 connection (in windows, load DLL etc.)
     if (!j2534->init())
     {
-        //qDebug() << "Can't connect to J2534 DLL.";
+        qDebug() << "INIT: Can't load J2534 DLL.";
         return STATUS_ERROR;
     }
     else
     {
-        //qDebug() << "J2534 DLL connected.";
+        qDebug() << "INIT: J2534 DLL loaded.";
     }
 
     // Open J2534 connection
@@ -849,7 +844,7 @@ int SerialPortActionsDirect::init_j2534_connection()
     }
     else
     {
-        //qDebug() << "J2534 opened, devID" << devID;
+        qDebug() << "INIT: J2534 opened, devID" << devID;
     }
 
     // Get J2534 adapter and driver version numbers
@@ -1129,7 +1124,7 @@ int SerialPortActionsDirect::set_j2534_iso9141()
         flags = ISO9141_NO_CHECKSUM;
     }
 
-    qDebug() << protocol;
+    qDebug() << "Protocol:" << protocol;
     //baudrate = 4800;
 
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages

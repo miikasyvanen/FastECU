@@ -180,6 +180,9 @@ long J2534::LoadJ2534DLL(const char* szDLL)
         return(1);
     }
 
+    FreeLibrary(hDLL);
+    hDLL = NULL;
+
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
     if (!(hDLL = LoadLibraryA(szDLL)))
     {

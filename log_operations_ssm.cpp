@@ -79,27 +79,27 @@ void MainWindow::ssm_kline_init()
     {
         ecu_init_started = true;
 
-        qDebug() << "K-Line SSM init with BF";
+        //qDebug() << "K-Line SSM init with BF";
         output.clear();
         output.append((uint8_t)0xBF);
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        qDebug() << "K-Line SSM init sent";
+        //qDebug() << "K-Line SSM init sent";
         delay(200);
         received = serial->read_serial_data(100, 500);
-        qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
+        //qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
         if (received.length() > 0)
         {
-            qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
-            qDebug() << "ECU INIT:" << parse_message_to_hex(received);
+            //qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
+            //qDebug() << "ECU INIT:" << parse_message_to_hex(received);
 
             if (received.length() == (uint8_t)received.at(3) + 5)
             {
                 ecu_init_complete = true;
                 //set_status_bar_label(true, true, ecuid);
                 ecuid = parse_ecuid(received);
-                qDebug() << "ECU ID:" << ecuid;
+                //qDebug() << "ECU ID:" << ecuid;
                 parse_log_value_list(received, "SSM");
-                qDebug() << "ECU ID:" << ecuid;
+                //qDebug() << "ECU ID:" << ecuid;
 
                 received = serial->read_serial_data(1, 100);
                 while(received.length() > 0)
