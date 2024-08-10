@@ -440,7 +440,6 @@ QString SerialPortActionsDirect::open_serial_port()
         {
             close_j2534_serial_port();
         }
-        j2534->debug(false);
     }
     else if (J2534_init_ok)
     {
