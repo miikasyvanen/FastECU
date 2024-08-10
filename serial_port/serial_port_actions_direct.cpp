@@ -530,17 +530,11 @@ void SerialPortActionsDirect::close_j2534_serial_port()
     J2534_init_ok = false;
     j2534->J2534_init_ok = false;
     openedSerialPort.clear();
-#ifdef Q_OS_LINUX
-    delete j2534;
-    j2534 = new J2534();
-#endif
-#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
     char dllName[256];
     j2534->getDllName(dllName);
     delete j2534;
     j2534 = new J2534();
     j2534->setDllName(dllName);
-#endif
 }
 
 QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t timeout)
