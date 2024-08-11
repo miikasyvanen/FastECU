@@ -168,14 +168,9 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
 
     serial->change_port_speed("38400");
 
-    output.clear();
-    output.append((uint8_t)0xBF);
-    received = serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    delay(50);
-    received = serial->read_serial_data(100, 1000);
-    send_log_window_message("SSM init response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "SSM init response:" << parse_message_to_hex(received);
-    if (received == "")
+    // Checking connection after baudrate change with SSM Init
+    received = send_subaru_sid_bf_ssm_init();
+    if (received == "" || (uint8_t)received.at(4) != 0xFF)
         return STATUS_ERROR;
 
     datalen = 6;
@@ -183,7 +178,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
     if (start_addr == 0 && length == 0)
     {
         start_addr = 0;
-        length = 0x030000;
+        length = 0x040000;
     }
     end_addr = start_addr + length;
 

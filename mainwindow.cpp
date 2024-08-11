@@ -618,13 +618,16 @@ void MainWindow::check_serial_ports()
 
 void MainWindow::open_serial_port()
 {
-    QStringList serial_port;
-
     if (serial_ports.length() > 0)
     {
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+        QStringList serial_port = serial_ports.at(serial_port_list->currentIndex()).split(" - ");
 
+        //qDebug() << "Serial ports" << serial_ports;
+
+        //if (serial_port.length() < 2)
+        //    serial_port.append("Unknown");
+
+        //qDebug() << "Serial port" << serial_port;
         serial->set_serial_port_list(serial_port);
         QString opened_serial_port = serial->open_serial_port();
         if (opened_serial_port != "")
@@ -1465,7 +1468,7 @@ void MainWindow::update_logboxes(QString protocol)
         {
             if (logValues->lower_panel_switch_id.at(i) == logValues->log_switch_id.at(j) && logValues->log_switch_protocol.at(j) == protocol)
             {
-                qDebug() << "Switch:" << logValues->log_switch_name.at(j);
+                //qDebug() << "Switch:" << logValues->log_switch_name.at(j);
                 QGroupBox *switchBox = logBoxes->drawLogBoxes("switch", i, switchBoxCount, logValues->log_switch_name.at(j), logValues->log_switch_name.at(j), logValues->log_switch_state.at(j));
                 switchBox->setAttribute(Qt::WA_TransparentForMouseEvents);
                 ui->switchBoxLayout->addWidget(switchBox);
@@ -1478,7 +1481,7 @@ void MainWindow::update_logboxes(QString protocol)
         {
             if (logValues->lower_panel_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
             {
-                qDebug() << "Log value:" << logValues->log_value_name.at(j);
+                //qDebug() << "Log value:" << logValues->log_value_name.at(j);
                 QStringList value_unit = logValues->log_value_units.at(j).split(",");
                 QGroupBox *logBox = logBoxes->drawLogBoxes("log", i, logBoxCount, logValues->log_value_name.at(j), value_unit.at(1), logValues->log_value.at(j));
                 logBox->setAttribute(Qt::WA_TransparentForMouseEvents);

@@ -283,6 +283,215 @@ int SerialPortActionsDirect::line_end_check_2_toggled(int state)
     return STATUS_SUCCESS;
 }
 
+#if defined(Q_OS_WIN32)
+// List all USB devices with some additional information
+QMap<QString, QStringList> SerialPortActionsDirect::list_devices(CONST GUID *pClassGuid, LPCTSTR pszEnumerator)
+{
+    char str[100];
+    QMap<QString, QStringList> vehicle_passthru_interfaces;
+    QString j2534_interface;
+    QStringList list;
+
+    unsigned i, j;
+    DWORD dwSize, dwPropertyRegDataType;
+    DEVPROPTYPE ulPropertyType;
+    CONFIGRET status;
+    HDEVINFO hDevInfo;
+    SP_DEVINFO_DATA DeviceInfoData;
+    const static LPCTSTR arPrefix[3] = {TEXT("VID_"), TEXT("PID_"), TEXT("MI_")};
+    TCHAR szDeviceInstanceID [MAX_DEVICE_ID_LEN];
+    TCHAR szDesc[1024], szHardwareIDs[4096];
+    WCHAR szBuffer[4096];
+    LPTSTR pszToken, pszNextToken;
+    TCHAR szVid[MAX_DEVICE_ID_LEN], szPid[MAX_DEVICE_ID_LEN], szMi[MAX_DEVICE_ID_LEN];
+    FN_SetupDiGetDevicePropertyW fn_SetupDiGetDevicePropertyW = (FN_SetupDiGetDevicePropertyW)
+        GetProcAddress (GetModuleHandle (TEXT("Setupapi.dll")), "SetupDiGetDevicePropertyW");
+
+    // List all connected USB devices
+    hDevInfo = SetupDiGetClassDevs (pClassGuid, pszEnumerator, NULL,
+                                   pClassGuid != NULL ? DIGCF_PRESENT: DIGCF_ALLCLASSES | DIGCF_PRESENT);
+    if (hDevInfo == INVALID_HANDLE_VALUE)
+        return vehicle_passthru_interfaces;
+
+    // Find the ones that are driverless
+    for (i = 0; ; i++)  {
+        DeviceInfoData.cbSize = sizeof (DeviceInfoData);
+        if (!SetupDiEnumDeviceInfo(hDevInfo, i, &DeviceInfoData))
+            break;
+
+        status = CM_Get_Device_ID(DeviceInfoData.DevInst, szDeviceInstanceID , MAX_PATH, 0);
+        if (status != CR_SUCCESS)
+            continue;
+
+        qDebug() << "*** Device:" << i;
+
+        // Display device instance ID
+        //_tprintf (TEXT("%s\n"), szDeviceInstanceID );
+        sprintf(str, "%ls", szDeviceInstanceID );
+        qDebug() << str;
+
+        if (SetupDiGetDeviceRegistryProperty (hDevInfo, &DeviceInfoData, SPDRP_DEVICEDESC,
+                                             &dwPropertyRegDataType, (BYTE*)szDesc,
+                                             sizeof(szDesc),   // The size, in bytes
+                                             &dwSize)) {
+            //_tprintf (TEXT("    Device Description: \"%s\"\n"), szDesc);
+            sprintf(str, "%ls", szDesc);
+            qDebug() << "    Device Description:" << str;
+            j2534_interface.clear();
+            j2534_interface.append(str);
+            list.clear();
+            //list.append(QString::number(i));
+        }
+
+        if (SetupDiGetDeviceRegistryProperty (hDevInfo, &DeviceInfoData, SPDRP_HARDWAREID,
+                                             &dwPropertyRegDataType, (BYTE*)szHardwareIDs,
+                                             sizeof(szHardwareIDs),    // The size, in bytes
+                                             &dwSize)) {
+            LPCTSTR pszId;
+            //_tprintf (TEXT("    Hardware IDs:\n"));
+            sprintf(str, "");
+            qDebug() << "    Hardware IDs:";
+            for (pszId=szHardwareIDs;
+                 *pszId != TEXT('\0') && pszId + dwSize/sizeof(TCHAR) <= szHardwareIDs + ARRAYSIZE(szHardwareIDs);
+                 pszId += lstrlen(pszId)+1) {
+
+                //_tprintf (TEXT("        \"%ls\"\n"), pszId);
+                sprintf(str, "%ls", pszId);
+                qDebug() << "        " << str;
+            }
+        }
+
+        // Retreive the device description as reported by the device itself
+        // On Vista and earlier, we can use only SPDRP_DEVICEDESC
+        // On Windows 7, the information we want ("Bus reported device description") is
+        // accessed through DEVPKEY_Device_BusReportedDeviceDesc
+        if (fn_SetupDiGetDevicePropertyW && fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_Device_BusReportedDeviceDesc,
+                                                                         &ulPropertyType, (BYTE*)szBuffer, sizeof(szBuffer), &dwSize, 0)) {
+
+
+            if (fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_Device_BusReportedDeviceDesc,
+                                             &ulPropertyType, (BYTE*)szBuffer, sizeof(szBuffer), &dwSize, 0)) {
+                //_tprintf (TEXT("    Bus Reported Device Description: \"%ls\"\n"), szBuffer);
+                sprintf(str, "%ls", szBuffer);
+                qDebug() << "    Bus Reported Device Description:" << str;
+                list.append(str);
+            }
+            else
+                list.append("N/A");
+            if (fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_Device_Manufacturer,
+                                             &ulPropertyType, (BYTE*)szBuffer, sizeof(szBuffer), &dwSize, 0)) {
+                //_tprintf (TEXT("    Device Manufacturer: \"%ls\"\n"), szBuffer);
+                sprintf(str, "%ls", szBuffer);
+                qDebug() << "    Device Manufacturer:" << str;
+                list.append(str);
+            }
+            else
+                list.append("N/A");
+            if (fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_Device_FriendlyName,
+                                             &ulPropertyType, (BYTE*)szBuffer, sizeof(szBuffer), &dwSize, 0)) {
+                //_tprintf (TEXT("    Device Friendly Name: \"%ls\"\n"), szBuffer);
+                sprintf(str, "%ls", szBuffer);
+                qDebug() << "    Device Friendly Name:" << str;
+                //list.append(str);
+            }
+            //else
+                //list.append("N/A");
+            if (fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_Device_LocationInfo,
+                                             &ulPropertyType, (BYTE*)szBuffer, sizeof(szBuffer), &dwSize, 0)) {
+                //_tprintf (TEXT("    Device Location Info: \"%ls\"\n"), szBuffer);
+                sprintf(str, "%ls", szBuffer);
+                qDebug() << "    Device Location Info:" << str;
+                //list.append(str);
+            }
+            //else
+                //list.append("N/A");
+            if (fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_Device_SecuritySDS,
+                                             &ulPropertyType, (BYTE*)szBuffer, sizeof(szBuffer), &dwSize, 0)) {
+                // See Security Descriptor Definition Language on MSDN
+                // (http://msdn.microsoft.com/en-us/library/windows/desktop/aa379567(v=vs.85).aspx)
+                //_tprintf (TEXT("    Device Security Descriptor String: \"%ls\"\n"), szBuffer);
+                sprintf(str, "%ls", szBuffer);
+                qDebug() << "    Device Security Descriptor String:" << str;
+                //list.append(str);
+            }
+            //else
+                //list.append("N/A");
+/*
+            if (fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_Device_ContainerId,
+                                             &ulPropertyType, (BYTE*)szDesc, sizeof(szDesc), &dwSize, 0)) {
+                StringFromGUID2((REFGUID)szDesc, szBuffer, ARRAY_SIZE(szBuffer));
+                //_tprintf (TEXT("    ContainerId: \"%ls\"\n"), szBuffer);
+                sprintf(str, "%ls", szBuffer);
+                qDebug() << "    ContainerId:" << str;
+                //list.append(str);
+            }
+            //else
+                //list.append("N/A");
+*/
+            if (fn_SetupDiGetDevicePropertyW (hDevInfo, &DeviceInfoData, &DEVPKEY_DeviceDisplay_Category,
+                                             &ulPropertyType, (BYTE*)szBuffer, sizeof(szBuffer), &dwSize, 0)) {
+                //_tprintf (TEXT("    Device Display Category: \"%ls\"\n"), szBuffer);
+                sprintf(str, "%ls", szBuffer);
+                qDebug() << "    Device Display Category:" << str;
+                //list.append(str);
+            }
+            //else
+                //list.append("N/A");
+        }
+
+        pszToken = _tcstok_s (szDeviceInstanceID , TEXT("\\#&"), &pszNextToken);
+        while(pszToken != NULL) {
+            szVid[0] = TEXT('\0');
+            szPid[0] = TEXT('\0');
+            szMi[0] = TEXT('\0');
+            for (j = 0; j < 3; j++) {
+                //sprintf(str, "pszToken: %s", pszToken);
+                //qDebug() << str;
+                if (_tcsncmp(pszToken, arPrefix[j], lstrlen(arPrefix[j])) == 0) {
+                    switch(j) {
+                    case 0:
+                        _tcscpy_s(szVid, ARRAY_SIZE(szVid), pszToken);
+                        break;
+                    case 1:
+                        _tcscpy_s(szPid, ARRAY_SIZE(szPid), pszToken);
+                        break;
+                    case 2:
+                        _tcscpy_s(szMi, ARRAY_SIZE(szMi), pszToken);
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+            if (szVid[0] != TEXT('\0')) {
+                //_tprintf (TEXT("    vid: \"%s\"\n"), szVid);
+                sprintf(str, "%ls", szVid);
+                qDebug() << "    vid:" << str;
+                //list.append(str);
+            }
+            else if (szPid[0] != TEXT('\0')) {
+                //_tprintf (TEXT("    pid: \"%s\"\n"), szPid);
+                sprintf(str, "%ls", szPid);
+                qDebug() << "    pid:" << str;
+                //list.append(str);
+            }
+            else if (szMi[0] != TEXT('\0')) {
+                //_tprintf (TEXT("    mi: \"%s\"\n"), szMi);
+                sprintf(str, "%ls", szMi);
+                qDebug() << "    mi:" << str;
+                //list.append(str);
+            }
+            //else
+                //list.append("N/A");
+            pszToken = _tcstok_s (NULL, TEXT("\\#&"), &pszNextToken);
+        }
+        vehicle_passthru_interfaces[j2534_interface] = list;
+    }
+
+    return vehicle_passthru_interfaces;
+}
+#endif
+
 QStringList SerialPortActionsDirect::check_serial_ports()
 {
     const auto serialPortsInfo = QSerialPortInfo::availablePorts();
@@ -295,13 +504,38 @@ QStringList SerialPortActionsDirect::check_serial_ports()
     for (const QSerialPortInfo &serialPortInfo : serialPortsInfo){
         //ui->serial_ports->addItem(serialPortPrefix + serialPortInfo.portName());
         serial_ports.append(serialPortInfo.portName() + " - " + serialPortInfo.description());
-        //qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
+        qDebug() << "Serial port name:" << serialPortInfo.portName() << serialPortInfo.description();
     }
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+    qDebug() << "*** Vehicle PassThru Interfaces list start ***";
+    QMap<QString, QStringList> vehicle_passthru_interfaces;
+    vehicle_passthru_interfaces = list_devices(&GUID_DEVCLASS_VEHICLE_PASSTHRU, NULL);
+    qDebug() << "*** Vehicle PassThru Interfaces list end ***";
+
     //bool j2534DeviceFound = false;
     QMap<QString, QString> user_j2534_device;
-    user_j2534_device["J2534 - API DLL"] = "j2534.dll";
     QMap<QString, QString> installed_drivers = getAllJ2534DriversNames();
+
+    for (const QString vendor : vehicle_passthru_interfaces.keys())
+    {
+        qDebug() << "Interface:" << vendor;
+        QStringList j2534_interface = vehicle_passthru_interfaces.value(vendor);
+        for (int i = 0; i < j2534_interface.count(); i++)
+        {
+            qDebug() << "       " << j2534_interface.at(i);
+        }
+        for (const QString installed_vendor : installed_drivers.keys())
+        {
+            QString interface_name = j2534_interface.at(1) + " - " + j2534_interface.at(0);
+            qDebug() << installed_vendor << interface_name;
+            if (installed_vendor.startsWith(j2534_interface.at(1) + " - " + j2534_interface.at(0)))
+            {
+                QStringList dllName = installed_drivers.value(installed_vendor).split("\\");
+                qDebug() << "DLL Name:" << dllName.at(dllName.count() - 1);
+                user_j2534_device[vendor] = dllName.at(dllName.count() - 1);
+            }
+        }
+    }
     //Last hope driver
     QMap<QString, QString> last_hope_j2534_device;
     last_hope_j2534_device["Tactrix - OpenPort 2.0"] = "op20pt32.dll";
@@ -396,8 +630,10 @@ QMap<QString, QString> SerialPortActionsDirect::getAllJ2534DriversNames()
     for (const QString &i : registry->childGroups())
     {
         QString vendor = i;
+        //QString name = registry->value(i+"/Name").toString();
         vendor.replace("\\", "/");
         QString dllName = registry->value(i+"/FunctionLibrary").toString();
+        //drivers_map[name] = dllName;
         drivers_map[vendor] = dllName;
     }
     qDebug() << "Found installed drivers:" << drivers_map;
@@ -438,6 +674,7 @@ QString SerialPortActionsDirect::open_serial_port()
         }
         if (!j2534->is_serial_port_open())
         {
+            use_openport2_adapter = false;
             close_j2534_serial_port();
         }
     }
@@ -911,12 +1148,12 @@ int SerialPortActionsDirect::init_j2534_connection()
     // Init J2534 connection (in windows, load DLL etc.)
     if (!j2534->init())
     {
-        qDebug() << "INIT: Can't load J2534 DLL.";
+        //qDebug() << "INIT: Can't load J2534 DLL.";
         return STATUS_ERROR;
     }
     else
     {
-        qDebug() << "INIT: J2534 DLL loaded.";
+        //qDebug() << "INIT: J2534 DLL loaded.";
     }
 
     // Open J2534 connection
@@ -927,7 +1164,7 @@ int SerialPortActionsDirect::init_j2534_connection()
     }
     else
     {
-        qDebug() << "INIT: J2534 opened, devID" << devID;
+        //qDebug() << "INIT: J2534 opened, devID" << devID;
     }
 
     // Get J2534 adapter and driver version numbers
@@ -1298,7 +1535,8 @@ void SerialPortActionsDirect::reportJ2534Error()
 
 void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
 {
-    //qDebug() << "Error:" << error;
+    if (error != QSerialPort::NoError)
+        qDebug() << "Error:" << error;
 
     if (error == QSerialPort::NoError)
     {

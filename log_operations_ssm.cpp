@@ -404,9 +404,9 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
             if (switch_byte_index < received.length())
             {
                 uint8_t switch_bit = logValues->log_switch_ecu_bit.at(i).toUInt();
-                qDebug() << "1" << switch_byte_index;
+                //qDebug() << "1" << switch_byte_index;
                 uint8_t value = (uint8_t)received.at(switch_byte_index);
-                qDebug() << "2";
+                //qDebug() << "2";
                 if (((value) & (1 << (switch_bit))))
                 {
                     logValues->log_switch_enabled.replace(i, "1");
