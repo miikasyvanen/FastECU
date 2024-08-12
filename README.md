@@ -46,6 +46,8 @@ Support forum found here: https://www.fastecu.fi/forum/
 - **ECU models currently under development**
   - Subaru Forester, Impreza, Legacy Turbo 1999-2000 K-Line (UJ WA12212920/128KB)
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
+  - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)
+  - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)
 
 - **ECU models planned**
   - Subaru Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)
