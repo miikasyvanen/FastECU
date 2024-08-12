@@ -697,7 +697,7 @@ QString SerialPortActionsDirect::open_serial_port()
             for (const QString installed_vendor : installed_drivers.keys())
             {
                 QString interface_name = j2534_interface.at(1) + " - " + j2534_interface.at(0);
-                qDebug() << installed_vendor << interface_name;
+                qDebug() << serial_port << installed_vendor << interface_name;
                 if (serial_port == installed_vendor && serial_port.startsWith(interface_name))
                 {
                     QStringList dllName = installed_drivers.value(installed_vendor).split("\\");
@@ -720,9 +720,9 @@ QString SerialPortActionsDirect::open_serial_port()
             QStringList j2534_driver;
             user_j2534_drivers[serial_port] = localDllName;
             j2534_driver = check_j2534_devices(user_j2534_drivers);
-            user_j2534_drivers[serial_port] = installedDllName;
-            if (j2534_driver.isEmpty())
-                j2534_driver = check_j2534_devices(user_j2534_drivers);
+            //user_j2534_drivers[serial_port] = installedDllName;
+            //if (j2534_driver.isEmpty())
+            //    j2534_driver = check_j2534_devices(user_j2534_drivers);
             if (!j2534_driver.isEmpty())
                 j2534->setDllName(j2534_driver.at(0).toLocal8Bit().data());
             else

@@ -680,10 +680,14 @@ int MainWindow::can_listener()
     //serial->serial_port_list.clear();
     //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
     //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
-    QStringList spl = serial->get_serial_port_list();
-    spl.clear();
-    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    //QStringList spl = serial->get_serial_port_list();
+    //spl.clear();
+    //spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+    //spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+
+    QStringList spl;
+    spl.append(serial_ports.at(serial_port_list->currentIndex()));
+
     serial->set_serial_port_list(spl);
 
     if (flash_transport_list->currentText() == "CAN")
@@ -773,10 +777,13 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     //serial->serial_port_list.clear();
     //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
     //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
-    QStringList spl = serial->get_serial_port_list();
-    spl.clear();
-    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-    spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    //QStringList spl = serial->get_serial_port_list();
+    //spl.clear();
+    //spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
+    //spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+    QStringList spl;
+    spl.append(serial_ports.at(serial_port_list->currentIndex()));
+
     serial->set_serial_port_list(spl);
 
     if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != '/')
