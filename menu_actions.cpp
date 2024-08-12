@@ -769,17 +769,14 @@ void MainWindow::connect_to_ecu()
     open_serial_port();
     if (serial->is_serial_port_open())
     {
+        serial_port_list->setDisabled(true);
+        refresh_serial_port_list->setDisabled(true);
         qDebug() << "Initialising ECU, please wait...";
         ecu_init();
     }
     else
     {
-        QMessageBox::warning(this, tr("Serial port"), "Could not open serial port!");
-    }
-    if (ecu_init_complete)
-    {
-        serial_port_list->setDisabled(true);
-        refresh_serial_port_list->setDisabled(true);
+        QMessageBox::warning(this, tr("Serial port"), "Could not open interface!");
     }
 }
 
