@@ -27,6 +27,20 @@ void J2534::setDllName(const char* name)
     strcpy(dllName,name);
 }
 
+void J2534::getDllName(char* name)
+{
+    strcpy(name,dllName);
+}
+
+void J2534::disable()
+{
+    if (hDLL)
+    {
+        FreeLibrary(hDLL);
+        hDLL=NULL;
+    }
+}
+
 char* J2534::getLastError()
 {
     return lastError;
@@ -179,6 +193,9 @@ long J2534::LoadJ2534DLL(const char* szDLL)
         DBGPRINT(("NULL string pointer to J2534 DLL location.\n"));
         return(1);
     }
+
+    FreeLibrary(hDLL);
+    hDLL = NULL;
 
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
     if (!(hDLL = LoadLibraryA(szDLL)))

@@ -659,7 +659,7 @@ int EcuOperationsSubaru::ecu_functions(FileActions::EcuCalDefStructure *ecuCalDe
     }
     else
     {
-        send_log_window_message("Unknown flashmethod " + flash_method, true, true);
+        send_log_window_message("Unknown flashmethod! Flashmethod " + flash_method + " not yet implemented!", true, true);
         return STATUS_ERROR;
     }
 

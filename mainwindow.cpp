@@ -582,6 +582,24 @@ void MainWindow::check_serial_ports()
     QString prev_serial_port = serial_port_list->currentText();
     int index = 0;
 
+    serial_poll_timer->stop();
+    ssm_init_poll_timer->stop();
+
+    serial->reset_connection();
+    ecuid.clear();
+    ecu_init_complete = false;
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_add_iso14230_header(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_serial_port_baudrate("4800");
+    emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
+    //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
+
+    //QStringList j2534_list = serial->getAvailableJ2534Libs();
+    //qDebug() << "J2534 Vehicle PassThru Interfaces:" << j2534_list;
+
     serial_ports = serial->check_serial_ports();
     serial_port_list->clear();
 
@@ -592,17 +610,24 @@ void MainWindow::check_serial_ports()
             serial_port_list->setCurrentIndex(index);
         index++;
     }
+
+    qDebug() << "Start serial and ssm poll timers";
+    serial_poll_timer->start();
+    ssm_init_poll_timer->start();
 }
 
 void MainWindow::open_serial_port()
 {
-    QStringList serial_port;
-
     if (serial_ports.length() > 0)
     {
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-        serial_port.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
+        QStringList serial_port = serial_ports.at(serial_port_list->currentIndex()).split(" - ");
 
+        //qDebug() << "Serial ports" << serial_ports;
+
+        //if (serial_port.length() < 2)
+        //    serial_port.append("Unknown");
+
+        //qDebug() << "Serial port" << serial_port;
         serial->set_serial_port_list(serial_port);
         QString opened_serial_port = serial->open_serial_port();
         if (opened_serial_port != "")
@@ -809,6 +834,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
 
+        /*
+        * Denso CAN
+        */
         if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_can") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_kline") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_denso_kline"))
         {
             if (ecuCalDef[rom_number]->McuType == "SH7055")
@@ -819,22 +847,26 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             }
             flashEcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
         }
-        else if (configValues->flash_protocol_selected_family.startsWith("wrx02"))
+        /*
+        * Denso ECU
+        */
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_mc68hc16y5_02"))
             flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("wrx04"))
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_mc68hc16y5_04"))
             flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("fxt02"))
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7055_02"))
             flashEcuSubaruDensoSH7055_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sti04"))
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7055_04"))
             flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sti05"))
-            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("subarucand"))
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058_can_diesel"))
             flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("subarucan"))
+        else if (configValues->flash_protocol_selected_family == "sub_sh7058_can")
             flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sti04"))
+        else if (configValues->flash_protocol_selected_family == "sub_sh7058")
             flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
+        /*
+        * Hitachi ECU
+        */
         else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs_0x27Kline"))
             flashEcuSubaruUnisiaJecs0x27Kline = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs0x27Kline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs"))
@@ -845,6 +877,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruHitachiM32R_06 = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32R_06(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_can"))
             flashEcuSubaruHitachiCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiCan(serial,ecuCalDef[rom_number], cmd_type, this));
+        /*
+        * Hitachi TCU
+        */
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_kline"))
             flashTcuSubaruHitachiM32RKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_can"))
@@ -853,8 +888,15 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashTcuCvtSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
             flashTcuCvtSubaruMitsuMH8104Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8104Can(serial,ecuCalDef[rom_number], cmd_type, this));
+
+        /*
+        * Denso TCU
+        */
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_denso_can"))
             flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDef[rom_number], cmd_type, this));
+        /*
+        * Denso EEPROM
+        */
         else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7055_eeprom"))
             eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoKline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7058_eeprom"))
@@ -867,6 +909,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_diesel_eeprom"))
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
+        /*
+        * Denso CAN
+        */
         else if (configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
         {
             if (ecuCalDef[rom_number]->McuType.startsWith("SH7058"))
@@ -876,7 +921,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         else if (configValues->flash_protocol_selected_family.startsWith("dev_subarucan"))
             flashEcuSubaruDensoSH7xxxCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7xxxCan(serial, ecuCalDef[rom_number], cmd_type, this));
         else
-            QMessageBox::warning(this, tr("Unknown flashmethod"), "Unknown flashmethod! Flashmethod not yet implemented!");
+            QMessageBox::warning(this, tr("Unknown flashmethod"), "Unknown flashmethod! Flashmethod \"" + configValues->flash_protocol_selected_family + "\" not yet implemented!");
             //ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[rom_number], cmd_type, this);
 
         if (cmd_type == "read")
@@ -1426,7 +1471,7 @@ void MainWindow::update_logboxes(QString protocol)
         {
             if (logValues->lower_panel_switch_id.at(i) == logValues->log_switch_id.at(j) && logValues->log_switch_protocol.at(j) == protocol)
             {
-                qDebug() << "Switch:" << logValues->log_switch_name.at(j);
+                //qDebug() << "Switch:" << logValues->log_switch_name.at(j);
                 QGroupBox *switchBox = logBoxes->drawLogBoxes("switch", i, switchBoxCount, logValues->log_switch_name.at(j), logValues->log_switch_name.at(j), logValues->log_switch_state.at(j));
                 switchBox->setAttribute(Qt::WA_TransparentForMouseEvents);
                 ui->switchBoxLayout->addWidget(switchBox);
@@ -1439,7 +1484,7 @@ void MainWindow::update_logboxes(QString protocol)
         {
             if (logValues->lower_panel_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
             {
-                qDebug() << "Log value:" << logValues->log_value_name.at(j);
+                //qDebug() << "Log value:" << logValues->log_value_name.at(j);
                 QStringList value_unit = logValues->log_value_units.at(j).split(",");
                 QGroupBox *logBox = logBoxes->drawLogBoxes("log", i, logBoxCount, logValues->log_value_name.at(j), value_unit.at(1), logValues->log_value.at(j));
                 logBox->setAttribute(Qt::WA_TransparentForMouseEvents);

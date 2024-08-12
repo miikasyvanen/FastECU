@@ -47,7 +47,9 @@ public:
 
     bool is_serial_port_open();
     bool init() { return checkDLL(); };
+    void disable();
     void setDllName(const char* name);
+    void getDllName(char* name);
     bool valid();
     void debug(bool enable) { debugMode = enable; };
     char* getLastError();
