@@ -234,7 +234,8 @@ private:
     int line_end_check_1_toggled(int state);
     int line_end_check_2_toggled(int state);
 #if defined(Q_OS_WIN32)
-    QMap<QString, QStringList> list_devices(CONST GUID *pClassGuid, LPCTSTR pszEnumerator);
+    QMap<QString, QStringList> list_connected_interfaces(CONST GUID *pClassGuid, LPCTSTR pszEnumerator);
+    QMap<QString, QString> installed_drivers;
 #endif
 
     QByteArray add_packet_header(QByteArray output);

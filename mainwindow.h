@@ -219,6 +219,7 @@ private:
 
     QMenu *mainWindowMenu;
 
+    QPushButton *refresh_serial_port_list;
     QComboBox *serial_port_list;
     QComboBox *flash_transport_list;
     QComboBox *log_transport_list;

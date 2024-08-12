@@ -283,13 +283,13 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     }
     ui->toolBar->addWidget(serial_port_list);
 
-    QPushButton *refresh_serial_list = new QPushButton();
-    refresh_serial_list->setIcon(QIcon(":/icons/view-refresh.png"));
-    refresh_serial_list->setFixedHeight(toolbar_item_size.height());
-    refresh_serial_list->setFixedWidth(toolbar_item_size.height());
-    //refresh_serial_list->setIconSize(toolbar_item_size);
-    connect(refresh_serial_list, SIGNAL(clicked(bool)), this, SLOT(check_serial_ports()));
-    ui->toolBar->addWidget(refresh_serial_list);
+    refresh_serial_port_list = new QPushButton();
+    refresh_serial_port_list->setIcon(QIcon(":/icons/view-refresh.png"));
+    refresh_serial_port_list->setFixedHeight(toolbar_item_size.height());
+    refresh_serial_port_list->setFixedWidth(toolbar_item_size.height());
+    //refresh_serial_port_list->setIconSize(toolbar_item_size);
+    connect(refresh_serial_port_list, SIGNAL(clicked(bool)), this, SLOT(check_serial_ports()));
+    ui->toolBar->addWidget(refresh_serial_port_list);
 
     logValues = &fileActions->LogValuesStruct;
     logValues = fileActions->read_logger_definition_file();
@@ -622,7 +622,9 @@ void MainWindow::open_serial_port()
 {
     if (serial_ports.length() > 0)
     {
-        QStringList serial_port = serial_ports.at(serial_port_list->currentIndex()).split(" - ");
+        //QStringList serial_port = serial_ports.at(serial_port_list->currentIndex()).split(" - ");
+        QStringList serial_port;
+        serial_port.append(serial_ports.at(serial_port_list->currentIndex()));
 
         //qDebug() << "Serial ports" << serial_ports;
 

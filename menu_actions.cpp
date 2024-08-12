@@ -776,13 +776,22 @@ void MainWindow::connect_to_ecu()
     {
         QMessageBox::warning(this, tr("Serial port"), "Could not open serial port!");
     }
+    if (ecu_init_complete)
+    {
+        serial_port_list->setDisabled(true);
+        refresh_serial_port_list->setDisabled(true);
+    }
 }
 
 void MainWindow::disconnect_from_ecu()
 {
     ecuid.clear();
     ecu_init_complete = false;
+    set_status_bar_label(false, false, "");
     serial->reset_connection();
+
+    serial_port_list->setEnabled(true);
+    refresh_serial_port_list->setEnabled(true);
 }
 
 void MainWindow::ecu_definition_manager()
