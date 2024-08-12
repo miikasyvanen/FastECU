@@ -30,6 +30,7 @@ void MainWindow::canbus_listener()
 
 bool MainWindow::ecu_init()
 {
+/*
     QString car_model;
 
     //qDebug() << "ECU init";
@@ -43,7 +44,7 @@ bool MainWindow::ecu_init()
     for (int i = 0; i < output.length(); i++)
         chksum += (uint8_t)output.at(i);
     output.append(chksum & 0xFF);
-
+*/
     if (serial->is_serial_port_open())
     {
         if (!ecu_init_complete)
@@ -100,6 +101,10 @@ void MainWindow::ssm_kline_init()
                 //qDebug() << "ECU ID:" << ecuid;
                 parse_log_value_list(received, "SSM");
                 //qDebug() << "ECU ID:" << ecuid;
+                if (ecuid == "")
+                    set_status_bar_label(true, false, "");
+                else
+                    set_status_bar_label(true, true, ecuid);
 
                 received = serial->read_serial_data(1, 100);
                 while(received.length() > 0)

@@ -285,7 +285,9 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     QPushButton *refresh_serial_list = new QPushButton();
     refresh_serial_list->setIcon(QIcon(":/icons/view-refresh.png"));
-    refresh_serial_list->setIconSize(toolbar_item_size);
+    refresh_serial_list->setFixedHeight(toolbar_item_size.height());
+    refresh_serial_list->setFixedWidth(toolbar_item_size.height());
+    //refresh_serial_list->setIconSize(toolbar_item_size);
     connect(refresh_serial_list, SIGNAL(clicked(bool)), this, SLOT(check_serial_ports()));
     ui->toolBar->addWidget(refresh_serial_list);
 
@@ -305,7 +307,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     serial_port_baudrate = default_serial_port_baudrate;
     serial->set_serial_port_baudrate(serial_port_baudrate);
     serial->set_serial_port(serial_port);
-
+/*
     serial_poll_timer = new QTimer(this);
     serial_poll_timer->setInterval(serial_poll_timer_timeout);
     connect(serial_poll_timer, SIGNAL(timeout()), this, SLOT(open_serial_port()));
@@ -315,7 +317,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     ssm_init_poll_timer->setInterval(ssm_init_poll_timer_timeout);
     connect(ssm_init_poll_timer, SIGNAL(timeout()), this, SLOT(ecu_init()));
     ssm_init_poll_timer->start();
-
+*/
     logging_poll_timer = new QTimer(this);
     logging_poll_timer->setInterval(logging_poll_timer_timeout);
     connect(logging_poll_timer, SIGNAL(timeout()), this, SLOT(log_ssm_values()));
@@ -350,8 +352,8 @@ MainWindow::~MainWindow()
         log_ssm_values();
         delay(200);
     }
-    ssm_init_poll_timer->stop();
-    serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
     delete ui;
 }
 
@@ -564,7 +566,7 @@ void MainWindow::log_transport_changed()
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    ssm_init_poll_timer->start();
+    //ssm_init_poll_timer->start();
 }
 
 void MainWindow::flash_transport_changed()
@@ -582,8 +584,8 @@ void MainWindow::check_serial_ports()
     QString prev_serial_port = serial_port_list->currentText();
     int index = 0;
 
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
 
     serial->reset_connection();
     ecuid.clear();
@@ -611,9 +613,9 @@ void MainWindow::check_serial_ports()
         index++;
     }
 
-    qDebug() << "Start serial and ssm poll timers";
-    serial_poll_timer->start();
-    ssm_init_poll_timer->start();
+    //qDebug() << "Start serial and ssm poll timers";
+    //serial_poll_timer->start();
+    //ssm_init_poll_timer->start();
 }
 
 void MainWindow::open_serial_port()
@@ -669,8 +671,8 @@ int MainWindow::can_listener()
     }
 
     // Stop serial timers
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     //serial->serial_port_list.clear();
@@ -762,8 +764,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     }
 
     // Stop serial timers
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     //serial->serial_port_list.clear();
@@ -985,8 +987,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->set_serial_port_baudrate("4800");
     emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
-    serial_poll_timer->start();
-    ssm_init_poll_timer->start();
+    //serial_poll_timer->start();
+    //ssm_init_poll_timer->start();
     serial->change_port_speed("4800");
 
     return 0;

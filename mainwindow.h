@@ -153,7 +153,7 @@ private:
     /* Flash modules */
 
     SerialPortActions *serial;
-    QTimer *serial_poll_timer;
+    //QTimer *serial_poll_timer;
     uint16_t serial_poll_timer_timeout = 500;
     QString serial_port_baudrate = "4800";
     QString default_serial_port_baudrate = "4800";
@@ -195,7 +195,7 @@ private:
     QString protocol = "";
     QString log_protocol = "";
 
-    QTimer *ssm_init_poll_timer;
+    //QTimer *ssm_init_poll_timer;
     uint16_t ssm_init_poll_timer_timeout = 250;
 
     QTimer *logging_poll_timer;
@@ -276,6 +276,8 @@ private:
     void interpolate_value(QString action);
     void copy_value();
     void paste_value();
+    void connect_to_ecu();
+    void disconnect_from_ecu();
     void ecu_definition_manager();
     void logger_definition_manager();
     void winols_csv_to_romraider_xml();

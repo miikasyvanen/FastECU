@@ -44,6 +44,10 @@ void MainWindow::menu_action_triggered(QString action)
         toggle_log_to_file();
 
     // ECU MENU
+    if (action == "connect_to_ecu")
+        connect_to_ecu();
+    if (action == "disconnect_from_ecu")
+        disconnect_from_ecu();
     if (action == "read_rom_from_ecu")
         start_ecu_operations("read");
     if (action == "test_write_rom_to_ecu")
@@ -755,6 +759,32 @@ void MainWindow::paste_value()
     }
 }
 
+void MainWindow::connect_to_ecu()
+{
+    ecuid.clear();
+    ecu_init_complete = false;
+    set_status_bar_label(false, false, "");
+
+    qDebug() << "Connecting to ECU, please wait...";
+    open_serial_port();
+    if (serial->is_serial_port_open())
+    {
+        qDebug() << "Initialising ECU, please wait...";
+        ecu_init();
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Serial port"), "Could not open serial port!");
+    }
+}
+
+void MainWindow::disconnect_from_ecu()
+{
+    ecuid.clear();
+    ecu_init_complete = false;
+    serial->reset_connection();
+}
+
 void MainWindow::ecu_definition_manager()
 {
     QDialog *definitions_manager_dialog = new QDialog;
@@ -934,8 +964,8 @@ void MainWindow::show_preferences_window()
 
 void MainWindow::show_subaru_biu_window()
 {
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     serial->reset_connection();
@@ -953,8 +983,8 @@ void MainWindow::show_subaru_biu_window()
     qDebug() << "BIU stopped";
 
     serial->set_add_iso14230_header(false);
-    serial_poll_timer->start();
-    ssm_init_poll_timer->start();
+    //serial_poll_timer->start();
+    //ssm_init_poll_timer->start();
 }
 
 void MainWindow::show_subaru_get_key_window()
@@ -1235,8 +1265,8 @@ int MainWindow::test_haltech_ic7_display()
 
     int i = 0;
 
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     serial->set_is_iso15765_connection(true);
@@ -1383,8 +1413,8 @@ int MainWindow::test_haltech_ic7_display()
     output.append((uint8_t)0xE2);
 */
     serial->set_can_speed("500000");
-    serial_poll_timer->start();
-    ssm_init_poll_timer->start();
+    //serial_poll_timer->start();
+    //ssm_init_poll_timer->start();
 
     return 0;
 }
@@ -1419,8 +1449,8 @@ int MainWindow::simulate_obd()
 
     qDebug() << "Simulating OBD communications";
 
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     serial->reset_connection();

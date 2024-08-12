@@ -30,8 +30,8 @@ public:
     bool is_serial_port_open();
 
     bool init() { return true; };
-    void setDllName(const char* name) { qDebug() << "For Win/Linux compatibility only"; };
-    void getDllName(char* name) { qDebug() << "For Win/Linux compatibility only"; };
+    void setDllName(const char* name) {}; // For Win/Linux compatibility only
+    void getDllName(char* name) {}; // For Win/Linux compatibility only
     void debug(bool enable) { debugMode = enable; };
 
     long PassThruOpen(const void *pName, unsigned long *pDeviceID);

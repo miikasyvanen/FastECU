@@ -1,7 +1,5 @@
 #include "flash_tcu_cvt_subaru_mitsu_mh8104_can.h"
 
-QT_CHARTS_USE_NAMESPACE
-
 FlashTcuCvtSubaruMitsuMH8104Can::FlashTcuCvtSubaruMitsuMH8104Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)

@@ -30,23 +30,23 @@ QString J2534::open_serial_port(QString serial_port)
                 opened_serial_port = serial_port;
                 //connect(serial, SIGNAL(readyRead()), this, SLOT(ReadSerialDataSlot()), Qt::DirectConnection);
                 qRegisterMetaType<QSerialPort::SerialPortError>();
-                connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
+                connect(serial, SIGNAL(errorOccurred(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
                 //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
-                //qDebug() << "Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
+                //qDebug() << "Linux j2534 serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
                 return opened_serial_port;
             }
             else
             {
                 //SendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
-                //qDebug() << "Couldn't open serial port '" + serial_port + "'";
+                //qDebug() << "Couldn't open Linux j2534 serial port '" + serial_port + "'";
                 return NULL;
             }
 
         }
         else{
             //SendLogWindowMessage("Serial port '" + serialPort + "' is already opened", true, true);
-            //qDebug() << "Serial port '" + serial_port + "' is already opened";
+            //qDebug() << "Serial port Linux j2534 '" + serial_port + "' is already opened";
             return opened_serial_port;
         }
     }
@@ -107,7 +107,8 @@ int J2534::write_serial_data(QByteArray output)
         //qDebug() << "Send J2534:" << parseMessageToHex(output);
         for (int i = 0; i < output.length(); i++)
         {
-            msg[0] = output.at(i);
+            msg.clear();
+            msg.append(output.at(i));
             serial->write(msg, 1);
         }
         //serial->write(output);
@@ -166,7 +167,7 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     long result = STATUS_NOERROR;
 
     pDeviceID = 0;
-    //qDebug() << "Open J2534 device" << pName << "with ID:" << pDeviceID;
+    qDebug() << "Open J2534 device" << pName << "with ID:" << pDeviceID;
 
     output = "ata\r\n";
     //qDebug() << "Send data:" << output;
