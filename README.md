@@ -42,6 +42,8 @@ Support forum found here: https://www.fastecu.fi/forum/
   - Subaru Impreza, Legacy Diesel MY08+ EURO4 (SH7058S)
 
 - **Supported TCU models**
+  - TBA - TCU CVT CAN (Mitsubishi MH8104/512KB)
+  - TBA - TCU CVT CAN (Mitsubishi MH8111/1536KB)
 
 - **ECU models currently under development**
   - Subaru Forester, Impreza, Legacy Turbo 1999-2000 K-Line (UJ WA12212920/128KB)
