@@ -1,6 +1,8 @@
-#include "flash_tcu_cvt_subaru_mitsu_mh8104_can.h"
+#include "flash_tcu_cvt_subaru_mitsu_mh8111_can.h"
 
-FlashTcuCvtSubaruMitsuMH8104Can::FlashTcuCvtSubaruMitsuMH8104Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+QT_CHARTS_USE_NAMESPACE
+
+FlashTcuCvtSubaruMitsuMH8111Can::FlashTcuCvtSubaruMitsuMH8111Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -18,7 +20,7 @@ FlashTcuCvtSubaruMitsuMH8104Can::FlashTcuCvtSubaruMitsuMH8104Can(SerialPortActio
     this->serial = serial;
 }
 
-void FlashTcuCvtSubaruMitsuMH8104Can::run()
+void FlashTcuCvtSubaruMitsuMH8111Can::run()
 {
     this->show();
 
@@ -38,17 +40,17 @@ void FlashTcuCvtSubaruMitsuMH8104Can::run()
     }
 }
 
-FlashTcuCvtSubaruMitsuMH8104Can::~FlashTcuCvtSubaruMitsuMH8104Can()
+FlashTcuCvtSubaruMitsuMH8111Can::~FlashTcuCvtSubaruMitsuMH8111Can()
 {
 
 }
 
-void FlashTcuCvtSubaruMitsuMH8104Can::closeEvent(QCloseEvent *event)
+void FlashTcuCvtSubaruMitsuMH8111Can::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
 
-int FlashTcuCvtSubaruMitsuMH8104Can::init_flash_mitsu_can()
+int FlashTcuCvtSubaruMitsuMH8111Can::init_flash_mitsu_can()
 {
     bool ok = false;
 
@@ -62,15 +64,13 @@ int FlashTcuCvtSubaruMitsuMH8104Can::init_flash_mitsu_can()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+//    send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
 
     int result = STATUS_ERROR;
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
-
-    emit external_logger("Starting");
 
     if (cmd_type == "read")
     {
@@ -113,13 +113,13 @@ int FlashTcuCvtSubaruMitsuMH8104Can::init_flash_mitsu_can()
         if (cmd_type == "read")
         {
             emit external_logger("Reading ROM, please wait...");
-            send_log_window_message("Reading ROM from TCU Subaru Mitsubishi using CAN", true, true);
+            send_log_window_message("Not yet implemented: Reading ROM from TCU Subaru Mitsubishi using CAN", true, true);
             result = read_mem_subaru_tcu_mitsu_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "test_write" || cmd_type == "write")
         {
             emit external_logger("Writing ROM, please wait...");
-            send_log_window_message("Writing ROM to TCU Subaru Mitsubishi using CAN", true, true);
+            send_log_window_message("Not yet implemented: Writing ROM to TCU Subaru Mitsubishi using CAN", true, true);
             result = write_mem_subaru_tcu_mitsu_can(test_write);
         }
     }
@@ -131,7 +131,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::init_flash_mitsu_can()
  *
  * @return success
  */
-int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
+int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader_subaru_tcu_mitsu_can()
 {
     QByteArray output;
     QByteArray received;
@@ -142,32 +142,6 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
-    }
-
-    send_log_window_message("Checking if kernel is already running...", true, true);
-    qDebug() << "Checking if kernel is already running...";
-
-    // Check if kernel already alive
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE1);
-    output.append((uint8_t)0x31);
-    output.append((uint8_t)0x02);
-    output.append((uint8_t)0x02);
-    output.append((uint8_t)0x01);
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x02 && (uint8_t)received.at(6) == 0x02 && (uint8_t)received.at(7) == 0x03)
-    {
-        send_log_window_message("Kernel already running", true, true);
-
-        kernel_alive = true;
-        return STATUS_SUCCESS;
     }
 
     send_log_window_message("Trying TCU Init...", true, true);
@@ -289,8 +263,10 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
 
     output[4] = (uint8_t)0x27;
     output[5] = (uint8_t)0x02;
-    output.append(seed_key);
-
+    output[6] = (uint8_t)seed_key.at(0);
+    output[7] = (uint8_t)seed_key.at(1);
+    output[8] = (uint8_t)seed_key.at(2);
+    output[9] = (uint8_t)seed_key.at(3);
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
@@ -325,7 +301,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     {
         send_log_window_message("Bad response to jumping to onboard kernel", true, true);
 
-        //return STATUS_ERROR;
+//        return STATUS_ERROR;
     }
 
     send_log_window_message("Jump to kernel ok", true, true);
@@ -343,12 +319,13 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     output.append((uint8_t)0x08);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
+
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(20, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x74 && (uint8_t)received.at(5) != 0x20 && (uint8_t)received.at(6) != 0x01 && (uint8_t)received.at(7) != 0x04)
+    if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x02 && (uint8_t)received.at(6) == 0x02 && (uint8_t)received.at(7) == 0x03)
     {
         send_log_window_message("Kernel verified to be running", true, true);
 
@@ -360,12 +337,13 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     return STATUS_SUCCESS;
 }
 
+
 /*
  * Read memory from Subaru TCU Mitsubishi CAN bootloader
  *
  * @return success
  */
-int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t start_addr, uint32_t length)
+int FlashTcuCvtSubaruMitsuMH8111Can::read_mem_subaru_tcu_mitsu_can(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -378,7 +356,8 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
 
     uint32_t pagesize = 0x100;
 
-   //    start_addr = start_addr - 0x00100000;          // manual adjustment for starting address
+
+      //    start_addr = start_addr - 0x00100000;          // manual adjustment for starting address
     start_addr = 0x8000;
   //  if (start_addr < 0x8000)                       // TCU code does not allow dumping below 0x8000
    // {
@@ -388,7 +367,6 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
 
     length = 0x78000;    // hack for testing
 
-
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
@@ -397,7 +375,6 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
     send_log_window_message("Settting dump start & length...", true, true);
     qDebug() << "Settting dump start & length...";
 
-    output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
@@ -417,7 +394,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
     delay(200);
     received = serial->read_serial_data(20, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
+    if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
     {
         send_log_window_message("Bad response to setting dump start & length", true, true);
 
@@ -455,7 +432,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
         pleft = (float)(addr - start_addr) / (float)length * 100.0f;
         set_progressbar_value(pleft);
 
-        //length = 7FFF0;
+        //length = 256;
 
         output[5] = (uint8_t)((addr >> 16) & 0xFF);
         output[6] = (uint8_t)((addr >> 8) & 0xFF);
@@ -463,7 +440,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
         send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         //qDebug() << "0xB7 message sent to kernel to dump 256 bytes";
-        delay(50);
+//        delay(200);
         received = serial->read_serial_data(270, 200);
         //qDebug() << "Response to 0xB7 (dump mem) message:" << parse_message_to_hex(received);
         send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
@@ -568,11 +545,11 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
 
     // now decrypt the data obtained
     //mapdata = QByteArray::fromHex("4124e4724124e472faff08b64aa113f1023cc075fa6e0315ad211d9e777dc7f1fdcb739381938aebdf5d38548b4a226299d54a008df351aee83af9b683ab470bf1eff976255c06fbb34995017541312f1d3857f18c7a12cfb28263f2777dc7f144b4dee98439ebf001ccdd872fe3aa70ccab0283c1f119d078179024ed173b89777dc7f13147c3703147c37097fb0d8297fb0d8246c2152546c2152580c19d9980c19d994ece965d4ece965dad11fb19ad11fb199b012c569b012c564fcd8d814fcd8d81402c0bc7402c0bc78b21b8bf8b21b8bf148e7551148e7551a6955d8ba6955d8b814dda6c814dda6ca2c1c21ba2c1c21b47b4f07047b4f0708197e947");
-//	send_log_window_message("Received mapdata: " + parse_message_to_hex(mapdata), true, true);
+    //send_log_window_message("Received mapdata: " + parse_message_to_hex(mapdata), true, true);
     mapdata = subaru_tcu_mitsu_decrypt_32bit_payload(mapdata, mapdata.length());
     //send_log_window_message("Decrypted mapdata: " + parse_message_to_hex(mapdata), true, true);
 
-    // need to pad out first 0x8000 bytes with 0xFF
+    // need to pad out first 0x8000 bytes with 0x00
     int i;
     QByteArray padBytes;
     for (i = 0; i < 0x8000; i++)
@@ -650,7 +627,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
  * @return success
  */
 
-int FlashTcuCvtSubaruMitsuMH8104Can::write_mem_subaru_tcu_mitsu_can(bool test_write)
+int FlashTcuCvtSubaruMitsuMH8111Can::write_mem_subaru_tcu_mitsu_can(bool test_write)
 {
     QByteArray filedata;
 
@@ -777,7 +754,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::write_mem_subaru_tcu_mitsu_can(bool test_wr
  * @return
  */
 /*
-int FlashTcuCvtSubaruMitsuMH8104Can::get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified)
+int FlashTcuSubaruHitachiM32RCan::get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified)
 {
     unsigned blockno;
     QByteArray msg;
@@ -893,7 +870,7 @@ int FlashEcuSubaruDensoSH705xCan::check_romcrc_denso_can_02_32bit(const uint8_t 
  *
  * @return success
  */
-int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block_subaru_tcu_mitsu_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -917,7 +894,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
 
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
-    maxblocks = pl_len / 128;
+    maxblocks = pl_len / 256;
     end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
     uint32_t data_len = end_addr - start_address;
 
@@ -936,9 +913,12 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
     output.append((uint8_t)0x34);
     output.append((uint8_t)0x04);
     output.append((uint8_t)0x33);
-    output.append((uint8_t)((start_address >> 16) & 0xFF));
-    output.append((uint8_t)((start_address >> 8) & 0xFF));
-    output.append((uint8_t)(start_address & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+//    output.append((uint8_t)((start_address >> 16) & 0xFF));
+//    output.append((uint8_t)((start_address >> 8) & 0xFF));
+//    output.append((uint8_t)(start_address & 0xFF));
     output.append((uint8_t)((data_len >> 16) & 0xFF));
     output.append((uint8_t)((data_len >> 8) & 0xFF));
     output.append((uint8_t)(data_len & 0xFF));
@@ -950,7 +930,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
+//        delay(200);
         received = serial->read_serial_data(20, 200);
         if (received != "")
         {
@@ -971,7 +951,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         if (kill_process)
             return 0;
 
-        blockaddr = start_address + blockctr * 128;
+        blockaddr = start_address + blockctr * 256;
         output.clear();
         output.append((uint8_t)0x00);
         output.append((uint8_t)0x00);
@@ -981,20 +961,20 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
-        qDebug() << "Data header:" << parse_message_to_hex(output);
+        //qDebug() << "Data header:" << parse_message_to_hex(output);
 
-        for (int i = 0; i < 128; i++)
+        for (int i = 0; i < 256; i++)
         {
             output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
             data_bytes_sent++;
         }
-        data_len -= 128;
+        data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Kernel data:" << parse_message_to_hex(output);
+        //qDebug() << "Kernel data:" << parse_message_to_hex(output);
         //delay(20);
-        delay(20);
+//        delay(200);
         received = serial->read_serial_data(5, receive_timeout);
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
@@ -1061,7 +1041,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         //delay(50);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        if (received != "")
+        if (received != "")        	
         {
             connected = true;
             send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
@@ -1087,7 +1067,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
  *
  * @return success
  */
-int FlashTcuCvtSubaruMitsuMH8104Can::erase_subaru_tcu_mitsu_can()
+int FlashTcuCvtSubaruMitsuMH8111Can::erase_subaru_tcu_mitsu_can()
 {
     QByteArray output;
     QByteArray received;
@@ -1101,6 +1081,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::erase_subaru_tcu_mitsu_can()
     send_log_window_message("Erasing TCU ROM...", true, true);
     qDebug() << "Erasing TCU ROM...";
 
+    output.clear();
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1116,20 +1097,22 @@ int FlashTcuCvtSubaruMitsuMH8104Can::erase_subaru_tcu_mitsu_can()
     output.append((uint8_t)0xff);
 
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+    delay(100);
     serial->write_serial_data_echo_check(output);
-    delay(8000);
-
-    // should there be a QTime delay to wait for erasing process?
 
     received = serial->read_serial_data(20, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    delay(5000);
 
-    if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+//    delay(200);
+
+    while ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
     {
-        send_log_window_message("Erasing error! Do not panic, do not reset the TCU immediately. The kernel is most likely still running and receiving commands!", true, true);
-        //return STATUS_ERROR;
+    received = serial->read_serial_data(20, 200);
+    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    delay(100);
     }
+
+    send_log_window_message("Erased! Starting Writing! Do Not Power Off!", true, true);
 
     return STATUS_SUCCESS;
 }
@@ -1142,7 +1125,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::erase_subaru_tcu_mitsu_can()
  */
 
 /*
-uint8_t FlashTcuCvtSubaruMitsuMH8104Can::cks_add8(QByteArray chksum_data, unsigned len)
+uint8_t FlashTcuSubaruHitachiM32RCan::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
     uint8_t data[chksum_data.length()];
@@ -1487,12 +1470,17 @@ QByteArray FlashEcuSubaruDensoSH705xCan::send_subaru_denso_sid_31_start_routine(
 }
 */
 
+// CVT version
+//
+//
+//
+
 /*
- * Generate tcu Mitsubishi can seed key from received seed bytes
+ * Generate cvt tcu Mitsubishi can seed key from received seed bytes
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashTcuCvtSubaruMitsuMH8111Can::subaru_tcu_mitsu_generate_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1501,6 +1489,7 @@ QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_generate_can_seed_k
         0x27D4, 0xA967, 0xB63B, 0x7A37,
         0xE23B, 0xA8D0, 0x9B82, 0xAC43,
         0xE874, 0x7FC5, 0x7141, 0x8B44
+
     };
 
     const uint8_t indextransformation[]={
@@ -1520,7 +1509,7 @@ QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_generate_can_seed_k
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuCvtSubaruMitsuMH8111Can::subaru_tcu_mitsu_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1562,13 +1551,24 @@ QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_calculate_seed_key(
 
     return key;
 }
+
+
+//
+//
+//
+// end CVT version
+
+
+
+
+
 /*
  * Encrypt upload data
  *
  * @return encrypted data
  */
 
-QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuCvtSubaruMitsuMH8111Can::subaru_tcu_mitsu_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1588,7 +1588,7 @@ QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_encrypt_32bit_paylo
     return encrypted;
 }
 
-QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuCvtSubaruMitsuMH8111Can::subaru_tcu_mitsu_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1608,7 +1608,7 @@ QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_decrypt_32bit_paylo
     return decrypt;
 }
 
-QByteArray FlashTcuCvtSubaruMitsuMH8104Can::subaru_tcu_mitsu_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuCvtSubaruMitsuMH8111Can::subaru_tcu_mitsu_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1842,7 +1842,7 @@ int FlashEcuSubaruDensoSH705xCan::connect_bootloader_start_countdown(int timeout
  *
  * @return parsed message
  */
-QString FlashTcuCvtSubaruMitsuMH8104Can::parse_message_to_hex(QByteArray received)
+QString FlashTcuCvtSubaruMitsuMH8111Can::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1860,7 +1860,7 @@ QString FlashTcuCvtSubaruMitsuMH8104Can::parse_message_to_hex(QByteArray receive
  *
  * @return
  */
-int FlashTcuCvtSubaruMitsuMH8104Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashTcuCvtSubaruMitsuMH8111Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1899,14 +1899,14 @@ int FlashTcuCvtSubaruMitsuMH8104Can::send_log_window_message(QString message, bo
     return STATUS_ERROR;
 }
 
-void FlashTcuCvtSubaruMitsuMH8104Can::set_progressbar_value(int value)
+void FlashTcuCvtSubaruMitsuMH8111Can::set_progressbar_value(int value)
 {
     if (ui->progressbar)
         ui->progressbar->setValue(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashTcuCvtSubaruMitsuMH8104Can::delay(int timeout)
+void FlashTcuCvtSubaruMitsuMH8111Can::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

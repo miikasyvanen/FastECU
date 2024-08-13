@@ -15,6 +15,7 @@ enum mcu_type {
     SH7058,
     SH7058d,
     MH8104,
+    MH8111,
     SH_INVALID
 };
 
@@ -329,6 +330,24 @@ const struct eepromblock eblocks_MH8104[] = {
     {0x00000000,    0x00000100},
 };
 
+const struct flashblock fblocks_MH8111[] = {
+    {0x00000000,    0x00040000},
+    {0x00040000,    0x00020000},
+    {0x00060000,    0x00020000},
+    {0x00080000,    0x00100000},
+};
+
+const struct ramblock rblocks_MH8111[] = {
+    {0x00804000,    0x0000A000},
+};
+
+const struct kernelblock kblocks_MH8111[] = {
+    {0x00804000,    0x0000A000},
+};
+
+const struct eepromblock eblocks_MH8111[] = {
+    {0x00000000,    0x00000100},
+};
 
 const struct flashdev_t flashdevices[] = {
     { "M32R_128KB", M32R_128KB, 128 * 1024, 2, fblocks_M32R_128KB, rblocks_M32R_128KB, kblocks_M32R_128KB, eblocks_M32R_128KB },
@@ -342,6 +361,7 @@ const struct flashdev_t flashdevices[] = {
     { "SH7058", SH7058, 1024 * 1024, 16, fblocks_SH7058, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
     { "SH7058d", SH7058d, 1024 * 1024, 16, fblocks_SH7058d, rblocks_SH7058d, kblocks_SH7058d, eblocks_SH7058d },
     { "MH8104", MH8104, 512 * 1024, 4, fblocks_MH8104, rblocks_MH8104, kblocks_MH8104, eblocks_MH8104 },
+    { "MH8111", MH8111, 3 * 512 * 1024, 4, fblocks_MH8111, rblocks_MH8111, kblocks_MH8111, eblocks_MH8111 },
     { 0, SH_INVALID, 0, 0, 0, 0, 0, 0},
 };
 
