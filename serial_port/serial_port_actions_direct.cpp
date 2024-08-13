@@ -681,7 +681,7 @@ QString SerialPortActionsDirect::open_serial_port()
         QMap<QString, QStringList> vehicle_passthru_interfaces;
         vehicle_passthru_interfaces = list_connected_interfaces(&GUID_DEVCLASS_VEHICLE_PASSTHRU, NULL);
 
-        QMap<QString, QString> user_j2534_drivers; // Local drivers in software folder
+        //QMap<QString, QString> user_j2534_drivers; // Local drivers in software folder
         bool j2534DeviceFound = false;
         QString localDllName;
         QString installedDllName;
@@ -712,8 +712,14 @@ QString SerialPortActionsDirect::open_serial_port()
             if (j2534DeviceFound)
                 break;
         }
-        if (j2534DeviceFound)
-        {
+        QStringList dllName = installed_drivers.value(serial_port).split("\\");
+        localDllName = dllName.at(dllName.count() - 1);
+        installedDllName = installed_drivers.value(serial_port);
+        qDebug() << "Local DLL Name:" << localDllName;
+        qDebug() << "Installed DLL Name:" << installedDllName;
+
+        //if (j2534DeviceFound)
+        //{
             QMap<QString, QString> user_j2534_drivers;
 
             qDebug() << "Opening device:" << serial_port;
@@ -729,7 +735,7 @@ QString SerialPortActionsDirect::open_serial_port()
             {
                 qDebug() << "Could not start interface!";
             }
-        }
+        //}
 
 
         if (!J2534_init_ok)

@@ -280,9 +280,13 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
  */
 int FlashEcuSubaruUnisiaJecs::write_mem_subaru_unisia_jecs(bool test_write)
 {
+    QByteArray filedata;
     QByteArray output;
     QByteArray received;
     QString msg;
+
+    filedata = ecuCalDef->FullRomData;
+
 
     if (!serial->is_serial_port_open())
     {
@@ -315,6 +319,8 @@ int FlashEcuSubaruUnisiaJecs::write_mem_subaru_unisia_jecs(bool test_write)
     received = send_subaru_unisia_jecs_sid_af_enter_flash_mode(received);
 
     qDebug() << "SID AF enter flash mode response:" << parse_message_to_hex(received);
+
+    //send_subaru_unisia_jecs_sid_af_erase_memory_block(0x00800000);
 
     return STATUS_ERROR;
 }
