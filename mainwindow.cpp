@@ -899,6 +899,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashTcuCvtSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
             flashTcuCvtSubaruMitsuMH8104Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8104Can(serial,ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8111_can"))
+            flashTcuCvtSubaruMitsuMH8111Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8111Can(serial,ecuCalDef[rom_number], cmd_type, this));
 
         /*
         * Denso TCU
