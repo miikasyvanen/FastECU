@@ -12,6 +12,7 @@ Huge thanks to following:
 - rimwall
 - SergArb
 - alesv
+- jimihimisimi
 
 Also big thanks to:
 - fenugrec, whos kernel development with rimwall for Renesas SH-processors made this project to start at the first place.
