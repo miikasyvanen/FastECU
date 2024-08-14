@@ -764,6 +764,7 @@ void MainWindow::connect_to_ecu()
     ecuid.clear();
     ecu_init_complete = false;
     set_status_bar_label(false, false, "");
+    serial->reset_connection();
 
     qDebug() << "Connecting to ECU, please wait...";
     open_serial_port();

@@ -91,7 +91,7 @@ private:
     QByteArray send_subaru_sid_b8_change_baudrate_38400();
 
     QByteArray send_subaru_unisia_jecs_sid_af_enter_flash_mode(QByteArray ecu_id);
-    QByteArray send_subaru_unisia_jecs_sid_af_erase_memory_block(uint32_t address);
+    QByteArray send_subaru_unisia_jecs_sid_af_erase_memory_block();
     QByteArray send_subaru_unisia_jecs_sid_af_write_memory_block(uint32_t address, QByteArray payload);
     QByteArray send_subaru_unisia_jecs_sid_af_write_last_memory_block(uint32_t address, QByteArray payload);
 
