@@ -766,7 +766,7 @@ void MainWindow::connect_to_ecu()
     set_status_bar_label(false, false, "");
     serial->reset_connection();
 
-    qDebug() << "Connecting to ECU, please wait...";
+    qDebug() << "Opening interface, please wait...";
     open_serial_port();
     if (serial->is_serial_port_open())
     {
@@ -783,6 +783,7 @@ void MainWindow::connect_to_ecu()
 
 void MainWindow::disconnect_from_ecu()
 {
+    qDebug() << "Disconnecting...";
     ecuid.clear();
     ecu_init_complete = false;
     set_status_bar_label(false, false, "");
