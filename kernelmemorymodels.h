@@ -9,6 +9,7 @@ enum mcu_type {
     M32R_384KB,
     M32R_512KB,
     M32R_512KB_1block,
+    M32R_512KB_4blocks,
     MC68HC16Y5,
     SH7051,
     SH7055,
@@ -299,6 +300,13 @@ const struct flashblock fblocks_M32R_512KB_1block[] = {
     {0x00000000,    0x00080000},
 };
 
+const struct flashblock fblocks_M32R_512KB_4blocks[] = {
+    {0x00000000,    0x00004000},
+    {0x00004000,    0x00002000},
+    {0x00006000,    0x00002000},
+    {0x00008000,    0x00078000},
+};
+
 const struct ramblock rblocks_M32R_512KB[] = {
     {0x00804000,    0x0000A000},
 };
@@ -355,6 +363,7 @@ const struct flashdev_t flashdevices[] = {
     { "M32R_384KB", M32R_384KB, 384 * 1024, 9, fblocks_M32R_384KB, rblocks_M32R_384KB, kblocks_M32R_384KB, eblocks_M32R_384KB },
     { "M32R_512KB", M32R_512KB, 512 * 1024, 11, fblocks_M32R_512KB, rblocks_M32R_512KB, kblocks_M32R_512KB, eblocks_M32R_512KB },
     { "M32R_512KB_1block", M32R_512KB_1block, 512 * 1024, 1, fblocks_M32R_512KB_1block, rblocks_M32R_512KB, kblocks_M32R_512KB, eblocks_M32R_512KB },
+    { "M32R_512KB_4blocks", M32R_512KB_4blocks, 512 * 1024, 4, fblocks_M32R_512KB_4blocks, rblocks_M32R_512KB, kblocks_M32R_512KB, eblocks_M32R_512KB },
     { "MC68HC16Y5", MC68HC16Y5, 160 * 1024, 10, fblocks_MC68HC16Y5, rblocks_MC68HC16Y5, kblocks_MC68HC16Y5, eblocks_MC68HC16Y5 },
     { "SH7051", SH7051, 256 * 1024, 12, fblocks_SH7051, rblocks_SH7051, kblocks_SH7051, eblocks_SH7051 },
     { "SH7055", SH7055, 512 * 1024, 16, fblocks_SH7055, rblocks_SH7055, kblocks_SH7055, eblocks_SH7055 },

@@ -58,6 +58,7 @@
 #include <modules/flash_tcu_subaru_denso_sh705x_can.h>
 #include <modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.h>
 #include <modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.h>
+#include <modules/flash_ecu_subaru_mitsu_m32r_kline.h>
 
 
 #include <modules/eeprom_ecu_subaru_denso_kline.h>
@@ -145,6 +146,7 @@ private:
     FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
     FlashTcuCvtSubaruMitsuMH8104Can *flashTcuCvtSubaruMitsuMH8104Can;
     FlashTcuCvtSubaruMitsuMH8111Can *flashTcuCvtSubaruMitsuMH8111Can;
+    FlashEcuSubaruMitsuM32RKline *flashEcuSubaruMitsuM32RKline;
 
     EepromEcuSubaruDensoKline *eepromEcuSubaruDensoKline;
     EepromEcuSubaruDensoCan *eepromEcuSubaruDensoCan;
