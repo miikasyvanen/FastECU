@@ -2122,21 +2122,21 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
-    if (configValues->flash_protocol_selected_checksum != "yes")
+    if (configValues->flash_protocol_selected_checksum == "yes")
     {
         if (configValues->flash_protocol_selected_make == "Subaru")
         {
             if (ecuCalDef->RomInfo[MemModel] == "SH7055")
-                checksum_module_subarudbw(ecuCalDef, 0x07FB80, 17 * 12);
+                checksum_module_subarudbw_denso32bit(ecuCalDef, 0x07FB80, 17 * 12);
             if (ecuCalDef->RomInfo[MemModel] == "SH7058")
-                checksum_module_subarudbw(ecuCalDef, 0x0FFB80, 17 * 12);
+                checksum_module_subarudbw_denso32bit(ecuCalDef, 0x0FFB80, 17 * 12);
             qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
         }
     }
     return ecuCalDef;
 }
 
-FileActions::EcuCalDefStructure *FileActions::checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_length)
+FileActions::EcuCalDefStructure *FileActions::checksum_module_subarudbw_denso32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_length)
 {
     QByteArray checksum_array;
 

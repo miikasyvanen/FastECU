@@ -31,7 +31,7 @@ linux {
     HEADERS += \
     serial_port/J2534_linux.h
     HEADERS += \
-    serial_port/J2534_tatrix_linux.h \
+    serial_port/J2534_tactrix_linux.h \
 }
 
 REPC_REPLICA = \
@@ -49,11 +49,6 @@ SOURCES += \
     calibration_treewidget.cpp \
     definition_file_convert.cpp \
     ecu_operations.cpp \
-    ecu_operations_iso14230.cpp \
-    ecu_operations_manual.cpp \
-    ecu_operations_mercedes.cpp \
-    ecu_operations_nissan.cpp \
-    ecu_operations_subaru.cpp \
     file_actions.cpp \
     file_defs_ecuflash.cpp \
     file_defs_romraider.cpp \
@@ -103,12 +98,6 @@ HEADERS += \
     calibration_treewidget.h \
     definition_file_convert.h \
     ecu_operations.h \
-    ecu_operations_iso14230.h \
-    ecu_operations_manual.h \
-    ecu_operations_manual.h \
-    ecu_operations_mercedes.h \
-    ecu_operations_nissan.h \
-    ecu_operations_subaru.h \
     file_actions.h \
     get_key_operations_subaru.h \
     kernelcomms.h \
@@ -153,7 +142,7 @@ FORMS += \
     biu_ops_subaru_switches.ui \
     calibration_map_table.ui \
     definition_file_convert.ui \
-    ecu_manual_operations.ui \
+#    ecu_manual_operations.ui \
     ecu_operations.ui \
     logvalues.ui \
     mainwindow.ui \
