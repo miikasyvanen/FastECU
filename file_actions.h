@@ -20,7 +20,11 @@
 #include <iostream>
 
 #include "modules/checksum_ecu_subaru_denso_sh705x.h"
+#include "modules/checksum_ecu_subaru_hitachi_m32r.h"
+
 #include "modules/checksum_tcu_subaru_denso_sh7055.h"
+#include "modules/checksum_tcu_subaru_hitachi_m32r_can.h"
+
 
 #ifdef WIN32
     #include <windows.h>

@@ -54,6 +54,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
     qDebug() << "ECU protocols set";
     configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_family = configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
@@ -64,6 +65,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     qDebug() << configValues->flash_protocol_selected_make;
     qDebug() << configValues->flash_protocol_selected_mcu;
+    qDebug() << configValues->flash_protocol_selected_checksum;
     qDebug() << configValues->flash_protocol_selected_model;
     qDebug() << configValues->flash_protocol_selected_version;
     qDebug() << configValues->flash_protocol_selected_family;
@@ -824,7 +826,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 QMessageBox *msgBox = new QMessageBox();
                 msgBox->setIcon(QMessageBox::Warning);
                 msgBox->setWindowTitle("Checksum warning");
-                //msgBox->setDetailedText("Checksum warning");
+                //msgBox->setDetailedText("Write Flash - Checksum Warning");
                 msgBox->setText("WARNING! There is no checksum module for this ROM!\
                                     Be aware that if this ROM need checksum correction it must be done with another software!");
                 QPushButton *cancelButton = msgBox->addButton(QMessageBox::Cancel);

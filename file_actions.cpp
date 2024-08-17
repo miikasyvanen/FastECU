@@ -1694,92 +1694,6 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         return NULL;
     }
 */
-    // Hitachi TCU checksum calcs
-    if (configValues->flash_protocol_selected_family == "sub_tcu_denso_can_SH7058")
-    {
-        uint32_t chksum = 0;
-        uint32_t chksum1 = 0;
-        uint32_t chksum2 = 0;
-        for (int i = 0x0; i < ecuCalDef->FullRomData.length(); i += 4)
-        {
-            if (i >= 0x8020)
-                //chksum1 += ecuCalDef->FullRomData.at(i);
-                chksum1 += (ecuCalDef->FullRomData.at(i) << 24) + (ecuCalDef->FullRomData.at(i + 1) << 16) + (ecuCalDef->FullRomData.at(i + 2) << 8) + ecuCalDef->FullRomData.at(i + 3);
-            if (i < 0x8000 || i > 0x8007)
-                chksum2 += (ecuCalDef->FullRomData.at(i) << 24) + (ecuCalDef->FullRomData.at(i + 1) << 16) + (ecuCalDef->FullRomData.at(i + 2) << 8) + ecuCalDef->FullRomData.at(i + 3);
-        }
-        chksum = (ecuCalDef->FullRomData.at(0x8000) << 24) + (ecuCalDef->FullRomData.at(0x8001) << 16) + (ecuCalDef->FullRomData.at(0x8002) << 8) + ecuCalDef->FullRomData.at(0x8003);
-        qDebug() << "ChkSum =" << chksum;
-        chksum = (ecuCalDef->FullRomData.at(0x8020) << 24) + (ecuCalDef->FullRomData.at(0x8021) << 16) + (ecuCalDef->FullRomData.at(0x8022) << 8) + ecuCalDef->FullRomData.at(0x8023);
-        qDebug() << "ChkSum =" << chksum;
-        qDebug() << "ChkSum 1 =" << chksum1;
-        qDebug() << "ChkSum 2 =" << chksum2;
-        uint8_t chksum_2[4];
-        chksum_2[3] = 0xff - ((chksum2 >> 24) & 0xff);
-        chksum_2[2] = 0xff - ((chksum2 >> 16) & 0xff);
-        chksum_2[1] = 0xff - ((chksum2 >> 8) & 0xff);
-        chksum_2[0] = 0x100 - (chksum2 & 0xff);
-        chksum2 = (chksum_2[3] << 24) + (chksum_2[2] << 16) + (chksum_2[1] << 8) + chksum_2[0];
-        qDebug() << "ChkSum 2 =" << chksum2;
-    }
-    else if (configValues->flash_protocol_selected_family == "sub_tcu_hitachi_can")
-    {
-        uint32_t chksum = 0;
-        uint32_t chksum1 = 0;
-        uint32_t chksum2 = 0;
-        uint8_t chksum_2[4];
-        for (int i = 0x4000; i < ecuCalDef->FullRomData.length(); i += 4)
-        {
-            if (i < 0x10000 || i > 0x10003)
-                chksum += (ecuCalDef->FullRomData.at(i) << 24) + (ecuCalDef->FullRomData.at(i + 1) << 16) + (ecuCalDef->FullRomData.at(i + 2) << 8) + ecuCalDef->FullRomData.at(i + 3);
-        }
-        for (int i = 0; i < ecuCalDef->FullRomData.length(); i += 1)
-        {
-            if (i < 0x10000 || i > 0x10007)
-            {
-                chksum1 += ecuCalDef->FullRomData.at(i);
-                chksum2 ^= i;
-            }
-        }
-        chksum_2[3] = ((chksum >> 24) & 0xff);
-        chksum_2[2] = ((chksum >> 16) & 0xff);
-        chksum_2[1] = ((chksum >> 8) & 0xff);
-        chksum_2[0] = (chksum & 0xff);
-
-        QString msg;
-        msg.append(QString("0x%1").arg(chksum_2[3],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[2],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[1],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[0],2,16,QLatin1Char('0')));
-
-        qDebug() << "ChkSum = " + QString::number(chksum) + " (" + msg + ")";
-
-        chksum_2[3] = ((chksum1 >> 24) & 0xff);
-        chksum_2[2] = ((chksum1 >> 16) & 0xff);
-        chksum_2[1] = ((chksum1 >> 8) & 0xff);
-        chksum_2[0] = (chksum1 & 0xff);
-        msg.clear();
-        msg.append(QString("0x%1").arg(chksum_2[3],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[2],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[1],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[0],2,16,QLatin1Char('0')));
-        qDebug() << "ChkSum1 = " + QString::number(chksum) + " (" + msg + ")";
-
-        chksum1 = (chksum1 * 256) + chksum2;
-        chksum_2[3] = ((chksum1 >> 24) & 0xff);
-        chksum_2[2] = ((chksum1 >> 16) & 0xff);
-        chksum_2[1] = ((chksum1 >> 8) & 0xff);
-        chksum_2[0] = (chksum1 & 0xff);
-        msg.clear();
-        msg.append(QString("0x%1").arg(chksum_2[3],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[2],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[1],2,16,QLatin1Char('0')));
-        msg.append(QString("%1").arg(chksum_2[0],2,16,QLatin1Char('0')));
-        qDebug() << "ChkSum2 = " + QString::number(chksum) + " (" + msg + ")";
-    }
-
-
-
     if (!file_name_str.length())
         file_name_str = ecuCalDef->RomId;
 
@@ -2208,34 +2122,53 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 
     QString flashMethod = ecuCalDef->RomInfo[FlashMethod];
 
+    qDebug() << "Protocol:" << configValues->flash_protocol_selected_family;
+    qDebug() << "Make:" << configValues->flash_protocol_selected_make;
+    qDebug() << "Checksum:" << configValues->flash_protocol_selected_checksum;
+
     if (configValues->flash_protocol_selected_checksum == "yes")
     {
         if (configValues->flash_protocol_selected_make == "Subaru")
         {
             qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
+
+            // ECU checksum modules
             if (flashMethod.startsWith("sub_ecu_sh7055"))
             {
                 chksumModuleAvailable = true;
                 ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
                 ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x07FB80, 17 * 12);
             }
-            if (flashMethod.startsWith("sub_ecu_sh7058"))
+            else if (flashMethod.startsWith("sub_ecu_sh7058"))
             {
                 chksumModuleAvailable = true;
                 ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
                 ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
-            if (flashMethod.startsWith("sub_tcu_denso_can_SH7058"))
+            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            // TCU checksum modules
+            else if (flashMethod.startsWith("sub_tcu_denso_sh7058_can"))
             {
                 chksumModuleAvailable = true;
                 ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
                 ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
-            if (flashMethod.startsWith("sub_tcu_denso_can_SH7055"))
+            else if (flashMethod.startsWith("sub_tcu_denso_sh7055_can"))
             {
                 chksumModuleAvailable = true;
                 ChecksumTcuSubaruDensoSH7055 *checksumTcuSubaruDensoSH7055 = new ChecksumTcuSubaruDensoSH7055();
-                ecuCalDef->FullRomData = checksumTcuSubaruDensoSH7055->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = checksumTcuSubaruDensoSH7055->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumTcuSubaruHitachiM32rCan *checksumTcuSubaruHitachiM32rCan = new ChecksumTcuSubaruHitachiM32rCan();
+                ecuCalDef->FullRomData = checksumTcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
             }
             else
                 chksumModuleAvailable = false;
@@ -2245,8 +2178,8 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
     {
         QMessageBox *msgBox = new QMessageBox();
         msgBox->setIcon(QMessageBox::Warning);
-        msgBox->setWindowTitle("Checksum warning");
-        //msgBox->setDetailedText("Checksum warning");
+        msgBox->setWindowTitle("File - Checksum Warning");
+        //msgBox->setDetailedText("File - Checksum Warning");
         msgBox->setText("WARNING! There is no checksum module for this ROM!\
                             Be aware that if this ROM need checksum correction it must be done with another software!");
         QPushButton *cancelButton = msgBox->addButton(QMessageBox::Cancel);
