@@ -170,9 +170,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         }
     }
 
-    //qDebug() << "File index:" << file_index;
-    //qDebug() << "File name:" << configValues->ecuflash_def_filename.at(file_index);
-
     if (!cal_id_file_found)
         return ecuCalDef;
 
@@ -180,8 +177,10 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
 
     filename = configValues->ecuflash_def_filename.at(file_index);
 
-    while (ecuCalDef->RomInfo.length() < RomInfoStrings.length())
+    while (ecuCalDef->RomInfo.length() < ecuCalDef->RomInfoStrings.length())
         ecuCalDef->RomInfo.append(" ");
+
+    ecuCalDef->RomInfo.replace(DefFile, filename);
 
     QFile file(filename);
 

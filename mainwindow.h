@@ -108,6 +108,7 @@ private:
 
     int ecuCalDefIndex = 0;
     struct FileActions::EcuCalDefStructure *ecuCalDef[100];
+    struct FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     int mapCellWidthSelectable = 240;
     int mapCellWidth1D = 96;
