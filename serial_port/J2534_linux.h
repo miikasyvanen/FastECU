@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#include "J2534_tactrix_win.h"
+#include "J2534_tactrix_linux.h"
 
 class J2534 : public QWidget
 {

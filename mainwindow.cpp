@@ -817,7 +817,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
-            if (configValues->flash_protocol_selected_checksum != "yes")
+            if (configValues->flash_protocol_selected_checksum == "n/a")
                 QMessageBox::warning(this, tr("Checksum warning"), "WARNING! There is no checksum module for this ROM!\
                                                 Be aware that if this ROM need checksum correction it must be done with another software!");
             //fileActions->checksum_correction(ecuCalDef[rom_number]);
@@ -957,37 +957,6 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             }
         }
     }
-    else if (configValues->flash_protocol_selected_make == "Mercedes")
-    {
-        qDebug() << "Testing MB EDC16 ECU";
-
-        // Reset all comms
-        serial->reset_connection();
-        ecuid.clear();
-        ecu_init_complete = false;
-
-        // For CAN comms
-        if (flash_transport_list->currentText() == "CAN")
-            serial->set_is_can_connection(true);
-        if (flash_transport_list->currentText() == "iso15765")
-            serial->set_is_iso15765_connection(true);
-
-        if (serial->get_is_can_connection() || serial->get_is_iso15765_connection())
-        {
-            serial->set_is_29_bit_id(false);
-            serial->set_can_speed("500000");
-            open_serial_port();
-        }
-        // For K-Line comms
-        else
-        {
-            serial->set_add_iso14230_header(true);
-            open_serial_port();
-            serial->change_port_speed("10400");
-        }
-
-        ecuOperationsRenault = new EcuOperationsMercedes(serial, ecuCalDef[ecuCalDefIndex], cmd_type);
-    }
 
     serial->reset_connection();
     ecuid.clear();
@@ -1002,18 +971,6 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
     //serial_poll_timer->start();
     //ssm_init_poll_timer->start();
-    serial->change_port_speed("4800");
-
-    return 0;
-}
-
-int MainWindow::start_manual_ecu_operations()
-{
-    QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
-    int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
-
-    EcuManualOperations *ecuManualOperations = new EcuManualOperations(serial, ecuCalDef[romNumber]);
-
     serial->change_port_speed("4800");
 
     return 0;

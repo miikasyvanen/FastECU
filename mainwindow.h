@@ -30,10 +30,10 @@
 #include <definition_file_convert.h>
 #include <biu_operations_subaru.h>
 #include <get_key_operations_subaru.h>
-#include <ecu_operations_nissan.h>
-#include <ecu_operations_mercedes.h>
-#include <ecu_operations_subaru.h>
-#include <ecu_operations_manual.h>
+//#include <ecu_operations_nissan.h>
+//#include <ecu_operations_mercedes.h>
+//#include <ecu_operations_subaru.h>
+//#include <ecu_operations_manual.h>
 #include <file_actions.h>
 #include <logbox.h>
 #include <settings.h>
@@ -125,8 +125,6 @@ private:
     FileActions *fileActions;
     FileActions::LogValuesStructure *logValues;
     FileActions::ConfigValuesStructure *configValues;
-    EcuOperationsSubaru *ecuOperationsSubaru;
-    EcuOperationsMercedes *ecuOperationsRenault;
 
     /* Flash modules */
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
@@ -340,7 +338,6 @@ private slots:
     void open_serial_port();
     int can_listener();
     int start_ecu_operations(QString cmd_type);
-    int start_manual_ecu_operations();
     void close_calibration();
     void close_calibration_map(QObject* obj);
     void change_gauge_values();

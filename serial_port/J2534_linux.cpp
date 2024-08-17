@@ -164,7 +164,8 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
 {
     QByteArray output;
     QByteArray received;
-    long result = STATUS_NOERROR;
+    QByteArray check_result = "ar";
+    long result = ERR_NOT_SUPPORTED;
 
     pDeviceID = 0;
     qDebug() << "Open J2534 device" << pName << "with ID:" << pDeviceID;
@@ -173,6 +174,13 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
     received = read_serial_data(7, 50);
+    qDebug() << "Result check against: " + check_result;
+    if (received.startsWith(check_result))
+    {
+        qDebug() << "Result check OK";
+        result = STATUS_NOERROR;
+    }
+    qDebug() << "Result check failed, not maybe an j2534 interface!";
     //qDebug() << "Received:" << parseMessageToHex(received);
 
     return result;
