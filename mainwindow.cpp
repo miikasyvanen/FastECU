@@ -19,6 +19,27 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qApp->installEventFilter(this);
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
+    QPixmap startUpSplashImage(":/images/startup_splash.jpg");
+
+    QSplashScreen *startUpSplash = new QSplashScreen(startUpSplashImage);
+    QVBoxLayout *startUpSplashLayout = new QVBoxLayout(startUpSplash);
+    startUpSplashLayout->setMargin(0);
+    startUpSplashLayout->setSpacing(0);
+    startUpSplashLayout->setAlignment(Qt::AlignBottom);
+    QLabel *startUpSplashLabel = new QLabel();
+    startUpSplashLabel->setMargin(0);
+    startUpSplashLabel->setPixmap(startUpSplashImage);
+    startUpSplashLayout->addWidget(startUpSplashLabel);
+    QProgressBar *startUpSplashProgressBar = new QProgressBar();
+    startUpSplashProgressBar->setMinimum(0);
+    startUpSplashProgressBar->setMaximum(100);
+    startUpSplashProgressBar->setValue(0);
+    startUpSplashLayout->addWidget(startUpSplashProgressBar);
+    startUpSplash->show();
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
+    this->setWindowTitle(title + " " + version);
+
 #ifdef Q_OS_LINUX
     //send_log_window_message("Running on Linux Desktop ", true, false);
     //serialPort = serialPortLinux;
@@ -43,6 +64,9 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     fileActions = new FileActions();
     configValues = &fileActions->ConfigValuesStruct;
+
+    fileActions->title = title;
+    fileActions->version = version;
 
     //fileActions->check_config_dir(configValues);
     configValues = fileActions->read_config_file(configValues);
@@ -342,6 +366,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 
     set_flash_arrow_state();
+
+    startUpSplash->finish(this);
 
 }
 

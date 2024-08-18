@@ -84,11 +84,14 @@ public:
     void delay(int n);
 
 private:
+    QString title = "FastECU";
+    QString version = "0.0-dev0";
+
     QString peerAddress;
     QSplashScreen *splash;
     QWebSocket *clientWebSocket;
     RemoteUtility *remote_utility;
-    const char *sw_version = "FastECU v0.3b";
+    const char *sw_version = "FastECU v0.0.1";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
     static const QColor YELLOW_LIGHT_OFF;
