@@ -42,7 +42,7 @@
 // Flash modules
 #include <modules/flash_ecu_subaru_denso_mc68hc16y5_02.h>
 #include <modules/flash_ecu_subaru_denso_sh7055_02.h>
-#include <modules/flash_ecu_subaru_denso_sh705x_can.h>
+#include <modules/flash_ecu_subaru_denso_sh705x_densocan.h>
 #include <modules/flash_ecu_subaru_denso_sh7055_04.h>
 #include <modules/flash_ecu_subaru_denso_sh7058_can.h>
 #include <modules/flash_ecu_subaru_denso_sh7058_can_diesel.h>
@@ -62,7 +62,7 @@
 #include <modules/eeprom_ecu_subaru_denso_can.h>
 
 
-#include <modules/flash_ecu_subaru_denso_sh7xxx_can.h>
+#include <modules/flash_ecu_subaru_denso_sh7xxx_densocan.h>
 //
 #include <remote_utility/remote_utility.h>
 
@@ -127,7 +127,7 @@ private:
     /* Flash modules */
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
     FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
-    FlashEcuSubaruDensoSH705xCan *flashEcuSubaruDensoSH705xCan;
+    FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoSH7055_04 *flashEcuSubaruDensoSH7055_04;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
@@ -144,7 +144,7 @@ private:
     EepromEcuSubaruDensoKline *eepromEcuSubaruDensoKline;
     EepromEcuSubaruDensoCan *eepromEcuSubaruDensoCan;
 
-    FlashEcuSubaruDensoSH7xxxCan *flashEcuSubaruDensoSH7xxxCan;
+    FlashEcuSubaruDensoSH7xxxDensoCan *flashEcuSubaruDensoSH7xxxCan;
 
 
     /* Flash modules */

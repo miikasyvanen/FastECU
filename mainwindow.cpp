@@ -872,7 +872,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Denso CAN
         */
         if (configValues->flash_protocol_selected_family.endsWith("_densocan"))
-            flashEcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDefTemp, cmd_type, this));
+            flashEcuSubaruDensoSH705xDensoCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xDensoCan(serial, ecuCalDefTemp, cmd_type, this));
         /*
         * Denso ECU
         */

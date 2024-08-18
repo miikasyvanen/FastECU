@@ -1,5 +1,5 @@
-#ifndef FLASH_ECU_SUBARU_DENSO_SH705X_CAN_H
-#define FLASH_ECU_SUBARU_DENSO_SH705X_CAN_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH705X_DENSOCAN_H
+#define FLASH_ECU_SUBARU_DENSO_SH705X_DENSOCAN_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashEcuSubaruDensoSH705xCan : public QDialog
+class FlashEcuSubaruDensoSH705xDensoCan : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashEcuSubaruDensoSH705xCan();
+    explicit FlashEcuSubaruDensoSH705xDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH705xDensoCan();
 
     void run();
 
@@ -122,4 +122,4 @@ private:
 
 };
 
-#endif // FLASH_ECU_SUBARU_DENSO_SH705X_CAN_H
+#endif // FLASH_ECU_SUBARU_DENSO_SH705X_DENSOCAN_H
