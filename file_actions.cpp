@@ -2174,7 +2174,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 chksumModuleAvailable = false;
         }
     }
-    if (!chksumModuleAvailable)
+    if (!chksumModuleAvailable && configValues->flash_protocol_selected_checksum != "no")
     {
         QMessageBox *msgBox = new QMessageBox();
         msgBox->setIcon(QMessageBox::Warning);
