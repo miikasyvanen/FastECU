@@ -2132,7 +2132,9 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
         {
             qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
 
-            // ECU checksum modules
+            /*
+            * Denso ECU
+            */
             if (flashMethod.startsWith("sub_ecu_sh7055"))
             {
                 chksumModuleAvailable = true;
@@ -2145,25 +2147,33 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
                 ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
-            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_"))
-            {
-                chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
-            }
-            // TCU checksum modules
-            else if (flashMethod.startsWith("sub_tcu_denso_sh7058_can"))
-            {
-                chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
-            }
+            /*
+            * Denso TCU
+            */
             else if (flashMethod.startsWith("sub_tcu_denso_sh7055_can"))
             {
                 chksumModuleAvailable = true;
                 ChecksumTcuSubaruDensoSH7055 *checksumTcuSubaruDensoSH7055 = new ChecksumTcuSubaruDensoSH7055();
                 ecuCalDef->FullRomData = checksumTcuSubaruDensoSH7055->calculate_checksum(ecuCalDef->FullRomData);
             }
+            else if (flashMethod.startsWith("sub_tcu_denso_sh7058_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
+                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+            }
+            /*
+            * Hitachi ECU
+            */
+            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            /*
+            * Hitachi TCU
+            */
             else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_can"))
             {
                 chksumModuleAvailable = true;
