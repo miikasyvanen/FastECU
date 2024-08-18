@@ -36,7 +36,12 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplashProgressBar->setValue(0);
     startUpSplashLayout->addWidget(startUpSplashProgressBar);
     startUpSplash->show();
+    // Move splashscreen to the center of the screen
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect  screenGeometry = screen->geometry();
+    startUpSplash->move(screenGeometry.center() - startUpSplash->rect().center());
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
 
     this->setWindowTitle(title + " " + version);
 
@@ -194,13 +199,19 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     QPushButton *button1 = new QPushButton("Close app", splash);
     layout->addWidget(label1);
     layout->addWidget(button1);
-    splash->setLayout(layout);
+    //splash->setLayout(layout);
     splash->resize(350,50);
     //Show it in remote mode only
     //Prepare for remote mode
     if (!peerAddress.isEmpty())
     {
         splash->show();
+        // Move splashscreen to the center of the screen
+        QScreen *screen = QGuiApplication::primaryScreen();
+        QRect  screenGeometry = screen->geometry();
+        splash->move(screenGeometry.center() - splash->rect().center());
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
         clientWebSocket = new QWebSocket("",QWebSocketProtocol::VersionLatest,this);
         QString wt = this->windowTitle();
         if (peerAddress.length() > 0)
