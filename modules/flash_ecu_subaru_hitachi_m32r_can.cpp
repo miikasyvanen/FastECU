@@ -1,6 +1,6 @@
 #include "flash_ecu_subaru_hitachi_m32r_can.h"
 
-FlashEcuSubaruHitachiCan::FlashEcuSubaruHitachiCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruHitachiM32rCan::FlashEcuSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -18,37 +18,14 @@ FlashEcuSubaruHitachiCan::FlashEcuSubaruHitachiCan(SerialPortActions *serial, Fi
     this->serial = serial;
 }
 
-void FlashEcuSubaruHitachiCan::run()
+void FlashEcuSubaruHitachiM32rCan::run()
 {
     this->show();
 
     int result = STATUS_ERROR;
 
-    result = init_flash_subaru_hitachi_can();
+    //result = init_flash_subaru_hitachi_can();
 
-    if (result == STATUS_SUCCESS)
-    {
-        QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-        this->close();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-    }
-}
-
-FlashEcuSubaruHitachiCan::~FlashEcuSubaruHitachiCan()
-{
-
-}
-
-void FlashEcuSubaruHitachiCan::closeEvent(QCloseEvent *event)
-{
-    kill_process = true;
-}
-
-int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can()
-{
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -61,8 +38,6 @@ int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can()
     QString mcu_name = flashdevices[mcu_type_index].name;
     //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
 
     flash_method = ecuCalDef->FlashMethod;
 
@@ -89,23 +64,58 @@ int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can()
     // Open serial port
     serial->open_serial_port();
 
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
+    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                   tr("Turn ignition ON and press OK to start initializing connection to ECU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
 
-    if (cmd_type == "read")
+    switch (ret)
     {
-        emit external_logger("Preparing, please wait...");
-        send_log_window_message("Reading ROM from Subaru Hitachi WA12212970WWW using CAN", true, true);
-        result = read_mem_subaru_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+        case QMessageBox::Ok:
+            if (cmd_type == "read")
+            {
+                emit external_logger("Preparing, please wait...");
+                send_log_window_message("Reading ROM from Subaru Hitachi WA12212970WWW using CAN", true, true);
+                result = read_mem_subaru_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            }
+            else if (cmd_type == "test_write" || cmd_type == "write")
+            {
+                emit external_logger("Writing ROM, please wait...");
+                send_log_window_message("Writing ROM to Subaru Hitachi WA12212970WWW using CAN", true, true);
+                result = write_mem_subaru_hitachi_can(test_write);
+            }
+            emit external_logger("Finished");
+
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+            }
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
+            this->close();
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
     }
-    else if (cmd_type == "test_write" || cmd_type == "write")
-    {
-        emit external_logger("Reading ROM, please wait...");
-        send_log_window_message("Writing ROM to Subaru Hitachi WA12212970WWW using CAN", true, true);
-        result = write_mem_subaru_hitachi_can(test_write);
-    }
-    emit external_logger("Finished");
-    return result;
+}
+
+FlashEcuSubaruHitachiM32rCan::~FlashEcuSubaruHitachiM32rCan()
+{
+
+}
+
+void FlashEcuSubaruHitachiM32rCan::closeEvent(QCloseEvent *event)
+{
+    kill_process = true;
 }
 
 /*
@@ -113,7 +123,7 @@ int FlashEcuSubaruHitachiCan::init_flash_subaru_hitachi_can()
  *
  * @return success
  */
-int FlashEcuSubaruHitachiCan::read_mem_subaru_hitachi_can(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruHitachiM32rCan::read_mem_subaru_hitachi_can(uint32_t start_addr, uint32_t length)
 {
 
     return STATUS_ERROR;
@@ -124,7 +134,7 @@ int FlashEcuSubaruHitachiCan::read_mem_subaru_hitachi_can(uint32_t start_addr, u
  *
  * @return success
  */
-int FlashEcuSubaruHitachiCan::write_mem_subaru_hitachi_can(bool test_write)
+int FlashEcuSubaruHitachiM32rCan::write_mem_subaru_hitachi_can(bool test_write)
 {
 
     return STATUS_ERROR;
@@ -155,7 +165,7 @@ int FlashEcuSubaruHitachiCan::write_mem_subaru_hitachi_can(bool test_write)
  *
  * @return parsed message
  */
-QByteArray FlashEcuSubaruHitachiCan::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+QByteArray FlashEcuSubaruHitachiM32rCan::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
 {
     uint8_t length = output.length();
 
@@ -176,7 +186,7 @@ QByteArray FlashEcuSubaruHitachiCan::add_ssm_header(QByteArray output, uint8_t t
  *
  * @return 8-bit checksum
  */
-uint8_t FlashEcuSubaruHitachiCan::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t FlashEcuSubaruHitachiM32rCan::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -194,7 +204,7 @@ uint8_t FlashEcuSubaruHitachiCan::calculate_checksum(QByteArray output, bool dec
  *
  * @return
  */
-int FlashEcuSubaruHitachiCan::connect_bootloader_start_countdown(int timeout)
+int FlashEcuSubaruHitachiM32rCan::connect_bootloader_start_countdown(int timeout)
 {
     for (int i = timeout; i > 0; i--)
     {
@@ -219,7 +229,7 @@ int FlashEcuSubaruHitachiCan::connect_bootloader_start_countdown(int timeout)
  *
  * @return parsed message
  */
-QString FlashEcuSubaruHitachiCan::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruHitachiM32rCan::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -236,7 +246,7 @@ QString FlashEcuSubaruHitachiCan::parse_message_to_hex(QByteArray received)
  *
  * @return
  */
-int FlashEcuSubaruHitachiCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashEcuSubaruHitachiM32rCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -260,7 +270,7 @@ int FlashEcuSubaruHitachiCan::send_log_window_message(QString message, bool time
     return STATUS_ERROR;
 }
 
-void FlashEcuSubaruHitachiCan::set_progressbar_value(int value)
+void FlashEcuSubaruHitachiM32rCan::set_progressbar_value(int value)
 {
     bool valueChanged = true;
     if (ui->progressbar)
@@ -273,7 +283,7 @@ void FlashEcuSubaruHitachiCan::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashEcuSubaruHitachiCan::delay(int timeout)
+void FlashEcuSubaruHitachiM32rCan::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

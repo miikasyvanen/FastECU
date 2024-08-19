@@ -74,7 +74,6 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int init_flash_denso_kline_04();
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int upload_kernel_subaru_denso_kline_04_32bit(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_denso_kline_32bit(uint32_t start_addr, uint32_t length);

@@ -14,9 +14,17 @@
 #include <QElapsedTimer>
 #include <QDateTime>
 #include <QDirIterator>
+#include <QPushButton>
 
 #include <string.h>
 #include <iostream>
+
+#include "modules/checksum_ecu_subaru_denso_sh705x.h"
+#include "modules/checksum_ecu_subaru_hitachi_m32r.h"
+
+#include "modules/checksum_tcu_subaru_denso_sh7055.h"
+#include "modules/checksum_tcu_subaru_hitachi_m32r_can.h"
+
 
 #ifdef WIN32
     #include <windows.h>
@@ -36,6 +44,9 @@ public:
     uint8_t float_precision = 15;
     int def_map_index = 0;
     //QString ecu_protocol;
+
+    QString title;
+    QString version;
 
     struct ConfigValuesStructure {
         QString serial_port = "ttyUSB0";
@@ -318,25 +329,44 @@ public:
         bool use_romraider_definition;
         bool use_ecuflash_definition;
 
+        QStringList RomInfoStrings = {
+            "XmlId",
+            "InternalIdAddress",
+            "Make",
+            "Model",
+            "Submodel",
+            "Market",
+            "Transmission",
+            "Year",
+            "ECU ID",
+            "Internal ID",
+            "Memory Model",
+            "Checksum Module",
+            "Rom Base",
+            "Flash Method",
+            "File Size",
+            "Def File",
+    /*
+            "XmlId",
+            "InternalIdAddress",
+            "Make",
+            "Model",
+            "SubModel",
+            "Market",
+            "Transmission",
+            "Year",
+            "EcuId",
+            "InternalIdString",
+            "MemModel",
+            "ChecksumModule",
+            "RomBase",
+            "FlashMethod",
+            "FileSize",
+            "DefFile",
+    */
+        };
     } EcuCalDefStruct;
 
-    QStringList RomInfoStrings = {
-        "XmlId",
-        "InternalIdAddress",
-        "Make",
-        "Model",
-        "SubModel",
-        "Market",
-        "Transmission",
-        "Year",
-        "EcuId",
-        "InternalIdString",
-        "MemModel",
-        "ChecksumModule",
-        "RomBase",
-        "FlashMethod",
-        "FileSize",
-    };
 
     enum RomInfoEnum {
         XmlId,
@@ -354,6 +384,7 @@ public:
         RomBase,
         FlashMethod,
         FileSize,
+        DefFile,
     };
 
     /****************************************************
@@ -446,7 +477,7 @@ public:
      * checksums
      **************************/
     EcuCalDefStructure *checksum_correction(FileActions::EcuCalDefStructure *ecuCalDef);
-    EcuCalDefStructure *checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_end);
+    EcuCalDefStructure *checksum_module_subarudbw_denso32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_end);
 
     /*************************************
      * Parse expression strings for used

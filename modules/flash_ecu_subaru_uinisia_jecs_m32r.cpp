@@ -1,6 +1,6 @@
 #include "flash_ecu_subaru_uinisia_jecs_m32r.h"
 
-FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruUnisiaJecsM32r::FlashEcuSubaruUnisiaJecsM32r(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -18,37 +18,14 @@ FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, Fi
     this->serial = serial;
 }
 
-void FlashEcuSubaruUnisiaJecs::run()
+void FlashEcuSubaruUnisiaJecsM32r::run()
 {
     this->show();
 
     int result = STATUS_ERROR;
 
-    result = init_flash_subaru_unisia_jecs();
+    //result = init_flash_subaru_unisia_jecs();
 
-    if (result == STATUS_SUCCESS)
-    {
-        QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-        this->close();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-    }
-}
-
-FlashEcuSubaruUnisiaJecs::~FlashEcuSubaruUnisiaJecs()
-{
-
-}
-
-void FlashEcuSubaruUnisiaJecs::closeEvent(QCloseEvent *event)
-{
-    kill_process = true;
-}
-
-int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs()
-{
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -59,10 +36,7 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
 
     flash_method = ecuCalDef->FlashMethod;
 
@@ -92,23 +66,59 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs()
     serial->open_serial_port();
     //serial->change_port_speed("10400");
 
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
+    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                   tr("Turn ignition ON and press OK to start initializing connection to ECU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
 
-    if (cmd_type == "read")
+    switch (ret)
     {
-        emit external_logger("Reading ROM, please wait...");
-        send_log_window_message("Reading ROM from Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
-        result = read_mem_subaru_unisia_jecs(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-    }
-    else if (cmd_type == "test_write" || cmd_type == "write")
-    {
-        emit external_logger("Writing ROM, please wait...");
-        send_log_window_message("Writing ROM to Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
-        result = write_mem_subaru_unisia_jecs(test_write);
-    }
-    emit external_logger("Finished");
-    return result;
+        case QMessageBox::Ok:
+
+            if (cmd_type == "read")
+            {
+                emit external_logger("Reading ROM, please wait...");
+                send_log_window_message("Reading ROM from Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
+                result = read_mem_subaru_unisia_jecs(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+            }
+            else if (cmd_type == "test_write" || cmd_type == "write")
+            {
+                emit external_logger("Writing ROM, please wait...");
+                send_log_window_message("Writing ROM to Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
+                result = write_mem_subaru_unisia_jecs(test_write);
+            }
+            emit external_logger("Finished");
+
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+            }
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
+            this->close();
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
+        }
+}
+
+FlashEcuSubaruUnisiaJecsM32r::~FlashEcuSubaruUnisiaJecsM32r()
+{
+
+}
+
+void FlashEcuSubaruUnisiaJecsM32r::closeEvent(QCloseEvent *event)
+{
+    kill_process = true;
 }
 
 /*
@@ -116,7 +126,7 @@ int FlashEcuSubaruUnisiaJecs::init_flash_subaru_unisia_jecs()
  *
  * @return success
  */
-int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruUnisiaJecsM32r::read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
 
@@ -278,7 +288,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
  *
  * @return success
  */
-int FlashEcuSubaruUnisiaJecs::write_mem_subaru_unisia_jecs(bool test_write)
+int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs(bool test_write)
 {
     QByteArray flashdata;
     QByteArray output;
@@ -520,7 +530,7 @@ int FlashEcuSubaruUnisiaJecs::write_mem_subaru_unisia_jecs(bool test_write)
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
@@ -555,7 +565,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_sid_bf_ssm_init()
     return received;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_sid_b8_change_baudrate_4800()
+QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_sid_b8_change_baudrate_4800()
 {
     QByteArray output;
     QByteArray received;
@@ -576,7 +586,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_sid_b8_change_baudrate_4800()
     return received;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_sid_b8_change_baudrate_38400()
+QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_sid_b8_change_baudrate_38400()
 {
     QByteArray output;
     QByteArray received;
@@ -597,7 +607,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_sid_b8_change_baudrate_38400()
     return received;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_enter_flash_mode(QByteArray ecu_id)
+QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_unisia_jecs_sid_af_enter_flash_mode(QByteArray ecu_id)
 {
     QByteArray output;
     QByteArray received;
@@ -638,7 +648,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_enter_flash_
     return received;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_erase_memory_block()
+QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_unisia_jecs_sid_af_erase_memory_block()
 {
     QByteArray output;
     QByteArray received;
@@ -652,7 +662,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_erase_memory
     return received;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_write_memory_block(uint32_t address, QByteArray payload)
+QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_unisia_jecs_sid_af_write_memory_block(uint32_t address, QByteArray payload)
 {
     QByteArray output;
     QByteArray received;
@@ -665,7 +675,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_write_memory
     return received;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_write_last_memory_block(uint32_t address, QByteArray payload)
+QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_unisia_jecs_sid_af_write_last_memory_block(uint32_t address, QByteArray payload)
 {
     QByteArray output;
     QByteArray received;
@@ -683,7 +693,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::send_subaru_unisia_jecs_sid_af_write_last_m
  *
  * @return parsed message
  */
-QByteArray FlashEcuSubaruUnisiaJecs::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+QByteArray FlashEcuSubaruUnisiaJecsM32r::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
 {
     uint8_t length = output.length();
 
@@ -704,7 +714,7 @@ QByteArray FlashEcuSubaruUnisiaJecs::add_ssm_header(QByteArray output, uint8_t t
  *
  * @return 8-bit checksum
  */
-uint8_t FlashEcuSubaruUnisiaJecs::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t FlashEcuSubaruUnisiaJecsM32r::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -722,7 +732,7 @@ uint8_t FlashEcuSubaruUnisiaJecs::calculate_checksum(QByteArray output, bool dec
  *
  * @return
  */
-int FlashEcuSubaruUnisiaJecs::connect_bootloader_start_countdown(int timeout)
+int FlashEcuSubaruUnisiaJecsM32r::connect_bootloader_start_countdown(int timeout)
 {
     for (int i = timeout; i > 0; i--)
     {
@@ -747,7 +757,7 @@ int FlashEcuSubaruUnisiaJecs::connect_bootloader_start_countdown(int timeout)
  *
  * @return parsed message
  */
-QString FlashEcuSubaruUnisiaJecs::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruUnisiaJecsM32r::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -764,7 +774,7 @@ QString FlashEcuSubaruUnisiaJecs::parse_message_to_hex(QByteArray received)
  *
  * @return
  */
-int FlashEcuSubaruUnisiaJecs::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashEcuSubaruUnisiaJecsM32r::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -788,7 +798,7 @@ int FlashEcuSubaruUnisiaJecs::send_log_window_message(QString message, bool time
     return STATUS_ERROR;
 }
 
-void FlashEcuSubaruUnisiaJecs::set_progressbar_value(int value)
+void FlashEcuSubaruUnisiaJecsM32r::set_progressbar_value(int value)
 {
     bool valueChanged = true;
     if (ui->progressbar)
@@ -801,7 +811,7 @@ void FlashEcuSubaruUnisiaJecs::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashEcuSubaruUnisiaJecs::delay(int timeout)
+void FlashEcuSubaruUnisiaJecsM32r::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

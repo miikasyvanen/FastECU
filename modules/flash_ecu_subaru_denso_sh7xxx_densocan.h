@@ -1,5 +1,5 @@
-#ifndef EEPROM_ECU_SUBARU_DENSO_CAN_H
-#define EEPROM_ECU_SUBARU_DENSO_CAN_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH7XXX_DENSOCAN_H
+#define FLASH_ECU_SUBARU_DENSO_SH7XXX_DENSOCAN_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class EepromEcuSubaruDensoCan : public QDialog
+class FlashEcuSubaruDensoSH7xxxDensoCan : public QDialog
 {
     Q_OBJECT
 
 public:
-    EepromEcuSubaruDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~EepromEcuSubaruDensoCan();
+    explicit FlashEcuSubaruDensoSH7xxxDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH7xxxDensoCan();
 
     void run();
 
@@ -55,8 +55,6 @@ private:
     int mcu_type_index;
     int bootloader_start_countdown = 3;
 
-    int EEPROM_MODE = 0;
-
     uint8_t tester_id;
     uint8_t target_id;
 
@@ -75,13 +73,16 @@ private:
     QString flash_method;
     QString kernel;
 
-    void closeEvent(QCloseEvent *bar);
+    void closeEvent(QCloseEvent *event);
 
-    int init_flash_denso_subarucan();
     int connect_bootloader_subaru_denso_subarucan();
     int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
-
+    int write_mem_subaru_denso_subarucan(bool test_write);
+    int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
+    int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
+    int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
+    int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     void init_crc16_tab(void);
@@ -97,7 +98,7 @@ private:
     QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
     QByteArray send_subaru_denso_sid_31_start_routine();
 
-    QByteArray subaru_denso_generate_can_seed_key(QByteArray seed);
+    QByteArray subaru_denso_generate_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
@@ -123,5 +124,4 @@ private:
 
 };
 
-
-#endif // EEPROM_ECU_SUBARU_DENSO_CAN_H
+#endif // FLASH_ECU_SUBARU_DENSO_SH7XXX_DENSOCAN_H

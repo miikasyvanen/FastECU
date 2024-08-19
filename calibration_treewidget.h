@@ -20,11 +20,10 @@ public:
     QTreeWidget *buildCalibrationDataTree(QTreeWidget *dataTreeWidget, FileActions::EcuCalDefStructure *ecuCalDef);
     void *calibrationDataTreeWidgetItemExpanded(FileActions::EcuCalDefStructure *ecuCalDef, QString categoryName);
     void *calibrationDataTreeWidgetItemCollapsed(FileActions::EcuCalDefStructure *ecuCalDef, QString categoryName);
-
+/*
     QStringList RomInfoStrings = {
         "XmlId",
         "InternalIdAddress",
-
         "Make",
         "Model",
         "Submodel",
@@ -38,6 +37,7 @@ public:
         "Rom Base",
         "Flash Method",
         "File Size",
+        "Def File",
     };
 
     enum RomInfoEnum {
@@ -56,8 +56,9 @@ public:
         RomBase,
         FlashMethod,
         FileSize,
+        DefFile,
     };
-
+*/
 signals:
     void closeRom();
 

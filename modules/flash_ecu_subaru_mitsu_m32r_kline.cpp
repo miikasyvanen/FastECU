@@ -27,33 +27,6 @@ void FlashEcuSubaruMitsuM32RKline::run()
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_mitsu_kline();
-
-    if (result == STATUS_SUCCESS)
-    {
-        QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-        this->close();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-    }
-}
-
-FlashEcuSubaruMitsuM32RKline::~FlashEcuSubaruMitsuM32RKline()
-{
-
-}
-
-void FlashEcuSubaruMitsuM32RKline::closeEvent(QCloseEvent *event)
-{
-    kill_process = true;
-}
-
-int FlashEcuSubaruMitsuM32RKline::init_flash_mitsu_kline()
-{
-    bool ok = false;
-
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -66,8 +39,6 @@ int FlashEcuSubaruMitsuM32RKline::init_flash_mitsu_kline()
     QString mcu_name = flashdevices[mcu_type_index].name;
     //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -99,27 +70,63 @@ int FlashEcuSubaruMitsuM32RKline::init_flash_mitsu_kline()
     tester_id = 0xF0;
     target_id = 0x10;
 
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to TCU"), "Press OK to start countdown!");
+    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                   tr("Turn ignition ON and press OK to start initializing connection to ECU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
 
-    send_log_window_message("Connecting to Subaru ECU Mitsubishi K-Line bootloader, please wait...", true, true);
-
-    result = connect_bootloader_subaru_ecu_mitsu_kline();
-
-    if (result == STATUS_SUCCESS)
+    switch (ret)
     {
-        if (cmd_type == "read")
-        {
-            send_log_window_message("Reading ROM from ECU Subaru Mitsubishi using K-Line", true, true);
-            result = read_mem_subaru_ecu_mitsu_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-        }
-        else if (cmd_type == "test_write" || cmd_type == "write")
-        {
-            send_log_window_message("Writing ROM to ECU Subaru Mitsubishi using K-Line", true, true);
-            result = write_mem_subaru_ecu_mitsu_kline(test_write);
-        }
+        case QMessageBox::Ok:
+            send_log_window_message("Connecting to Subaru ECU Mitsubishi K-Line bootloader, please wait...", true, true);
+
+            result = connect_bootloader_subaru_ecu_mitsu_kline();
+
+            if (result == STATUS_SUCCESS)
+            {
+                if (cmd_type == "read")
+                {
+                    send_log_window_message("Reading ROM from ECU Subaru Mitsubishi using K-Line", true, true);
+                    result = read_mem_subaru_ecu_mitsu_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                }
+                else if (cmd_type == "test_write" || cmd_type == "write")
+                {
+                    send_log_window_message("Writing ROM to ECU Subaru Mitsubishi using K-Line", true, true);
+                    result = write_mem_subaru_ecu_mitsu_kline(test_write);
+                }
+            }
+            emit external_logger("Finished");
+
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+            }
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
+            this->close();
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
     }
-    return result;
+}
+
+FlashEcuSubaruMitsuM32RKline::~FlashEcuSubaruMitsuM32RKline()
+{
+
+}
+
+void FlashEcuSubaruMitsuM32RKline::closeEvent(QCloseEvent *event)
+{
+    kill_process = true;
 }
 
 /*

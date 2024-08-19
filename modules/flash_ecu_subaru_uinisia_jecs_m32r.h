@@ -23,13 +23,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashEcuSubaruUnisiaJecs : public QDialog
+class FlashEcuSubaruUnisiaJecsM32r : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent);
-    ~FlashEcuSubaruUnisiaJecs();
+    explicit FlashEcuSubaruUnisiaJecsM32r(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent);
+    ~FlashEcuSubaruUnisiaJecsM32r();
 
     void run();
 
@@ -80,8 +80,6 @@ private:
     QString flash_method;
 
     void closeEvent(QCloseEvent *event);
-
-    int init_flash_subaru_unisia_jecs();
 
     int read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length);
     int write_mem_subaru_unisia_jecs(bool test_write);

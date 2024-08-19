@@ -26,35 +26,10 @@ void FlashTcuSubaruDensoSH705xCan::run()
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
-
-    result = init_flash_denso_subarucan();
-
-    if (result == STATUS_SUCCESS)
-    {
-        QMessageBox::information(this, tr("TCU Operation"), "TCU operation was succesful, press OK to exit");
-        this->close();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("TCU Operation"), "TCU operation failed, press OK to exit and try again");
-    }
-}
-
-FlashTcuSubaruDensoSH705xCan::~FlashTcuSubaruDensoSH705xCan()
-{
-
-}
-
-void FlashTcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
-{
-    kill_process = true;
-}
-
-int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan()
-{
-    bool ok = false;
-    //int tcuRead;
     int tcuAction = 1;
+    bool ok = false;
+
+    //result = init_flash_denso_subarucan();
 
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -68,8 +43,6 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan()
     QString mcu_name = flashdevices[mcu_type_index].name;
     //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -148,56 +121,90 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_denso_subarucan()
     // Open serial port
     serial->open_serial_port();
 
-    QMessageBox::information(this, tr("Connecting to TCU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to TCU"), "Press OK to start countdown!");
+    int ret = QMessageBox::warning(this, tr("Connecting to TCU"),
+                                   tr("Turn ignition ON and press OK to start initializing connection to TCU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
 
-    //if (tcuRead == QMessageBox::Yes)
-    if (tcuAction == 1)
+    switch (ret)
     {
-        send_log_window_message("Connecting to Subaru Denso CAN bootloader, please wait...", true, true);
-        result = connect_bootloader_subaru_denso_subarucan();
-
-        if (result == STATUS_SUCCESS && !kernel_alive)
-        {
-            emit external_logger("Preparing, please wait...");
-            send_log_window_message("Initializing Subaru Denso CAN kernel upload, please wait...", true, true);
-            result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
-        }
-        if (result == STATUS_SUCCESS)
-        {
-            if (cmd_type == "read")
+        case QMessageBox::Ok:
+            if (tcuAction == 1)
             {
-                emit external_logger("Reading ROM, please wait...");
-                send_log_window_message("Reading ROM from Subaru Denso using CAN", true, true);
-                result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                send_log_window_message("Connecting to Subaru Denso CAN bootloader, please wait...", true, true);
+                result = connect_bootloader_subaru_denso_subarucan();
+
+                if (result == STATUS_SUCCESS && !kernel_alive)
+                {
+                    emit external_logger("Preparing, please wait...");
+                    send_log_window_message("Initializing Subaru Denso CAN kernel upload, please wait...", true, true);
+                    result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                }
+                if (result == STATUS_SUCCESS)
+                {
+                    if (cmd_type == "read")
+                    {
+                        emit external_logger("Reading ROM, please wait...");
+                        send_log_window_message("Reading ROM from Subaru Denso using CAN", true, true);
+                        result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    }
+                    else if (cmd_type == "test_write" || cmd_type == "write")
+                    {
+                        emit external_logger("Writing ROM, please wait...");
+                        send_log_window_message("Writing ROM to Subaru Denso using CAN (beta status)", true, true);
+                        result = write_mem_subaru_denso_subarucan(test_write);
+                    }
+                }
             }
-            else if (cmd_type == "test_write" || cmd_type == "write")
+            else if (tcuAction == 2)
             {
-                emit external_logger("Writing ROM, please wait...");
-                send_log_window_message("Writing ROM to Subaru Denso using CAN (beta status)", true, true);
-                result = write_mem_subaru_denso_subarucan(test_write);
+                send_log_window_message("Commencing TCU relearn process, please wait...", true, true);
+                result = tcu_relearn_subaru_ssm();
+
             }
-        }
-    }
-    else if (tcuAction == 2)
-    {
-        send_log_window_message("Commencing TCU relearn process, please wait...", true, true);
-        result = tcu_relearn_subaru_ssm();
+            else if (tcuAction == 3)
+            {
+                send_log_window_message("Commencing to read TCU parameters, please wait...", true, true);
+                result = tcu_readparam_subaru_ssm();
+            }
+            else if (tcuAction == 4)
+            {
+                send_log_window_message("Commencing to set TCU parameters, please wait...", true, true);
+                result = tcu_setparam_subaru_ssm();
+            }
 
-    }
-    else if (tcuAction == 3)
-    {
-        send_log_window_message("Commencing to read TCU parameters, please wait...", true, true);
-        result = tcu_readparam_subaru_ssm();
-    }
-    else if (tcuAction == 4)
-    {
-        send_log_window_message("Commencing to set TCU parameters, please wait...", true, true);
-        result = tcu_setparam_subaru_ssm();
-    }
+            emit external_logger("Finished");
 
-    emit external_logger("Finished");
-    return result;
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("TCU Operation"), "TCU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("TCU Operation"), "TCU operation failed, press OK to exit and try again");
+            }
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
+            this->close();
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
+    }
+}
+
+FlashTcuSubaruDensoSH705xCan::~FlashTcuSubaruDensoSH705xCan()
+{
+
+}
+
+void FlashTcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
+{
+    kill_process = true;
 }
 
 /*

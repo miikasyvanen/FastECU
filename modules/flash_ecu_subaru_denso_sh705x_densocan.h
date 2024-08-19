@@ -1,5 +1,5 @@
-#ifndef FLASH_TCU_DENSO_CAN_H
-#define FLASH_TCU_DENSO_CAN_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH705X_DENSOCAN_H
+#define FLASH_ECU_SUBARU_DENSO_SH705X_DENSOCAN_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -10,7 +10,6 @@
 #include <QTime>
 #include <QTimer>
 #include <QWidget>
-#include <QInputDialog>
 
 #include <kernelcomms.h>
 #include <kernelmemorymodels.h>
@@ -25,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashTcuSubaruDensoSH705xCan : public QDialog
+class FlashEcuSubaruDensoSH705xDensoCan : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashTcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashTcuSubaruDensoSH705xCan();
+    explicit FlashEcuSubaruDensoSH705xDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH705xDensoCan();
 
     void run();
 
@@ -43,8 +42,8 @@ private:
     FileActions::EcuCalDefStructure *ecuCalDef;
     QString cmd_type;
 
-    #define STATUS_SUCCESS	0x00
-    #define STATUS_ERROR	0x01
+    #define STATUS_SUCCESS							0x00
+    #define STATUS_ERROR							0x01
 
     bool kill_process = false;
     bool kernel_alive = false;
@@ -60,6 +59,7 @@ private:
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
@@ -75,17 +75,15 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int connect_bootloader_subaru_denso_subarucan();
-    int tcu_relearn_subaru_ssm();
-    int tcu_readparam_subaru_ssm();
-    int tcu_setparam_subaru_ssm();
-    int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_subarucan(bool test_write);
-    int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
-    int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
-    int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int connect_bootloader_subaru_denso_can_02_32bit();
+    int connect_bootloader_subaru_denso_can_02_32bit_recovery();
+    int upload_kernel_subaru_denso_can_02_32bit(QString kernel, uint32_t kernel_start_addr);
+    int read_mem_subaru_denso_can_02_32bit(uint32_t start_addr, uint32_t length);
+    int write_mem_subaru_denso_can_02_32bit(bool test_write);
+    int get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified);
+    int check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
+    int flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t start, uint32_t len);
+    int reflash_block_denso_can_02_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     void init_crc16_tab(void);
@@ -100,11 +98,6 @@ private:
     QByteArray send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
     QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
     QByteArray send_subaru_denso_sid_31_start_routine();
-
-    QByteArray subaru_denso_generate_can_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray request_kernel_init();
     QByteArray request_kernel_id();
@@ -127,4 +120,4 @@ private:
 
 };
 
-#endif // FLASH_TCU_DENSO_CAN_H
+#endif // FLASH_ECU_SUBARU_DENSO_SH705X_DENSOCAN_H

@@ -83,53 +83,53 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     switch (ret)
     {
-    case QMessageBox::Ok:
-        send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-        result = connect_bootloader_subaru_denso_subarucan();
+        case QMessageBox::Ok:
+            send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
+            result = connect_bootloader_subaru_denso_subarucan();
 
-        if (result == STATUS_SUCCESS && !kernel_alive)
-        {
-            emit external_logger("Preparing, please wait...");
-            send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-            result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
-        }
-        if (result == STATUS_SUCCESS)
-        {
-            if (cmd_type == "read")
+            if (result == STATUS_SUCCESS && !kernel_alive)
             {
-                emit external_logger("Reading ROM, please wait...");
-                send_log_window_message("Reading ROM from Subaru 07+ 32-bit using CAN", true, true);
-                result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                emit external_logger("Preparing, please wait...");
+                send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
+                result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
-            else if (cmd_type == "test_write" || cmd_type == "write")
+            if (result == STATUS_SUCCESS)
             {
-                emit external_logger("Writing ROM, please wait...");
-                send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-                result = write_mem_subaru_denso_subarucan(test_write);
+                if (cmd_type == "read")
+                {
+                    emit external_logger("Reading ROM, please wait...");
+                    send_log_window_message("Reading ROM from Subaru 07+ 32-bit using CAN", true, true);
+                    result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                }
+                else if (cmd_type == "test_write" || cmd_type == "write")
+                {
+                    emit external_logger("Writing ROM, please wait...");
+                    send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
+                    result = write_mem_subaru_denso_subarucan(test_write);
+                }
             }
-        }
-        emit external_logger("Finished");
+            emit external_logger("Finished");
 
-        if (result == STATUS_SUCCESS)
-        {
-            QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+            }
+
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
             this->close();
-        }
-        else
-        {
-            QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-        }
-
-        break;
-    case QMessageBox::Cancel:
-        qDebug() << "Operation canceled";
-        this->close();
-        break;
-    default:
-        QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-        qDebug() << "Unknown operation selected!";
-        this->close();
-        break;
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
     }
 }
 
@@ -141,90 +141,6 @@ FlashEcuSubaruDensoSH7058Can::~FlashEcuSubaruDensoSH7058Can()
 void FlashEcuSubaruDensoSH7058Can::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
-}
-
-int FlashEcuSubaruDensoSH7058Can::init_flash_denso_subarucan()
-{
-    bool ok = false;
-
-    mcu_type_string = ecuCalDef->McuType;
-    mcu_type_index = 0;
-
-    while (flashdevices[mcu_type_index].name != 0)
-    {
-        if (flashdevices[mcu_type_index].name == mcu_type_string)
-            break;
-        mcu_type_index++;
-    }
-    QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
-
-    kernel = ecuCalDef->Kernel;
-    flash_method = ecuCalDef->FlashMethod;
-
-    emit external_logger("Starting");
-
-    if (cmd_type == "read")
-    {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-    else if (cmd_type == "write")
-    {
-        test_write = false;
-        send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-
-    // Set serial port
-    serial->set_is_iso14230_connection(false);
-    serial->set_is_can_connection(false);
-    serial->set_is_iso15765_connection(true);
-    serial->set_is_29_bit_id(false);
-    serial->set_can_speed("500000");
-    serial->set_iso15765_source_address(0x7E0);
-    serial->set_iso15765_destination_address(0x7E8);
-    // Open serial port
-    serial->open_serial_port();
-
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
-
-    send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-    result = connect_bootloader_subaru_denso_subarucan();
-
-    if (result == STATUS_SUCCESS && !kernel_alive)
-    {
-        emit external_logger("Preparing, please wait...");
-        send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-        result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
-    }
-    if (result == STATUS_SUCCESS)
-    {
-        if (cmd_type == "read")
-        {
-            emit external_logger("Reading ROM, please wait...");
-            send_log_window_message("Reading ROM from Subaru 07+ 32-bit using CAN", true, true);
-            result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-        }
-        else if (cmd_type == "test_write" || cmd_type == "write")
-        {
-            emit external_logger("Writing ROM, please wait...");
-            send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-            result = write_mem_subaru_denso_subarucan(test_write);
-        }
-    }
-    emit external_logger("Finished");
-    return result;
 }
 
 /*

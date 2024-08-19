@@ -76,8 +76,6 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_mitsu_kline();
-
     int connect_bootloader_subaru_ecu_mitsu_kline();
     //int upload_kernel_subaru_denso_can_02_32bit(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_ecu_mitsu_kline(uint32_t start_addr, uint32_t length);

@@ -1,6 +1,6 @@
-#include "eeprom_ecu_subaru_denso_can.h"
+#include "eeprom_ecu_subaru_denso_sh705x_can.h"
 
-EepromEcuSubaruDensoCan::EepromEcuSubaruDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+EepromEcuSubaruDensoSH705xCan::EepromEcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -18,7 +18,7 @@ EepromEcuSubaruDensoCan::EepromEcuSubaruDensoCan(SerialPortActions *serial, File
     this->serial = serial;
 }
 
-void EepromEcuSubaruDensoCan::run()
+void EepromEcuSubaruDensoSH705xCan::run()
 {
     this->show();
 
@@ -180,101 +180,14 @@ void EepromEcuSubaruDensoCan::run()
     }
 }
 
-EepromEcuSubaruDensoCan::~EepromEcuSubaruDensoCan()
+EepromEcuSubaruDensoSH705xCan::~EepromEcuSubaruDensoSH705xCan()
 {
 
 }
 
-void EepromEcuSubaruDensoCan::closeEvent(QCloseEvent *event)
+void EepromEcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
-}
-
-int EepromEcuSubaruDensoCan::init_flash_denso_subarucan()
-{
-    bool ok = false;
-
-    mcu_type_string = ecuCalDef->McuType;
-    mcu_type_index = 0;
-
-    while (flashdevices[mcu_type_index].name != 0)
-    {
-        if (flashdevices[mcu_type_index].name == mcu_type_string)
-            break;
-        mcu_type_index++;
-    }
-    QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
-
-    kernel = ecuCalDef->Kernel;
-    flash_method = ecuCalDef->FlashMethod;
-
-    emit external_logger("Starting");
-
-    if (cmd_type == "read")
-    {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-    else if (cmd_type == "write")
-    {
-        test_write = false;
-        send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-
-    // Set serial port
-    serial->set_is_iso14230_connection(false);
-    serial->set_is_can_connection(true);
-    serial->set_is_iso15765_connection(false);
-    serial->set_is_29_bit_id(false);
-    serial->set_can_speed("500000");
-    serial->set_can_source_address(0x7e0);
-    serial->set_can_destination_address(0x7e8);
-    serial->set_iso15765_source_address(0x7e0);
-    serial->set_iso15765_destination_address(0x7e8);
-    // Open serial port
-    serial->open_serial_port();
-
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
-
-    send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-    result = connect_bootloader_subaru_denso_subarucan();
-
-    if (result == STATUS_SUCCESS && !kernel_alive)
-    {
-        emit external_logger("Preparing, please wait...");
-        send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-        result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
-    }
-    if (result == STATUS_SUCCESS)
-    {
-        if (cmd_type == "read")
-        {
-            emit external_logger("Reading ROM, please wait...");
-            send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
-            qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
-            result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
-        }
-        else if (cmd_type == "test_write" || cmd_type == "write")
-        {
-            emit external_logger("Writing ROM, please wait...");
-            send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-            //result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
-        }
-    }
-    emit external_logger("Finished");
-    return result;
 }
 
 /*
@@ -282,7 +195,7 @@ int EepromEcuSubaruDensoCan::init_flash_denso_subarucan()
  *
  * @return success
  */
-int EepromEcuSubaruDensoCan::connect_bootloader_subaru_denso_subarucan()
+int EepromEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_subarucan()
 {
     QByteArray output;
     QByteArray received;
@@ -657,7 +570,7 @@ int EepromEcuSubaruDensoCan::connect_bootloader_subaru_denso_subarucan()
  *
  * @return success
  */
-int EepromEcuSubaruDensoCan::upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr)
+int EepromEcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr)
 {
     QFile file(kernel);
 
@@ -947,7 +860,7 @@ int EepromEcuSubaruDensoCan::upload_kernel_subaru_denso_subarucan(QString kernel
  *
  * @return success
  */
-int EepromEcuSubaruDensoCan::read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length)
+int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -1111,7 +1024,7 @@ int EepromEcuSubaruDensoCan::read_mem_subaru_denso_subarucan(uint32_t start_addr
  *
  * @return
  */
-uint8_t EepromEcuSubaruDensoCan::cks_add8(QByteArray chksum_data, unsigned len)
+uint8_t EepromEcuSubaruDensoSH705xCan::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
     uint8_t data[chksum_data.length()];
@@ -1139,7 +1052,7 @@ uint8_t EepromEcuSubaruDensoCan::cks_add8(QByteArray chksum_data, unsigned len)
 #define NPK_CRC16   0xBAAD  //koopman, 2048bits (256B)
 static bool crc_tab16_init = 0;
 static uint16_t crc_tab16[256];
-void EepromEcuSubaruDensoCan::init_crc16_tab(void)
+void EepromEcuSubaruDensoSH705xCan::init_crc16_tab(void)
 {
 
     uint32_t i, j;
@@ -1164,7 +1077,7 @@ void EepromEcuSubaruDensoCan::init_crc16_tab(void)
 
 }
 
-uint16_t EepromEcuSubaruDensoCan::crc16(const uint8_t *data, uint32_t siz)
+uint16_t EepromEcuSubaruDensoSH705xCan::crc16(const uint8_t *data, uint32_t siz)
 {
     uint16_t crc;
 
@@ -1210,7 +1123,7 @@ uint16_t EepromEcuSubaruDensoCan::crc16(const uint8_t *data, uint32_t siz)
  *
  * @return seed key (4 bytes)
  */
-QByteArray EepromEcuSubaruDensoCan::subaru_denso_generate_can_seed_key(QByteArray requested_seed)
+QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1247,7 +1160,7 @@ QByteArray EepromEcuSubaruDensoCan::subaru_denso_generate_can_seed_key(QByteArra
  *
  * @return seed key (4 bytes)
  */
-QByteArray EepromEcuSubaruDensoCan::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
+QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1280,7 +1193,7 @@ QByteArray EepromEcuSubaruDensoCan::subaru_denso_generate_ecutek_can_seed_key(QB
 /************************************
  * COBB'd Denso CAN ECUs seed key
  ***********************************/
-QByteArray EepromEcuSubaruDensoCan::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
+QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1317,7 +1230,7 @@ QByteArray EepromEcuSubaruDensoCan::subaru_denso_generate_cobb_can_seed_key(QByt
  *
  * @return seed key (4 bytes)
  */
-QByteArray EepromEcuSubaruDensoCan::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1365,7 +1278,7 @@ QByteArray EepromEcuSubaruDensoCan::subaru_denso_calculate_seed_key(QByteArray r
  *
  * @return encrypted data
  */
-QByteArray EepromEcuSubaruDensoCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1385,7 +1298,7 @@ QByteArray EepromEcuSubaruDensoCan::subaru_denso_encrypt_32bit_payload(QByteArra
     return encrypted;
 }
 
-QByteArray EepromEcuSubaruDensoCan::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1405,7 +1318,7 @@ QByteArray EepromEcuSubaruDensoCan::subaru_denso_decrypt_32bit_payload(QByteArra
     return decrypt;
 }
 
-QByteArray EepromEcuSubaruDensoCan::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1465,7 +1378,7 @@ QByteArray EepromEcuSubaruDensoCan::subaru_denso_calculate_32bit_payload(QByteAr
  *
  * @return
  */
-QByteArray EepromEcuSubaruDensoCan::request_kernel_init()
+QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_init()
 {
     QByteArray output;
     QByteArray received;
@@ -1503,7 +1416,7 @@ QByteArray EepromEcuSubaruDensoCan::request_kernel_init()
  *
  * @return kernel id
  */
-QByteArray EepromEcuSubaruDensoCan::request_kernel_id()
+QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
 {
     QByteArray output;
     QByteArray received;
@@ -1572,7 +1485,7 @@ QByteArray EepromEcuSubaruDensoCan::request_kernel_id()
  *
  * @return parsed message
  */
-QByteArray EepromEcuSubaruDensoCan::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+QByteArray EepromEcuSubaruDensoSH705xCan::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
 {
     uint8_t length = output.length();
 
@@ -1593,7 +1506,7 @@ QByteArray EepromEcuSubaruDensoCan::add_ssm_header(QByteArray output, uint8_t te
  *
  * @return 8-bit checksum
  */
-uint8_t EepromEcuSubaruDensoCan::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t EepromEcuSubaruDensoSH705xCan::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -1611,7 +1524,7 @@ uint8_t EepromEcuSubaruDensoCan::calculate_checksum(QByteArray output, bool dec_
  *
  * @return
  */
-int EepromEcuSubaruDensoCan::connect_bootloader_start_countdown(int timeout)
+int EepromEcuSubaruDensoSH705xCan::connect_bootloader_start_countdown(int timeout)
 {
     for (int i = timeout; i > 0; i--)
     {
@@ -1636,7 +1549,7 @@ int EepromEcuSubaruDensoCan::connect_bootloader_start_countdown(int timeout)
  *
  * @return parsed message
  */
-QString EepromEcuSubaruDensoCan::parse_message_to_hex(QByteArray received)
+QString EepromEcuSubaruDensoSH705xCan::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1653,7 +1566,7 @@ QString EepromEcuSubaruDensoCan::parse_message_to_hex(QByteArray received)
  *
  * @return
  */
-int EepromEcuSubaruDensoCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int EepromEcuSubaruDensoSH705xCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1677,7 +1590,7 @@ int EepromEcuSubaruDensoCan::send_log_window_message(QString message, bool times
     return STATUS_ERROR;
 }
 
-void EepromEcuSubaruDensoCan::set_progressbar_value(int value)
+void EepromEcuSubaruDensoSH705xCan::set_progressbar_value(int value)
 {
     bool valueChanged = true;
     if (ui->progressbar)
@@ -1690,7 +1603,7 @@ void EepromEcuSubaruDensoCan::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void EepromEcuSubaruDensoCan::delay(int timeout)
+void EepromEcuSubaruDensoSH705xCan::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

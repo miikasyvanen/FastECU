@@ -81,7 +81,6 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int init_flash_denso_kline_wrx02();
     int connect_bootloader_subaru_denso_kline_wrx02();
     int upload_kernel_subaru_denso_kline_wrx02(QString kernel, uint32_t kernel_start_addr);
 

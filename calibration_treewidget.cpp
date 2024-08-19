@@ -72,7 +72,7 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationDataTree(QTreeWidget *dataTr
         for (int i = 2; i < ecuCalDef->RomInfo.length(); i++)
         {
             QTreeWidgetItem * item = new QTreeWidgetItem();
-            item->setText(0, RomInfoStrings.at(i) + ": " + ecuCalDef->RomInfo.at(i));
+            item->setText(0, ecuCalDef->RomInfoStrings.at(i) + ": " + ecuCalDef->RomInfo.at(i));
             calDataTree->topLevelItem(0)->addChild(item);
         }
     }

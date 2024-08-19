@@ -1,6 +1,6 @@
-#include "flash_ecu_subaru_unisia_jecs_0x27.h"
+#include "flash_ecu_subaru_hitachi_m32r_kline.h"
 
-FlashEcuSubaruUnisiaJecs0x27Kline::FlashEcuSubaruUnisiaJecs0x27Kline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruHitachiM32rKline::FlashEcuSubaruHitachiM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -18,40 +18,14 @@ FlashEcuSubaruUnisiaJecs0x27Kline::FlashEcuSubaruUnisiaJecs0x27Kline(SerialPortA
     this->serial = serial;
 }
 
-void FlashEcuSubaruUnisiaJecs0x27Kline::run()
+void FlashEcuSubaruHitachiM32rKline::run()
 {
     this->show();
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_hitachi_kline();
-
-    if (result == STATUS_SUCCESS)
-    {
-        QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-        this->close();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-    }
-
-}
-
-FlashEcuSubaruUnisiaJecs0x27Kline::~FlashEcuSubaruUnisiaJecs0x27Kline()
-{
-
-}
-
-void FlashEcuSubaruUnisiaJecs0x27Kline::closeEvent(QCloseEvent *event)
-{
-    kill_process = true;
-}
-
-int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline()
-{
-    bool ok = false;
+    //result = init_flash_hitachi_kline();
 
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -65,8 +39,6 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline()
     QString mcu_name = flashdevices[mcu_type_index].name;
     //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -102,33 +74,70 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline()
     serial->change_port_speed("4800");
     serial->set_add_iso14230_header(false);
 
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to TCU"), "Press OK to start countdown!");
+    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                   tr("Turn ignition ON and press OK to start initializing connection to ECU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
 
-    send_log_window_message("Connecting to Subaru ECU Hitachi K-Line bootloader, please wait...", true, true);
-
-    result = connect_bootloader_subaru_ecu_hitachi_kline();
-
-    if (result == STATUS_SUCCESS)
+    switch (ret)
     {
-        if (cmd_type == "read")
-        {
-            emit external_logger("Reading ROM, please wait...");
-            send_log_window_message("Reading ROM from ECU using K-Line", true, true);
-            result = read_a0_rom_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-            //result = read_a0_ram_subaru_ecu_hitachi_kline(0x80000, 0x100000);
-            //result = read_b8_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-            //result = read_b0_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-        }
-        else if (cmd_type == "test_write" || cmd_type == "write")
-        {
-            emit external_logger("Writing ROM, please wait...");
-            send_log_window_message("Writing ROM to ECU Subaru Hitachi using K-Line", true, true);
-            //result = write_mem_subaru_denso_can_02_32bit(test_write);
-            result = write_mem_subaru_ecu_hitachi_kline(test_write);
-        }
+        case QMessageBox::Ok:
+            send_log_window_message("Connecting to Subaru ECU Hitachi K-Line bootloader, please wait...", true, true);
+
+            result = connect_bootloader_subaru_ecu_hitachi_kline();
+
+            if (result == STATUS_SUCCESS)
+            {
+                if (cmd_type == "read")
+                {
+                    emit external_logger("Reading ROM, please wait...");
+                    send_log_window_message("Reading ROM from ECU using K-Line", true, true);
+                    result = read_a0_rom_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    //result = read_a0_ram_subaru_ecu_hitachi_kline(0x80000, 0x100000);
+                    //result = read_b8_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    //result = read_b0_subaru_ecu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                }
+                else if (cmd_type == "test_write" || cmd_type == "write")
+                {
+                    emit external_logger("Writing ROM, please wait...");
+                    send_log_window_message("Writing ROM to ECU Subaru Hitachi using K-Line", true, true);
+                    //result = write_mem_subaru_denso_can_02_32bit(test_write);
+                    result = write_mem_subaru_ecu_hitachi_kline(test_write);
+                }
+            }
+            emit external_logger("Finished");
+
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+            }
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
+            this->close();
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
     }
-    return result;
+
+}
+
+FlashEcuSubaruHitachiM32rKline::~FlashEcuSubaruHitachiM32rKline()
+{
+
+}
+
+void FlashEcuSubaruHitachiM32rKline::closeEvent(QCloseEvent *event)
+{
+    kill_process = true;
 }
 
 /*
@@ -136,7 +145,7 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::init_flash_hitachi_kline()
  *
  * @return success
  */
-int FlashEcuSubaruUnisiaJecs0x27Kline::connect_bootloader_subaru_ecu_hitachi_kline()
+int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline()
 {
     QByteArray received;
     QByteArray seed;
@@ -236,7 +245,7 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::connect_bootloader_subaru_ecu_hitachi_kli
  *
  *
  */
-int FlashEcuSubaruUnisiaJecs0x27Kline::read_a0_rom_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruHitachiM32rKline::read_a0_rom_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length)
 {
 
     QByteArray received;
@@ -315,7 +324,7 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::read_a0_rom_subaru_ecu_hitachi_kline(uint
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
@@ -347,7 +356,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_bf_ssm_init()
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_81_start_communication()
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_81_start_communication()
 {
     QByteArray output;
     QByteArray received;
@@ -369,7 +378,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_81_start_commu
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_83_request_timings()
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_83_request_timings()
 {
     QByteArray output;
     QByteArray received;
@@ -398,7 +407,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_83_request_tim
  *
  * @return seed (4 bytes)
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_27_request_seed()
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_27_request_seed()
 {
     QByteArray output;
     QByteArray received;
@@ -419,7 +428,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_27_request_see
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_27_send_seed_key(QByteArray seed_key)
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_27_send_seed_key(QByteArray seed_key)
 {
     QByteArray output;
     QByteArray received;
@@ -441,7 +450,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_27_send_seed_k
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_10_start_diagnostic()
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_10_start_diagnostic()
 {
     QByteArray output;
     QByteArray received;
@@ -473,7 +482,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_10_start_diagn
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_generate_kline_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruHitachiM32rKline::subaru_ecu_generate_kline_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -496,7 +505,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_generate_kline_seed_key
     return key;
 }
 
-int FlashEcuSubaruUnisiaJecs0x27Kline::write_mem_subaru_ecu_hitachi_kline(bool test_write)
+int FlashEcuSubaruHitachiM32rKline::write_mem_subaru_ecu_hitachi_kline(bool test_write)
 {
     QByteArray received;
     QByteArray filedata;
@@ -582,7 +591,7 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::write_mem_subaru_ecu_hitachi_kline(bool t
  * @return received response
  */
 
-int FlashEcuSubaruUnisiaJecs0x27Kline::reflash_block_subaru_ecu_hitachi_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruHitachiM32rKline::reflash_block_subaru_ecu_hitachi_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -750,7 +759,7 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::reflash_block_subaru_ecu_hitachi_kline(co
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_b8_byte_read(uint32_t dataaddr)
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_b8_byte_read(uint32_t dataaddr)
 {
     QByteArray output;
     QByteArray received;
@@ -776,7 +785,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_b8_byte_read(u
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen)
+QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_ecu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen)
 {
     QByteArray output;
     QByteArray received;
@@ -805,7 +814,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::send_subaru_ecu_sid_a0_block_read(
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruHitachiM32rKline::subaru_ecu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -854,7 +863,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_calculate_seed_
  * @return encrypted data
  */
 
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruHitachiM32rKline::subaru_ecu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -874,7 +883,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_encrypt_32bit_p
     return encrypted;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruHitachiM32rKline::subaru_ecu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -895,7 +904,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_decrypt_32bit_p
     return decrypt;
 }
 
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruHitachiM32rKline::subaru_ecu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -944,7 +953,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::subaru_ecu_hitachi_calculate_32bit
  *
  * @return parsed message
  */
-QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+QByteArray FlashEcuSubaruHitachiM32rKline::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
 {
     QByteArray received;
     QByteArray msg;
@@ -968,7 +977,7 @@ QByteArray FlashEcuSubaruUnisiaJecs0x27Kline::add_ssm_header(QByteArray output, 
  *
  * @return 8-bit checksum
  */
-uint8_t FlashEcuSubaruUnisiaJecs0x27Kline::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t FlashEcuSubaruHitachiM32rKline::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -987,7 +996,7 @@ uint8_t FlashEcuSubaruUnisiaJecs0x27Kline::calculate_checksum(QByteArray output,
  *
  * @return parsed message
  */
-QString FlashEcuSubaruUnisiaJecs0x27Kline::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruHitachiM32rKline::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1005,7 +1014,7 @@ QString FlashEcuSubaruUnisiaJecs0x27Kline::parse_message_to_hex(QByteArray recei
  *
  * @return
  */
-int FlashEcuSubaruUnisiaJecs0x27Kline::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashEcuSubaruHitachiM32rKline::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1044,7 +1053,7 @@ int FlashEcuSubaruUnisiaJecs0x27Kline::send_log_window_message(QString message, 
     return STATUS_ERROR;
 }
 
-void FlashEcuSubaruUnisiaJecs0x27Kline::set_progressbar_value(int value)
+void FlashEcuSubaruHitachiM32rKline::set_progressbar_value(int value)
 {
     bool valueChanged = true;
     if (ui->progressbar)
@@ -1057,7 +1066,7 @@ void FlashEcuSubaruUnisiaJecs0x27Kline::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashEcuSubaruUnisiaJecs0x27Kline::delay(int timeout)
+void FlashEcuSubaruHitachiM32rKline::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

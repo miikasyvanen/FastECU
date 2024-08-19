@@ -31,7 +31,7 @@ linux {
     HEADERS += \
     serial_port/J2534_linux.h
     HEADERS += \
-    serial_port/J2534_tatrix_linux.h \
+    serial_port/J2534_tactrix_linux.h \
 }
 
 REPC_REPLICA = \
@@ -49,11 +49,6 @@ SOURCES += \
     calibration_treewidget.cpp \
     definition_file_convert.cpp \
     ecu_operations.cpp \
-    ecu_operations_iso14230.cpp \
-    ecu_operations_manual.cpp \
-    ecu_operations_mercedes.cpp \
-    ecu_operations_nissan.cpp \
-    ecu_operations_subaru.cpp \
     file_actions.cpp \
     file_defs_ecuflash.cpp \
     file_defs_romraider.cpp \
@@ -64,21 +59,25 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
-    modules/eeprom_ecu_subaru_denso_can.cpp \
-    modules/eeprom_ecu_subaru_denso_kline.cpp \
+    modules/checksum_ecu_subaru_denso_sh705x.cpp \
+    modules/checksum_ecu_subaru_hitachi_m32r.cpp \
+    modules/checksum_tcu_subaru_denso_sh7055.cpp \
+    modules/checksum_tcu_subaru_hitachi_m32r_can.cpp \
+    modules/eeprom_ecu_subaru_denso_sh705x_can.cpp \
+    modules/eeprom_ecu_subaru_denso_sh705x_kline.cpp \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.cpp \
     modules/flash_ecu_subaru_denso_sh7055_02.cpp \
     modules/flash_ecu_subaru_denso_sh7055_04.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.cpp \
-    modules/flash_ecu_subaru_denso_sh705x_can.cpp \
-    modules/flash_ecu_subaru_denso_sh7xxx_can_.cpp \
-    modules/flash_ecu_subaru_hitachi_m32r_02.cpp \
-    modules/flash_ecu_subaru_hitachi_m32r_06.cpp \
+    modules/flash_ecu_subaru_denso_sh705x_densocan.cpp \
+    modules/flash_ecu_subaru_denso_sh7xxx_densocan.cpp \
     modules/flash_ecu_subaru_hitachi_m32r_can.cpp \
+    modules/flash_ecu_subaru_hitachi_m32r_kline.cpp \
+    modules/flash_ecu_subaru_hitachi_sh7058_can.cpp \
+    modules/flash_ecu_subaru_hitachi_sh72543r_can.cpp \
     modules/flash_ecu_subaru_mitsu_m32r_kline.cpp \
     modules/flash_ecu_subaru_uinisia_jecs_m32r.cpp \
-    modules/flash_ecu_subaru_unisia_jecs_0x27.cpp \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.cpp \
@@ -104,33 +103,31 @@ HEADERS += \
     calibration_treewidget.h \
     definition_file_convert.h \
     ecu_operations.h \
-    ecu_operations_iso14230.h \
-    ecu_operations_manual.h \
-    ecu_operations_manual.h \
-    ecu_operations_mercedes.h \
-    ecu_operations_nissan.h \
-    ecu_operations_subaru.h \
     file_actions.h \
     get_key_operations_subaru.h \
     kernelcomms.h \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
-    modules/eeprom_ecu_subaru_denso_can.h \
-    modules/eeprom_ecu_subaru_denso_kline.h \
+    modules/checksum_ecu_subaru_denso_sh705x.h \
+    modules/checksum_ecu_subaru_hitachi_m32r.h \
+    modules/checksum_tcu_subaru_denso_sh7055.h \
+    modules/checksum_tcu_subaru_hitachi_m32r_can.h \
+    modules/eeprom_ecu_subaru_denso_sh705x_can.h \
+    modules/eeprom_ecu_subaru_denso_sh705x_kline.h \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.h \
     modules/flash_ecu_subaru_denso_sh7055_02.h \
     modules/flash_ecu_subaru_denso_sh7055_04.h \
     modules/flash_ecu_subaru_denso_sh7058_can.h \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.h \
-    modules/flash_ecu_subaru_denso_sh705x_can.h \
-    modules/flash_ecu_subaru_denso_sh7xxx_can.h \
-    modules/flash_ecu_subaru_hitachi_m32r_02.h \
-    modules/flash_ecu_subaru_hitachi_m32r_06.h \
+    modules/flash_ecu_subaru_denso_sh705x_densocan.h \
+    modules/flash_ecu_subaru_denso_sh7xxx_densocan.h \
     modules/flash_ecu_subaru_hitachi_m32r_can.h \
+    modules/flash_ecu_subaru_hitachi_m32r_kline.h \
+    modules/flash_ecu_subaru_hitachi_sh7058_can.h \
+    modules/flash_ecu_subaru_hitachi_sh72543r_can.h \
     modules/flash_ecu_subaru_mitsu_m32r_kline.h \
     modules/flash_ecu_subaru_uinisia_jecs_m32r.h \
-    modules/flash_ecu_subaru_unisia_jecs_0x27.h \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.h \
@@ -155,7 +152,7 @@ FORMS += \
     biu_ops_subaru_switches.ui \
     calibration_map_table.ui \
     definition_file_convert.ui \
-    ecu_manual_operations.ui \
+#    ecu_manual_operations.ui \
     ecu_operations.ui \
     logvalues.ui \
     mainwindow.ui \
@@ -168,7 +165,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    icons.qrc
+    icons.qrc \
+    images.qrc
 
 DISTFILES += \
     LICENSE \

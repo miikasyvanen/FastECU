@@ -299,12 +299,21 @@ void ProtocolSelect::car_model_treewidget_item_selected()
             item->setText(5, year.at(i));
             item->setText(6, ecu.at(i));
             item->setText(7, mode.at(i));
-            if (checksum.at(i) == "yes")
+            if (checksum.at(i) == "yes") {
                 item->setCheckState(8, Qt::Checked);
-            else if (checksum.at(i) == "no")
+                item->setForeground(8, Qt::darkGreen);
+                item->setToolTip(8, "Checksum calculation supported");
+            }
+            else if (checksum.at(i) == "no") {
                 item->setCheckState(8, Qt::Unchecked);
-            else
-                item->setText(8, "n/a");
+                item->setForeground(8, Qt::gray);
+                item->setToolTip(8, "ROM has no checksum");
+            }
+            else if (checksum.at(i) == "n/a") {
+                item->setCheckState(8, Qt::Checked);
+                item->setForeground(8, Qt::red);
+                item->setToolTip(8, "Checksum calculation NOT supported yet");
+            }
             if (read.at(i) == "yes")
                 item->setCheckState(9, Qt::Checked);
             else

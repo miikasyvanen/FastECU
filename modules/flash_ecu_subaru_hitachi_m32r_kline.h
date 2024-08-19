@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashEcuSubaruUnisiaJecs0x27Kline : public QDialog
+class FlashEcuSubaruHitachiM32rKline : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuSubaruUnisiaJecs0x27Kline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashEcuSubaruUnisiaJecs0x27Kline();
+    explicit FlashEcuSubaruHitachiM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruHitachiM32rKline();
 
     void run();
 
@@ -73,8 +73,6 @@ private:
     QString kernel;
 
     void closeEvent(QCloseEvent *event);
-
-    int init_flash_hitachi_kline();
 
     int connect_bootloader_subaru_ecu_hitachi_kline();
     int read_a0_rom_subaru_ecu_hitachi_kline(uint32_t start_addr, uint32_t length);

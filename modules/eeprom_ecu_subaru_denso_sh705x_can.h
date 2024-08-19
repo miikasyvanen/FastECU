@@ -1,5 +1,5 @@
-#ifndef EEPROM_ECU_SUBARU_DENSO_KLINE_H
-#define EEPROM_ECU_SUBARU_DENSO_KLINE_H
+#ifndef EEPROM_ECU_SUBARU_DENSO_SH705X_CAN_H
+#define EEPROM_ECU_SUBARU_DENSO_SH705X_CAN_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class EepromEcuSubaruDensoKline : public QDialog
+class EepromEcuSubaruDensoSH705xCan : public QDialog
 {
     Q_OBJECT
 
 public:
-    EepromEcuSubaruDensoKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~EepromEcuSubaruDensoKline();
+    EepromEcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~EepromEcuSubaruDensoSH705xCan();
 
     void run();
 
@@ -77,10 +77,9 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int init_flash_denso_kline_04();
-    int connect_bootloader_subaru_denso_kline_04_32bit();
-    int upload_kernel_subaru_denso_kline_04_32bit(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_kline_32bit(uint32_t start_addr, uint32_t length);
+    int connect_bootloader_subaru_denso_subarucan();
+    int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
+    int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
 
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
@@ -97,8 +96,9 @@ private:
     QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
     QByteArray send_subaru_denso_sid_31_start_routine();
 
-    QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
-    QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_can_seed_key(QByteArray seed);
+    QByteArray subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed);
+    QByteArray subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed);
     QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray request_kernel_init();
@@ -123,4 +123,4 @@ private:
 };
 
 
-#endif // EEPROM_ECU_SUBARU_DENSO_KLINE_H
+#endif // EEPROM_ECU_SUBARU_DENSO_SH705X_CAN_H
