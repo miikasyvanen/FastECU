@@ -14,7 +14,9 @@ enum mcu_type {
     SH7051,
     SH7055,
     SH7058,
+    SH7058_1block,
     SH7058d,
+    SH72453R,
     MH8104,
     MH8111,
     SH_INVALID
@@ -106,6 +108,15 @@ const struct flashblock fblocks_SH7058[] = {
     {0x000A0000,    0x00020000},
     {0x000C0000,    0x00020000},
     {0x000E0000,    0x00020000},
+};
+
+const struct flashblock fblocks_SH7058_1block[] = {
+    {0x00000000,    0x00100000},
+};
+
+const struct flashblock fblocks_SH72453R[] = {
+    {0x00000000,    0x00006000},
+    {0x00006000,    0x001FA000},
 };
 
 const struct ramblock rblocks_SH7058[] = {
@@ -368,7 +379,9 @@ const struct flashdev_t flashdevices[] = {
     { "SH7051", SH7051, 256 * 1024, 12, fblocks_SH7051, rblocks_SH7051, kblocks_SH7051, eblocks_SH7051 },
     { "SH7055", SH7055, 512 * 1024, 16, fblocks_SH7055, rblocks_SH7055, kblocks_SH7055, eblocks_SH7055 },
     { "SH7058", SH7058, 1024 * 1024, 16, fblocks_SH7058, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
+    { "SH7058_1block", SH7058, 1024 * 1024, 1, fblocks_SH7058_1block, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
     { "SH7058d", SH7058d, 1024 * 1024, 16, fblocks_SH7058d, rblocks_SH7058d, kblocks_SH7058d, eblocks_SH7058d },
+    { "SH72453R", SH72453R, 2 * 1024 * 1024, 2, fblocks_SH72453R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "MH8104", MH8104, 512 * 1024, 4, fblocks_MH8104, rblocks_MH8104, kblocks_MH8104, eblocks_MH8104 },
     { "MH8111", MH8111, 3 * 512 * 1024, 4, fblocks_MH8111, rblocks_MH8111, kblocks_MH8111, eblocks_MH8111 },
     { 0, SH_INVALID, 0, 0, 0, 0, 0, 0},
