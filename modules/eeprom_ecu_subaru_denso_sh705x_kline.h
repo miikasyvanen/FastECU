@@ -1,5 +1,5 @@
-#ifndef EEPROM_ECU_SUBARU_DENSO_KLINE_H
-#define EEPROM_ECU_SUBARU_DENSO_KLINE_H
+#ifndef EEPROM_ECU_SUBARU_DENSO_SH705X_KLINE_H
+#define EEPROM_ECU_SUBARU_DENSO_SH705X_KLINE_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class EepromEcuSubaruDensoKline : public QDialog
+class EepromEcuSubaruDensoSH705xKline : public QDialog
 {
     Q_OBJECT
 
 public:
-    EepromEcuSubaruDensoKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~EepromEcuSubaruDensoKline();
+    EepromEcuSubaruDensoSH705xKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~EepromEcuSubaruDensoSH705xKline();
 
     void run();
 
@@ -77,7 +77,6 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int init_flash_denso_kline_04();
     int connect_bootloader_subaru_denso_kline_04_32bit();
     int upload_kernel_subaru_denso_kline_04_32bit(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_denso_kline_32bit(uint32_t start_addr, uint32_t length);
@@ -123,4 +122,4 @@ private:
 };
 
 
-#endif // EEPROM_ECU_SUBARU_DENSO_KLINE_H
+#endif // EEPROM_ECU_SUBARU_DENSO_SH705X_KLINE_H

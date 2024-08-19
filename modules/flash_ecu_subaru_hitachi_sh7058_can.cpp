@@ -27,33 +27,6 @@ void FlashEcuSubaruHitachiSh7058Can::run()
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_hitachi_can();
-
-    if (result == STATUS_SUCCESS)
-    {
-        QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-        this->close();
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-    }
-}
-
-FlashEcuSubaruHitachiSh7058Can::~FlashEcuSubaruHitachiSh7058Can()
-{
-
-}
-
-void FlashEcuSubaruHitachiSh7058Can::closeEvent(QCloseEvent *event)
-{
-    kill_process = true;
-}
-
-int FlashEcuSubaruHitachiSh7058Can::init_flash_hitachi_can()
-{
-    bool ok = false;
-
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -66,8 +39,6 @@ int FlashEcuSubaruHitachiSh7058Can::init_flash_hitachi_can()
     QString mcu_name = flashdevices[mcu_type_index].name;
     //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -102,25 +73,62 @@ int FlashEcuSubaruHitachiSh7058Can::init_flash_hitachi_can()
     // Open serial port
     serial->open_serial_port();
 
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
+    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                   tr("Turn ignition ON and press OK to start initializing connection to ECU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
 
-    send_log_window_message("Connecting to Subaru ECU 1MB Hitachi CAN bootloader, please wait...", true, true);
-    result = connect_bootloader_subaru_ecu_hitachi_can();
-
-    if (result == STATUS_SUCCESS)
+    switch (ret)
     {
-        if (cmd_type == "read")
-        {
-            send_log_window_message("Reading ROM from ECU Subaru Hitachi 1MB using CAN", true, true);
-            result = read_mem_subaru_ecu_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-        }
-        else if (cmd_type == "test_write" || cmd_type == "write")
-        {
-            send_log_window_message("Writing ROM to ECU Subaru Hitachi 1MB using CAN", true, true);
-            result = write_mem_subaru_ecu_hitachi_can(test_write);
-        }
+        case QMessageBox::Ok:
+            send_log_window_message("Connecting to Subaru ECU 1MB Hitachi CAN bootloader, please wait...", true, true);
+            result = connect_bootloader_subaru_ecu_hitachi_can();
+
+            if (result == STATUS_SUCCESS)
+            {
+                if (cmd_type == "read")
+                {
+                    send_log_window_message("Reading ROM from ECU Subaru Hitachi 1MB using CAN", true, true);
+                    result = read_mem_subaru_ecu_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                }
+                else if (cmd_type == "test_write" || cmd_type == "write")
+                {
+                    send_log_window_message("Writing ROM to ECU Subaru Hitachi 1MB using CAN", true, true);
+                    result = write_mem_subaru_ecu_hitachi_can(test_write);
+                }
+            }
+            emit external_logger("Finished");
+
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+            }
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
+            this->close();
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
     }
-    return result;
+}
+
+FlashEcuSubaruHitachiSh7058Can::~FlashEcuSubaruHitachiSh7058Can()
+{
+
+}
+
+void FlashEcuSubaruHitachiSh7058Can::closeEvent(QCloseEvent *event)
+{
+    kill_process = true;
 }
 
 /*

@@ -1,5 +1,5 @@
-#ifndef EEPROM_ECU_SUBARU_DENSO_CAN_H
-#define EEPROM_ECU_SUBARU_DENSO_CAN_H
+#ifndef EEPROM_ECU_SUBARU_DENSO_SH705X_CAN_H
+#define EEPROM_ECU_SUBARU_DENSO_SH705X_CAN_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -24,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class EepromEcuSubaruDensoCan : public QDialog
+class EepromEcuSubaruDensoSH705xCan : public QDialog
 {
     Q_OBJECT
 
 public:
-    EepromEcuSubaruDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~EepromEcuSubaruDensoCan();
+    EepromEcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~EepromEcuSubaruDensoSH705xCan();
 
     void run();
 
@@ -77,7 +77,6 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int init_flash_denso_subarucan();
     int connect_bootloader_subaru_denso_subarucan();
     int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
@@ -124,4 +123,4 @@ private:
 };
 
 
-#endif // EEPROM_ECU_SUBARU_DENSO_CAN_H
+#endif // EEPROM_ECU_SUBARU_DENSO_SH705X_CAN_H

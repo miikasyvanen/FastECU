@@ -68,8 +68,6 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_subaru_hitachi_can();
-
     int read_mem_subaru_hitachi_can(uint32_t start_addr, uint32_t length);
     int write_mem_subaru_hitachi_can(bool test_write);
 

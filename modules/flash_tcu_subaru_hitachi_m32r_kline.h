@@ -74,8 +74,6 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_hitachi_can();
-
     int connect_bootloader_subaru_tcu_hitachi_kline();
     int read_a0_rom_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
     int read_a0_ram_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);

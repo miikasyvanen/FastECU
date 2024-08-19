@@ -75,8 +75,6 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_denso_subarucan();
-
     int connect_bootloader_subaru_denso_subarucan();
     int tcu_relearn_subaru_ssm();
     int tcu_readparam_subaru_ssm();

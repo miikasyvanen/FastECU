@@ -61,8 +61,8 @@
 #include <modules/flash_ecu_subaru_hitachi_sh72543r_can.h>
 
 
-#include <modules/eeprom_ecu_subaru_denso_kline.h>
-#include <modules/eeprom_ecu_subaru_denso_can.h>
+#include <modules/eeprom_ecu_subaru_denso_sh705x_kline.h>
+#include <modules/eeprom_ecu_subaru_denso_sh705x_can.h>
 
 
 #include <modules/flash_ecu_subaru_denso_sh7xxx_densocan.h>
@@ -131,27 +131,28 @@ private:
     FileActions::ConfigValuesStructure *configValues;
 
     /* Flash modules */
+    FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
     FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
-    FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoSH7055_04 *flashEcuSubaruDensoSH7055_04;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
-    FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
+    FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecs;
     FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
     FlashEcuSubaruHitachiM32rCan *flashEcuSubaruHitachiM32rCan;
+    FlashEcuSubaruMitsuM32RKline *flashEcuSubaruMitsuM32RKline;
+    FlashEcuSubaruHitachiSh7058Can *flashEcuSubaruHitachiSh7058Can;
+    FlashEcuSubaruHitachiSh72543rCan *flashEcuSubaruHitachiSh72543rCan;
+
     FlashTcuSubaruHitachiM32RKline *flashTcuSubaruHitachiM32RKline;
     FlashTcuSubaruHitachiM32RCan *flashTcuSubaruHitachiM32RCan;
     FlashTcuCvtSubaruHitachiM32RCan *flashTcuCvtSubaruHitachiM32RCan;
     FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
     FlashTcuCvtSubaruMitsuMH8104Can *flashTcuCvtSubaruMitsuMH8104Can;
     FlashTcuCvtSubaruMitsuMH8111Can *flashTcuCvtSubaruMitsuMH8111Can;
-    FlashEcuSubaruMitsuM32RKline *flashEcuSubaruMitsuM32RKline;
-    FlashEcuSubaruHitachiSh7058Can *flashEcuSubaruHitachiSh7058Can;
-    FlashEcuSubaruHitachiSh72543rCan *flashEcuSubaruHitachiSh72543rCan;
 
-    EepromEcuSubaruDensoKline *eepromEcuSubaruDensoKline;
-    EepromEcuSubaruDensoCan *eepromEcuSubaruDensoCan;
+    EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
+    EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;
 
     FlashEcuSubaruDensoSH7xxxDensoCan *flashEcuSubaruDensoSH7xxxCan;
 

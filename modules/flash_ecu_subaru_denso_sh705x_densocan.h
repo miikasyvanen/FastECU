@@ -75,8 +75,6 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_denso_can_02();
-
     int connect_bootloader_subaru_denso_can_02_32bit();
     int connect_bootloader_subaru_denso_can_02_32bit_recovery();
     int upload_kernel_subaru_denso_can_02_32bit(QString kernel, uint32_t kernel_start_addr);

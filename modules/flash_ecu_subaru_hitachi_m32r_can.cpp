@@ -117,68 +117,7 @@ void FlashEcuSubaruHitachiM32rCan::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
-/*
-int FlashEcuSubaruHitachiM32rCan::init_flash_subaru_hitachi_can()
-{
-    mcu_type_string = ecuCalDef->McuType;
-    mcu_type_index = 0;
 
-    while (flashdevices[mcu_type_index].name != 0)
-    {
-        if (flashdevices[mcu_type_index].name == mcu_type_string)
-            break;
-        mcu_type_index++;
-    }
-    QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
-
-    flash_method = ecuCalDef->FlashMethod;
-
-    emit external_logger("Starting");
-
-    if (cmd_type == "read")
-    {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method;
-    }
-    else if (cmd_type == "write")
-    {
-        send_log_window_message("Write memory with flashmethod '" + flash_method + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method;
-    }
-
-    // Set serial port
-    serial->set_is_iso14230_connection(true);
-    serial->set_is_can_connection(false);
-    serial->set_is_iso15765_connection(false);
-    serial->set_is_29_bit_id(false);
-    tester_id = 0xF0;
-    target_id = 0x10;
-    // Open serial port
-    serial->open_serial_port();
-
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
-
-    if (cmd_type == "read")
-    {
-        emit external_logger("Preparing, please wait...");
-        send_log_window_message("Reading ROM from Subaru Hitachi WA12212970WWW using CAN", true, true);
-        result = read_mem_subaru_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-    }
-    else if (cmd_type == "test_write" || cmd_type == "write")
-    {
-        emit external_logger("Reading ROM, please wait...");
-        send_log_window_message("Writing ROM to Subaru Hitachi WA12212970WWW using CAN", true, true);
-        result = write_mem_subaru_hitachi_can(test_write);
-    }
-    emit external_logger("Finished");
-    return result;
-}
-*/
 /*
  * Read memory from Subaru Hitachi WA12212970WWW CAN 32bit ECUs
  *
