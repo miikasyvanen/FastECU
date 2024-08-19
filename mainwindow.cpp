@@ -1003,7 +1003,6 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_diesel_eeprom"))
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDefTemp, cmd_type, this));
-
         /*
         * Unisia Jecs ECU
         */
@@ -1016,6 +1015,11 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruHitachiM32rKline = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rKline(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_m32r_can"))
             flashEcuSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rCan(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_mitsu_m32r_kline"))
+            flashEcuSubaruMitsuM32RKline = connect_signals_and_run_module(new FlashEcuSubaruMitsuM32RKline(serial,ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_sh7058_can"))
+            flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSh7058Can(serial,ecuCalDef[rom_number], cmd_type, this));
+
         /*
         * Hitachi TCU
         */
