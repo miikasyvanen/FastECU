@@ -90,6 +90,10 @@ private:
     QString title = "FastECU";
     QString version = "0.0-dev0";
 
+    QSplashScreen *startUpSplash;
+    QLabel *startUpSplashLabel;
+    QProgressBar *startUpSplashProgressBar;
+
     QString peerAddress;
     QSplashScreen *splash;
     QWebSocket *clientWebSocket;
@@ -277,6 +281,7 @@ private:
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
 	QString check_kernel(QString flash_method);
+    void setSplashScreenProgress(QString text, int incValue);
 
     // menuactions.c
     void inc_dec_value(QString action);

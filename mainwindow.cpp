@@ -22,16 +22,16 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     QPixmap startUpSplashImage(":/images/startup_splash.jpg");
     int startUpSplashProgressBarValue = 0;
 
-    QSplashScreen *startUpSplash = new QSplashScreen(startUpSplashImage);
+    startUpSplash = new QSplashScreen(startUpSplashImage);
     QVBoxLayout *startUpSplashLayout = new QVBoxLayout(startUpSplash);
     startUpSplashLayout->setMargin(0);
     startUpSplashLayout->setSpacing(0);
     startUpSplashLayout->setAlignment(Qt::AlignBottom);
-    QLabel *startUpSplashLabel = new QLabel(QString("Starting FastECU..."));
+    startUpSplashLabel = new QLabel(QString("Starting FastECU..."));
     startUpSplashLabel->setStyleSheet("QLabel { background-color : black; color : white; }");
     startUpSplashLayout->addWidget(startUpSplashLabel);
 
-    QProgressBar *startUpSplashProgressBar = new QProgressBar();
+    startUpSplashProgressBar = new QProgressBar();
     startUpSplashProgressBar->setMinimum(0);
     startUpSplashProgressBar->setMaximum(100);
     startUpSplashProgressBar->setValue(startUpSplashProgressBarValue);
@@ -67,11 +67,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //send_log_window_message("64-bit executable", false, true);
 #endif
 
-    startUpSplashLabel->setText("Reading config files...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Reading config files...", 10);
     fileActions = new FileActions();
     configValues = &fileActions->ConfigValuesStruct;
 
@@ -116,26 +112,14 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     else
         this->setWindowState(Qt::WindowMaximized);
 
-    startUpSplashLabel->setText("Preparing ROM definitions...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Preparing ROM definitions...", 10);
     if (!configValues->romraider_definition_files.length() && !configValues->primary_definition_base.contains("ecuflash"))
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
 
-    startUpSplashLabel->setText("Preparing EcuFlash ROM definitions...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Preparing EcuFlash ROM definitions...", 10);
     fileActions->create_ecuflash_def_id_list(configValues);
 
-    startUpSplashLabel->setText("Preparing RomRaider ROM definitions...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Preparing RomRaider ROM definitions...", 10);
     fileActions->create_romraider_def_id_list(configValues);
 
     if (QDir(configValues->kernel_files_directory).exists()){
@@ -145,11 +129,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
         //qDebug() << txtFilesAndDirectories;
     }
 
-    startUpSplashLabel->setText("Setting up menus...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Setting up menus...", 10);
     QSignalMapper *mapper = fileActions->read_menu_file(ui->menubar, ui->toolBar);
     connect(mapper, SIGNAL(mappedString(QString)), this, SLOT(menu_action_triggered(QString)));
 
@@ -185,11 +165,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     connect(ui->calibrationDataTreeWidget, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calibration_data_treewidget_item_collapsed(QTreeWidgetItem*)));
     connect(calibrationTreeWidget, SIGNAL(closeRom()), this, SLOT(close_calibration()));
 
-    startUpSplashLabel->setText("Setting up statusbar...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Setting up statusbar...", 10);
     status_bar_connection_label->setMargin(5);
     //status_bar_connection_label->setStyleSheet("QLabel { background-color : red; color : white; }");
     set_status_bar_label(false, false, "");
@@ -207,11 +183,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     statusBar()->addPermanentWidget(status_bar_ecu_label);
     statusBar()->setSizeGripEnabled(true);
 
-    startUpSplashLabel->setText("Preparing up treewidget...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Preparing up treewidget...", 10);
     ui->calibrationFilesTreeWidget->setHeaderLabel("Calibration Files");
     ui->calibrationDataTreeWidget->setHeaderLabel("Calibration Data");
     ui->calibrationDataTreeWidget->resizeColumnToContents(0);
@@ -224,11 +196,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //ui->splitter->setStretchFactor(2, 1);
     ui->splitter->setSizes(QList<int>({125, INT_MAX}));
 
-    startUpSplashLabel->setText("Preparing remote connection...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Preparing remote connection...", 10);
     //Splash screen
     splash = new QSplashScreen();
     QVBoxLayout *layout = new QVBoxLayout(splash);
@@ -293,11 +261,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     splash->close();
     timer->deleteLater();
 
-    startUpSplashLabel->setText("Setting up toolbar...");
-    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
-    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-
+    setSplashScreenProgress("Setting up toolbar...", 10);
     toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
     toolbar_item_size.setHeight(configValues->toolbar_iconsize.toInt());
     ui->toolBar->setIconSize(toolbar_item_size);
@@ -1627,6 +1591,14 @@ void MainWindow::update_logbox_values(QString protocol)
         }
     }
     delay(1);
+}
+
+void MainWindow::setSplashScreenProgress(QString text, int incValue)
+{
+    startUpSplashLabel->setText(text);
+    int startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += incValue);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 }
 
 bool MainWindow::event(QEvent *event)
