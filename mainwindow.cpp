@@ -19,6 +19,35 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qApp->installEventFilter(this);
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
+    QPixmap startUpSplashImage(":/images/startup_splash.jpg");
+    int startUpSplashProgressBarValue = 0;
+
+    QSplashScreen *startUpSplash = new QSplashScreen(startUpSplashImage);
+    QVBoxLayout *startUpSplashLayout = new QVBoxLayout(startUpSplash);
+    startUpSplashLayout->setMargin(0);
+    startUpSplashLayout->setSpacing(0);
+    startUpSplashLayout->setAlignment(Qt::AlignBottom);
+    QLabel *startUpSplashLabel = new QLabel(QString("Starting FastECU..."));
+    startUpSplashLabel->setStyleSheet("QLabel { background-color : black; color : white; }");
+    startUpSplashLayout->addWidget(startUpSplashLabel);
+
+    QProgressBar *startUpSplashProgressBar = new QProgressBar();
+    startUpSplashProgressBar->setMinimum(0);
+    startUpSplashProgressBar->setMaximum(100);
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue);
+    startUpSplashProgressBar->setFixedHeight(16);
+    startUpSplashLayout->addWidget(startUpSplashProgressBar);
+    //startUpSplash->setEnabled(false);
+    startUpSplash->show();
+    // Move splashscreen to the center of the screen
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect  screenGeometry = screen->geometry();
+    startUpSplash->move(screenGeometry.center() - startUpSplash->rect().center());
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
+
+    this->setWindowTitle(title + " " + version);
+
 #ifdef Q_OS_LINUX
     //send_log_window_message("Running on Linux Desktop ", true, false);
     //serialPort = serialPortLinux;
@@ -38,11 +67,16 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //send_log_window_message("64-bit executable", false, true);
 #endif
 
-    ui->calibrationFilesTreeWidget->setHeaderLabel("Calibration Files");
-    ui->calibrationDataTreeWidget->setHeaderLabel("Calibration Data");
+    startUpSplashLabel->setText("Reading config files...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     fileActions = new FileActions();
     configValues = &fileActions->ConfigValuesStruct;
+
+    fileActions->title = title;
+    fileActions->version = version;
 
     //fileActions->check_config_dir(configValues);
     configValues = fileActions->read_config_file(configValues);
@@ -54,6 +88,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
     qDebug() << "ECU protocols set";
     configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_family = configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
@@ -64,6 +99,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     qDebug() << configValues->flash_protocol_selected_make;
     qDebug() << configValues->flash_protocol_selected_mcu;
+    qDebug() << configValues->flash_protocol_selected_checksum;
     qDebug() << configValues->flash_protocol_selected_model;
     qDebug() << configValues->flash_protocol_selected_version;
     qDebug() << configValues->flash_protocol_selected_family;
@@ -75,19 +111,31 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     QRect qrect = MainWindow::geometry();
 
-    toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
-    toolbar_item_size.setHeight(configValues->toolbar_iconsize.toInt());
-    ui->toolBar->setIconSize(toolbar_item_size);
-
     if (configValues->window_width != "maximized" && configValues->window_height != "maximized")
         this->setGeometry(qrect.x(), qrect.y(), configValues->window_width.toInt(), configValues->window_height.toInt());
     else
         this->setWindowState(Qt::WindowMaximized);
 
+    startUpSplashLabel->setText("Preparing ROM definitions...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
     if (!configValues->romraider_definition_files.length() && !configValues->primary_definition_base.contains("ecuflash"))
         QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
 
+    startUpSplashLabel->setText("Preparing EcuFlash ROM definitions...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
     fileActions->create_ecuflash_def_id_list(configValues);
+
+    startUpSplashLabel->setText("Preparing RomRaider ROM definitions...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
     fileActions->create_romraider_def_id_list(configValues);
 
     if (QDir(configValues->kernel_files_directory).exists()){
@@ -96,6 +144,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
         QStringList txtFilesAndDirectories = dir.entryList(nameFilter);
         //qDebug() << txtFilesAndDirectories;
     }
+
+    startUpSplashLabel->setText("Setting up menus...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     QSignalMapper *mapper = fileActions->read_menu_file(ui->menubar, ui->toolBar);
     connect(mapper, SIGNAL(mappedString(QString)), this, SLOT(menu_action_triggered(QString)));
@@ -132,10 +185,14 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     connect(ui->calibrationDataTreeWidget, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calibration_data_treewidget_item_collapsed(QTreeWidgetItem*)));
     connect(calibrationTreeWidget, SIGNAL(closeRom()), this, SLOT(close_calibration()));
 
+    startUpSplashLabel->setText("Setting up statusbar...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
     status_bar_connection_label->setMargin(5);
     //status_bar_connection_label->setStyleSheet("QLabel { background-color : red; color : white; }");
     set_status_bar_label(false, false, "");
-
 
     status_bar_ecu_label->setText("");
     status_bar_ecu_label->setMargin(5);
@@ -150,6 +207,13 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     statusBar()->addPermanentWidget(status_bar_ecu_label);
     statusBar()->setSizeGripEnabled(true);
 
+    startUpSplashLabel->setText("Preparing up treewidget...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
+    ui->calibrationFilesTreeWidget->setHeaderLabel("Calibration Files");
+    ui->calibrationDataTreeWidget->setHeaderLabel("Calibration Data");
     ui->calibrationDataTreeWidget->resizeColumnToContents(0);
     ui->calibrationDataTreeWidget->resizeColumnToContents(1);
     ui->calibrationFilesTreeWidget->setMinimumHeight(125);
@@ -160,6 +224,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //ui->splitter->setStretchFactor(2, 1);
     ui->splitter->setSizes(QList<int>({125, INT_MAX}));
 
+    startUpSplashLabel->setText("Preparing remote connection...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
     //Splash screen
     splash = new QSplashScreen();
     QVBoxLayout *layout = new QVBoxLayout(splash);
@@ -168,13 +237,19 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     QPushButton *button1 = new QPushButton("Close app", splash);
     layout->addWidget(label1);
     layout->addWidget(button1);
-    splash->setLayout(layout);
+    //splash->setLayout(layout);
     splash->resize(350,50);
     //Show it in remote mode only
     //Prepare for remote mode
     if (!peerAddress.isEmpty())
     {
         splash->show();
+        // Move splashscreen to the center of the screen
+        QScreen *screen = QGuiApplication::primaryScreen();
+        QRect  screenGeometry = screen->geometry();
+        splash->move(screenGeometry.center() - splash->rect().center());
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
         clientWebSocket = new QWebSocket("",QWebSocketProtocol::VersionLatest,this);
         QString wt = this->windowTitle();
         if (peerAddress.length() > 0)
@@ -217,6 +292,15 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     timer->stop();
     splash->close();
     timer->deleteLater();
+
+    startUpSplashLabel->setText("Setting up toolbar...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+
+    toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
+    toolbar_item_size.setHeight(configValues->toolbar_iconsize.toInt());
+    ui->toolBar->setIconSize(toolbar_item_size);
 
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -341,6 +425,17 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     set_flash_arrow_state();
 
+    startUpSplashLabel->setText("Starting FastECU GUI...");
+    startUpSplashProgressBarValue = startUpSplashProgressBar->value();
+    while (startUpSplashProgressBarValue < 100)
+    {
+        startUpSplashProgressBar->setValue(startUpSplashProgressBarValue += 1);
+        delay(10);
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    }
+
+    startUpSplash->close();
+
 }
 
 MainWindow::~MainWindow()
@@ -446,14 +541,14 @@ QString MainWindow::check_kernel(QString flash_method)
         else
             kernel = prefix + "ssmk_SH7058.bin";
     }
-    else if (flash_method.startsWith("sub_sh7055_denso_can"))
+    else if (flash_method.startsWith("sub_sh7055_densocan"))
         kernel = prefix + "ssmk_CAN_SH7055.bin";
-    else if (flash_method.startsWith("sub_sh7058_denso_can"))
+    else if (flash_method.startsWith("sub_sh7058_densocan"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
-    else if (flash_method.startsWith("sub_sh7058s_denso_can"))
+    else if (flash_method.startsWith("sub_sh7058s_densocan"))
         kernel = prefix + "ssmk_CAN_SH7058.bin";
 
-    else if (flash_method.startsWith("sub_tcu_denso_can"))
+    else if (flash_method.startsWith("sub_tcu_densocan"))
         kernel = prefix + "ssmk_tcu_SH7055_35.bin";
 
     else
@@ -817,143 +912,147 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
         if (cmd_type == "test_write" || cmd_type == "write")
         {
-            if (configValues->flash_protocol_selected_checksum == "n/a")
-                QMessageBox::warning(this, tr("Checksum warning"), "WARNING! There is no checksum module for this ROM!\
-                                                Be aware that if this ROM need checksum correction it must be done with another software!");
-            //fileActions->checksum_correction(ecuCalDef[rom_number]);
-            fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDef[rom_number]);
+            ecuCalDefTemp = ecuCalDef[rom_number];
 
-            ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
-            ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_family;
-            ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
-            ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
-            ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+            if (configValues->flash_protocol_selected_checksum == "n/a" || ecuCalDefTemp->RomInfo.at(fileActions->DefFile) == " ")
+            {
+                QMessageBox *msgBox = new QMessageBox();
+                msgBox->setIcon(QMessageBox::Warning);
+                msgBox->setWindowTitle("Checksum warning");
+                //msgBox->setDetailedText("Write Flash - Checksum Warning");
+                msgBox->setText("WARNING! There is no checksum module for this ROM!\
+                                    Be aware that if this ROM need checksum correction it must be done with another software!");
+                QPushButton *cancelButton = msgBox->addButton(QMessageBox::Cancel);
+                QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+                msgBox->exec();
+
+                if (msgBox->clickedButton() == cancelButton)
+                {
+                    qDebug() << "Write canceled!";
+                    return 0;
+                }
+            }
+
+            if (configValues->flash_protocol_selected_checksum == "n/a" || ecuCalDefTemp->RomInfo.at(fileActions->DefFile) != " ")
+                ecuCalDefTemp = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDefTemp);
+
+            if (ecuCalDefTemp == NULL)
+                return 0;
+
+            ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
+            ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_family;
+            ecuCalDefTemp->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+            ecuCalDefTemp->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
+            ecuCalDefTemp->McuType = configValues->flash_protocol_selected_mcu;
         }
         else
         {
             rom_number = ecuCalDefIndex;
-            ecuCalDef[rom_number] = new FileActions::EcuCalDefStructure;
-            while (ecuCalDef[rom_number]->RomInfo.length() < fileActions->RomInfoStrings.length()){
-                ecuCalDef[rom_number]->RomInfo.append(" ");
+            ecuCalDefTemp = new FileActions::EcuCalDefStructure;
+            while (ecuCalDefTemp->RomInfo.length() < ecuCalDefTemp->RomInfoStrings.length()){
+                ecuCalDefTemp->RomInfo.append(" ");
             }
-            ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
-            ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_family;
-            ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
-            ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
-            ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+            ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
+            ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_family;
+            ecuCalDefTemp->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDefTemp->RomInfo.at(fileActions->FlashMethod));
+            ecuCalDefTemp->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
+            ecuCalDefTemp->McuType = configValues->flash_protocol_selected_mcu;
         }
 
-        qDebug() << "Family to use:" << configValues->flash_protocol_selected_family;
+        qDebug() << "Protocol to use:" << configValues->flash_protocol_selected_family;
 
         /*
         * Denso CAN
         */
-        if (configValues->flash_protocol_selected_flash_transport == "CAN" && !configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_can") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_hitachi_kline") && !configValues->flash_protocol_selected_family.endsWith("sub_tcu_denso_kline"))
-        {
-            if (ecuCalDef[rom_number]->McuType == "SH7055")
-                ecuCalDef[rom_number]->FlashMethod = "sh7055_denso_can";
-            else if (ecuCalDef[rom_number]->McuType.startsWith("SH7058")){
-                ecuCalDef[rom_number]->FlashMethod = "sh7058_denso_can";
-                ecuCalDef[rom_number]->McuType = "SH7058";
-            }
-            flashEcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
-        }
+        if (configValues->flash_protocol_selected_family.endsWith("_densocan"))
+            flashEcuSubaruDensoSH705xDensoCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xDensoCan(serial, ecuCalDefTemp, cmd_type, this));
         /*
         * Denso ECU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_mc68hc16y5_02"))
-            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_mc68hc16y5_04"))
-            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7055_02"))
-            flashEcuSubaruDensoSH7055_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7055_04"))
-            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_sh7058_can_diesel"))
-            flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family == "sub_sh7058_can")
-            flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family == "sub_sh7058")
-            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_mc68hc16y5_02"))
+            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_mc68hc16y5_04"))
+            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_sh7055_02"))
+            flashEcuSubaruDensoSH7055_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_sh7055_04"))
+            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_sh7058_can_diesel"))
+            flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family == "sub_ecu_denso_sh7058_can")
+            flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family == "sub_ecu_denso_sh7058")
+            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDefTemp, cmd_type, this));
+        /*
+        * Denso TCU
+        */
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_densocan"))
+            flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDefTemp, cmd_type, this));
+        /*
+        * Denso EEPROM
+        */
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7055_eeprom"))
+            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoKline(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7058_eeprom"))
+            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoKline(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_sh7055_eeprom"))
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_sh7058_eeprom"))
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_eeprom"))
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_diesel_eeprom"))
+            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDefTemp, cmd_type, this));
+        /*
+        * Unisia Jecs ECU
+        */
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_unisia_jecs_"))
+            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial,ecuCalDefTemp, cmd_type, this));
         /*
         * Hitachi ECU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs_0x27Kline"))
-            flashEcuSubaruUnisiaJecs0x27Kline = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs0x27Kline(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_unisia_jecs"))
-            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_02"))
-            flashEcuSubaruHitachiM32R_02 = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32R_02(serial,ecuCalDef[rom_number], cmd_type, this));
-         else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_06"))
-            flashEcuSubaruHitachiM32R_06 = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32R_06(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_hitachi_can"))
-            flashEcuSubaruHitachiCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiCan(serial,ecuCalDef[rom_number], cmd_type, this));
-        /*
-        * Hitachi TCU
-        */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_kline"))
-            flashTcuSubaruHitachiM32RKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_can"))
-            flashTcuSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_hitachi_can"))
-            flashTcuCvtSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
-            flashTcuCvtSubaruMitsuMH8104Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8104Can(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8111_can"))
-            flashTcuCvtSubaruMitsuMH8111Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8111Can(serial,ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_unisia_jecs_m32r_kline"))
+            flashEcuSubaruHitachiM32rKline = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rKline(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_m32r_can"))
+            flashEcuSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rCan(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_mitsu_m32r_kline"))
             flashEcuSubaruMitsuM32RKline = connect_signals_and_run_module(new FlashEcuSubaruMitsuM32RKline(serial,ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_sh7058_can"))
             flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSh7058Can(serial,ecuCalDef[rom_number], cmd_type, this));
 
         /*
-        * Denso TCU
+        * Hitachi TCU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_denso_can"))
-            flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_m32r_kline"))
+            flashTcuSubaruHitachiM32RKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_m32r_can"))
+            flashTcuSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_hitachi_m32r_can"))
+            flashTcuCvtSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
+            flashTcuCvtSubaruMitsuMH8104Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8104Can(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8111_can"))
+            flashTcuCvtSubaruMitsuMH8111Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8111Can(serial,ecuCalDefTemp, cmd_type, this));
+
         /*
-        * Denso EEPROM
+        * Unknown flashmethod
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7055_eeprom"))
-            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoKline(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_kline_sh7058_eeprom"))
-            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoKline(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_sh7055_eeprom"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_sh7058_eeprom"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_eeprom"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_can_tp_sh7058_diesel_eeprom"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoCan(serial,ecuCalDef[rom_number], cmd_type, this));
-        /*
-        * Denso CAN
-        */
-        else if (configValues->flash_protocol_selected_family.endsWith("sub_denso_can_recovery"))
-        {
-            if (ecuCalDef[rom_number]->McuType.startsWith("SH7058"))
-                ecuCalDef[rom_number]->McuType = "SH7058";
-            flashEcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
-        }
-        else if (configValues->flash_protocol_selected_family.startsWith("dev_subarucan"))
-            flashEcuSubaruDensoSH7xxxCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7xxxCan(serial, ecuCalDef[rom_number], cmd_type, this));
         else
             QMessageBox::warning(this, tr("Unknown flashmethod"), "Unknown flashmethod! Flashmethod \"" + configValues->flash_protocol_selected_family + "\" not yet implemented!");
-            //ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDef[rom_number], cmd_type, this);
+            //ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDefTemp, cmd_type, this);
 
         if (cmd_type == "read")
         {
+            ecuCalDef[rom_number] = ecuCalDefTemp;
             if (ecuCalDef[rom_number]->FullRomData.length())
             {
                 //qDebug() << "Checking definitions, please wait...";
                 fileActions->open_subaru_rom_file(ecuCalDef[rom_number], ecuCalDef[rom_number]->FullFileName);
-                //if(ecuCalDef[ecuCalDefIndex]->RomId != NULL)
-                //{
-                    //qDebug() << "Building treewidget, please wait...";
-                    calibrationTreeWidget->buildCalibrationFilesTree(rom_number, ui->calibrationFilesTreeWidget, ecuCalDef[rom_number]);
-                    calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[rom_number]);
 
-                //}
+                //qDebug() << "Building treewidget, please wait...";
+                calibrationTreeWidget->buildCalibrationFilesTree(rom_number, ui->calibrationFilesTreeWidget, ecuCalDef[rom_number]);
+                calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[rom_number]);
+
                 ecuCalDefIndex++;
                 save_calibration_file_as();
             }
@@ -994,7 +1093,7 @@ bool MainWindow::open_calibration_file(QString filename)
 {
     ecuCalDef[ecuCalDefIndex] = new FileActions::EcuCalDefStructure;
 
-    while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < fileActions->RomInfoStrings.length())
+    while (ecuCalDef[ecuCalDefIndex]->RomInfo.length() < ecuCalDef[ecuCalDefIndex]->RomInfoStrings.length())
         ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
 
     ecuCalDef[ecuCalDefIndex] = fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], filename);
@@ -1027,8 +1126,13 @@ void MainWindow::save_calibration_file()
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
-    fileActions->save_subaru_rom_file(ecuCalDef[romNumber], ecuCalDef[romNumber]->FullFileName);
-
+    ecuCalDefTemp = ecuCalDef[romNumber];
+    ecuCalDefTemp = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDefTemp);
+    if (ecuCalDefTemp != NULL)
+    {
+        ecuCalDef[romNumber] = ecuCalDefTemp;
+        fileActions->save_subaru_rom_file(ecuCalDef[romNumber], ecuCalDef[romNumber]->FullFileName);
+    }
 }
 
 void MainWindow::save_calibration_file_as()
@@ -1044,26 +1148,32 @@ void MainWindow::save_calibration_file_as()
     int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
-    QString filename = "";
+    ecuCalDefTemp = ecuCalDef[romNumber];
+    ecuCalDefTemp = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDefTemp);
+    if (ecuCalDefTemp != NULL)
+    {
+        ecuCalDef[romNumber] = ecuCalDefTemp;
+        QString filename = "";
 
-    QFileDialog saveDialog;
-    saveDialog.setDefaultSuffix("bin");
-    qDebug() << "Save as: Check if OEM ECU file";
+        QFileDialog saveDialog;
+        saveDialog.setDefaultSuffix("bin");
+        qDebug() << "Save as: Check if OEM ECU file";
 
-    filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_base_directory, tr("Calibration file (*.bin)"));
+        filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_base_directory, tr("Calibration file (*.bin)"));
 
-    if (filename.isEmpty()){
-        ecuCalDef[romNumber]->FileName = "No name.bin";
+        if (filename.isEmpty()){
+            //ecuCalDef[romNumber]->FileName = "No name.bin";
+            ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
+            QMessageBox::information(this, tr("Calibration file"), "No file name selected");
+            return;
+        }
+
+        if(!filename.endsWith(QString(".bin")))
+             filename.append(QString(".bin"));
+
+        fileActions->save_subaru_rom_file(ecuCalDef[romNumber], filename);
         ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
-        QMessageBox::information(this, tr("Calibration file"), "No file name selected");
-        return;
     }
-
-    if(!filename.endsWith(QString(".bin")))
-         filename.append(QString(".bin"));
-
-    fileActions->save_subaru_rom_file(ecuCalDef[romNumber], filename);
-    ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
 }
 
 void MainWindow::selectable_combobox_item_changed(QString item)

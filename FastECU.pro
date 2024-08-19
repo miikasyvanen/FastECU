@@ -59,6 +59,10 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
+    modules/checksum_ecu_subaru_denso_sh705x.cpp \
+    modules/checksum_ecu_subaru_hitachi_m32r.cpp \
+    modules/checksum_tcu_subaru_denso_sh7055.cpp \
+    modules/checksum_tcu_subaru_hitachi_m32r_can.cpp \
     modules/eeprom_ecu_subaru_denso_can.cpp \
     modules/eeprom_ecu_subaru_denso_kline.cpp \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.cpp \
@@ -66,16 +70,14 @@ SOURCES += \
     modules/flash_ecu_subaru_denso_sh7055_04.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.cpp \
-    modules/flash_ecu_subaru_denso_sh705x_can.cpp \
-    modules/flash_ecu_subaru_denso_sh7xxx_can_.cpp \
-    modules/flash_ecu_subaru_hitachi_m32r_02.cpp \
-    modules/flash_ecu_subaru_hitachi_m32r_06.cpp \
+    modules/flash_ecu_subaru_denso_sh705x_densocan.cpp \
+    modules/flash_ecu_subaru_denso_sh7xxx_densocan.cpp \
     modules/flash_ecu_subaru_hitachi_m32r_can.cpp \
+    modules/flash_ecu_subaru_hitachi_m32r_kline.cpp \
     modules/flash_ecu_subaru_hitachi_sh7058_can.cpp \
     modules/flash_ecu_subaru_hitachi_sh72543r_can.cpp \
     modules/flash_ecu_subaru_mitsu_m32r_kline.cpp \
     modules/flash_ecu_subaru_uinisia_jecs_m32r.cpp \
-    modules/flash_ecu_subaru_unisia_jecs_0x27.cpp \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.cpp \
@@ -107,6 +109,10 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
+    modules/checksum_ecu_subaru_denso_sh705x.h \
+    modules/checksum_ecu_subaru_hitachi_m32r.h \
+    modules/checksum_tcu_subaru_denso_sh7055.h \
+    modules/checksum_tcu_subaru_hitachi_m32r_can.h \
     modules/eeprom_ecu_subaru_denso_can.h \
     modules/eeprom_ecu_subaru_denso_kline.h \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.h \
@@ -114,16 +120,14 @@ HEADERS += \
     modules/flash_ecu_subaru_denso_sh7055_04.h \
     modules/flash_ecu_subaru_denso_sh7058_can.h \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.h \
-    modules/flash_ecu_subaru_denso_sh705x_can.h \
-    modules/flash_ecu_subaru_denso_sh7xxx_can.h \
-    modules/flash_ecu_subaru_hitachi_m32r_02.h \
-    modules/flash_ecu_subaru_hitachi_m32r_06.h \
+    modules/flash_ecu_subaru_denso_sh705x_densocan.h \
+    modules/flash_ecu_subaru_denso_sh7xxx_densocan.h \
     modules/flash_ecu_subaru_hitachi_m32r_can.h \
+    modules/flash_ecu_subaru_hitachi_m32r_kline.h \
     modules/flash_ecu_subaru_hitachi_sh7058_can.h \
     modules/flash_ecu_subaru_hitachi_sh72543r_can.h \
     modules/flash_ecu_subaru_mitsu_m32r_kline.h \
     modules/flash_ecu_subaru_uinisia_jecs_m32r.h \
-    modules/flash_ecu_subaru_unisia_jecs_0x27.h \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.h \
@@ -161,7 +165,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    icons.qrc
+    icons.qrc \
+    images.qrc
 
 DISTFILES += \
     LICENSE \

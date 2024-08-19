@@ -421,10 +421,11 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
 
     filename = configValues->romraider_def_filename.at(file_index);
 
-    while (ecuCalDef->RomInfo.length() < RomInfoStrings.length())
+    while (ecuCalDef->RomInfo.length() < ecuCalDef->RomInfoStrings.length())
         ecuCalDef->RomInfo.append(" ");
 
-    qDebug() << "Open file:" << filename;
+    ecuCalDef->RomInfo.replace(DefFile, filename);
+
     QFile file(filename);
 
     if (!file.open(QIODevice::ReadOnly ))

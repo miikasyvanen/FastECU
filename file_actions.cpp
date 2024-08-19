@@ -1671,8 +1671,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file");
-        ecuCalDef->RomInfo.replace(XmlId, "UnknownID");//selected_id);
+        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
+        ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
         ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
         ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
         ecuCalDef->RomInfo.replace(EcuId, selected_id);
@@ -1684,6 +1684,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
         ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_family);
         ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
+        ecuCalDef->RomInfo.replace(DefFile, " ");
     }
 /*
     if (ecuCalDef == NULL)
@@ -1901,11 +1902,9 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (ecuCalDef == NULL)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected calibration file with ECU ID: " + selected_id);
+        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected calibration file with ECU ID: " + selected_id + ".");
         return NULL;
     }
-
-    checksum_correction(ecuCalDef);
 
     return ecuCalDef;
 }
@@ -1922,9 +1921,6 @@ FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::
         QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
         return NULL;
     }
-
-    ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
 
     file.write(ecuCalDef->FullRomData);
     file.close();
@@ -2113,7 +2109,7 @@ FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_da
         }
     }
 
-    checksum_correction(ecuCalDef);
+    ecuCalDef = checksum_correction(ecuCalDef);
 
     return ecuCalDef;
 }
@@ -2122,17 +2118,91 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
+    bool chksumModuleAvailable = false;
+
+    QString flashMethod = ecuCalDef->RomInfo[FlashMethod];
+
+    qDebug() << "Protocol:" << configValues->flash_protocol_selected_family;
+    qDebug() << "Make:" << configValues->flash_protocol_selected_make;
+    qDebug() << "Checksum:" << configValues->flash_protocol_selected_checksum;
+
     if (configValues->flash_protocol_selected_checksum == "yes")
     {
         if (configValues->flash_protocol_selected_make == "Subaru")
         {
-            if (ecuCalDef->RomInfo[MemModel] == "SH7055")
-                checksum_module_subarudbw_denso32bit(ecuCalDef, 0x07FB80, 17 * 12);
-            if (ecuCalDef->RomInfo[MemModel] == "SH7058")
-                checksum_module_subarudbw_denso32bit(ecuCalDef, 0x0FFB80, 17 * 12);
             qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
+
+            /*
+            * Denso ECU
+            */
+            if (flashMethod.startsWith("sub_ecu_sh7055"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
+                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x07FB80, 17 * 12);
+            }
+            else if (flashMethod.startsWith("sub_ecu_sh7058"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
+                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+            }
+            /*
+            * Denso TCU
+            */
+            else if (flashMethod.startsWith("sub_tcu_denso_sh7055_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumTcuSubaruDensoSH7055 *checksumTcuSubaruDensoSH7055 = new ChecksumTcuSubaruDensoSH7055();
+                ecuCalDef->FullRomData = checksumTcuSubaruDensoSH7055->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            else if (flashMethod.startsWith("sub_tcu_denso_sh7058_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
+                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+            }
+            /*
+            * Hitachi ECU
+            */
+            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            /*
+            * Hitachi TCU
+            */
+            else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumTcuSubaruHitachiM32rCan *checksumTcuSubaruHitachiM32rCan = new ChecksumTcuSubaruHitachiM32rCan();
+                ecuCalDef->FullRomData = checksumTcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            else
+                chksumModuleAvailable = false;
         }
     }
+    if (!chksumModuleAvailable && configValues->flash_protocol_selected_checksum != "no")
+    {
+        QMessageBox *msgBox = new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setWindowTitle("File - Checksum Warning");
+        //msgBox->setDetailedText("File - Checksum Warning");
+        msgBox->setText("WARNING! There is no checksum module for this ROM!\
+                            Be aware that if this ROM need checksum correction it must be done with another software!");
+        QPushButton *cancelButton = msgBox->addButton(QMessageBox::Cancel);
+        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+        msgBox->exec();
+
+        if (msgBox->clickedButton() == cancelButton)
+        {
+            qDebug() << "Write canceled!";
+            return NULL;
+        }
+    }
+
     return ecuCalDef;
 }
 

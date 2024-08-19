@@ -25,16 +25,103 @@ void FlashTcuSubaruHitachiM32RKline::run()
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    result = init_flash_hitachi_can();
+    //result = init_flash_hitachi_can();
 
-    if (result == STATUS_SUCCESS)
+    mcu_type_string = ecuCalDef->McuType;
+    mcu_type_index = 0;
+
+    while (flashdevices[mcu_type_index].name != 0)
     {
-        QMessageBox::information(this, tr("TCU Operation"), "TCU operation was succesful, press OK to exit");
-        this->close();
+        if (flashdevices[mcu_type_index].name == mcu_type_string)
+            break;
+        mcu_type_index++;
     }
-    else
+    QString mcu_name = flashdevices[mcu_type_index].name;
+    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
+
+    kernel = ecuCalDef->Kernel;
+    flash_method = ecuCalDef->FlashMethod;
+
+    emit external_logger("Starting");
+
+    if (cmd_type == "read")
     {
-        QMessageBox::warning(this, tr("TCU Operation"), "TCU operation failed, press OK to exit and try again");
+        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
+        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+    }
+    else if (cmd_type == "test_write")
+    {
+        test_write = true;
+        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
+        //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+    }
+    else if (cmd_type == "write")
+    {
+        test_write = false;
+        send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
+        //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+    }
+
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_iso14230_connection(true);
+    serial->open_serial_port();
+    serial->change_port_speed("4800");
+    serial->set_add_iso14230_header(false);
+    tester_id = 0xF0;
+    target_id = 0x18;
+
+    int ret = QMessageBox::warning(this, tr("Connecting to TCU"),
+                                   tr("Turn ignition ON and press OK to start initializing connection to TCU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
+
+    switch (ret)
+    {
+        case QMessageBox::Ok:
+            send_log_window_message("Connecting to Subaru TCU Hitachi CAN bootloader, please wait...", true, true);
+            result = connect_bootloader_subaru_tcu_hitachi_kline();
+
+            if (result == STATUS_SUCCESS)
+            {
+                if (cmd_type == "read")
+                {
+                    emit external_logger("Reading ROM, please wait...");
+                    send_log_window_message("Reading ROM from TCU using K-Line", true, true);
+                    result = read_a0_rom_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    //result = read_a0_ram_subaru_tcu_hitachi_kline(0x80000, 0x100000);
+                    //result = read_b8_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    //result = read_b0_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                }
+                else if (cmd_type == "test_write" || cmd_type == "write")
+                {
+                    emit external_logger("Writing ROM, please wait...");
+                    send_log_window_message("Not yet implemented: Writing ROM to TCU Subaru Hitachi using CAN", true, true);
+                    //result = write_mem_subaru_denso_can_02_32bit(test_write);
+                }
+            }
+            emit external_logger("Finished");
+
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("TCU Operation"), "TCU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("TCU Operation"), "TCU operation failed, press OK to exit and try again");
+            }
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
+            this->close();
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
     }
 }
 
@@ -47,7 +134,7 @@ void FlashTcuSubaruHitachiM32RKline::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
-
+/*
 int FlashTcuSubaruHitachiM32RKline::init_flash_hitachi_can()
 {
     bool ok = false;
@@ -126,7 +213,7 @@ int FlashTcuSubaruHitachiM32RKline::init_flash_hitachi_can()
     emit external_logger("Finished");
     return result;
 }
-
+*/
 /*
  * Connect to Subaru TCU Hitachi CAN bootloader
  *

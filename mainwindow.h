@@ -42,15 +42,13 @@
 // Flash modules
 #include <modules/flash_ecu_subaru_denso_mc68hc16y5_02.h>
 #include <modules/flash_ecu_subaru_denso_sh7055_02.h>
-#include <modules/flash_ecu_subaru_denso_sh705x_can.h>
+#include <modules/flash_ecu_subaru_denso_sh705x_densocan.h>
 #include <modules/flash_ecu_subaru_denso_sh7055_04.h>
 #include <modules/flash_ecu_subaru_denso_sh7058_can.h>
 #include <modules/flash_ecu_subaru_denso_sh7058_can_diesel.h>
 
 #include <modules/flash_ecu_subaru_uinisia_jecs_m32r.h>
-#include <modules/flash_ecu_subaru_unisia_jecs_0x27.h>
-#include <modules/flash_ecu_subaru_hitachi_m32r_02.h>
-#include <modules/flash_ecu_subaru_hitachi_m32r_06.h>
+#include <modules/flash_ecu_subaru_hitachi_m32r_kline.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_can.h>
 #include <modules/flash_tcu_subaru_hitachi_m32r_kline.h>
 #include <modules/flash_tcu_subaru_hitachi_m32r_can.h>
@@ -67,7 +65,7 @@
 #include <modules/eeprom_ecu_subaru_denso_can.h>
 
 
-#include <modules/flash_ecu_subaru_denso_sh7xxx_can.h>
+#include <modules/flash_ecu_subaru_denso_sh7xxx_densocan.h>
 //
 #include <remote_utility/remote_utility.h>
 
@@ -89,11 +87,14 @@ public:
     void delay(int n);
 
 private:
+    QString title = "FastECU";
+    QString version = "0.0-dev0";
+
     QString peerAddress;
     QSplashScreen *splash;
     QWebSocket *clientWebSocket;
     RemoteUtility *remote_utility;
-    const char *sw_version = "FastECU v0.3b";
+    const char *sw_version = "FastECU v0.0.1";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
     static const QColor YELLOW_LIGHT_OFF;
@@ -111,6 +112,7 @@ private:
 
     int ecuCalDefIndex = 0;
     struct FileActions::EcuCalDefStructure *ecuCalDef[100];
+    struct FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     int mapCellWidthSelectable = 240;
     int mapCellWidth1D = 96;
@@ -131,15 +133,13 @@ private:
     /* Flash modules */
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
     FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
-    FlashEcuSubaruDensoSH705xCan *flashEcuSubaruDensoSH705xCan;
+    FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoSH7055_04 *flashEcuSubaruDensoSH7055_04;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
     FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
-    FlashEcuSubaruUnisiaJecs0x27Kline *flashEcuSubaruUnisiaJecs0x27Kline;
-    FlashEcuSubaruHitachiM32R_02 *flashEcuSubaruHitachiM32R_02;
-    FlashEcuSubaruHitachiM32R_06 *flashEcuSubaruHitachiM32R_06;
-    FlashEcuSubaruHitachiCan *flashEcuSubaruHitachiCan;
+    FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
+    FlashEcuSubaruHitachiM32rCan *flashEcuSubaruHitachiM32rCan;
     FlashTcuSubaruHitachiM32RKline *flashTcuSubaruHitachiM32RKline;
     FlashTcuSubaruHitachiM32RCan *flashTcuSubaruHitachiM32RCan;
     FlashTcuCvtSubaruHitachiM32RCan *flashTcuCvtSubaruHitachiM32RCan;
@@ -153,7 +153,7 @@ private:
     EepromEcuSubaruDensoKline *eepromEcuSubaruDensoKline;
     EepromEcuSubaruDensoCan *eepromEcuSubaruDensoCan;
 
-    FlashEcuSubaruDensoSH7xxxCan *flashEcuSubaruDensoSH7xxxCan;
+    FlashEcuSubaruDensoSH7xxxDensoCan *flashEcuSubaruDensoSH7xxxCan;
 
 
     /* Flash modules */

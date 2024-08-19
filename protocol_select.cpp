@@ -309,7 +309,7 @@ void ProtocolSelect::car_model_treewidget_item_selected()
                 item->setForeground(8, Qt::gray);
                 item->setToolTip(8, "ROM has no checksum");
             }
-            else {
+            else if (checksum.at(i) == "n/a") {
                 item->setCheckState(8, Qt::Checked);
                 item->setForeground(8, Qt::red);
                 item->setToolTip(8, "Checksum calculation NOT supported yet");

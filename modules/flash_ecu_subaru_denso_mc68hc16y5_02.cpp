@@ -81,53 +81,53 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
 
     switch (ret)
     {
-    case QMessageBox::Ok:
-        send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
-        result = connect_bootloader_subaru_denso_kline_wrx02();
+        case QMessageBox::Ok:
+            send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
+            result = connect_bootloader_subaru_denso_kline_wrx02();
 
-        if (result == STATUS_SUCCESS && !kernel_alive)
-        {
-            emit external_logger("Preparing, please wait...");
-            send_log_window_message("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
-            result = upload_kernel_subaru_denso_kline_wrx02(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
-        }
-        if (result == STATUS_SUCCESS)
-        {
-            if (cmd_type == "read")
+            if (result == STATUS_SUCCESS && !kernel_alive)
             {
-                emit external_logger("Reading ROM, please wait...");
-                send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
-                result = read_mem_subaru_denso_kline_16bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                emit external_logger("Preparing, please wait...");
+                send_log_window_message("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
+                result = upload_kernel_subaru_denso_kline_wrx02(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
-            else if (cmd_type == "test_write" || cmd_type == "write")
+            if (result == STATUS_SUCCESS)
             {
-                emit external_logger("Writing ROM, please wait...");
-                send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
-                result = write_mem_subaru_denso_kline_16bit(test_write);
+                if (cmd_type == "read")
+                {
+                    emit external_logger("Reading ROM, please wait...");
+                    send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
+                    result = read_mem_subaru_denso_kline_16bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                }
+                else if (cmd_type == "test_write" || cmd_type == "write")
+                {
+                    emit external_logger("Writing ROM, please wait...");
+                    send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
+                    result = write_mem_subaru_denso_kline_16bit(test_write);
+                }
             }
-        }
-        emit external_logger("Finished");
+            emit external_logger("Finished");
 
-        if (result == STATUS_SUCCESS)
-        {
-            QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+            if (result == STATUS_SUCCESS)
+            {
+                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                this->close();
+            }
+            else
+            {
+                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+            }
+
+            break;
+        case QMessageBox::Cancel:
+            qDebug() << "Operation canceled";
             this->close();
-        }
-        else
-        {
-            QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-        }
-
-        break;
-    case QMessageBox::Cancel:
-        qDebug() << "Operation canceled";
-        this->close();
-        break;
-    default:
-        QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-        qDebug() << "Unknown operation selected!";
-        this->close();
-        break;
+            break;
+        default:
+            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+            qDebug() << "Unknown operation selected!";
+            this->close();
+            break;
     }
 }
 
@@ -140,7 +140,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::closeEvent(QCloseEvent *bar)
 {
     kill_process = true;
 }
-
+/*
 int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_denso_kline_wrx02()
 {
     bool ok = false;
@@ -223,7 +223,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_denso_kline_wrx02()
     emit external_logger("Finished");
     return result;
 }
-
+*/
 int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx02()
 {
     QByteArray output;
