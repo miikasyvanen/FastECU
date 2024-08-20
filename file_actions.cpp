@@ -2180,6 +2180,15 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 ChecksumTcuSubaruHitachiM32rCan *checksumTcuSubaruHitachiM32rCan = new ChecksumTcuSubaruHitachiM32rCan();
                 ecuCalDef->FullRomData = checksumTcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
             }
+            /*
+            * Mitsu TCU
+            */
+            else if (flashMethod.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumTcuMitsuMH8104Can *checksumTcuMitsuMH8104Can = new ChecksumTcuMitsuMH8104Can();
+                ecuCalDef->FullRomData = checksumTcuMitsuMH8104Can->calculate_checksum(ecuCalDef->FullRomData);
+            }
             else
                 chksumModuleAvailable = false;
         }
