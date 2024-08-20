@@ -434,12 +434,21 @@ QByteArray MainWindow::add_ssm_header(QByteArray output, bool dec_0x100)
     uint8_t length = output.length();
 
     output.insert(0, (uint8_t)0x80);
-    output.insert(1, (uint8_t)0x10);
+    if (ecu_radio_button->isChecked())
+    {
+        qDebug() << "ECU selected";
+        output.insert(1, (uint8_t)0x10);
+    }
+    else
+    {
+        qDebug() << "TCU selected";
+        output.insert(1, (uint8_t)0x18);
+    }
     output.insert(2, (uint8_t)0xF0);
     output.insert(3, length);
     output.append(calculate_checksum(output, dec_0x100));
 
-    //qDebug() << "Generated SSM message:" << parseMessageToHex(output);
+    qDebug() << "Generated SSM message:" << parse_message_to_hex(output);
 
     return output;
 }
