@@ -1,4 +1,4 @@
-#include "flash_ecu_subaru_hitachi_sh72543r_can.h"
+oo#include "flash_ecu_subaru_hitachi_sh72543r_can.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -82,8 +82,8 @@ void FlashEcuSubaruHitachiSh72543rCan::run()
     {
         case QMessageBox::Ok:
             send_log_window_message("Connecting to Subaru ECU Hitachi CAN bootloader, please wait...", true, true);
-            //result = connect_bootloader_subaru_ecu_hitachi_can();
-            result = STATUS_SUCCESS;
+            result = connect_bootloader_subaru_ecu_hitachi_can();
+
             if (result == STATUS_SUCCESS)
             {
                 if (cmd_type == "read")
