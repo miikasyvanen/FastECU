@@ -222,6 +222,9 @@ private:
 
     LogBox *logBoxes;
 
+    QRadioButton *ecu_radio_button;
+    QRadioButton *tcu_radio_button;
+
     QTreeWidget treeWidget;
     CalibrationTreeWidget *calibrationTreeWidget = new CalibrationTreeWidget();
 

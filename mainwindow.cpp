@@ -306,11 +306,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     log_select->setMargin(5);
     ui->toolBar->addWidget(log_select);
 
-    QCheckBox *ecu_check_box = new QCheckBox("ECU");
-    ecu_check_box->setCheckState(Qt::Checked);
-    ui->toolBar->addWidget(ecu_check_box);
-    QCheckBox *tcu_check_box = new QCheckBox("TCU");
-    ui->toolBar->addWidget(tcu_check_box);
+    ecu_radio_button = new QRadioButton("ECU");
+    ecu_radio_button->setChecked(true);
+    ui->toolBar->addWidget(ecu_radio_button);
+    tcu_radio_button = new QRadioButton("TCU");
+    ui->toolBar->addWidget(tcu_radio_button);
 
     ui->toolBar->addSeparator();
 
