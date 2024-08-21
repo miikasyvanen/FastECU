@@ -75,6 +75,7 @@ public:
 
     QString can_speed = "500000";
 
+    QString serial_port_parity = "none";
     QString serial_port_baudrate = "4800";
     QString serial_port_linux = "/dev/ttyUSB0";
     QString serial_port_windows = "COM67";

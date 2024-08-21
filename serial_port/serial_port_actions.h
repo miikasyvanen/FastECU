@@ -86,6 +86,8 @@ public:
 
     QString get_serial_port_baudrate();
     bool    set_serial_port_baudrate(QString value);
+    QString get_serial_port_parity();
+    bool    set_serial_port_parity(QString value);
     QString get_serial_port_linux();
     bool    set_serial_port_linux(QString value);
     QString get_serial_port_windows();

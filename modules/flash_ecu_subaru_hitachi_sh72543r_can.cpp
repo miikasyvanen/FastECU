@@ -167,8 +167,8 @@ int FlashEcuSubaruHitachiSh72543rCan::connect_bootloader_subaru_ecu_hitachi_can(
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
-        //delay(50);
-        received = serial->read_serial_data(20, 200);
+        delay(100);
+        received = serial->read_serial_data(100, 200);
         if (received != "")
         {
             connected = true;
@@ -178,9 +178,16 @@ int FlashEcuSubaruHitachiSh72543rCan::connect_bootloader_subaru_ecu_hitachi_can(
         try_count++;
         //delay(try_timeout);
     }
+    if (!connected)
+        return STATUS_ERROR;
 
     QByteArray response = received;
-    response.remove(0, 8);
+
+    if (response.length() > 7)
+        response.remove(0, 8);
+    else
+        return STATUS_ERROR;
+
     QString calid;
     for (int i = 0; i < 5; i++)
         calid.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
@@ -201,7 +208,7 @@ int FlashEcuSubaruHitachiSh72543rCan::connect_bootloader_subaru_ecu_hitachi_can(
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
         //delay(50);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(100, 200);
         if (received != "")
         {
             connected = true;
@@ -211,12 +218,22 @@ int FlashEcuSubaruHitachiSh72543rCan::connect_bootloader_subaru_ecu_hitachi_can(
         try_count++;
         //delay(try_timeout);
     }
+    if (!connected)
+        return STATUS_ERROR;
 
     response = received;
-    response.remove(0, 7);
-    response.remove(8, 8);
-    QString tcuid = QString::fromUtf8(response);
-    send_log_window_message("Init Success: ECU ID = " + tcuid, true, true);
+
+    if (response.length() > 6)
+        response.remove(0, 7);
+    else
+        return STATUS_ERROR;
+    if (response.length() > 15)
+        response.remove(8, 8);
+    else
+        return STATUS_ERROR;
+
+    QString ecuid = QString::fromUtf8(response);
+    send_log_window_message("Init Success: ECU ID = " + ecuid, true, true);
 
     QMessageBox::information(this, tr("Init was OK?"), "Press OK to continue");
 
@@ -237,7 +254,7 @@ int FlashEcuSubaruHitachiSh72543rCan::connect_bootloader_subaru_ecu_hitachi_can(
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -254,7 +271,7 @@ int FlashEcuSubaruHitachiSh72543rCan::connect_bootloader_subaru_ecu_hitachi_can(
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
     send_log_window_message("Test script complete", true, true);
@@ -282,16 +299,15 @@ int FlashEcuSubaruHitachiSh72543rCan::read_mem_subaru_ecu_hitachi_can(uint32_t s
 
     uint32_t pagesize = 0x400;
 
-   //    start_addr = start_addr - 0x00100000;          // manual adjustment for starting address
+    //start_addr = start_addr - 0x00100000;          // manual adjustment for starting address
     start_addr = 0x0;
-  //  if (start_addr < 0x8000)                       // TCU code does not allow dumping below 0x8000
-   // {
-   //     length = length - (0x8000 - start_addr);
-   //     start_addr = 0x8000;
-   // }
+    //if (start_addr < 0x8000)                       // TCU code does not allow dumping below 0x8000
+    //{
+    //   length = length - (0x8000 - start_addr);
+    //   start_addr = 0x8000;
+    //}
 
     length = 0x200000;    // hack for testing
-
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
@@ -311,14 +327,17 @@ int FlashEcuSubaruHitachiSh72543rCan::read_mem_subaru_ecu_hitachi_can(uint32_t s
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
-    if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x03)
+    if (received.length() > 5)
     {
-        send_log_window_message("Failed to initialise bootloader", true, true);
+        if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x03)
+        {
+            send_log_window_message("Failed to initialise bootloader", true, true);
 
-        //return STATUS_ERROR;
+            //return STATUS_ERROR;
+        }
     }
 
     send_log_window_message("Starting seed request...", true, true);
@@ -334,13 +353,17 @@ int FlashEcuSubaruHitachiSh72543rCan::read_mem_subaru_ecu_hitachi_can(uint32_t s
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
-    {
-        send_log_window_message("Bad response to seed request", true, true);
 
-        //return STATUS_ERROR;
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
+        {
+            send_log_window_message("Bad response to seed request", true, true);
+
+            //return STATUS_ERROR;
+        }
     }
 
     send_log_window_message("Seed request ok", true, true);
@@ -368,13 +391,17 @@ int FlashEcuSubaruHitachiSh72543rCan::read_mem_subaru_ecu_hitachi_can(uint32_t s
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
-    {
-        send_log_window_message("Bad response to seed request", true, true);
 
-        //return STATUS_ERROR;
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
+        {
+            send_log_window_message("Bad response to seed request", true, true);
+
+            //return STATUS_ERROR;
+        }
     }
 
     send_log_window_message("Seed key ok", true, true);
@@ -449,7 +476,8 @@ int FlashEcuSubaruHitachiSh72543rCan::read_mem_subaru_ecu_hitachi_can(uint32_t s
         }
         */
         pagedata.clear();
-        pagedata = received.remove(0, 5);
+        if (received.length() > 4)
+            pagedata = received.remove(0, 5);
 
         send_log_window_message("Received pagedata: " + parse_message_to_hex(pagedata), true, true);
         mapdata.append(pagedata);
@@ -761,9 +789,15 @@ int FlashEcuSubaruHitachiSh72543rCan::reflash_block_subaru_ecu_hitachi_can(const
         try_count++;
         //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x77)
+    if (received.length() > 4)
+    {
+        if (received == "" || (uint8_t)received.at(4) != 0x77)
+            send_log_window_message("No or bad response received", true, true);
+            //return STATUS_ERROR;
+    }
+    else
         send_log_window_message("No or bad response received", true, true);
-        //return STATUS_ERROR;
+    //    return STATUS_ERROR;
 
     delay(100);
 
@@ -799,9 +833,15 @@ int FlashEcuSubaruHitachiSh72543rCan::reflash_block_subaru_ecu_hitachi_can(const
         try_count++;
         //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+    if (received.length() > 6)
+    {
+        if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+            send_log_window_message("No or bad response received", true, true);
+            //return STATUS_ERROR;
+    }
+    else
         send_log_window_message("No or bad response received", true, true);
-        //return STATUS_ERROR;
+    //    return STATUS_ERROR;
 
     send_log_window_message("Checksum verified...", true, true);
     qDebug() << "Checksum verified...";
@@ -838,15 +878,21 @@ int FlashEcuSubaruHitachiSh72543rCan::erase_subaru_ecu_hitachi_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
-    if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
+    if (received.length() > 5)
     {
-        send_log_window_message("Failed to initialise bootloader", true, true);
+        if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
+        {
+            send_log_window_message("Failed to initialise bootloader", true, true);
 
-        //return STATUS_ERROR;
+            //return STATUS_ERROR;
+        }
     }
+    else
+        send_log_window_message("No or bad response received", true, true);
+    //    return STATUS_ERROR;
 
     send_log_window_message("Starting seed request...", true, true);
     qDebug() << "Starting seed request...";
@@ -861,14 +907,20 @@ int FlashEcuSubaruHitachiSh72543rCan::erase_subaru_ecu_hitachi_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
+    if (received.length() > 5)
     {
-        send_log_window_message("Bad response to seed request", true, true);
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
+        {
+            send_log_window_message("Bad response to seed request", true, true);
 
-        //return STATUS_ERROR;
+            //return STATUS_ERROR;
+        }
     }
+    else
+        send_log_window_message("No or bad response received", true, true);
+    //    return STATUS_ERROR;
 
     send_log_window_message("Seed request ok", true, true);
     qDebug() << "Seed request ok";
@@ -895,14 +947,20 @@ int FlashEcuSubaruHitachiSh72543rCan::erase_subaru_ecu_hitachi_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
+    if (received.length() > 5)
     {
-        send_log_window_message("Bad response to seed request", true, true);
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
+        {
+            send_log_window_message("Bad response to seed request", true, true);
 
-        //return STATUS_ERROR;
+            //return STATUS_ERROR;
+        }
     }
+    else
+        send_log_window_message("No or bad response received", true, true);
+    //    return STATUS_ERROR;
 
     send_log_window_message("Seed key ok", true, true);
     qDebug() << "Seed key ok";
@@ -920,15 +978,21 @@ int FlashEcuSubaruHitachiSh72543rCan::erase_subaru_ecu_hitachi_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
-    if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
+    if (received.length() > 5)
     {
-        send_log_window_message("Failed to initialise bootloader", true, true);
+        if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
+        {
+            send_log_window_message("Failed to initialise bootloader", true, true);
 
-        //return STATUS_ERROR;
+            //return STATUS_ERROR;
+        }
     }
+    else
+        send_log_window_message("No or bad response received", true, true);
+    //    return STATUS_ERROR;
 
     send_log_window_message("Settting flash start & length...", true, true);
 
@@ -949,16 +1013,22 @@ int FlashEcuSubaruHitachiSh72543rCan::erase_subaru_ecu_hitachi_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
-    if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20)
+    if (received.length() > 5)
     {
-        send_log_window_message("Failed to initialise bootloader", true, true);
+        if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20)
+        {
+            send_log_window_message("Failed to initialise bootloader", true, true);
 
-        //return STATUS_ERROR;
+            //return STATUS_ERROR;
+        }
     }
-                   
+    else
+        send_log_window_message("No or bad response received", true, true);
+    //    return STATUS_ERROR;
+
     send_log_window_message("Erasing ECU ROM...", true, true);
     qDebug() << "Erasing ECU ROM...";
 
@@ -980,16 +1050,16 @@ int FlashEcuSubaruHitachiSh72543rCan::erase_subaru_ecu_hitachi_can()
     delay(100);
     serial->write_serial_data_echo_check(output);
 
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(100, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
 //    delay(200);
 
     while ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
     {
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    delay(100);
+        received = serial->read_serial_data(100, 200);
+        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+        delay(100);
     }
 
     QMessageBox::information(this, tr("TCU was erased?"), "Press OK to start flash download");

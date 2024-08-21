@@ -456,6 +456,7 @@ QString SerialPortActionsDirect::open_serial_port()
             serial->setBaudRate(serial_port_baudrate.toDouble());
             serial->setDataBits(QSerialPort::Data8);
             serial->setStopBits(QSerialPort::OneStop);
+            //serial->setParity(QSerialPort::EvenParity);//QSerialPort::NoParity);
             serial->setParity(QSerialPort::NoParity);
             serial->setFlowControl(QSerialPort::NoFlowControl);
 
