@@ -613,22 +613,6 @@ bool SerialPortActions::set_serial_port_baudrate(QString value)
         r = qtrohelper::slot_sync(serial_remote->set_serial_port_baudrate(value));
     return r;
 }
-QString SerialPortActions::get_serial_port_parity(void)
-{
-    if (isDirectConnection())
-        return serial_direct->serial_port_parity;
-    //else
-    //    return qtrohelper::slot_sync(serial_remote->get_serial_port_parity());
-}
-bool SerialPortActions::set_serial_port_parity(QString value)
-{
-    bool r = true;
-    if (isDirectConnection())
-        serial_direct->serial_port_parity = value;
-    //else
-    //    r = qtrohelper::slot_sync(serial_remote->set_serial_port_parity(value));
-    return r;
-}
 QString SerialPortActions::get_serial_port_linux(void)
 {
     if (isDirectConnection())

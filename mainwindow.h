@@ -27,6 +27,7 @@
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
 #include <protocol_select.h>
+#include <vehicle_select.h>
 #include <definition_file_convert.h>
 #include <biu_operations_subaru.h>
 #include <get_key_operations_subaru.h>
@@ -346,6 +347,8 @@ private slots:
     // mainwindow.c
     void select_protocol();
     void select_protocol_finished(int result);
+    void select_vehicle();
+    void select_vehicle_finished(int result);
     void log_transport_changed();
     void flash_transport_changed();
     void check_serial_ports();

@@ -271,13 +271,20 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     ui->toolBar->addWidget(spacer);
 
     ui->toolBar->addSeparator();
-
+/*
     QPushButton *select_protocol_button = new QPushButton();
-    select_protocol_button->setText("Select vehicle");
+    select_protocol_button->setText("Select protocol");
     //car_make_button->setMargin(10);
     select_protocol_button->setFixedHeight(toolbar_item_size.height());
     ui->toolBar->addWidget(select_protocol_button);
     connect(select_protocol_button, SIGNAL(clicked(bool)), this, SLOT(select_protocol()));
+*/
+    QPushButton *select_vehicle_button = new QPushButton();
+    select_vehicle_button->setText("Select vehicle");
+    //car_make_button->setMargin(10);
+    select_vehicle_button->setFixedHeight(toolbar_item_size.height());
+    ui->toolBar->addWidget(select_vehicle_button);
+    connect(select_vehicle_button, SIGNAL(clicked(bool)), this, SLOT(select_vehicle()));
 
     flash_transport_list = new QComboBox();
     flash_transport_list->setFixedHeight(toolbar_item_size.height());
@@ -535,8 +542,37 @@ void MainWindow::select_protocol()
 
 }
 
-
 void MainWindow::select_protocol_finished(int result)
+{
+    if(result == QDialog::Accepted)
+    {
+        create_flash_transports_list();
+        create_log_transports_list();
+        fileActions->save_config_file(configValues);
+
+        set_flash_arrow_state();
+    }
+    else
+    {
+        //qDebug() << "Dialog is rejected";
+    }
+
+    status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
+}
+
+void MainWindow::select_vehicle()
+{
+    //qDebug() << "Select protocol";
+    VehicleSelect *vehicleSelect = new VehicleSelect(configValues);
+    connect(vehicleSelect, SIGNAL(finished (int)), this, SLOT(select_vehicle_finished(int)));
+    vehicleSelect->exec();
+
+    //qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_family;
+    //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
+
+}
+
+void MainWindow::select_vehicle_finished(int result)
 {
    if(result == QDialog::Accepted)
    {

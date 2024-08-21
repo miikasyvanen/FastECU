@@ -1,166 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ProtocolSelectWindow</class>
- <widget class="QDialog" name="ProtocolSelectWindow">
+ <class>ProtocolSelect</class>
+ <widget class="QDialog" name="ProtocolSelect">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>714</width>
-    <height>511</height>
+    <width>800</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select protocol</string>
+   <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="2,3,0">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,3">
-     <item>
-      <widget class="QTreeWidget" name="car_make_tree_widget">
-       <property name="indentation">
-        <number>0</number>
-       </property>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTreeWidget" name="car_model_tree_widget">
-       <property name="indentation">
-        <number>0</number>
-       </property>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QTreeWidget" name="car_version_tree_widget">
-       <property name="indentation">
-        <number>0</number>
-       </property>
-       <property name="columnCount">
-        <number>12</number>
-       </property>
-       <attribute name="headerMinimumSectionSize">
-        <number>10</number>
-       </attribute>
-       <attribute name="headerDefaultSectionSize">
-        <number>50</number>
-       </attribute>
-       <attribute name="headerStretchLastSection">
-        <bool>true</bool>
-       </attribute>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">2</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">3</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">4</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">5</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">6</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">7</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">8</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">9</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">10</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">11</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string notr="true">12</string>
-        </property>
-       </column>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <property name="spacing">
-      <number>10</number>
+    <widget class="QTreeWidget" name="treeWidget">
+     <property name="columnCount">
+      <number>2</number>
      </property>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="cancel_button">
-       <property name="text">
-        <string>Cancel</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="select_button">
-       <property name="text">
-        <string>Select</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     <column>
+      <property name="text">
+       <string notr="true">1</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">2</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>ProtocolSelect</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>ProtocolSelect</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

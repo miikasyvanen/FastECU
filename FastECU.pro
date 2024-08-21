@@ -91,6 +91,7 @@ SOURCES += \
     serial_port/serial_port_actions_direct.cpp \
     serial_port/websocketiodevice.cpp \
     settings.cpp \
+    vehicle_select.cpp \
     verticallabel.cpp
 
 HEADERS += \
@@ -143,6 +144,7 @@ HEADERS += \
     serial_port/serial_port_actions_direct.h \
     serial_port/websocketiodevice.h \
     settings.h \
+    vehicle_select.h \
     verticallabel.h
 
 FORMS += \
@@ -159,7 +161,8 @@ FORMS += \
     logvalues.ui \
     mainwindow.ui \
     protocol_select.ui \
-    settings.ui
+    settings.ui \
+    vehicle_select.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
