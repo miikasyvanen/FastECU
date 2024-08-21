@@ -53,9 +53,11 @@ bool MainWindow::ecu_init()
             {
                 if (configValues->flash_protocol_selected_log_protocol == "CAN" || configValues->flash_protocol_selected_log_protocol == "iso15765")
                     ssm_can_init();
-                else
+                else if (configValues->flash_protocol_selected_log_protocol == "K-Line")
                     //serial->fast_init(output);
                     ssm_kline_init();
+                else if (configValues->flash_protocol_selected_log_protocol == "SSM1")
+                    ssm1_init();
             }
         }
     }
@@ -68,6 +70,75 @@ bool MainWindow::ecu_init()
     //qDebug() << "ECU ID check complete";
 
     return ecu_init_complete;
+}
+
+void MainWindow::ssm1_init()
+{
+    QByteArray output;
+    QByteArray received;
+
+    qDebug() << "Using SSM1 protocol";
+
+    qDebug() << "Issue read cmd...";
+    output.clear();
+    output.append((uint8_t)0x78);
+    output.append((uint8_t)0x12);
+    output.append((uint8_t)0x34);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    delay(1000);
+    received = serial->read_serial_data(100, 500);
+    if (received.length() > 0)
+        qDebug() << "Something received" << parse_message_to_hex(received);
+    else
+        qDebug() << "No response...";
+
+
+    qDebug() << "Issue init cmd...";
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x46);
+    output.append((uint8_t)0x48);
+    output.append((uint8_t)0x49);
+    serial->write_serial_data_echo_check(output);
+
+    qDebug() << "Init sent, delaying 2s...";
+    delay(2000);
+    qDebug() << "Checking response...";
+    received = serial->read_serial_data(100, 500);
+    if (received.length() > 0)
+    {
+        qDebug() << "Something received" << parse_message_to_hex(received);;
+
+        if (received.length() == (uint8_t)received.at(3) + 5)
+        {
+            ecu_init_complete = true;
+            ecuid = parse_ecuid(received);
+            qDebug() << "ECU ID:" << ecuid;
+            parse_log_value_list(received, "SSM");
+            if (ecuid == "")
+                set_status_bar_label(true, false, "");
+            else
+                set_status_bar_label(true, true, ecuid);
+
+            received = serial->read_serial_data(1, 100);
+            while(received.length() > 0)
+            {
+                ecu_init_complete = true;
+                ecuid = parse_ecuid(received);
+                parse_log_value_list(received, "SSM");
+
+                received = serial->read_serial_data(1, 100);
+                while(received.length() > 0)
+                {
+                    received = serial->read_serial_data(1, 100);
+                }
+            }
+        }
+    }
+    else
+        qDebug() << "No response...";
+
 }
 
 void MainWindow::ssm_kline_init()

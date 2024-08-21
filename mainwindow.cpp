@@ -690,6 +690,8 @@ void MainWindow::open_serial_port()
         //if (serial_port.length() < 2)
         //    serial_port.append("Unknown");
 
+        serial->set_serial_port_baudrate("1953");
+        serial->set_serial_port_parity("even");
         //qDebug() << "Serial port" << serial_port;
         serial->set_serial_port_list(serial_port);
         QString opened_serial_port = serial->open_serial_port();
