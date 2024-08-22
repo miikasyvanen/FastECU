@@ -121,7 +121,7 @@ public:
         QStringList flash_protocol_kernel;
         QStringList flash_protocol_kernel_addr;
         QStringList flash_protocol_description;
-        QStringList flash_protocol_family;
+        QStringList flash_protocol_protocol_name;
 
         QString flash_protocol_selected_id;
         QString flash_protocol_selected_make;
@@ -132,7 +132,7 @@ public:
         QString flash_protocol_selected_flash_transport;
         QString flash_protocol_selected_log_transport;
         QString flash_protocol_selected_log_protocol;
-        QString flash_protocol_selected_family;
+        QString flash_protocol_selected_protocol_name;
         QString flash_protocol_selected_description;
 
     } ConfigValuesStruct;

@@ -84,6 +84,8 @@ public:
     QString get_can_speed();
     bool    set_can_speed(QString value);
 
+    QString get_serial_port_parity();
+    bool    set_serial_port_parity(QString value);
     QString get_serial_port_baudrate();
     bool    set_serial_port_baudrate(QString value);
     QString get_serial_port_linux();
