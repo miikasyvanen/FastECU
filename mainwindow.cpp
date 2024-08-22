@@ -81,6 +81,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << "ECU protocols read";
     qDebug() << "Protocols ID:" << configValues->flash_protocol_selected_id.toInt();
 
+    if (configValues->flash_protocol_selected_id.toInt() > configValues->flash_protocol_selected_id.length())
+        configValues->flash_protocol_selected_id = "0";
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
     qDebug() << "ECU protocols set";
     configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
