@@ -77,6 +77,11 @@ void MainWindow::ssm1_init()
     QByteArray output;
     QByteArray received;
 
+    serial->reset_connection();
+    serial->set_serial_port_baudrate("1953");
+    serial->set_serial_port_parity(QSerialPort::EvenParity);
+    serial->open_serial_port();
+
     qDebug() << "Using SSM1 protocol";
 
     qDebug() << "Issue read cmd...";

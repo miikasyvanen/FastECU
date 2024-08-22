@@ -913,6 +913,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         ecuid.clear();
         ecu_init_complete = false;
         serial->set_add_iso14230_header(false);
+        serial->set_serial_port_parity(QSerialPort::NoParity);
         //open_serial_port();
 
         if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != '/')
@@ -1079,6 +1080,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
+    serial->set_serial_port_parity(QSerialPort::NoParity);
     serial->set_serial_port_baudrate("4800");
     emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")
