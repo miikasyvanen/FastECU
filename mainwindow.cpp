@@ -951,6 +951,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 return 0;
 
             ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+            ecuCalDefTemp->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
             ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDefTemp->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
             ecuCalDefTemp->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
@@ -964,6 +965,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDefTemp->RomInfo.append(" ");
             }
             ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+/*
+            if (configValues->flash_protocol_selected_checksum == "yes")
+                ecuCalDefTemp->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_protocol_name);
+            if (configValues->flash_protocol_selected_checksum == "no")
+                ecuCalDefTemp->RomInfo.replace(fileActions->ChecksumModule, "No checksums");
+*/
             ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDefTemp->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDefTemp->RomInfo.at(fileActions->FlashMethod));
             ecuCalDefTemp->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());

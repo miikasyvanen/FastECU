@@ -1686,6 +1686,12 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
         ecuCalDef->RomInfo.replace(DefFile, " ");
     }
+
+    if (configValues->flash_protocol_selected_checksum == "yes")
+        ecuCalDef->RomInfo.replace(ChecksumModule, configValues->flash_protocol_selected_protocol_name);
+    if (configValues->flash_protocol_selected_checksum == "no")
+        ecuCalDef->RomInfo.replace(ChecksumModule, "No checksums");
+
 /*
     if (ecuCalDef == NULL)
     {
@@ -2477,5 +2483,7 @@ double FileActions::calculate_value_from_expression(QStringList expression)
         }
     }
 
+    if (isnan(value))
+        value = 0;
     return value;
 }
