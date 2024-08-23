@@ -81,13 +81,15 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << "ECU protocols read";
     qDebug() << "Protocols ID:" << configValues->flash_protocol_selected_id.toInt();
 
+    if (configValues->flash_protocol_selected_id.toInt() > configValues->flash_protocol_selected_id.length())
+        configValues->flash_protocol_selected_id = "0";
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
     qDebug() << "ECU protocols set";
     configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(configValues->flash_protocol_selected_id.toInt());
-    configValues->flash_protocol_selected_family = configValues->flash_protocol_family.at(configValues->flash_protocol_selected_id.toInt());
+    configValues->flash_protocol_selected_protocol_name = configValues->flash_protocol_protocol_name.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(configValues->flash_protocol_selected_id.toInt());
     //configValues->flash_protocol_selected_flash_transport = configValues->flash_protocol_flash_transport.at(configValues->flash_protocol_selected_id.toInt());
     //configValues->flash_protocol_selected_log_transport = configValues->flash_protocol_log_transport.at(configValues->flash_protocol_selected_id.toInt());
@@ -98,7 +100,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << configValues->flash_protocol_selected_checksum;
     qDebug() << configValues->flash_protocol_selected_model;
     qDebug() << configValues->flash_protocol_selected_version;
-    qDebug() << configValues->flash_protocol_selected_family;
+    qDebug() << configValues->flash_protocol_selected_protocol_name;
     qDebug() << configValues->flash_protocol_selected_description;
     qDebug() << configValues->flash_protocol_selected_flash_transport;
     qDebug() << configValues->flash_protocol_selected_log_transport;
@@ -271,14 +273,14 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     ui->toolBar->addWidget(spacer);
 
     ui->toolBar->addSeparator();
-/*
+
     QPushButton *select_protocol_button = new QPushButton();
     select_protocol_button->setText("Select protocol");
     //car_make_button->setMargin(10);
     select_protocol_button->setFixedHeight(toolbar_item_size.height());
     ui->toolBar->addWidget(select_protocol_button);
     connect(select_protocol_button, SIGNAL(clicked(bool)), this, SLOT(select_protocol()));
-*/
+
     QPushButton *select_vehicle_button = new QPushButton();
     select_vehicle_button->setText("Select vehicle");
     //car_make_button->setMargin(10);
@@ -471,7 +473,7 @@ QStringList MainWindow::create_log_transports_list()
 
     return log_transports;
 }
-
+/*
 QString MainWindow::check_kernel(QString flash_method)
 {
     QString kernel;
@@ -529,13 +531,17 @@ QString MainWindow::check_kernel(QString flash_method)
 
     return kernel;
 }
-
+*/
 void MainWindow::select_protocol()
 {
     //qDebug() << "Select protocol";
     ProtocolSelect *protocolSelect = new ProtocolSelect(configValues);
     connect(protocolSelect, SIGNAL(finished (int)), this, SLOT(select_protocol_finished(int)));
     protocolSelect->exec();
+
+    QRect  screenGeometry = this->geometry();
+    protocolSelect->move(screenGeometry.center() - protocolSelect->rect().center());
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     //qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_family;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
@@ -566,6 +572,10 @@ void MainWindow::select_vehicle()
     VehicleSelect *vehicleSelect = new VehicleSelect(configValues);
     connect(vehicleSelect, SIGNAL(finished (int)), this, SLOT(select_vehicle_finished(int)));
     vehicleSelect->exec();
+
+    QRect  screenGeometry = this->geometry();
+    vehicleSelect->move(screenGeometry.center() - vehicleSelect->rect().center());
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     //qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_family;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
@@ -905,6 +915,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         ecuid.clear();
         ecu_init_complete = false;
         serial->set_add_iso14230_header(false);
+        serial->set_serial_port_parity(QSerialPort::NoParity);
         //open_serial_port();
 
         if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != '/')
@@ -939,8 +950,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             if (ecuCalDefTemp == NULL)
                 return 0;
 
-            ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
-            ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_family;
+            ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+            ecuCalDefTemp->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
+            ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDefTemp->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
             ecuCalDefTemp->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDefTemp->McuType = configValues->flash_protocol_selected_mcu;
@@ -952,97 +964,103 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             while (ecuCalDefTemp->RomInfo.length() < ecuCalDefTemp->RomInfoStrings.length()){
                 ecuCalDefTemp->RomInfo.append(" ");
             }
-            ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_family);
-            ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_family;
+            ecuCalDefTemp->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+/*
+            if (configValues->flash_protocol_selected_checksum == "yes")
+                ecuCalDefTemp->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_protocol_name);
+            if (configValues->flash_protocol_selected_checksum == "no")
+                ecuCalDefTemp->RomInfo.replace(fileActions->ChecksumModule, "No checksums");
+*/
+            ecuCalDefTemp->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDefTemp->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDefTemp->RomInfo.at(fileActions->FlashMethod));
             ecuCalDefTemp->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDefTemp->McuType = configValues->flash_protocol_selected_mcu;
         }
 
-        qDebug() << "Protocol to use:" << configValues->flash_protocol_selected_family;
+        qDebug() << "Protocol to use:" << configValues->flash_protocol_selected_protocol_name;
 
         /*
         * Denso CAN
         */
-        if (configValues->flash_protocol_selected_family.endsWith("_densocan"))
+        if (configValues->flash_protocol_selected_protocol_name.endsWith("_densocan"))
             flashEcuSubaruDensoSH705xDensoCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xDensoCan(serial, ecuCalDefTemp, cmd_type, this));
         /*
         * Denso ECU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_mc68hc16y5_02"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_02"))
             flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_mc68hc16y5_04"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_04"))
             flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_sh7055_02"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7055_02"))
             flashEcuSubaruDensoSH7055_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_sh7055_04"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7055_04"))
             flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_denso_sh7058_can_diesel"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7058_can_diesel"))
             flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family == "sub_ecu_denso_sh7058_can")
+        else if (configValues->flash_protocol_selected_protocol_name == "sub_ecu_denso_sh7058_can")
             flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family == "sub_ecu_denso_sh7058")
+        else if (configValues->flash_protocol_selected_protocol_name == "sub_ecu_denso_sh7058")
             flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDefTemp, cmd_type, this));
         /*
         * Denso TCU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_denso_sh7055_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_denso_sh7055_can"))
             flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_denso_sh7058_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_denso_sh7058_can"))
             flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial,ecuCalDefTemp, cmd_type, this));
         /*
         * Denso EEPROM
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_eeprom_denso_sh7055_kline"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7055_kline"))
             eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xKline(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_eeprom_denso_sh7058_kline"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_kline"))
             eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xKline(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_eeprom_denso_sh7055_densocan"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7055_densocan"))
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_eeprom_denso_sh7058_densocan"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_densocan"))
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_eeprom_denso_sh7058_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_can"))
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_eeprom_denso_sh7058_can_diesel"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_can_diesel"))
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial,ecuCalDefTemp, cmd_type, this));
         /*
         * Unisia Jecs ECU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_unisia_jecs_"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_"))
             flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial,ecuCalDefTemp, cmd_type, this));
         /*
         * Hitachi ECU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_m32r_kline"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_m32r_kline"))
             flashEcuSubaruHitachiM32rKline = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rKline(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_m32r_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_m32r_can"))
             flashEcuSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rCan(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_mitsu_m32r_kline"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_mitsu_m32r_kline"))
             flashEcuSubaruMitsuM32RKline = connect_signals_and_run_module(new FlashEcuSubaruMitsuM32RKline(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_sh7058_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh7058_can"))
             flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSh7058Can(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_ecu_hitachi_sh72543r_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh72543r_can"))
             flashEcuSubaruHitachiSh72543rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiSh72543rCan(serial,ecuCalDefTemp, cmd_type, this));
 
         /*
         * Hitachi TCU
         */
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_m32r_kline"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_hitachi_m32r_kline"))
             flashTcuSubaruHitachiM32RKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_hitachi_m32r_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_hitachi_m32r_can"))
             flashTcuSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_hitachi_m32r_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_hitachi_m32r_can"))
             flashTcuCvtSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
             flashTcuCvtSubaruMitsuMH8104Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8104Can(serial,ecuCalDefTemp, cmd_type, this));
-        else if (configValues->flash_protocol_selected_family.startsWith("sub_tcu_cvt_mitsu_mh8111_can"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_mitsu_mh8111_can"))
             flashTcuCvtSubaruMitsuMH8111Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8111Can(serial,ecuCalDefTemp, cmd_type, this));
 
         /*
         * Unknown flashmethod
         */
         else
-            QMessageBox::warning(this, tr("Unknown flashmethod"), "Unknown flashmethod! Flashmethod \"" + configValues->flash_protocol_selected_family + "\" not yet implemented!");
+            QMessageBox::warning(this, tr("Unknown flashmethod"), "Unknown flashmethod! Flashmethod \"" + configValues->flash_protocol_selected_protocol_name + "\" not yet implemented!");
             //ecuOperationsSubaru = new EcuOperationsSubaru(serial, ecuCalDefTemp, cmd_type, this);
 
         if (cmd_type == "read")
@@ -1071,6 +1089,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
+    serial->set_serial_port_parity(QSerialPort::NoParity);
     serial->set_serial_port_baudrate("4800");
     emit log_transport_list->currentIndexChanged(log_transport_list->currentIndex());
     //if(configValues->flash_method != "subarucan" && configValues->flash_method != "subarucan_iso")

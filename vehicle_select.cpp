@@ -7,10 +7,6 @@ VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, Q
 {
     ui->setupUi(this);
     this->setParent(parent);
-    QScreen *screen = QGuiApplication::primaryScreen();
-    QRect  screenGeometry = screen->geometry();
-    this->move(screenGeometry.center() - this->rect().center());
-    //this->show();
 
     this->configValues = configValues;
     ui->select_button->setEnabled(false);
@@ -37,7 +33,8 @@ VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, Q
         width += ui->car_version_tree_widget->columnWidth(i);
 
     //qDebug() << "Full width =" << width;
-    ui->car_version_tree_widget->setFixedWidth(width);
+    ui->car_version_tree_widget->setMinimumWidth(width);
+
 
     int height = width / 4 * 2.5 + 18;
     this->setFixedHeight(height);
@@ -56,7 +53,7 @@ VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, Q
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(index);
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(index);
     configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(index);
-    configValues->flash_protocol_selected_family = configValues->flash_protocol_family.at(index);
+    configValues->flash_protocol_selected_protocol_name = configValues->flash_protocol_protocol_name.at(index);
     configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(index);
 
     QStringList car_makes;
@@ -77,10 +74,6 @@ VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, Q
     for (int i = 0; i < car_makes_sorted.length(); i++)
     {
         QTreeWidgetItem *item = new QTreeWidgetItem();
-        font = item->font(0);
-        font.setPointSize(font_size);
-        font.setBold(font_bold);
-        font.setFamily(font_family);
         item->setFont(0, font);
         item->setText(0, car_makes_sorted.at(i));
         item->setFirstColumnSpanned(true);
@@ -110,6 +103,7 @@ VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, Q
     ui->car_make_tree_widget->setCurrentIndex(make_index);
     emit ui->car_make_tree_widget->itemSelectionChanged();
 
+    //this->adjustSize();
 /*
     const QModelIndex model_index = ui->car_model_tree_widget->selectionModel()->currentIndex();
     ui->car_model_tree_widget->setCurrentIndex(model_index);
@@ -132,7 +126,7 @@ void VehicleSelect::car_model_selected()
     configValues->flash_protocol_selected_make = flash_protocol_make;
     configValues->flash_protocol_selected_model = flash_protocol_model;
     configValues->flash_protocol_selected_version = flash_protocol_version;
-    configValues->flash_protocol_selected_family = flash_protocol_family;
+    configValues->flash_protocol_selected_protocol_name = flash_protocol_family;
     configValues->flash_protocol_selected_description = flash_protocol_description;
     configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
@@ -281,7 +275,7 @@ void VehicleSelect::car_model_treewidget_item_selected()
                 checksum.append(configValues->flash_protocol_checksum.at(i));
                 read.append(configValues->flash_protocol_read.at(i));
                 write.append(configValues->flash_protocol_write.at(i));
-                family.append(configValues->flash_protocol_family.at(i));
+                family.append(configValues->flash_protocol_protocol_name.at(i));
                 description.append(configValues->flash_protocol_description.at(i));
             }
         }

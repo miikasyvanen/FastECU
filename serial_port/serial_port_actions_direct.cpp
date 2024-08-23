@@ -457,7 +457,7 @@ QString SerialPortActionsDirect::open_serial_port()
             serial->setDataBits(QSerialPort::Data8);
             serial->setStopBits(QSerialPort::OneStop);
             //serial->setParity(QSerialPort::EvenParity);
-            serial->setParity(QSerialPort::NoParity);
+            serial->setParity((QSerialPort::Parity)serial_port_parity);
             serial->setFlowControl(QSerialPort::NoFlowControl);
 
             if (serial->open(QIODevice::ReadWrite)){

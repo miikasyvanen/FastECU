@@ -596,7 +596,22 @@ bool SerialPortActions::set_can_speed(QString value)
         r = qtrohelper::slot_sync(serial_remote->set_can_speed(value));
     return r;
 }
-
+uint8_t SerialPortActions::get_serial_port_parity(void)
+{
+    if (isDirectConnection())
+        return serial_direct->serial_port_parity;
+    else
+        return qtrohelper::slot_sync(serial_remote->get_serial_port_parity());
+}
+bool SerialPortActions::set_serial_port_parity(uint8_t parity)
+{
+    bool r = true;
+    if (isDirectConnection())
+        serial_direct->serial_port_parity = parity;
+    else
+        r = qtrohelper::slot_sync(serial_remote->set_serial_port_parity(parity));
+    return r;
+}
 QString SerialPortActions::get_serial_port_baudrate(void)
 {
     if (isDirectConnection())

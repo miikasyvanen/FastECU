@@ -285,7 +285,7 @@ private:
     void set_flash_arrow_state();
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
-	QString check_kernel(QString flash_method);
+    //QString check_kernel(QString flash_method);
     void setSplashScreenProgress(QString text, int incValue);
 
     // menuactions.c
