@@ -85,21 +85,27 @@ void MainWindow::ssm1_init()
     qDebug() << "Using SSM1 protocol";
 
     qDebug() << "Issue read cmd...";
+    received.clear();
     output.clear();
     output.append((uint8_t)0x78);
     output.append((uint8_t)0x12);
     output.append((uint8_t)0x34);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    delay(1000);
-    received = serial->read_serial_data(100, 500);
-    if (received.length() > 0)
-        qDebug() << "Something received" << parse_message_to_hex(received);
-    else
-        qDebug() << "No response...";
+    //delay(1000);
+    for (int i = 0; i < 10; i++)
+    {
+        received.append(serial->read_serial_data(100, 500));
+    }
+    qDebug() << "Received:" << parse_message_to_hex(received);
+    //if (received.length() > 0)
+    //    qDebug() << "Something received" << parse_message_to_hex(received);
+    //else
+    //    qDebug() << "No response...";
 
 
     qDebug() << "Issue init cmd...";
+    received.clear();
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x46);
@@ -108,9 +114,23 @@ void MainWindow::ssm1_init()
     serial->write_serial_data_echo_check(output);
 
     qDebug() << "Init sent, delaying 2s...";
-    delay(2000);
-    qDebug() << "Checking response...";
-    received = serial->read_serial_data(100, 500);
+    //delay(2000);
+    for (int i = 0; i < 10; i++)
+    {
+        received.append(serial->read_serial_data(100, 500));
+    }
+    qDebug() << "Received:" << parse_message_to_hex(received);
+    //qDebug() << "Checking response...";
+    //received = serial->read_serial_data(100, 500);
+    received.clear();
+    output.clear();
+    output.append((uint8_t)0x12);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    received.append(serial->read_serial_data(100, 500));
+
     if (received.length() > 0)
     {
         qDebug() << "Something received" << parse_message_to_hex(received);;
