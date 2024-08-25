@@ -1026,8 +1026,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         /*
         * Unisia Jecs ECU
         */
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_92"))
+            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial,ecuCalDefTemp, cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_97"))
+            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_"))
-            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial,ecuCalDefTemp, cmd_type, this));
+            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial,ecuCalDefTemp, cmd_type, this));
         /*
         * Hitachi ECU
         */
@@ -1036,7 +1040,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_m32r_can"))
             flashEcuSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rCan(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_mitsu_m32r_kline"))
-            flashEcuSubaruMitsuM32RKline = connect_signals_and_run_module(new FlashEcuSubaruMitsuM32RKline(serial,ecuCalDefTemp, cmd_type, this));
+            flashEcuSubaruMitsuM32rKline = connect_signals_and_run_module(new FlashEcuSubaruMitsuM32rKline(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh7058_can"))
             flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSh7058Can(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh72543r_can"))
@@ -1046,11 +1050,11 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Hitachi TCU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_hitachi_m32r_kline"))
-            flashTcuSubaruHitachiM32RKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RKline(serial,ecuCalDefTemp, cmd_type, this));
+            flashTcuSubaruHitachiM32rKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32rKline(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_hitachi_m32r_can"))
-            flashTcuSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32RCan(serial,ecuCalDefTemp, cmd_type, this));
+            flashTcuSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32rCan(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_hitachi_m32r_can"))
-            flashTcuCvtSubaruHitachiM32RCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32RCan(serial,ecuCalDefTemp, cmd_type, this));
+            flashTcuCvtSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32rCan(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
             flashTcuCvtSubaruMitsuMH8104Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8104Can(serial,ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_mitsu_mh8111_can"))

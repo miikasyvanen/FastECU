@@ -51,12 +51,12 @@ bool MainWindow::ecu_init()
         {
             if (configValues->flash_protocol_selected_make == "Subaru")
             {
-                if (configValues->flash_protocol_selected_log_protocol == "CAN" || configValues->flash_protocol_selected_log_protocol == "iso15765")
+                if (configValues->flash_protocol_selected_log_transport == "CAN" || configValues->flash_protocol_selected_log_transport == "iso15765")
                     ssm_can_init();
-                else if (configValues->flash_protocol_selected_log_protocol == "K-Line")
+                else if (configValues->flash_protocol_selected_log_transport == "K-Line")
                     //serial->fast_init(output);
                     ssm_kline_init();
-                else if (configValues->flash_protocol_selected_log_protocol == "SSM1")
+                else if (configValues->flash_protocol_selected_log_transport == "SSM")
                     ssm1_init();
             }
         }

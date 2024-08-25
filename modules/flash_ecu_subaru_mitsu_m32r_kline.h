@@ -26,13 +26,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashEcuSubaruMitsuM32RKline : public QDialog
+class FlashEcuSubaruMitsuM32rKline : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuSubaruMitsuM32RKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashEcuSubaruMitsuM32RKline();
+    explicit FlashEcuSubaruMitsuM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruMitsuM32rKline();
 
     void run();
 

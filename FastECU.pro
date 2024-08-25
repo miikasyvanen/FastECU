@@ -78,7 +78,8 @@ SOURCES += \
     modules/flash_ecu_subaru_hitachi_sh7058_can.cpp \
     modules/flash_ecu_subaru_hitachi_sh72543r_can.cpp \
     modules/flash_ecu_subaru_mitsu_m32r_kline.cpp \
-    modules/flash_ecu_subaru_uinisia_jecs_m32r.cpp \
+    modules/flash_ecu_subaru_unisia_jecs.cpp \
+    modules/flash_ecu_subaru_unisia_jecs_m32r.cpp \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.cpp \
@@ -130,7 +131,8 @@ HEADERS += \
     modules/flash_ecu_subaru_hitachi_sh7058_can.h \
     modules/flash_ecu_subaru_hitachi_sh72543r_can.h \
     modules/flash_ecu_subaru_mitsu_m32r_kline.h \
-    modules/flash_ecu_subaru_uinisia_jecs_m32r.h \
+    modules/flash_ecu_subaru_unisia_jecs.h \
+    modules/flash_ecu_subaru_unisia_jecs_m32r.h \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.h \

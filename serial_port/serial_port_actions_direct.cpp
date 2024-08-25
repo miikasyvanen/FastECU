@@ -568,8 +568,6 @@ QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
 {
     QByteArray received;
     QByteArray msg;
-    //uint8_t msgLen = 0;
-    //uint8_t chk_sum = 0;
 
     if (is_serial_port_open())
     {
@@ -583,7 +581,8 @@ QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
         }
         for (int i = 0; i < output.length(); i++)
         {
-            msg[0] = output.at(i);
+            msg.clear();
+            msg.append(output.at(i));
             serial->write(msg, 1);
         }
         //qDebug() << "Data sent:" << parse_message_to_hex(output);
@@ -612,7 +611,8 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
         }
         for (int i = 0; i < output.length(); i++)
         {
-            msg[0] = output.at(i);
+            msg.clear();
+            msg.append(output.at(i));
             serial->write(msg, 1);
             // Add serial echo read during transmit to speed up a little
             if (serial->bytesAvailable())

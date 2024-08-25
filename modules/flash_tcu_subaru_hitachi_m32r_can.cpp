@@ -2,7 +2,7 @@
 
 //QT_CHARTS_USE_NAMESPACE
 
-FlashTcuSubaruHitachiM32RCan::FlashTcuSubaruHitachiM32RCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashTcuSubaruHitachiM32rCan::FlashTcuSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -20,7 +20,7 @@ FlashTcuSubaruHitachiM32RCan::FlashTcuSubaruHitachiM32RCan(SerialPortActions *se
     this->serial = serial;
 }
 
-void FlashTcuSubaruHitachiM32RCan::run()
+void FlashTcuSubaruHitachiM32rCan::run()
 {
     this->show();
 
@@ -127,12 +127,12 @@ void FlashTcuSubaruHitachiM32RCan::run()
     }
 }
 
-FlashTcuSubaruHitachiM32RCan::~FlashTcuSubaruHitachiM32RCan()
+FlashTcuSubaruHitachiM32rCan::~FlashTcuSubaruHitachiM32rCan()
 {
 
 }
 
-void FlashTcuSubaruHitachiM32RCan::closeEvent(QCloseEvent *event)
+void FlashTcuSubaruHitachiM32rCan::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
@@ -142,7 +142,7 @@ void FlashTcuSubaruHitachiM32RCan::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::connect_bootloader_subaru_tcu_hitachi_can()
+int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
 {
     QByteArray output;
     QByteArray received;
@@ -373,7 +373,7 @@ int FlashTcuSubaruHitachiM32RCan::connect_bootloader_subaru_tcu_hitachi_can()
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(uint32_t start_addr, uint32_t length)
+int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -657,7 +657,7 @@ int FlashTcuSubaruHitachiM32RCan::read_mem_subaru_tcu_hitachi_can(uint32_t start
  * @return success
  */
 
-int FlashTcuSubaruHitachiM32RCan::write_mem_subaru_tcu_hitachi_can(bool test_write)
+int FlashTcuSubaruHitachiM32rCan::write_mem_subaru_tcu_hitachi_can(bool test_write)
 {
     QByteArray filedata;
 
@@ -900,7 +900,7 @@ int FlashEcuSubaruDensoSH705xCan::check_romcrc_denso_can_02_32bit(const uint8_t 
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::reflash_block_subaru_tcu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -1093,7 +1093,7 @@ int FlashTcuSubaruHitachiM32RCan::reflash_block_subaru_tcu_hitachi_can(const uin
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32RCan::erase_subaru_tcu_hitachi_can()
+int FlashTcuSubaruHitachiM32rCan::erase_subaru_tcu_hitachi_can()
 {
     QByteArray output;
     QByteArray received;
@@ -1496,7 +1496,7 @@ QByteArray FlashEcuSubaruDensoSH705xCan::send_subaru_denso_sid_31_start_routine(
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_generate_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1524,7 +1524,7 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_generate_can_seed_ke
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1572,7 +1572,7 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_seed_key(Q
  * @return encrypted data
  */
 
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1592,7 +1592,7 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_encrypt_32bit_payloa
     return encrypted;
 }
 
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1612,7 +1612,7 @@ QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_decrypt_32bit_payloa
     return decrypt;
 }
 
-QByteArray FlashTcuSubaruHitachiM32RCan::subaru_tcu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1846,7 +1846,7 @@ int FlashEcuSubaruDensoSH705xCan::connect_bootloader_start_countdown(int timeout
  *
  * @return parsed message
  */
-QString FlashTcuSubaruHitachiM32RCan::parse_message_to_hex(QByteArray received)
+QString FlashTcuSubaruHitachiM32rCan::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1864,7 +1864,7 @@ QString FlashTcuSubaruHitachiM32RCan::parse_message_to_hex(QByteArray received)
  *
  * @return
  */
-int FlashTcuSubaruHitachiM32RCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashTcuSubaruHitachiM32rCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1903,7 +1903,7 @@ int FlashTcuSubaruHitachiM32RCan::send_log_window_message(QString message, bool 
     return STATUS_ERROR;
 }
 
-void FlashTcuSubaruHitachiM32RCan::set_progressbar_value(int value)
+void FlashTcuSubaruHitachiM32rCan::set_progressbar_value(int value)
 {
     bool valueChanged = true;
     if (ui->progressbar)
@@ -1916,7 +1916,7 @@ void FlashTcuSubaruHitachiM32RCan::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashTcuSubaruHitachiM32RCan::delay(int timeout)
+void FlashTcuSubaruHitachiM32rCan::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)
