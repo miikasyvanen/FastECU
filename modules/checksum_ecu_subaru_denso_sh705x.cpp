@@ -96,8 +96,8 @@ QByteArray ChecksumEcuSubaruDensoSH705x::calculate_checksum(QByteArray romData, 
         qDebug() << "Checksums corrected";
         QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums corrected");
     }
-    else
-        QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums OK");
+    //else
+    //    QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums OK");
 
     return romData;
 }

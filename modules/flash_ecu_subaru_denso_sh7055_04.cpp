@@ -595,8 +595,8 @@ int FlashEcuSubaruDensoSH7055_04::write_mem_subaru_denso_kline_32bit(bool test_w
         data_array[i] = filedata.at(i);
     }
 
-    send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
-    send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+    send_log_window_message("--- Comparing ECU flash memory pages to image file ---", true, true);
+    send_log_window_message("seg\tstart\tlength\tecu crc\timg crc\tsame?", true, true);
 
     if (get_changed_blocks_kline_32bit(data_array, block_modified))
     {
@@ -627,7 +627,7 @@ int FlashEcuSubaruDensoSH7055_04::write_mem_subaru_denso_kline_32bit(bool test_w
             }
         }
 
-        send_log_window_message("--- start writing ROM file to ECU flash memory ---", true, true);
+        send_log_window_message("--- Start writing ROM file to ECU flash memory ---", true, true);
         for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)
         {
             if (block_modified[blockno])
@@ -645,8 +645,8 @@ int FlashEcuSubaruDensoSH7055_04::write_mem_subaru_denso_kline_32bit(bool test_w
             }
         }
 
-        send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
-        send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+        send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
+        send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
         if (get_changed_blocks_kline_32bit(data_array, block_modified))
         {
@@ -704,7 +704,7 @@ int FlashEcuSubaruDensoSH7055_04::get_changed_blocks_kline_32bit(const uint8_t *
         QString block_start = QString("%1").arg((uint32_t)bs,8,16,QLatin1Char('0')).toUpper();
         QString block_length = QString("%1").arg((uint32_t)blen,8,16,QLatin1Char('0')).toUpper();
 
-        msg = QString("FB" + block_no + "\t0x" + block_start + "\t0x" + block_length).toUtf8();
+        msg = QString("FB" + block_no + "\t" + block_start + "\t" + block_length).toUtf8();
         //qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
@@ -725,12 +725,63 @@ int FlashEcuSubaruDensoSH7055_04::check_romcrc_kline_32bit(const uint8_t *src, u
     QByteArray output;
     QByteArray received;
     QByteArray msg;
+    uint32_t imgcrc32;
+    uint32_t ecucrc32;
+    uint32_t pagesize = len; // Test 32-bit CRC with block size
+    //uint32_t CRC32 = 0x5AA5A55A;
     uint16_t chunko;
 
     len = (len + ROMCRC_LENMASK_32BIT) & ~ROMCRC_LENMASK_32BIT;
 
     chunko = start / ROMCRC_CHUNKSIZE_32BIT;
 
+    // Test 32-bit CRC with block size
+    output.clear();
+    output.append(SID_CONF);
+    output.append(SID_CONF_CKS1);
+    output.append((uint8_t)(start >> 24) & 0xFF);
+    output.append((uint8_t)(start >> 16) & 0xFF);
+    output.append((uint8_t)(start >> 8) & 0xFF);
+    output.append((uint8_t)start & 0xFF);
+    output.append((uint8_t)0x00 & 0xFF);
+    output.append((uint8_t)(pagesize >> 16) & 0xFF);
+    output.append((uint8_t)(pagesize >> 8) & 0xFF);
+    output.append((uint8_t)pagesize & 0xFF);
+    qDebug() << "Send: " + parse_message_to_hex(output);
+    serial->write_serial_data_echo_check(output);
+
+    received.clear();
+    received = serial->read_serial_data(10, serial_read_long_timeout);
+    qDebug() << "Received: " + parse_message_to_hex(received);
+    if (received.length())
+    {
+        uint8_t len = (uint8_t)received.at(0);
+        if (len == 6)
+        {
+            received.remove(0, 3);
+            received.remove(received.length() - 1, 1);
+        }
+    }
+
+    imgcrc32 = crc32(src, pagesize);
+    if (received.length() > 3)
+        ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
+    msg.clear();
+    msg.append(QString("ROM CRC: 0x%1 IMG CRC: 0x%2").arg(ecucrc32,8,16,QLatin1Char('0')).arg(imgcrc32,8,16,QLatin1Char('0')).toUtf8());
+    qDebug() << msg;
+
+    QString ecu_crc32 = QString("%1").arg((uint32_t)ecucrc32,8,16,QLatin1Char('0')).toUpper();
+    QString img_crc32 = QString("%1").arg((uint32_t)imgcrc32,8,16,QLatin1Char('0')).toUpper();
+    msg = QString("\t" + ecu_crc32 + "\t" + img_crc32).toUtf8();
+    send_log_window_message(msg, false, false);
+    if (ecucrc32 != imgcrc32)
+    {
+        send_log_window_message("\tNO", false, true);
+        *modified = 1;
+        return 0;
+    }
+
+/*
     //request format : <SID_CONF> <SID_CONF_CKS1> <CNH> <CNL> <CRC0H> <CRC0L> ...<CRC3H> <CRC3L>
     //verify if <CRCH:CRCL> hash is valid for n*256B chunk of the ROM (starting at <CNH:CNL> * 256)
     for (; len > 0; len -= ROMCRC_ITERSIZE_32BIT, chunko += ROMCRC_NUMCHUNKS_32BIT) {
@@ -784,12 +835,49 @@ int FlashEcuSubaruDensoSH7055_04::check_romcrc_kline_32bit(const uint8_t *src, u
 
         return 0;
     }   //for
-
+*/
     send_log_window_message("\tYES", false, true);
     *modified = 0;
     serial->read_serial_data(100, serial_read_short_timeout);
     return 0;
 }
+
+unsigned int FlashEcuSubaruDensoSH7055_04::crc32(const unsigned char *buf, unsigned int len)
+{
+    unsigned int crc = 0xFFFFFFFF;
+
+    if (!crc_tab32_init)
+        init_crc32_tab();
+
+    if (buf == NULL)
+        return 0L;
+    while (len--)
+        crc = crc_tab32[((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8);
+
+    return crc ^ 0xFFFFFFFF;
+}
+
+void FlashEcuSubaruDensoSH7055_04::init_crc32_tab( void ) {
+    uint32_t i, j;
+    uint32_t crc, c;
+
+    for (i=0; i<256; i++) {
+        crc = 0;
+        c = (uint32_t)i;
+
+        for (j=0; j<8; j++) {
+            if ( (crc ^ c) & 0x00000001 )
+                crc = ( crc >> 1 ) ^ CRC32;
+            else
+                crc =   crc >> 1;
+            c = c >> 1;
+        }
+        crc_tab32[i] = crc;
+    }
+
+    crc_tab32_init = 1;
+
+}  /* init_crc32_tab */
 
 /*
  *  Reflash ROM 32bit K-Line ECUs

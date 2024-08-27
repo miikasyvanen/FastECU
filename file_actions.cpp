@@ -2126,7 +2126,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 
     bool chksumModuleAvailable = false;
 
-    QString flashMethod = ecuCalDef->RomInfo[FlashMethod];
+    QString flashMethod = configValues->flash_protocol_selected_protocol_name;// ecuCalDef->RomInfo[FlashMethod];
 
     qDebug() << "Protocol:" << configValues->flash_protocol_selected_protocol_name;
     qDebug() << "Make:" << configValues->flash_protocol_selected_make;
@@ -2137,17 +2137,19 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
         if (configValues->flash_protocol_selected_make == "Subaru")
         {
             qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
+            qDebug() << "Checksum module:" << flashMethod;
 
             /*
             * Denso ECU
             */
-            if (flashMethod.startsWith("sub_ecu_sh7055"))
+            if (flashMethod.startsWith("sub_ecu_denso_sh7055"))
             {
+                qDebug() << "Checksum module:" << flashMethod;
                 chksumModuleAvailable = true;
                 ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();
                 ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x07FB80, 17 * 12);
             }
-            else if (flashMethod.startsWith("sub_ecu_sh7058"))
+            else if (flashMethod.startsWith("sub_ecu_denso_sh7058"))
             {
                 chksumModuleAvailable = true;
                 ChecksumEcuSubaruDensoSH705x *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH705x();

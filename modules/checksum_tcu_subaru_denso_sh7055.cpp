@@ -79,8 +79,8 @@ QByteArray ChecksumTcuSubaruDensoSH7055::calculate_checksum(QByteArray romData)
         qDebug() << "Checksums corrected";
         QMessageBox::information(this, tr("Subaru Denso SH7055 TCU Checksum"), "Checksums corrected");
     }
-    else
-        QMessageBox::information(this, tr("Subaru Denso SH7055 TCU Checksum"), "Checksums OK");
+    //else
+    //    QMessageBox::information(this, tr("Subaru Denso SH7055 TCU Checksum"), "Checksums OK");
 
     return romData;
 }
