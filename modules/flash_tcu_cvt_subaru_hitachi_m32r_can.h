@@ -26,13 +26,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashTcuCvtSubaruHitachiM32RCan : public QDialog
+class FlashTcuCvtSubaruHitachiM32rCan : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashTcuCvtSubaruHitachiM32RCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashTcuCvtSubaruHitachiM32RCan();
+    explicit FlashTcuCvtSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashTcuCvtSubaruHitachiM32rCan();
 
     void run();
 

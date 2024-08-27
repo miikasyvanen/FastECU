@@ -789,6 +789,9 @@ void MainWindow::disconnect_from_ecu()
     set_status_bar_label(false, false, "");
     serial->reset_connection();
 
+    serial->set_serial_port_baudrate("4800");
+    serial->set_serial_port_parity(QSerialPort::NoParity);
+
     serial_port_list->setEnabled(true);
     refresh_serial_port_list->setEnabled(true);
 }

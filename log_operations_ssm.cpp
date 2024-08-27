@@ -51,12 +51,12 @@ bool MainWindow::ecu_init()
         {
             if (configValues->flash_protocol_selected_make == "Subaru")
             {
-                if (configValues->flash_protocol_selected_log_protocol == "CAN" || configValues->flash_protocol_selected_log_protocol == "iso15765")
+                if (configValues->flash_protocol_selected_log_transport == "CAN" || configValues->flash_protocol_selected_log_transport == "iso15765")
                     ssm_can_init();
-                else if (configValues->flash_protocol_selected_log_protocol == "K-Line")
+                else if (configValues->flash_protocol_selected_log_transport == "K-Line")
                     //serial->fast_init(output);
                     ssm_kline_init();
-                else if (configValues->flash_protocol_selected_log_protocol == "SSM1")
+                else if (configValues->flash_protocol_selected_log_transport == "SSM")
                     ssm1_init();
             }
         }
@@ -77,35 +77,60 @@ void MainWindow::ssm1_init()
     QByteArray output;
     QByteArray received;
 
+    serial->reset_connection();
+    serial->set_serial_port_baudrate("1953");
+    serial->set_serial_port_parity(QSerialPort::EvenParity);
+    serial->open_serial_port();
+
     qDebug() << "Using SSM1 protocol";
 
     qDebug() << "Issue read cmd...";
+    received.clear();
     output.clear();
     output.append((uint8_t)0x78);
     output.append((uint8_t)0x12);
     output.append((uint8_t)0x34);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    delay(1000);
-    received = serial->read_serial_data(100, 500);
-    if (received.length() > 0)
-        qDebug() << "Something received" << parse_message_to_hex(received);
-    else
-        qDebug() << "No response...";
+    //delay(1000);
+    for (int i = 0; i < 10; i++)
+    {
+        received.append(serial->read_serial_data(100, 500));
+    }
+    qDebug() << "Received:" << parse_message_to_hex(received);
+    //if (received.length() > 0)
+    //    qDebug() << "Something received" << parse_message_to_hex(received);
+    //else
+    //    qDebug() << "No response...";
 
 
     qDebug() << "Issue init cmd...";
+    received.clear();
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x46);
     output.append((uint8_t)0x48);
     output.append((uint8_t)0x49);
-    serial->write_serial_data_echo_check(output);
+    serial->write_serial_data(output);
 
     qDebug() << "Init sent, delaying 2s...";
-    delay(2000);
-    qDebug() << "Checking response...";
-    received = serial->read_serial_data(100, 500);
+    //delay(2000);
+    for (int i = 0; i < 2; i++)
+    {
+        received.append(serial->read_serial_data(100, 500));
+    }
+    qDebug() << "Received:" << parse_message_to_hex(received);
+    //qDebug() << "Checking response...";
+    //received = serial->read_serial_data(100, 500);
+    received.clear();
+    output.clear();
+    output.append((uint8_t)0x12);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data(output);
+    received.append(serial->read_serial_data(100, 500));
+
     if (received.length() > 0)
     {
         qDebug() << "Something received" << parse_message_to_hex(received);;

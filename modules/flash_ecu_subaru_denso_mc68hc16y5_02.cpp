@@ -169,8 +169,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     //received = serial->write_serial_data_echo_check(output);
     serial->write_serial_data_echo_check(output);
     send_log_window_message("Sent to bootloader: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent to bootloader: " + parse_message_to_hex(output);
     received = serial->read_serial_data(output.length(), serial_read_short_timeout);
     send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response from bootloader: " + parse_message_to_hex(received);
 
     if (flash_method.endsWith("_ecutek"))
         denso_bootloader_init_response_wrx02_ok = denso_bootloader_init_response_ecutek_wrx02_ok;
@@ -280,14 +282,16 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     send_log_window_message("Requesting kernel ID", true, true);
     qDebug() << "Requesting kernel ID";
 
+    delay(1500);
     serial->change_port_speed("39473");
-    delay(200);
     received.clear();
     while (received == "")
     {
         received = request_kernel_id();
         delay(500);
     }
+    received.remove(0, 5);
+    received.remove(received.length() - 1, 1);
     send_log_window_message("Kernel ID: " + received, true, true);
     qDebug() << "Kernel ID: " << parse_message_to_hex(received);
 
@@ -350,11 +354,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
             received.clear();
             for (unsigned int j = flashdevices[mcu_type_index].rblocks->start; j < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len); j++)
             {
-                received.append((uint8_t)0x00);
+                received.append((uint8_t)0xff);
             }
             mapdata.append(received);
 
-            addr = 0x028000;
+            addr = flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len;
         }
 
         output.clear();
@@ -386,6 +390,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
         else
         {
             //qDebug() << "ERROR IN DATA RECEIVE!";
+            return STATUS_ERROR;
         }
 
         cplen = (numblocks * pagesize);
@@ -759,7 +764,7 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
 
     request_denso_kernel_id = false;
 
-    //qDebug() << "kernel ID:" << parse_message_to_hex(kernelid);
+    qDebug() << "kernel ID:" << parse_message_to_hex(kernelid);
 
     return kernelid;
 }

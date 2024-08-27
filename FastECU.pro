@@ -78,7 +78,8 @@ SOURCES += \
     modules/flash_ecu_subaru_hitachi_sh7058_can.cpp \
     modules/flash_ecu_subaru_hitachi_sh72543r_can.cpp \
     modules/flash_ecu_subaru_mitsu_m32r_kline.cpp \
-    modules/flash_ecu_subaru_uinisia_jecs_m32r.cpp \
+    modules/flash_ecu_subaru_unisia_jecs.cpp \
+    modules/flash_ecu_subaru_unisia_jecs_m32r.cpp \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.cpp \
@@ -91,6 +92,7 @@ SOURCES += \
     serial_port/serial_port_actions_direct.cpp \
     serial_port/websocketiodevice.cpp \
     settings.cpp \
+    vehicle_select.cpp \
     verticallabel.cpp
 
 HEADERS += \
@@ -129,7 +131,8 @@ HEADERS += \
     modules/flash_ecu_subaru_hitachi_sh7058_can.h \
     modules/flash_ecu_subaru_hitachi_sh72543r_can.h \
     modules/flash_ecu_subaru_mitsu_m32r_kline.h \
-    modules/flash_ecu_subaru_uinisia_jecs_m32r.h \
+    modules/flash_ecu_subaru_unisia_jecs.h \
+    modules/flash_ecu_subaru_unisia_jecs_m32r.h \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.h \
@@ -143,6 +146,7 @@ HEADERS += \
     serial_port/serial_port_actions_direct.h \
     serial_port/websocketiodevice.h \
     settings.h \
+    vehicle_select.h \
     verticallabel.h
 
 FORMS += \
@@ -159,7 +163,8 @@ FORMS += \
     logvalues.ui \
     mainwindow.ui \
     protocol_select.ui \
-    settings.ui
+    settings.ui \
+    vehicle_select.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

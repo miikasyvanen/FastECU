@@ -27,6 +27,7 @@
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
 #include <protocol_select.h>
+#include <vehicle_select.h>
 #include <definition_file_convert.h>
 #include <biu_operations_subaru.h>
 #include <get_key_operations_subaru.h>
@@ -47,7 +48,8 @@
 #include <modules/flash_ecu_subaru_denso_sh7058_can.h>
 #include <modules/flash_ecu_subaru_denso_sh7058_can_diesel.h>
 
-#include <modules/flash_ecu_subaru_uinisia_jecs_m32r.h>
+#include <modules/flash_ecu_subaru_unisia_jecs.h>
+#include <modules/flash_ecu_subaru_unisia_jecs_m32r.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_kline.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_can.h>
 #include <modules/flash_tcu_subaru_hitachi_m32r_kline.h>
@@ -141,16 +143,17 @@ private:
     FlashEcuSubaruDensoSH7055_04 *flashEcuSubaruDensoSH7055_04;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
-    FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecs;
+    FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
+    FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecsM32r;
     FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
     FlashEcuSubaruHitachiM32rCan *flashEcuSubaruHitachiM32rCan;
-    FlashEcuSubaruMitsuM32RKline *flashEcuSubaruMitsuM32RKline;
+    FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;
     FlashEcuSubaruHitachiSh7058Can *flashEcuSubaruHitachiSh7058Can;
     FlashEcuSubaruHitachiSh72543rCan *flashEcuSubaruHitachiSh72543rCan;
 
-    FlashTcuSubaruHitachiM32RKline *flashTcuSubaruHitachiM32RKline;
-    FlashTcuSubaruHitachiM32RCan *flashTcuSubaruHitachiM32RCan;
-    FlashTcuCvtSubaruHitachiM32RCan *flashTcuCvtSubaruHitachiM32RCan;
+    FlashTcuSubaruHitachiM32rKline *flashTcuSubaruHitachiM32rKline;
+    FlashTcuSubaruHitachiM32rCan *flashTcuSubaruHitachiM32rCan;
+    FlashTcuCvtSubaruHitachiM32rCan *flashTcuCvtSubaruHitachiM32rCan;
     FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
     FlashTcuCvtSubaruMitsuMH8104Can *flashTcuCvtSubaruMitsuMH8104Can;
     FlashTcuCvtSubaruMitsuMH8111Can *flashTcuCvtSubaruMitsuMH8111Can;
@@ -284,7 +287,7 @@ private:
     void set_flash_arrow_state();
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
-	QString check_kernel(QString flash_method);
+    //QString check_kernel(QString flash_method);
     void setSplashScreenProgress(QString text, int incValue);
 
     // menuactions.c
@@ -346,6 +349,8 @@ private slots:
     // mainwindow.c
     void select_protocol();
     void select_protocol_finished(int result);
+    void select_vehicle();
+    void select_vehicle_finished(int result);
     void log_transport_changed();
     void flash_transport_changed();
     void check_serial_ports();

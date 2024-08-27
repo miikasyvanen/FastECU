@@ -557,7 +557,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QStringList flash_protocol_kernel;
     QStringList flash_protocol_kernel_addr;
     QStringList flash_protocol_description;
-    QStringList flash_protocol_family;
+    QStringList flash_protocol_protocol_name;
 
     QFile file(filename);
     if(!file.open(QFile::ReadWrite | QFile::Text)) {
@@ -606,8 +606,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         flash_protocol_kernel.append(" ");
                         flash_protocol_kernel_addr.append(" ");
                         flash_protocol_description.append(" ");
-                        flash_protocol_family.append(" ");
-                        flash_protocol_family.replace(index, protocol.attribute("name","No name"));
+                        flash_protocol_protocol_name.append(" ");
+                        flash_protocol_protocol_name.replace(index, protocol.attribute("name","No name"));
 
                         QDomElement protocol_data = protocol.firstChild().toElement();
                         while (!protocol_data.isNull())
@@ -648,13 +648,13 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 flash_protocol_kernel_addr.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "description")
                                 flash_protocol_description.replace(index, protocol_data.text());
-                            //if (protocol_data.tagName() == "family")
-                                //flash_protocol_family.replace(index, protocol_data.text());
+                            //if (protocol_data.tagName() == "protocol_name")
+                                //flash_protocol_protocol_name.replace(index, protocol_data.text());
 
                             protocol_data = protocol_data.nextSibling().toElement();
 
                         }
-                        //qDebug() << "Flash protocol name:" << flash_protocol_name.at(index) << "and family:" << flash_protocol_family.at(index);
+                        //qDebug() << "Flash protocol name:" << flash_protocol_name.at(index) << "and family:" << flash_protocol_protocol_name.at(index);
                         index++;
                     }
                     protocol = protocol.nextSibling().toElement();
@@ -697,7 +697,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         configValues->flash_protocol_kernel.append(" ");
                         configValues->flash_protocol_kernel_addr.append(" ");
                         configValues->flash_protocol_description.append(" ");
-                        configValues->flash_protocol_family.append(" ");
+                        configValues->flash_protocol_protocol_name.append(" ");
 
                         id++;
                         QDomElement car_model_data = car_model.firstChild().toElement();
@@ -720,12 +720,12 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 configValues->flash_protocol_fuel.replace(index, car_model_data.text());
                             if (car_model_data.tagName() == "year")
                                 configValues->flash_protocol_year.replace(index, car_model_data.text());
-                            if (car_model_data.tagName() == "family")
+                            if (car_model_data.tagName() == "protocol")
                             {
-                                configValues->flash_protocol_family.replace(index, car_model_data.text());
-                                for (int i = 0; i < flash_protocol_family.length(); i++)
+                                configValues->flash_protocol_protocol_name.replace(index, car_model_data.text());
+                                for (int i = 0; i < flash_protocol_protocol_name.length(); i++)
                                 {
-                                    if (flash_protocol_family.at(i) == configValues->flash_protocol_family.at(index))
+                                    if (flash_protocol_protocol_name.at(i) == configValues->flash_protocol_protocol_name.at(index))
                                     {
                                         configValues->flash_protocol_ecu.replace(index, flash_protocol_ecu.at(i));
                                         configValues->flash_protocol_mcu.replace(index, flash_protocol_mcu.at(i));
@@ -753,7 +753,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
 
                             car_model_data = car_model_data.nextSibling().toElement();
                         }
-                        //qDebug() << "Flash protocol ID:" << configValues->flash_protocol_id.at(index) << "make:" << configValues->flash_protocol_make.at(index) << "model:" << configValues->flash_protocol_model.at(index) << "flash method:" << configValues->flash_protocol_family.at(index);
+                        //qDebug() << "Flash protocol ID:" << configValues->flash_protocol_id.at(index) << "make:" << configValues->flash_protocol_make.at(index) << "model:" << configValues->flash_protocol_model.at(index) << "flash method:" << configValues->flash_protocol_protocol_name.at(index);
                         index++;
                     }
                     car_model = car_model.nextSibling().toElement();
@@ -1566,9 +1566,9 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
     {
-        if (!cal_id_family_list.contains(configValues->flash_protocol_family.at(i)))
+        if (!cal_id_family_list.contains(configValues->flash_protocol_protocol_name.at(i)))
         {
-            cal_id_family_list.append(configValues->flash_protocol_family.at(i));
+            cal_id_family_list.append(configValues->flash_protocol_protocol_name.at(i));
             cal_id_ascii_list.append(configValues->flash_protocol_cal_id_ascii.at(i));
             cal_id_addr_list.append(configValues->flash_protocol_cal_id_addr.at(i));
             cal_id_length_list.append(configValues->flash_protocol_cal_id_length.at(i));
@@ -1682,10 +1682,16 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         //ecuCalDef->RomInfo.replace(Transmission, transmission);
         //ecuCalDef->RomInfo.replace(MemModel, memmodel);
         //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-        ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_family);
+        ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
         ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
         ecuCalDef->RomInfo.replace(DefFile, " ");
     }
+
+    if (configValues->flash_protocol_selected_checksum == "yes")
+        ecuCalDef->RomInfo.replace(ChecksumModule, configValues->flash_protocol_selected_protocol_name);
+    if (configValues->flash_protocol_selected_checksum == "no")
+        ecuCalDef->RomInfo.replace(ChecksumModule, "No checksums");
+
 /*
     if (ecuCalDef == NULL)
     {
@@ -1709,7 +1715,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < 190 * 1024)
     {
         for (int i = 0; i < 0x8000; i++)
-            ecuCalDef->FullRomData.insert(0x20000, (uint8_t)0x00);
+            ecuCalDef->FullRomData.insert(0x20000, (uint8_t)0xff);
     }
     //qDebug() << "QByteArray size =" << ecuCalDef->FullRomData.length();
 
@@ -2122,7 +2128,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 
     QString flashMethod = ecuCalDef->RomInfo[FlashMethod];
 
-    qDebug() << "Protocol:" << configValues->flash_protocol_selected_family;
+    qDebug() << "Protocol:" << configValues->flash_protocol_selected_protocol_name;
     qDebug() << "Make:" << configValues->flash_protocol_selected_make;
     qDebug() << "Checksum:" << configValues->flash_protocol_selected_checksum;
 
@@ -2477,5 +2483,7 @@ double FileActions::calculate_value_from_expression(QStringList expression)
         }
     }
 
+    if (isnan(value))
+        value = 0;
     return value;
 }
