@@ -81,10 +81,9 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << "ECU protocols read";
     qDebug() << "Protocols ID:" << configValues->flash_protocol_selected_id.toInt();
 
-    if (configValues->flash_protocol_selected_id.toInt() > configValues->flash_protocol_selected_id.length())
+    if (configValues->flash_protocol_selected_id.toInt() > configValues->flash_protocol_id.length())
         configValues->flash_protocol_selected_id = "0";
     configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(configValues->flash_protocol_selected_id.toInt());
-    qDebug() << "ECU protocols set";
     configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(configValues->flash_protocol_selected_id.toInt());
     configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(configValues->flash_protocol_selected_id.toInt());
@@ -543,7 +542,7 @@ void MainWindow::select_protocol()
     protocolSelect->move(screenGeometry.center() - protocolSelect->rect().center());
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
-    //qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_family;
+    qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 
 }
@@ -577,7 +576,7 @@ void MainWindow::select_vehicle()
     vehicleSelect->move(screenGeometry.center() - vehicleSelect->rect().center());
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
-    //qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_family;
+    qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 
 }

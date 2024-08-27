@@ -111,11 +111,11 @@ void MainWindow::ssm1_init()
     output.append((uint8_t)0x46);
     output.append((uint8_t)0x48);
     output.append((uint8_t)0x49);
-    serial->write_serial_data_echo_check(output);
+    serial->write_serial_data(output);
 
     qDebug() << "Init sent, delaying 2s...";
     //delay(2000);
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 2; i++)
     {
         received.append(serial->read_serial_data(100, 500));
     }
@@ -128,7 +128,7 @@ void MainWindow::ssm1_init()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(output);
+    serial->write_serial_data(output);
     received.append(serial->read_serial_data(100, 500));
 
     if (received.length() > 0)

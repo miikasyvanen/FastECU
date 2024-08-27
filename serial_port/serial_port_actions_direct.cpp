@@ -630,6 +630,7 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
             }
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         }
+
         return received;
     }
     //send_log_window_message("Serial port not open", true, true);

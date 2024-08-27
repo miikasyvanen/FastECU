@@ -1715,7 +1715,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < 190 * 1024)
     {
         for (int i = 0; i < 0x8000; i++)
-            ecuCalDef->FullRomData.insert(0x20000, (uint8_t)0x00);
+            ecuCalDef->FullRomData.insert(0x20000, (uint8_t)0xff);
     }
     //qDebug() << "QByteArray size =" << ecuCalDef->FullRomData.length();
 
