@@ -68,10 +68,10 @@ SOURCES += \
     modules/eeprom_ecu_subaru_denso_sh705x_kline.cpp \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.cpp \
     modules/flash_ecu_subaru_denso_sh7055_02.cpp \
-    modules/flash_ecu_subaru_denso_sh7055_04.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.cpp \
     modules/flash_ecu_subaru_denso_sh705x_densocan.cpp \
+    modules/flash_ecu_subaru_denso_sh705x_kline.cpp \
     modules/flash_ecu_subaru_denso_sh7xxx_densocan.cpp \
     modules/flash_ecu_subaru_hitachi_m32r_can.cpp \
     modules/flash_ecu_subaru_hitachi_m32r_kline.cpp \
@@ -121,10 +121,10 @@ HEADERS += \
     modules/eeprom_ecu_subaru_denso_sh705x_kline.h \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.h \
     modules/flash_ecu_subaru_denso_sh7055_02.h \
-    modules/flash_ecu_subaru_denso_sh7055_04.h \
     modules/flash_ecu_subaru_denso_sh7058_can.h \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.h \
     modules/flash_ecu_subaru_denso_sh705x_densocan.h \
+    modules/flash_ecu_subaru_denso_sh705x_kline.h \
     modules/flash_ecu_subaru_denso_sh7xxx_densocan.h \
     modules/flash_ecu_subaru_hitachi_m32r_can.h \
     modules/flash_ecu_subaru_hitachi_m32r_kline.h \

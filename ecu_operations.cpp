@@ -100,7 +100,7 @@ QByteArray EcuOperations::request_kernel_id()
             output.append((uint8_t)0x0F);
             output.append((uint8_t)0xFF);
             output.append((uint8_t)0xFE);
-            output.append((uint8_t)SID_START_COMM_CAN);
+            output.append((uint8_t)SID_CAN_START_COMM);
             output.append((uint8_t)0xA0);
         }
         else
@@ -408,8 +408,8 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
     output.append((uint8_t)0x0F);
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_DUMP_ROM_CAN + 0x06));
+    output.append((uint8_t)SID_CAN_START_COMM);
+    output.append((uint8_t)(SID_CAN_DUMP_ROM + 0x06));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -459,7 +459,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
         received = serial->read_serial_data(1, 10);
         //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
 
-        if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_DUMP_ROM_CAN)
+        if ((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_DUMP_ROM)
         {
             send_log_window_message("Page data request failed!", true, true);
             send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
@@ -1133,7 +1133,7 @@ int EcuOperations::check_romcrc_32bit_kline(const uint8_t *src, uint32_t start, 
         received.append(serial->read_serial_data(2, serial_read_short_timeout));
         send_log_window_message("\tNO", false, true);
 
-        if (received.at(2) != (char)(SID_CONF) && received.at(3) != (char)(SID_CONF_CKS1_BADCKS))
+        if (received.at(2) != (char)(SID_CONF) && received.at(3) != (char)(SID_CONF_CKS_BADCKS))
         {
             send_log_window_message(" ", false, true);
             send_log_window_message("got bad SID_FLASH_CKS1 response : ", true, true);
@@ -1178,8 +1178,8 @@ int EcuOperations::check_romcrc_32bit_can(const uint8_t *src, uint32_t start_add
     output.append((uint8_t)0x0F);
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_CONF_CKS1_CAN + 0x06));
+    output.append((uint8_t)SID_CAN_START_COMM);
+    output.append((uint8_t)(SID_CAN_CONF_CKS + 0x06));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1217,7 +1217,7 @@ int EcuOperations::check_romcrc_32bit_can(const uint8_t *src, uint32_t start_add
         byte_index++;
 
         //qDebug() << "Checksums: File =" << hex << chk_sum << "ROM =" << hex << (uint8_t)received.at(2);
-        if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_CONF_CKS1_CAN || chk_sum == (uint8_t)received.at(2))
+        if ((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_CONF_CKS || chk_sum == (uint8_t)received.at(2))
             continue;
 
         send_log_window_message("\tNO", false, true);
@@ -1518,8 +1518,8 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
         }
 
         // send 0xF8 command to check and flash 128 bytes
-        output[4] = (uint8_t)SID_START_COMM_CAN;
-        output[5] = (uint8_t)(SIDFL_WB_CAN + 0x03);
+        output[4] = (uint8_t)SID_CAN_START_COMM;
+        output[5] = (uint8_t)(SID_CAN_FL_WB + 0x03);
         output[6] = (uint8_t)((i >> 8) & 0xFF);
         output[7] = (uint8_t)(i & 0xFF);
         output[8] = (uint8_t)(chk_sum & 0xFF);
@@ -1531,7 +1531,7 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
         // check for flash success or not
         received = serial->read_serial_data(3, serial_read_long_timeout);
         //qDebug() << parse_message_to_hex(received);
-        if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_WB_CAN)
+        if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_WB)
         {
             qDebug() << "Flashing of 128 byte block unsuccessful, stopping";
             qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
@@ -1860,12 +1860,12 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     output.append((uint8_t)0x0F);
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_FLASH_CAN + 0x01));
+    output.append((uint8_t)SID_CAN_START_COMM);
+    output.append((uint8_t)(SID_CAN_FLASH + 0x01));
     if (test_write)
-        output.append((uint8_t)SIDFL_PROTECT_CAN);
+        output.append((uint8_t)SID_CAN_FL_PROTECT);
     else
-        output.append((uint8_t)SIDFL_UNPROTECT_CAN);
+        output.append((uint8_t)SID_CAN_FL_UNPROTECT);
     output.append((uint8_t)(0x00));
     output.append((uint8_t)(0x00));
     output.append((uint8_t)(0x00));
@@ -1878,7 +1878,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     received = serial->read_serial_data(3, serial_read_short_timeout);
     qDebug() << parse_message_to_hex(received);
 
-    if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_FLASH_CAN)
+    if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FLASH)
     {
         qDebug() << "Initialize of erasing / flashing microcodes failed!";
         return STATUS_ERROR;
@@ -1888,7 +1888,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     int num_128_byte_blocks = (block_len >> 7) & 0xFFFFFFFF;
 
     qDebug() << "Proceeding to attempt erase and flash of block number: " << blockno;
-    output[5] = (uint8_t)(SIDFL_EB_CAN + 0x06);
+    output[5] = (uint8_t)(SID_CAN_FL_EB + 0x06);
     output[6] = (uint8_t)(blockno & 0xFF);
     output[7] = (uint8_t)((block_start >> 24) & 0xFF);
     output[8] = (uint8_t)((block_start >> 16) & 0xFF);
@@ -1912,7 +1912,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     //send_log_window_message(parse_message_to_hex(received), true, true);
     qDebug() << parse_message_to_hex(received);
 
-    if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_EB_CAN)
+    if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_EB)
     {
         qDebug() << "Not ready for 128byte block writing";
         return STATUS_ERROR;
