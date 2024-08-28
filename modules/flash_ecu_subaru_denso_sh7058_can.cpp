@@ -67,8 +67,8 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     // Set serial port
     serial->set_is_iso14230_connection(false);
-    serial->set_is_can_connection(false);
-    serial->set_is_iso15765_connection(true);
+    serial->set_is_can_connection(true);
+    serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
     serial->set_can_speed("500000");
     serial->set_iso15765_source_address(0x7E0);
@@ -161,7 +161,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
-
+/*
     serial->set_add_iso14230_header(false);
     serial->reset_connection();
     serial->set_is_iso14230_connection(false);
@@ -175,44 +175,23 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     serial->set_iso15765_destination_address(0x7E8);
     // Open serial port
     serial->open_serial_port();
-
+*/
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
 
     send_log_window_message("Checking if kernel is already running...", true, true);
     qDebug() << "Checking if kernel is already running...";
 
-    // Check if kernel already alive
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)(SID_CAN_START_COMM & 0xFF));
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 10);
-
-    if (received.length())
+    received.clear();
+    received = request_kernel_id();
+    send_log_window_message("Kernel ID: " + received, true, true);
+    qDebug() << "Kernel ID:" << received << parse_message_to_hex(received);
+    if (received != "")
     {
-        if ((uint8_t)received.at(0) == 0x7F && (uint8_t)received.at(2) == 0x34)
-        {
-            send_log_window_message("Kernel already running", true, true);
-
-            kernel_alive = true;
-            return STATUS_SUCCESS;
-        }
+        kernel_alive = true;
+        return STATUS_SUCCESS;
     }
-    else
-        send_log_window_message("No response from kernel, continue bootloader initialization...", true, true);
+    send_log_window_message("No response from kernel, continue bootloader initialization...", true, true);
 
     serial->reset_connection();
     serial->set_is_iso14230_connection(false);
@@ -1286,15 +1265,11 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    QByteArray pagedata;
-    uint16_t chunko;
-    uint32_t pagesize = ROMCRC_ITERSIZE_CAN;
-    uint32_t byte_index = 0;
+    uint32_t imgcrc32 = 0;
+    uint32_t ecucrc32 = 0;
+    uint32_t pagesize = len; // Test 32-bit CRC with block size
 
-    len = (len + ROMCRC_LENMASK_CAN) & ~ROMCRC_LENMASK_CAN;
-
-    chunko = start_addr / ROMCRC_CHUNKSIZE_CAN;
-
+    // Test 32-bit CRC with block size
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1302,61 +1277,105 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
     output.append((uint8_t)0xE0);
     output.append((uint8_t)SID_CAN_START_COMM);
     output.append((uint8_t)(SID_CAN_CONF_CKS + 0x06));
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
+    output.append((uint8_t)((start_addr >> 16) & 0xFF));
+    output.append((uint8_t)((start_addr >> 8) & 0xFF));
+    output.append((uint8_t)(start_addr & 0xFF));
+    output.append((uint8_t)((pagesize >> 16) & 0xFF));
+    output.append((uint8_t)((pagesize >> 8) & 0xFF));
+    output.append((uint8_t)(pagesize & 0xFF));
+    qDebug() << "Send: " + parse_message_to_hex(output);
+    serial->write_serial_data_echo_check(output);
 
-    //request format : <SID_CONF> <SID_CONF_CKS1> <CNH> <CNL> <CRC0H> <CRC0L> ...<CRC3H> <CRC3L>
-    //verify if <CRCH:CRCL> hash is valid for n*256B chunk of the ROM (starting at <CNH:CNL> * 256)
-    for (; len > 0; len -= ROMCRC_ITERSIZE_CAN, chunko += ROMCRC_NUMCHUNKS_CAN)
+    received.clear();
+    received = serial->read_serial_data(10, serial_read_long_timeout);
+    qDebug() << "Received: " + parse_message_to_hex(received);
+    if (received.length())
     {
-        if (kill_process)
-            return STATUS_ERROR;
-
-        output[6] = (uint8_t)((pagesize >> 24) & 0xFF);
-        output[7] = (uint8_t)((pagesize >> 16) & 0xFF);
-        output[8] = (uint8_t)((pagesize >> 8) & 0xFF);
-        output[9] = (uint8_t)((start_addr >> 24) & 0xFF);
-        output[10] = (uint8_t)((start_addr >> 16) & 0xFF);
-        output[11] = (uint8_t)((start_addr >> 8) & 0xFF);
-        //qDebug() << "Send req:" << parse_message_to_hex(output);
-        start_addr += pagesize;
-
-        received = serial->write_serial_data_echo_check(output);
-        //delay(100);
-        received = serial->read_serial_data(1, serial_read_short_timeout);
-        //received.remove(0, 4);
-        //qDebug() << "Received:" << parse_message_to_hex(received);
-
-        uint16_t chk_sum = 0;
-        for (uint32_t j = 0; j < pagesize; j++) {
-            pagedata[j] = src[(byte_index * pagesize) + j];
-            chk_sum += (pagedata[j] & 0xFF);
-            chk_sum = ((chk_sum >> 8) & 0xFF) + (chk_sum & 0xFF);
-        }
-        byte_index++;
-
-        if (received.length())
+        if (received.at(0) == 0x7f)
         {
-            if ((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_CONF_CKS || chk_sum == (uint8_t)received.at(2))
-                continue;
+            send_log_window_message("", false, true);
+            send_log_window_message("Failed: Wrong answer from ECU", true, true);
+            return STATUS_ERROR;
         }
+        uint8_t len = (uint8_t)received.at(1) & 0x07;
+        if (len > 3)
+        {
+            qDebug() << "Crop msg";
+            received.remove(0, 2);
+            received.remove(4, received.length() - 1);
+        }
+    }
+    else
+    {
+        send_log_window_message("", false, true);
+        send_log_window_message("Failed: No answer from ECU", true, true);
+        return STATUS_ERROR;
+    }
+
+    imgcrc32 = crc32(src, pagesize);
+    if (received.length() > 3)
+    {
+        qDebug() << "Get rom crc from msg";
+        ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
+    }
+    msg.clear();
+    msg.append(QString("ROM CRC: 0x%1 IMG CRC: 0x%2").arg(ecucrc32,8,16,QLatin1Char('0')).arg(imgcrc32,8,16,QLatin1Char('0')).toUtf8());
+    qDebug() << msg;
+
+    QString ecu_crc32 = QString("%1").arg((uint32_t)ecucrc32,8,16,QLatin1Char('0')).toUpper();
+    QString img_crc32 = QString("%1").arg((uint32_t)imgcrc32,8,16,QLatin1Char('0')).toUpper();
+    msg = QString("\t" + ecu_crc32 + "\t" + img_crc32).toUtf8();
+    send_log_window_message(msg, false, false);
+    if (ecucrc32 != imgcrc32)
+    {
         send_log_window_message("\tNO", false, true);
-
-        //confirmed bad CRC, we can exit
         *modified = 1;
-
+        serial->read_serial_data(100, serial_read_short_timeout);
         return 0;
-    }   //for
+    }
 
     send_log_window_message("\tYES", false, true);
     *modified = 0;
     serial->read_serial_data(100, serial_read_short_timeout);
     return 0;
 }
+
+unsigned int FlashEcuSubaruDensoSH7058Can::crc32(const unsigned char *buf, unsigned int len)
+{
+    unsigned int crc = 0xFFFFFFFF;
+
+    if (!crc_tab32_init)
+        init_crc32_tab();
+
+    if (buf == NULL)
+        return 0L;
+    while (len--)
+        crc = crc_tab32[((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8);
+
+    return crc ^ 0xFFFFFFFF;
+}
+
+void FlashEcuSubaruDensoSH7058Can::init_crc32_tab( void ) {
+    uint32_t i, j;
+    uint32_t crc, c;
+
+    for (i=0; i<256; i++) {
+        crc = 0;
+        c = (uint32_t)i;
+
+        for (j=0; j<8; j++) {
+            if ( (crc ^ c) & 0x00000001 )
+                crc = ( crc >> 1 ) ^ CRC32;
+            else
+                crc =   crc >> 1;
+            c = c >> 1;
+        }
+        crc_tab32[i] = crc;
+    }
+
+    crc_tab32_init = 1;
+
+}  /* init_crc32_tab */
 
 /*
  * Reflash ROM 32bit CAN (iso15765) ECUs
@@ -1614,60 +1633,6 @@ uint8_t FlashEcuSubaruDensoSH7058Can::cks_add8(QByteArray chksum_data, unsigned 
     return sum;
 }
 
-/*
- * CRC16 implementation adapted from Lammert Bies
- *
- * @return
- */
-#define NPK_CRC16   0xBAAD  //koopman, 2048bits (256B)
-static bool crc_tab16_init = 0;
-static uint16_t crc_tab16[256];
-void FlashEcuSubaruDensoSH7058Can::init_crc16_tab(void)
-{
-
-    uint32_t i, j;
-    uint16_t crc, c;
-
-    for (i=0; i<256; i++) {
-        crc = 0;
-        c   = (uint16_t) i;
-
-        for (j=0; j<8; j++) {
-            if ( (crc ^ c) & 0x0001 ) {
-                crc = ( crc >> 1 ) ^ NPK_CRC16;
-            } else {
-                crc =   crc >> 1;
-            }
-            c = c >> 1;
-        }
-        crc_tab16[i] = crc;
-    }
-
-    crc_tab16_init = 1;
-
-}
-
-uint16_t FlashEcuSubaruDensoSH7058Can::crc16(const uint8_t *data, uint32_t siz)
-{
-    uint16_t crc;
-
-    if (!crc_tab16_init) {
-        init_crc16_tab();
-    }
-
-    crc = 0;
-
-    while (siz > 0) {
-        uint16_t tmp;
-        uint8_t nextval;
-
-        nextval = *data++;
-        tmp =  crc ^ nextval;
-        crc = (crc >> 8) ^ crc_tab16[ tmp & 0xff ];
-        siz -= 1;
-    }
-    return crc;
-}
 
 
 
@@ -1990,15 +1955,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     QByteArray kernelid;
 
     request_denso_kernel_id = true;
-/*
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)0xA0);
-*/
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -2020,7 +1976,8 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     received = serial->read_serial_data(100, serial_read_timeout);
     qDebug() << "Request kernel id received:" << parse_message_to_hex(received);
 
-    received.remove(0, 2);
+    if (received.length() > 1)
+        received.remove(0, 2);
     qDebug() << "Initial request kernel id received and length:" << parse_message_to_hex(received) << received.length();
     kernelid = received;
 

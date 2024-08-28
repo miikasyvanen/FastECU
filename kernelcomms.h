@@ -100,6 +100,7 @@
 #define SID_CAN_ENTER_BL            0xFF86
 #define SID_CAN_CHECK_COMM_BL       0x90
 
+#define SID_CAN_RECUID              0xA0
 #define SID_CAN_DUMP_ROM            0xD8
 #define SID_CAN_DUMP_EEPROM         0xB8
 

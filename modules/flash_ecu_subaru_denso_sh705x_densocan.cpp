@@ -171,34 +171,17 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
     send_log_window_message("Checking if kernel is already running...", true, true);
     qDebug() << "Checking if kernel is already running...";
 
-    // Check if kernel already alive
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
-    output.append((uint8_t)(SID_CAN_START_COMM & 0xFF));
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 10);
-    //qDebug() << "0x7A 0x00 response:" << parse_message_to_hex(received);
-    //send_log_window_message("0x7A 0x00 response: " + parse_message_to_hex(received), true, true);
-    if (received.length()) {
-        if ((uint8_t)received.at(0) == 0x7F && (uint8_t)received.at(2) == 0x34)
-        {
-            send_log_window_message("Kernel already running", true, true);
-
-            kernel_alive = true;
-            return STATUS_SUCCESS;
-        }
+    received.clear();
+    received = request_kernel_id();
+    send_log_window_message("Kernel ID: " + received, true, true);
+    qDebug() << "Kernel ID:" << received << parse_message_to_hex(received);
+    if (received != "")
+    {
+        kernel_alive = true;
+        return STATUS_SUCCESS;
     }
+    send_log_window_message("No response from kernel, continue bootloader initialization...", true, true);
+
     send_log_window_message("Initializing bootloader", true, true);
     qDebug() << "Initializing bootloader";
 
@@ -813,14 +796,14 @@ int FlashEcuSubaruDensoSH705xDensoCan::check_romcrc_denso_sh705x_densocan(const 
     qDebug() << "Received: " + parse_message_to_hex(received);
     if (received.length())
     {
-        if (received.at(1) == 0x7f)
+        if (received.at(0) == 0x7f)
         {
             send_log_window_message("", false, true);
             send_log_window_message("Failed: Wrong answer from ECU", true, true);
             return STATUS_ERROR;
         }
-        uint8_t len = (uint8_t)received.at(0);
-        if (len > 5)
+        uint8_t len = (uint8_t)received.at(1) & 0x07;
+        if (len > 3)
         {
             qDebug() << "Crop msg";
             received.remove(0, 2);
@@ -1556,7 +1539,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::request_kernel_id()
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
     output.append((uint8_t)SID_CAN_START_COMM);
-    output.append((uint8_t)0xA0);
+    output.append((uint8_t)SID_CAN_RECUID);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1564,13 +1547,14 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::request_kernel_id()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
 
-    received = serial->write_serial_data_echo_check(output);
+    serial->write_serial_data_echo_check(output);
     qDebug() << "Request kernel id sent:" << parse_message_to_hex(output);
     delay(100);
     received = serial->read_serial_data(100, serial_read_timeout);
     qDebug() << "Request kernel id received:" << parse_message_to_hex(received);
 
-    received.remove(0, 2);
+    if (received.length() > 1)
+        received.remove(0, 2);
     qDebug() << "Initial request kernel id received and length:" << parse_message_to_hex(received) << received.length();
     kernelid = received;
 

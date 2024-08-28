@@ -267,7 +267,7 @@ private:
     // log_operations
     void kline_listener();
     void canbus_listener();
-    void ssm1_init();
+    void ssm_init();
     void ssm_kline_init();
     void ssm_can_init();
     QString parse_log_params(QByteArray received, QString protocol);
