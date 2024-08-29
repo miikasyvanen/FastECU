@@ -20,6 +20,7 @@
 #include <iostream>
 #include <math.h>
 
+#include "modules/checksum_ecu_subaru_denso_sh705x_diesel.h"
 #include "modules/checksum_ecu_subaru_denso_sh7xxx.h"
 #include "modules/checksum_ecu_subaru_hitachi_m32r.h"
 
