@@ -38,10 +38,11 @@ Support forum found here: https://www.fastecu.fi/forum/
 - **Supported ECU models**
   - Subaru Forester, Impreza, Legacy Turbo 1999-2000 K-Line (UJ WA12212920/128KB)
   - Subaru Forester JDM Cross Sports (SH7055)
-  - Subaru Legacy JDM GT (SH7055)
-  - Subaru Impreza WRX/STi MY05-07 (SH7058)
+  - Subaru Legacy JDM GT MY03+ (SH7055)
+  - Subaru Legacy JDM GT MY05+ (SH7058)
+  - Subaru Impreza WRX/STi MY06-07 (SH7058)
   - Subaru Impreza WRX/STi MY08+ (SH7058S)
-  - Subaru Impreza, Legacy Diesel MY08+ EURO4 (SH7058S)
+  - Subaru Impreza, Legacy Diesel MY07+ EURO4 (SH7058S)
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)
@@ -60,7 +61,8 @@ Support forum found here: https://www.fastecu.fi/forum/
 
 - **ECU models planned**
   - Subaru Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)
-  - Subaru Impreza, Legacy Diesel EURO5 CAN (SH7059)
+  - Subaru Impreza, Legacy Diesel MY11+ EURO5 CAN (SH7059)
+  - Subaru Impreza, Legacy Diesel MY17+ EURO6 CAN (SH72543)
   - Subaru Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)
   - Subaru Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)
   - Subaru Forester 2013+ CAN (Hitachi SH7059/1.5MB)
