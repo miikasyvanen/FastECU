@@ -924,7 +924,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         {
             ecuCalDefTemp = ecuCalDef[rom_number];
 
-            if (configValues->flash_protocol_selected_checksum == "n/a" || ecuCalDefTemp->RomInfo.at(fileActions->DefFile) == " ")
+            if (configValues->flash_protocol_selected_checksum == "n/a")// || ecuCalDefTemp->RomInfo.at(fileActions->DefFile) == " ")
             {
                 QMessageBox *msgBox = new QMessageBox();
                 msgBox->setIcon(QMessageBox::Warning);
@@ -943,7 +943,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 }
             }
 
-            if (configValues->flash_protocol_selected_checksum == "n/a" || ecuCalDefTemp->RomInfo.at(fileActions->DefFile) != " ")
+            if (configValues->flash_protocol_selected_checksum != "n/a")// || ecuCalDefTemp->RomInfo.at(fileActions->DefFile) != " ")
                 ecuCalDefTemp = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDefTemp);
 
             if (ecuCalDefTemp == NULL)
