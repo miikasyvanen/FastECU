@@ -577,6 +577,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel_subaru_denso_subarucan(QSt
     if((pl_len % 128) != 0)
         maxblocks++;
     end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
+    //uint32_t data_len = 0x2000;
     uint32_t data_len = end_addr - start_address;
     while ((uint32_t)pl_encr.length() < data_len)
         pl_encr.append((uint8_t)0x00);
