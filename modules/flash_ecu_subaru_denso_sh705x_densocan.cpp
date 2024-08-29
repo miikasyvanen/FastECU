@@ -185,14 +185,20 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
     send_log_window_message("Initializing bootloader", true, true);
     qDebug() << "Initializing bootloader";
 
-    output[4] = (uint8_t)((SID_CAN_ENTER_BL >> 8) & 0xFF);
-    output[5] = (uint8_t)(SID_CAN_ENTER_BL & 0xFF);
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0x00;
-    output[9] = (uint8_t)0x00;
-    output[10] = (uint8_t)0x00;
-    output[11] = (uint8_t)0x00;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)((SID_CAN_ENTER_BL >> 8) & 0xFF));
+    output.append((uint8_t)(SID_CAN_ENTER_BL & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(20, 10);
