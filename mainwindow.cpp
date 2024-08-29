@@ -993,13 +993,13 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7055_02"))
             flashEcuSubaruDensoSH7055_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7055_04"))
-            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDefTemp, cmd_type, this));
+            flashEcuSubaruDensoSH705xKline = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xKline(serial, ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7058_can_diesel"))
             flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name == "sub_ecu_denso_sh7058_can")
             flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDefTemp, cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name == "sub_ecu_denso_sh7058")
-            flashEcuSubaruDensoSH7055_04 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_04(serial, ecuCalDefTemp, cmd_type, this));
+            flashEcuSubaruDensoSH705xKline = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xKline(serial, ecuCalDefTemp, cmd_type, this));
         /*
         * Denso TCU
         */

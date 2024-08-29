@@ -45,6 +45,10 @@ private:
     #define STATUS_SUCCESS	0x00
     #define STATUS_ERROR	0x01
 
+    #define CRC32   0x5AA5A55A
+    bool crc_tab32_init = 0;
+    uint32_t crc_tab32[256];
+
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
@@ -84,9 +88,9 @@ private:
     int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
     int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
+    unsigned int crc32(const unsigned char *buf, unsigned int len);
+    void init_crc32_tab( void );
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
-    void init_crc16_tab(void);
-    uint16_t crc16(const uint8_t *data, uint32_t siz);
 
     QByteArray send_subaru_sid_bf_ssm_init();
     QByteArray send_subaru_denso_sid_81_start_communication();

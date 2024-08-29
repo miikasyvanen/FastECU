@@ -187,7 +187,7 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::connect_bootloader_subaru_denso_subarucan
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)(SID_START_COMM_CAN & 0xFF));
+    output.append((uint8_t)(SID_CAN_START_COMM & 0xFF));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -854,8 +854,8 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::read_mem_subaru_denso_subarucan(uint32_t 
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xe0);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_DUMP_ROM_CAN + 0x06));
+    output.append((uint8_t)SID_CAN_START_COMM);
+    output.append((uint8_t)(SID_CAN_DUMP_ROM + 0x06));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -898,7 +898,7 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::read_mem_subaru_denso_subarucan(uint32_t 
         //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
 
         if (received.length()) {
-            if ((uint8_t)received.at(0) != SID_START_COMM_CAN || (uint8_t)received.at(1) != SID_DUMP_ROM_CAN)
+            if ((uint8_t)received.at(0) != SID_CAN_START_COMM || (uint8_t)received.at(1) != SID_CAN_DUMP_ROM)
             {
                 send_log_window_message("Page data request failed!", true, true);
                 send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
@@ -1299,8 +1299,8 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::check_romcrc_denso_subarucan(const uint8_
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_CONF_CKS1_CAN + 0x06));
+    output.append((uint8_t)SID_CAN_START_COMM);
+    output.append((uint8_t)(SID_CAN_CONF_CKS + 0x06));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1340,7 +1340,7 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::check_romcrc_denso_subarucan(const uint8_
 
         if (received.length())
         {
-            if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_CONF_CKS1_CAN || chk_sum == (uint8_t)received.at(2))
+            if ((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_CONF_CKS || chk_sum == (uint8_t)received.at(2))
                 continue;
         }
         send_log_window_message("\tNO", false, true);
@@ -1394,12 +1394,12 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::reflash_block_denso_subarucan(const uint8
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_FLASH_CAN + 0x01));
+    output.append((uint8_t)SID_CAN_START_COMM);
+    output.append((uint8_t)(SID_CAN_FLASH + 0x01));
     if (test_write)
-        output.append((uint8_t)SIDFL_PROTECT_CAN);
+        output.append((uint8_t)SID_CAN_FL_PROTECT);
     else
-        output.append((uint8_t)SIDFL_UNPROTECT_CAN);
+        output.append((uint8_t)SID_CAN_FL_UNPROTECT);
     output.append((uint8_t)(0x00));
     output.append((uint8_t)(0x00));
     output.append((uint8_t)(0x00));
@@ -1414,7 +1414,7 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::reflash_block_denso_subarucan(const uint8
 
     if (received.length())
     {
-        if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_FLASH_CAN)
+        if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FLASH)
         {
             qDebug() << "Initialize of erasing / flashing microcodes failed!";
             return STATUS_ERROR;
@@ -1424,7 +1424,7 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::reflash_block_denso_subarucan(const uint8
     int num_128_byte_blocks = (block_len >> 7) & 0xFFFFFFFF;
 
     qDebug() << "Proceeding to attempt erase and flash of block number: " << blockno;
-    output[5] = (uint8_t)(SIDFL_EB_CAN + 0x06);
+    output[5] = (uint8_t)(SID_CAN_FL_EB + 0x06);
     output[6] = (uint8_t)(blockno & 0xFF);
     output[7] = (uint8_t)((block_start >> 24) & 0xFF);
     output[8] = (uint8_t)((block_start >> 16) & 0xFF);
@@ -1452,7 +1452,7 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::reflash_block_denso_subarucan(const uint8
 
     if (received.length())
     {
-        if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_EB_CAN)
+        if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_EB)
         {
             qDebug() << "Not ready for 128byte block writing";
             return STATUS_ERROR;
@@ -1532,8 +1532,8 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::flash_block_denso_subarucan(const uint8_t
             received = serial->write_serial_data_echo_check(output);
         }
 
-        output[4] = (uint8_t)SID_START_COMM_CAN;
-        output[5] = (uint8_t)(SIDFL_WB_CAN + 0x03);
+        output[4] = (uint8_t)SID_CAN_START_COMM;
+        output[5] = (uint8_t)(SID_CAN_FL_WB + 0x03);
         output[6] = (uint8_t)((i >> 8) & 0xFF);
         output[7] = (uint8_t)(i & 0xFF);
         output[8] = (uint8_t)(chk_sum & 0xFF);
@@ -1542,7 +1542,7 @@ int FlashEcuSubaruDensoSH7xxxDensoCan::flash_block_denso_subarucan(const uint8_t
         received = serial->read_serial_data(3, serial_read_long_timeout);
         if (received.length())
         {
-            if((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SIDFL_WB_CAN)
+            if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_WB)
             {
                 qDebug() << "Flashing of 128 byte block unsuccessful, stopping";
                 qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
@@ -2004,7 +2004,7 @@ QByteArray FlashEcuSubaruDensoSH7xxxDensoCan::request_kernel_id()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)SID_START_COMM_CAN);
+    output.append((uint8_t)SID_CAN_START_COMM);
     output.append((uint8_t)0xA0);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);

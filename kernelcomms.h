@@ -96,12 +96,13 @@
 /*************************************
  * NisProg based kernels CAN commands
  * **********************************/
-#define SID_START_COMM_CAN          0x7A
-#define SID_ENTER_BL_CAN            0xFF86
-#define SID_CHECK_COMM_BL_CAN       0x90
+#define SID_CAN_START_COMM          0x7A
+#define SID_CAN_ENTER_BL            0xFF86
+#define SID_CAN_CHECK_COMM_BL       0x90
 
-#define SID_DUMP_ROM_CAN            0xD8
-#define SID_DUMP_EEPROM_CAN         0xB8
+#define SID_CAN_RECUID              0xA0
+#define SID_CAN_DUMP_ROM            0xD8
+#define SID_CAN_DUMP_EEPROM         0xB8
 
 #define SID_KERNEL_ADDRESS          0x98
 #define SID_KERNEL_CHECKSUM         0xB0
@@ -110,18 +111,18 @@
 #define SID_KERNEL_STOP_CAN         0xFFC8
 
 /* SID_FLASH and subcommands */
-#define SID_FLASH_CAN               0xE0	/* low-level reflash commands; only available after successful RequestDownload */
-    #define SIDFL_UNPROTECT_CAN     0xA5	//enable erase / write.
-    #define SIDFL_PROTECT_CAN       0x00	//disable erase / write.
-    #define SIDFL_EB_CAN            0xF0	//erase block. format : <SID_FLASH> <SIDFL_EB> <BLOCK #>
-    #define SIDFL_WB_CAN            0xF8
+#define SID_CAN_FLASH               0xE0	/* low-level reflash commands; only available after successful RequestDownload */
+    #define SID_CAN_FL_UNPROTECT    0xA5	//enable erase / write.
+    #define SID_CAN_FL_PROTECT      0x00	//disable erase / write.
+    #define SID_CAN_FL_EB           0xF0	//erase block. format : <SID_FLASH> <SIDFL_EB> <BLOCK #>
+    #define SID_CAN_FL_WB           0xF8
 
 /* SID_CONF and subcommands */
-#define SID_CONF_CKS1_CAN           0xD0
+#define SID_CAN_CONF_CKS            0xD0
 
 
 /* SID_CONF error codes */
-#define SID_CONF_CKS1_BADCKS	0x77	//NRC when crc is bad
+#define SID_CONF_CKS_BADCKS     	0x77	//NRC when crc is bad
 
 
 /**** Common flash error codes for all platforms. */
