@@ -1,16 +1,16 @@
-#include "checksum_ecu_subaru_denso_sh705x.h"
+#include "checksum_ecu_subaru_denso_sh7xxx.h"
 
-ChecksumEcuSubaruDensoSH705x::ChecksumEcuSubaruDensoSH705x()
+ChecksumEcuSubaruDensoSH7xxx::ChecksumEcuSubaruDensoSH7xxx()
 {
 
 }
 
-ChecksumEcuSubaruDensoSH705x::~ChecksumEcuSubaruDensoSH705x()
+ChecksumEcuSubaruDensoSH7xxx::~ChecksumEcuSubaruDensoSH7xxx()
 {
 
 }
 
-QByteArray ChecksumEcuSubaruDensoSH705x::calculate_checksum(QByteArray romData, uint32_t checksum_area_start, uint32_t checksum_area_length)
+QByteArray ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(QByteArray romData, uint32_t checksum_area_start, uint32_t checksum_area_length)
 {
     QByteArray checksum_array;
 
@@ -96,8 +96,8 @@ QByteArray ChecksumEcuSubaruDensoSH705x::calculate_checksum(QByteArray romData, 
         qDebug() << "Checksums corrected";
         QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums corrected");
     }
-    else
-        QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums OK");
+    //else
+    //    QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums OK");
 
     return romData;
 }

@@ -16,6 +16,7 @@ enum mcu_type {
     SH7058,
     SH7058_1block,
     SH7058d,
+    SH7059d,
     SH72543R,
     MH8104,
     MH8111,
@@ -62,6 +63,38 @@ struct flashdev_t {
 
 
 /* flash block definitions */
+const struct flashblock fblocks_SH7059d[] = {
+    {0x00000000,    0x00001000},
+    {0x00001000,    0x00001000},
+    {0x00002000,    0x00001000},
+    {0x00003000,    0x00001000},
+    {0x00004000,    0x00001000},
+    {0x00005000,    0x00001000},
+    {0x00006000,    0x00001000},
+    {0x00007000,    0x00001000},
+    {0x00008000,    0x00018000},
+    {0x00020000,    0x00020000},
+    {0x00040000,    0x00020000},
+    {0x00060000,    0x00020000},
+    {0x00080000,    0x00040000},
+    {0x000C0000,    0x00040000},
+    {0x00100000,    0x00040000},
+    {0x00140000,    0x00040000},
+    };
+
+const struct ramblock rblocks_SH7059d[] = {
+    {0xFFFE8000,    0x00009000},//0xFFFFBFFF // 36k
+};
+
+const struct kernelblock kblocks_SH7059d[] = {
+    {0xFFFE8000,    0x00009000},//0xFFFFBFFF // 36k
+};
+
+const struct eepromblock eblocks_SH7059d[] = {
+    {0x00000000,    0x00000100},
+    };
+
+/* flash block definitions */
 const struct flashblock fblocks_SH7058d[] = {
     {0x00000000,    0x00001000},
     {0x00001000,    0x00001000},
@@ -79,7 +112,7 @@ const struct flashblock fblocks_SH7058d[] = {
     {0x000A0000,    0x00020000},
     {0x000C0000,    0x00020000},
     {0x000E0000,    0x00020000},
-};
+    };
 
 const struct ramblock rblocks_SH7058d[] = {
     {0xFFFF3000,    0x00009000},//0xFFFFBFFF // 36k
@@ -91,7 +124,7 @@ const struct kernelblock kblocks_SH7058d[] = {
 
 const struct eepromblock eblocks_SH7058d[] = {
     {0x00000000,    0x00000100},
-};
+    };
 
 const struct flashblock fblocks_SH7058[] = {
     {0x00000000,    0x00001000},
@@ -415,6 +448,7 @@ const struct flashdev_t flashdevices[] = {
     { "SH7058", SH7058, 1024 * 1024, 16, fblocks_SH7058, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
     { "SH7058_1block", SH7058, 1024 * 1024, 1, fblocks_SH7058_1block, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
     { "SH7058d", SH7058d, 1024 * 1024, 16, fblocks_SH7058d, rblocks_SH7058d, kblocks_SH7058d, eblocks_SH7058d },
+    { "SH7059d", SH7059d, 1536 * 1024, 16, fblocks_SH7059d, rblocks_SH7059d, kblocks_SH7059d, eblocks_SH7059d },
     { "SH72543R", SH72543R, 2 * 1024 * 1024, 2, fblocks_SH72543R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "MH8104", MH8104, 512 * 1024, 4, fblocks_MH8104, rblocks_MH8104, kblocks_MH8104, eblocks_MH8104 },
     { "MH8111", MH8111, 3 * 512 * 1024, 4, fblocks_MH8111, rblocks_MH8111, kblocks_MH8111, eblocks_MH8111 },

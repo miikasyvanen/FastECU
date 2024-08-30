@@ -59,7 +59,8 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     menu_actions.cpp \
-    modules/checksum_ecu_subaru_denso_sh705x.cpp \
+    modules/checksum_ecu_subaru_denso_sh705x_diesel.cpp \
+    modules/checksum_ecu_subaru_denso_sh7xxx.cpp \
     modules/checksum_ecu_subaru_hitachi_m32r.cpp \
     modules/checksum_tcu_mitsu_mh8104_can.cpp \
     modules/checksum_tcu_subaru_denso_sh7055.cpp \
@@ -68,10 +69,10 @@ SOURCES += \
     modules/eeprom_ecu_subaru_denso_sh705x_kline.cpp \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.cpp \
     modules/flash_ecu_subaru_denso_sh7055_02.cpp \
-    modules/flash_ecu_subaru_denso_sh7055_04.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can.cpp \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.cpp \
     modules/flash_ecu_subaru_denso_sh705x_densocan.cpp \
+    modules/flash_ecu_subaru_denso_sh705x_kline.cpp \
     modules/flash_ecu_subaru_denso_sh7xxx_densocan.cpp \
     modules/flash_ecu_subaru_hitachi_m32r_can.cpp \
     modules/flash_ecu_subaru_hitachi_m32r_kline.cpp \
@@ -112,7 +113,8 @@ HEADERS += \
     kernelmemorymodels.h \
     logbox.h \
     mainwindow.h \
-    modules/checksum_ecu_subaru_denso_sh705x.h \
+    modules/checksum_ecu_subaru_denso_sh705x_diesel.h \
+    modules/checksum_ecu_subaru_denso_sh7xxx.h \
     modules/checksum_ecu_subaru_hitachi_m32r.h \
     modules/checksum_tcu_mitsu_mh8104_can.h \
     modules/checksum_tcu_subaru_denso_sh7055.h \
@@ -121,10 +123,10 @@ HEADERS += \
     modules/eeprom_ecu_subaru_denso_sh705x_kline.h \
     modules/flash_ecu_subaru_denso_mc68hc16y5_02.h \
     modules/flash_ecu_subaru_denso_sh7055_02.h \
-    modules/flash_ecu_subaru_denso_sh7055_04.h \
     modules/flash_ecu_subaru_denso_sh7058_can.h \
     modules/flash_ecu_subaru_denso_sh7058_can_diesel.h \
     modules/flash_ecu_subaru_denso_sh705x_densocan.h \
+    modules/flash_ecu_subaru_denso_sh705x_kline.h \
     modules/flash_ecu_subaru_denso_sh7xxx_densocan.h \
     modules/flash_ecu_subaru_hitachi_m32r_can.h \
     modules/flash_ecu_subaru_hitachi_m32r_kline.h \

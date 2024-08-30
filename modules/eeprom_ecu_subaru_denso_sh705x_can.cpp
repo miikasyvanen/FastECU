@@ -221,7 +221,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_subarucan()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)(SID_START_COMM_CAN & 0xFF));
+    output.append((uint8_t)(SID_CAN_START_COMM & 0xFF));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -891,8 +891,8 @@ int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t star
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xe0);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_DUMP_EEPROM_CAN + 0x06));
+    output.append((uint8_t)SID_CAN_START_COMM);
+    output.append((uint8_t)(SID_CAN_DUMP_EEPROM + 0x06));
     output.append((uint8_t)EEPROM_MODE);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -936,7 +936,7 @@ int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t star
         qDebug() << "Response to 0xB8 (dump EEPROM) message:" << parse_message_to_hex(received);
 
         if (received.length()) {
-            if ((uint8_t)received.at(0) != SID_START_COMM_CAN || (uint8_t)received.at(1) != SID_DUMP_EEPROM_CAN)
+            if ((uint8_t)received.at(0) != SID_CAN_START_COMM || (uint8_t)received.at(1) != SID_CAN_DUMP_EEPROM)
             {
                 send_log_window_message("Page data request failed!", true, true);
                 qDebug() << "Page data request failed!";
@@ -1430,7 +1430,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)SID_START_COMM_CAN);
+    output.append((uint8_t)SID_CAN_START_COMM);
     output.append((uint8_t)0xA0);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
