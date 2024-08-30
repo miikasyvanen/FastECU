@@ -1731,7 +1731,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
-        //qDebug() << "Start parsing map" << ecuCalDef->NameList.at(i);
+        //qDebug() << "Start parsing map" << i << ecuCalDef->NameList.at(i);
         storagesize = 1;
         if (ecuCalDef->StorageTypeList.at(i) == "uint16")
             storagesize = 2;
@@ -1804,6 +1804,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 //qDebug() << "Map" << ecuCalDef->NameList.at(i) << "x scale";
                 if (ecuCalDef->XScaleTypeList.at(i) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(i) == "Static X Axis")
                 {
+                    qDebug() << "Static X scale";
                     ecuCalDef->XScaleData.replace(i, ecuCalDef->XScaleStaticDataList.at(i));
                 }
                 else if (ecuCalDef->XScaleTypeList.at(i) == "X Axis" || (ecuCalDef->XScaleTypeList.at(i) == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
@@ -1903,6 +1904,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             }
             else
                 ecuCalDef->YScaleData.replace(i, " ");
+            //qDebug() << "Map" << i << "parsed";
         }
     }
 

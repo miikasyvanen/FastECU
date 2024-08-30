@@ -310,7 +310,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         {
             map_defined = false;
 
-            //qDebug() << "TABLE TAG childs:" << rom_child.tagName() << rom_child.attribute("name", "n/a");
+            //qDebug() << "TABLE TAG childs:" << def_map_index << rom_child.tagName() << rom_child.attribute("name", "n/a");
             QString map_name = rom_child.attribute("name"," ");
             for (int i = 0; i < ecuCalDef->NameList.length(); i++)
             {
