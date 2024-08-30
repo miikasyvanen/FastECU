@@ -43,6 +43,7 @@ Support forum found here: https://www.fastecu.fi/forum/
   - Subaru Impreza WRX/STi MY06-07 (SH7058)
   - Subaru Impreza WRX/STi MY08+ (SH7058S)
   - Subaru Impreza, Legacy Diesel MY07+ EURO4 (SH7058S)
+  - Subaru Impreza, Legacy Diesel MY11+ EURO5 CAN (SH7059)
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)
@@ -53,20 +54,19 @@ Support forum found here: https://www.fastecu.fi/forum/
   - CVT CAN (Hitachi M32176F4/512KB)
   - K-Line (Hitachi M32176F4/512KB)
   - CAN (Hitachi M32176F4/512KB)
-  - TBA - TCU CVT CAN (Mitsubishi MH8104/512KB)
-  - TBA - TCU CVT CAN (Mitsubishi MH8111/1536KB)
+  - TCU CVT CAN (Mitsubishi MH8104/512KB)
+  - TCU CVT CAN (Mitsubishi MH8111/1536KB)
 
 - **ECU models currently under development**
   - Forester/Impreza/Legacy 16bit Denso 2001-2005 K-Line (HC16/160KB)
 
 - **ECU models planned**
   - Subaru Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)
-  - Subaru Impreza, Legacy Diesel MY11+ EURO5 CAN (SH7059)
-  - Subaru Impreza, Legacy Diesel MY17+ EURO6 CAN (SH72543)
   - Subaru Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)
   - Subaru Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)
   - Subaru Forester 2013+ CAN (Hitachi SH7059/1.5MB)
   - Subaru Forester 2013+ CAN (Hitachi SH7254/2MB)
+  - Subaru Impreza, Legacy Diesel MY17+ EURO6 CAN (SH72543)
 
 ### Unbricking with FastECU-m32r-flasher (bench flash)
 - **Supported models**
