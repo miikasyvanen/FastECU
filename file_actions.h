@@ -474,7 +474,6 @@ public:
      * checksums
      **************************/
     EcuCalDefStructure *checksum_correction(FileActions::EcuCalDefStructure *ecuCalDef);
-    EcuCalDefStructure *checksum_module_subarudbw_denso32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_end);
 
     /*************************************
      * Parse expression strings for used
