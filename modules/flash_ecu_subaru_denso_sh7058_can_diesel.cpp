@@ -1137,10 +1137,11 @@ int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc_denso_subarucan(const uint8
     output.append((uint8_t)((pagesize >> 8) & 0xFF));
     output.append((uint8_t)(pagesize & 0xFF));
     qDebug() << "Send: " + parse_message_to_hex(output);
+    delay(100);
     serial->write_serial_data_echo_check(output);
-
+    delay(200);
     received.clear();
-    received = serial->read_serial_data(10, serial_read_long_timeout);
+    received = serial->read_serial_data(10, serial_read_extra_long_timeout);
     qDebug() << "Received: " + parse_message_to_hex(received);
     if (received.length())
     {

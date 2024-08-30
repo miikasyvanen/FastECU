@@ -617,6 +617,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc_16bit_kline(const uint8_t *sr
             chksum = calculate_checksum(output, false);
             output.append((uint8_t)chksum & 0xFF);
 
+            delay(100);
             received = serial->write_serial_data_echo_check(output);
             //qDebug() << hex << chunk_cnt << output.length() << start << pagesize << parse_message_to_hex(output);
 
