@@ -46,7 +46,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
 
-    this->setWindowTitle(title + " " + version);
+    this->setWindowTitle(software_title + " " + software_version);
 
 #ifdef Q_OS_LINUX
     //send_log_window_message("Running on Linux Desktop ", true, false);
@@ -71,8 +71,9 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     fileActions = new FileActions();
     configValues = &fileActions->ConfigValuesStruct;
 
-    fileActions->title = title;
-    fileActions->version = version;
+    configValues->software_name = software_name;
+    configValues->software_title = software_title;
+    configValues->software_version = software_version;
 
     //fileActions->check_config_dir(configValues);
     configValues = fileActions->read_config_file(configValues);
@@ -289,6 +290,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     flash_transport_list = new QComboBox();
     flash_transport_list->setFixedHeight(toolbar_item_size.height());
+    flash_transport_list->setFixedWidth(90);
     flash_transport_list->setObjectName("flash_transport_list");
     ui->toolBar->addWidget(flash_transport_list);
 
@@ -300,6 +302,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     log_transport_list = new QComboBox();
     log_transport_list->setFixedHeight(toolbar_item_size.height());
+    log_transport_list->setFixedWidth(90);
     log_transport_list->setObjectName("log_transport_list");
     ui->toolBar->addWidget(log_transport_list);
 

@@ -89,8 +89,9 @@ public:
     void delay(int n);
 
 private:
-    QString title = "FastECU";
-    QString version = "0.0-dev0";
+    QString software_name = "FastECU";
+    QString software_title = "FastECU";
+    QString software_version = "0.0-dev0";
 
     QSplashScreen *startUpSplash;
     QLabel *startUpSplashLabel;

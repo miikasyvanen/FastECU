@@ -48,10 +48,11 @@ public:
     int def_map_index = 0;
     //QString ecu_protocol;
 
-    QString title;
-    QString version;
-
     struct ConfigValuesStructure {
+        QString software_name;
+        QString software_title;
+        QString software_version;
+
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
         QString window_size = "default";
