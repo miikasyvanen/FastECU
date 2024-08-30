@@ -93,7 +93,7 @@ void FlashEcuSubaruDensoSH705xDensoCan::run()
             if (result == STATUS_SUCCESS && !kernel_alive)
             {
                 emit external_logger("Preparing, please wait...");
-                send_log_window_message("Initializing Subaru 02+ 32-bit Denso CAN kernel upload, please wait...", true, true);
+                send_log_window_message("Initializing Subaru 02+ 32-bit DensoCAN kernel upload, please wait...", true, true);
                 result = upload_kernel_subaru_denso_sh705x_densocan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
             if (result == STATUS_SUCCESS)
@@ -101,13 +101,13 @@ void FlashEcuSubaruDensoSH705xDensoCan::run()
                 if (cmd_type == "read")
                 {
                     emit external_logger("Reading ROM, please wait...");
-                    send_log_window_message("Reading ROM from Subaru 02+ 32-bit Denso using CAN", true, true);
+                    send_log_window_message("Reading ROM from Subaru 02+ 32-bit Denso using DensoCAN", true, true);
                     result = read_mem_subaru_denso_sh705x_densocan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
-                    send_log_window_message("Writing ROM to Subaru 02+ 32-bit Denso using CAN", true, true);
+                    send_log_window_message("Writing ROM to Subaru 02+ 32-bit Denso using DensoCAN", true, true);
                     result = write_mem_subaru_denso_sh705x_densocan(test_write);
                 }
             }
@@ -535,6 +535,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::read_mem_subaru_denso_sh705x_densocan(uin
 
         //length = 256;
 
+        //qDebug() << "Send 0xD8 message to kernel to initiate dump";
         output[6] = (uint8_t)((pagesize >> 24) & 0xFF);
         output[7] = (uint8_t)((pagesize >> 16) & 0xFF);
         output[8] = (uint8_t)((pagesize >> 8) & 0xFF);
@@ -542,7 +543,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::read_mem_subaru_denso_sh705x_densocan(uin
         output[10] = (uint8_t)((addr >> 16) & 0xFF);
         output[11] = (uint8_t)((addr >> 8) & 0xFF);
         serial->write_serial_data_echo_check(output);
-        //qDebug() << "0xD8 message sent to kernel initiate dump";
+        //qDebug() << "0xD8 message sent to kernel to initiate dump";
         //delay(100);
         received = serial->read_serial_data(1, serial_read_timeout);
         //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
