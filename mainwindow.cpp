@@ -944,7 +944,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             }
 
             if (configValues->flash_protocol_selected_checksum != "n/a")// || ecuCalDefTemp->RomInfo.at(fileActions->DefFile) != " ")
-                ecuCalDefTemp = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDefTemp);
+                ecuCalDefTemp = fileActions->checksum_correction(ecuCalDefTemp);
 
             if (ecuCalDefTemp == NULL)
                 return 0;
@@ -1155,11 +1155,11 @@ void MainWindow::save_calibration_file()
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
     ecuCalDefTemp = ecuCalDef[romNumber];
-    ecuCalDefTemp = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDefTemp);
+    ecuCalDefTemp = fileActions->checksum_correction(ecuCalDefTemp);
     if (ecuCalDefTemp != NULL)
     {
-        ecuCalDef[romNumber] = ecuCalDefTemp;
-        fileActions->save_subaru_rom_file(ecuCalDef[romNumber], ecuCalDef[romNumber]->FullFileName);
+        //ecuCalDef[romNumber] = ecuCalDefTemp;
+        fileActions->save_subaru_rom_file(ecuCalDefTemp, ecuCalDefTemp->FullFileName);
     }
 }
 
@@ -1177,10 +1177,10 @@ void MainWindow::save_calibration_file_as()
     int romIndex = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
     ecuCalDefTemp = ecuCalDef[romNumber];
-    ecuCalDefTemp = fileActions->apply_subaru_cal_changes_to_rom_data(ecuCalDefTemp);
+    ecuCalDefTemp = fileActions->checksum_correction(ecuCalDefTemp);
     if (ecuCalDefTemp != NULL)
     {
-        ecuCalDef[romNumber] = ecuCalDefTemp;
+        //ecuCalDef[romNumber] = ecuCalDefTemp;
         QString filename = "";
 
         QFileDialog saveDialog;
@@ -1191,7 +1191,7 @@ void MainWindow::save_calibration_file_as()
 
         if (filename.isEmpty()){
             //ecuCalDef[romNumber]->FileName = "No name.bin";
-            ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
+            ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDefTemp->FileName);
             QMessageBox::information(this, tr("Calibration file"), "No file name selected");
             return;
         }
@@ -1199,8 +1199,8 @@ void MainWindow::save_calibration_file_as()
         if(!filename.endsWith(QString(".bin")))
              filename.append(QString(".bin"));
 
-        fileActions->save_subaru_rom_file(ecuCalDef[romNumber], filename);
-        ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[romNumber]->FileName);
+        fileActions->save_subaru_rom_file(ecuCalDefTemp, filename);
+        ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDefTemp->FileName);
     }
 }
 
@@ -1208,6 +1208,7 @@ void MainWindow::selectable_combobox_item_changed(QString item)
 {
     int mapRomNumber = 0;
     int mapNumber = 0;
+    bool bStatus = false;
 
     //bool ok = false;
 
@@ -1230,6 +1231,20 @@ void MainWindow::selectable_combobox_item_changed(QString item)
                     qDebug() << "Old selectable value is:" << ecuCalDef[mapRomNumber]->MapData.at(mapNumber);
                     ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, selectionsValueList.at(j));
                     qDebug() << "New selectable value is:" << ecuCalDef[mapRomNumber]->MapData.at(mapNumber);
+
+                    if (ecuCalDef[mapRomNumber]->StorageTypeList.at(mapNumber) == "bloblist")
+                    {
+                        uint8_t storagesize = 0;
+                        uint8_t dataByte = 0;
+                        uint32_t byteAddress = ecuCalDef[mapRomNumber]->AddressList.at(mapNumber).toUInt(&bStatus,16);
+                        storagesize = ecuCalDef[mapRomNumber]->SelectionsValueList.at(mapNumber).split(",").at(0).length() / 2;
+                        for (int k = 0; k < storagesize; k++)
+                        {
+                            dataByte = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).mid(0, 2).toUInt(&bStatus, 16);
+                            qDebug() << "Databyte:" << dataByte;
+                            ecuCalDef[mapRomNumber]->FullRomData[byteAddress] = dataByte;
+                        }
+                    }
                 }
             }
         }

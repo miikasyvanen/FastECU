@@ -773,9 +773,6 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t st
         return NULL;
     }
 
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
-
     //outStream.writeRawData(mapdata, mapdata.length());
     //file.write(mapdata);
     file.write(ecuCalDef->FullRomData);

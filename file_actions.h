@@ -463,12 +463,6 @@ public:
      **********************************************/
     EcuCalDefStructure *save_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
 
-    /***********************************************
-     * Apply changes made to calibration
-     * to rom data array
-     **********************************************/
-    EcuCalDefStructure *apply_subaru_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef);
-
     /***************************
      * Read software menu file
      * for menu creation

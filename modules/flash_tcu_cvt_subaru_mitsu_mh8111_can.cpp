@@ -663,9 +663,6 @@ int FlashTcuCvtSubaruMitsuMH8111Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
         return NULL;
     }
 
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
-
     //outStream.writeRawData(mapdata, mapdata.length());
     //file.write(mapdata);
     file.write(ecuCalDef->FullRomData);
