@@ -14,10 +14,10 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
 {
     /*******************
      *
-     *  Checksum 1 calculated between 0x9c80 - 0x1e000 , 32bit sum, result at 0x7ffe8 (0xffff9c88)
-     *  Checksum 2 calculated between 0x6000 - 0x8000 , 32 bit XOR, result at 0x7ffec (0xffff9c84)
-     *  Checksum 3 calculated between 0x0000 - 0x100000 excluding 0xffff0 - 0xffff7, 32-bit sum, result at 0x7fff0
-     *  Checksum 4 calculated between 0x0000 - 0x100000 excluding 0xffff0 - 0xffff7, 32-bit XOR, result at 0x7fff4
+     *  Checksum 1 calculated between 0x18000 - 0x1dfff, 32bit sum, result at 0x7ffe8
+     *  Checksum 2 calculated between 0x18000 - 0x1dfff, 32 bit XOR, result at 0x7ffec
+     *  Checksum 3 calculated between 0x0000 - 0xfffff excluding 0xffff0 - 0xffff7, 32-bit sum, result at 0x7fff0
+     *  Checksum 4 calculated between 0x0000 - 0xfffff excluding 0xffff0 - 0xffff7, 32-bit XOR, result at 0x7fff4
      *
      * ****************/
     QString msg;
