@@ -545,6 +545,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QStringList flash_protocol_mode;
     QStringList flash_protocol_checksum;
     QStringList flash_protocol_read;
+    QStringList flash_protocol_test_write;
     QStringList flash_protocol_write;
     QStringList flash_protocol_flash_transport;
     QStringList flash_protocol_log_transport;
@@ -594,6 +595,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         flash_protocol_mode.append(" ");
                         flash_protocol_checksum.append(" ");
                         flash_protocol_read.append(" ");
+                        flash_protocol_test_write.append(" ");
                         flash_protocol_write.append(" ");
                         flash_protocol_flash_transport.append(" ");
                         flash_protocol_log_transport.append(" ");
@@ -623,6 +625,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 flash_protocol_checksum.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "read")
                                 flash_protocol_read.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "test_write")
+                                flash_protocol_test_write.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "write")
                                 flash_protocol_write.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "flash_transport")
@@ -670,7 +674,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                 {
                     if (car_model.tagName() == "car_model")
                     {
-                        //qDebug() << "Add new list";
+                        //qDebug() << "Add new vehicle";
                         configValues->flash_protocol_id.append(QString::number(id));//car_model.attribute("id","No id"));
                         configValues->flash_protocol_make.append(" ");
                         configValues->flash_protocol_model.append(" ");
@@ -685,6 +689,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         configValues->flash_protocol_mode.append(" ");
                         configValues->flash_protocol_checksum.append(" ");
                         configValues->flash_protocol_read.append(" ");
+                        configValues->flash_protocol_test_write.append(" ");
                         configValues->flash_protocol_write.append(" ");
                         configValues->flash_protocol_flash_transport.append(" ");
                         configValues->flash_protocol_log_transport.append(" ");
@@ -733,6 +738,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                         configValues->flash_protocol_mode.replace(index, flash_protocol_mode.at(i));
                                         configValues->flash_protocol_checksum.replace(index, flash_protocol_checksum.at(i));
                                         configValues->flash_protocol_read.replace(index, flash_protocol_read.at(i));
+                                        configValues->flash_protocol_test_write.replace(index, flash_protocol_test_write.at(i));
                                         configValues->flash_protocol_write.replace(index, flash_protocol_write.at(i));
                                         configValues->flash_protocol_flash_transport.replace(index, flash_protocol_flash_transport.at(i));
                                         configValues->flash_protocol_log_transport.replace(index, flash_protocol_log_transport.at(i));
@@ -2025,6 +2031,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 chksumModuleAvailable = true;
                 ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
                 ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            else if (flashMethod.startsWith("sub_ecu_hitachi_sh7058_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruHitachiSH7058 *checksumEcuSubaruHitachiSH7058 = new ChecksumEcuSubaruHitachiSH7058();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiSH7058->calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
             * Hitachi TCU

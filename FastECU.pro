@@ -62,6 +62,7 @@ SOURCES += \
     modules/checksum_ecu_subaru_denso_sh705x_diesel.cpp \
     modules/checksum_ecu_subaru_denso_sh7xxx.cpp \
     modules/checksum_ecu_subaru_hitachi_m32r.cpp \
+    modules/checksum_ecu_subaru_hitachi_sh7058.cpp \
     modules/checksum_tcu_mitsu_mh8104_can.cpp \
     modules/checksum_tcu_subaru_denso_sh7055.cpp \
     modules/checksum_tcu_subaru_hitachi_m32r_can.cpp \
@@ -116,6 +117,7 @@ HEADERS += \
     modules/checksum_ecu_subaru_denso_sh705x_diesel.h \
     modules/checksum_ecu_subaru_denso_sh7xxx.h \
     modules/checksum_ecu_subaru_hitachi_m32r.h \
+    modules/checksum_ecu_subaru_hitachi_sh7058.h \
     modules/checksum_tcu_mitsu_mh8104_can.h \
     modules/checksum_tcu_subaru_denso_sh7055.h \
     modules/checksum_tcu_subaru_hitachi_m32r_can.h \

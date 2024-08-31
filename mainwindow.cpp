@@ -475,65 +475,7 @@ QStringList MainWindow::create_log_transports_list()
 
     return log_transports;
 }
-/*
-QString MainWindow::check_kernel(QString flash_method)
-{
-    QString kernel;
-    QString prefix = configValues->kernel_files_directory;
 
-    if (prefix.at(prefix.length() - 1) != '/')
-        prefix.append("/");
-
-    if (flash_method.startsWith("sub_mc68hc16y5_02"))
-        kernel = prefix + "ssmk_HC16.bin";
-    else if (flash_method.startsWith("sub_mc68hc16y5_04"))
-        kernel = prefix + "ssmk_HC16.bin";
-    else if (flash_method.startsWith("sub_sh7055_02"))
-    {
-        if (serial->get_is_can_connection())
-            kernel = prefix + "ssmk_CAN_SH7055.bin";
-        else
-            kernel = prefix + "ssmk_SH7055.bin";
-    }
-    else if (flash_method.startsWith("sub_sh7055_04"))
-    {
-        if (serial->get_is_can_connection())
-            kernel = prefix + "ssmk_CAN_SH7055.bin";
-        else
-            kernel = prefix + "ssmk_SH7055.bin";
-    }
-    else if (flash_method.startsWith("sub_sh7058_can_diesel"))
-        if (serial->get_is_can_connection())
-            kernel = prefix + "ssmk_CAN_SH7058.bin";
-        else
-            kernel = prefix + "ssmk_CAN_SH7058d.bin";
-    else if (flash_method.startsWith("sub_sh7058_can"))
-        kernel = prefix + "ssmk_CAN_SH7058.bin";
-    else if (flash_method.startsWith("sub_sh7058"))
-    {
-        if (serial->get_is_can_connection())
-            kernel = prefix + "ssmk_CAN_SH7058.bin";
-        else
-            kernel = prefix + "ssmk_SH7058.bin";
-    }
-    else if (flash_method.startsWith("sub_sh7055_densocan"))
-        kernel = prefix + "ssmk_CAN_SH7055.bin";
-    else if (flash_method.startsWith("sub_sh7058_densocan"))
-        kernel = prefix + "ssmk_CAN_SH7058.bin";
-    else if (flash_method.startsWith("sub_sh7058s_densocan"))
-        kernel = prefix + "ssmk_CAN_SH7058.bin";
-
-    else if (flash_method.startsWith("sub_tcu_densocan"))
-        kernel = prefix + "ssmk_tcu_SH7055_35.bin";
-
-    else
-        kernel = "N/A";
-
-    qDebug() << "Kernel to use:" << kernel;
-
-    return kernel;
-}
-*/
 void MainWindow::select_protocol()
 {
     //qDebug() << "Select protocol";
@@ -621,7 +563,7 @@ void MainWindow::set_flash_arrow_state()
                 }
                 if (action->text() == "Test write to ecu")
                 {
-                    if (configValues->flash_protocol_write.at(configValues->flash_protocol_selected_id.toInt()) == "yes")
+                    if (configValues->flash_protocol_test_write.at(configValues->flash_protocol_selected_id.toInt()) == "yes")
                         action->setEnabled(true);
                     else
                         action->setEnabled(false);

@@ -23,6 +23,7 @@
 #include "modules/checksum_ecu_subaru_denso_sh705x_diesel.h"
 #include "modules/checksum_ecu_subaru_denso_sh7xxx.h"
 #include "modules/checksum_ecu_subaru_hitachi_m32r.h"
+#include "modules/checksum_ecu_subaru_hitachi_sh7058.h"
 
 #include "modules/checksum_tcu_subaru_denso_sh7055.h"
 #include "modules/checksum_tcu_subaru_hitachi_m32r_can.h"
@@ -111,6 +112,7 @@ public:
         QStringList flash_protocol_mode;
         QStringList flash_protocol_checksum;
         QStringList flash_protocol_read;
+        QStringList flash_protocol_test_write;
         QStringList flash_protocol_write;
         QStringList flash_protocol_flash_transport;
         QStringList flash_protocol_log_transport;
