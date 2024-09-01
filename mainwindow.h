@@ -118,8 +118,6 @@ private:
     bool can_listener_on = false;
 
     int ecuCalDefIndex = 0;
-    struct FileActions::EcuCalDefStructure *ecuCalDef[100];
-    struct FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     int mapCellWidthSelectable = 240;
     int mapCellWidth1D = 96;
@@ -136,6 +134,8 @@ private:
     FileActions *fileActions;
     FileActions::LogValuesStructure *logValues;
     FileActions::ConfigValuesStructure *configValues;
+    FileActions::EcuCalDefStructure *ecuCalDef[100];
+    //FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     /* Flash modules */
     FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;

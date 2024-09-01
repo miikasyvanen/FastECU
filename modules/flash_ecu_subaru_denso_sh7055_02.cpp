@@ -529,6 +529,8 @@ int FlashEcuSubaruDensoSH7055_02::write_mem_subaru_denso_kline_32bit(bool test_w
     unsigned bcnt = 0;
     unsigned blockno;
 
+    set_progressbar_value(0);
+
     for (int i = 0; i < filedata.length(); i++)
     {
         data_array[i] = filedata.at(i);
@@ -583,6 +585,7 @@ int FlashEcuSubaruDensoSH7055_02::write_mem_subaru_denso_kline_32bit(bool test_w
                 }
             }
         }
+        set_progressbar_value(100);
 
         send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
@@ -784,8 +787,6 @@ int FlashEcuSubaruDensoSH7055_02::reflash_block_kline_32bit(const uint8_t *newda
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-
-    set_progressbar_value(0);
 
     if (blockno >= fdt->numblocks) {
         send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);

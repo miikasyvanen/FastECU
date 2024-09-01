@@ -38,6 +38,8 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
     uint16_t checksum_5_value_calculated = 0;
     uint32_t checksum_5_balance_value_address = 0x7fffa;
 
+    bool checksum_ok = true;
+
     for (int i = 0x18400; i < 0x1e000; i += 4)
     {
         checksum_1_value_calculated += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
@@ -97,6 +99,8 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
     if (checksum_1_value_calculated != checksum_1_value_stored)
     {
         qDebug() << "Checksum 1 value mismatch!";
+        checksum_ok = false;
+
         QByteArray checksum;
         checksum.append((uint8_t)(checksum_1_value_calculated >> 24));
         checksum.append((uint8_t)(checksum_1_value_calculated >> 16));
@@ -105,16 +109,16 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
         romData.replace(checksum_1_value_address, checksum.length(), checksum);
 
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 1 corrected";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 1 corrected");
     }
     else
     {
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 1 OK";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 1 OK");
     }
     if (checksum_2_value_calculated != checksum_2_value_stored)
     {
         qDebug() << "Checksum 2 value mismatch!";
+        checksum_ok = false;
+
         QByteArray checksum;
         checksum.append((uint8_t)(checksum_2_value_calculated >> 24));
         checksum.append((uint8_t)(checksum_2_value_calculated >> 16));
@@ -123,16 +127,16 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
         romData.replace(checksum_2_value_address, checksum.length(), checksum);
 
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 2 corrected";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 2 corrected");
     }
     else
     {
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 2 OK";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 2 OK");
     }
     if (checksum_3_value_calculated != checksum_3_value_stored)
     {
         qDebug() << "Checksum 3 value mismatch!";
+        checksum_ok = false;
+
         QByteArray checksum;
         checksum.append((uint8_t)(checksum_3_value_calculated >> 24));
         checksum.append((uint8_t)(checksum_3_value_calculated >> 16));
@@ -141,16 +145,16 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
         romData.replace(checksum_3_value_address, checksum.length(), checksum);
 
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 3 corrected";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 3 corrected");
     }
     else
     {
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 3 OK";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 3 OK");
     }
     if (checksum_4_value_calculated != checksum_4_value_stored)
     {
         qDebug() << "Checksum 4 value mismatch!";
+        checksum_ok = false;
+
         QByteArray checksum;
         checksum.append((uint8_t)(checksum_4_value_calculated >> 24));
         checksum.append((uint8_t)(checksum_4_value_calculated >> 16));
@@ -159,12 +163,14 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
         romData.replace(checksum_4_value_address, checksum.length(), checksum);
 
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 4 corrected";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 4 corrected");
     }
     else
     {
         qDebug() << "Subaru Hitachi SH7058 CAN ECU checksum 4 OK";
-        //QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksum 4 OK");
+    }
+    if (!checksum_ok)
+    {
+        QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksums corrected");
     }
 
 

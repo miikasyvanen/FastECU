@@ -446,6 +446,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool te
     unsigned bcnt = 0;
     unsigned blockno;
 
+    set_progressbar_value(0);
+
     for (int i = 0; i < filedata.length(); i++)
     {
         data_array[i] = filedata.at(i);
@@ -500,6 +502,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool te
                 }*/
             }
         }
+        set_progressbar_value(100);
 
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);

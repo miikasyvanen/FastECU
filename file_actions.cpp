@@ -1956,6 +1956,17 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
     qDebug() << "Make:" << configValues->flash_protocol_selected_make;
     qDebug() << "Checksum:" << configValues->flash_protocol_selected_checksum;
 
+    QString mcu_type_string = ecuCalDef->McuType;
+    int mcu_type_index = 0;
+    uint32_t fullRomSize = ecuCalDef->FullRomData.length();
+
+    while (flashdevices[mcu_type_index].name != 0)
+    {
+        if (flashdevices[mcu_type_index].name == mcu_type_string)
+            break;
+        mcu_type_index++;
+    }
+
     if (configValues->flash_protocol_selected_checksum == "yes")
     {
         if (configValues->flash_protocol_selected_make == "Subaru")
@@ -1963,6 +1974,11 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
             qDebug() << "Checksum module:" << flashMethod;
 
+            if (fullRomSize != flashdevices[mcu_type_index].romsize)
+            {
+                QMessageBox::information(this, tr("Checksum module"), "Bad ROM size, make sure that you have selected correct flash method!");
+                return ecuCalDef;
+            }
             /*
             * Denso ECU
             */

@@ -29,6 +29,8 @@
 #include "modules/checksum_tcu_subaru_hitachi_m32r_can.h"
 #include "modules/checksum_tcu_mitsu_mh8104_can.h"
 
+#include <kernelmemorymodels.h>
+
 
 #ifdef WIN32
     #include <windows.h>
@@ -373,6 +375,7 @@ public:
         };
     } EcuCalDefStruct;
 
+    //EcuCalDefStructure *ecuCalDefTemp;
 
     enum RomInfoEnum {
         XmlId,

@@ -982,6 +982,8 @@ int FlashEcuSubaruDensoSH7058CanDiesel::write_mem_subaru_denso_subarucan(bool te
     unsigned bcnt = 0;
     unsigned blockno;
 
+    set_progressbar_value(0);
+
     for (int i = 0; i < filedata.length(); i++)
     {
         data_array[i] = filedata.at(i);
@@ -1036,6 +1038,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::write_mem_subaru_denso_subarucan(bool te
                 }
             }
         }
+        set_progressbar_value(100);
 
         send_log_window_message("--- Comparing ECU flash memory pages to image file ---", true, true);
         send_log_window_message("seg\tstart\tlength\tecu crc\timg crc\tsame?", true, true);
@@ -1247,8 +1250,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block_denso_subarucan(const uint
     QByteArray received;
     QByteArray msg;
 
-    set_progressbar_value(0);
-
     if (blockno >= fdt->numblocks)
     {
         send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
@@ -1337,8 +1338,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block_denso_subarucan(const uint
         send_log_window_message("Reflash error! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands!", true, true);
         return STATUS_ERROR;
     }
-
-    set_progressbar_value(100);
 
     return STATUS_SUCCESS;
 }
