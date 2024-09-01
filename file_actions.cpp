@@ -1966,6 +1966,8 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             break;
         mcu_type_index++;
     }
+    qDebug() << "ecuCalDef->McuType:" << ecuCalDef->McuType << configValues->flash_protocol_selected_mcu;
+    qDebug() << "Size:" << fullRomSize << flashdevices[mcu_type_index].romsize;
 
     if (configValues->flash_protocol_selected_checksum == "yes")
     {

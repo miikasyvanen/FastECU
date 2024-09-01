@@ -286,6 +286,7 @@ private:
     FLASH_CLASS* connect_signals_and_run_module(FLASH_CLASS *object);
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
     void set_flash_arrow_state();
+    void update_protocol_info(int rom_number);
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
     //QString check_kernel(QString flash_method);

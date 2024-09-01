@@ -544,6 +544,16 @@ void MainWindow::select_vehicle_finished(int result)
    status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 }
 
+void MainWindow::update_protocol_info(int rom_number)
+{
+    ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+    ecuCalDef[rom_number]->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
+    ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
+    ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+    ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
+    ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+}
+
 void MainWindow::set_flash_arrow_state()
 {
     QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
@@ -894,12 +904,15 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 }
             }
 
+/*
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
             ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+*/
+            update_protocol_info(rom_number);
 
             if (configValues->flash_protocol_selected_checksum != "n/a")
                 ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
@@ -1021,6 +1034,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             {
                 //qDebug() << "Checking definitions, please wait...";
                 fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
+                update_protocol_info(rom_number);
 
                 //qDebug() << "Building treewidget, please wait...";
                 calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
@@ -1071,6 +1085,7 @@ bool MainWindow::open_calibration_file(QString filename)
         ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
 
     ecuCalDef[ecuCalDefIndex] = fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], filename);
+    update_protocol_info(ecuCalDefIndex);
 
     if(ecuCalDef[ecuCalDefIndex] != NULL)
     {
@@ -1102,6 +1117,8 @@ void MainWindow::save_calibration_file()
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
+    update_protocol_info(rom_number);
+
     ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
     if (ecuCalDef[rom_number] != NULL)
     {
@@ -1125,20 +1142,11 @@ void MainWindow::save_calibration_file_as()
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
+    update_protocol_info(rom_number);
+
     ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
     if (ecuCalDef[rom_number] != NULL)
     {
-        bool diff = false;
-        for (int i = 0; i < fullRomDataTmp.length(); i++)
-        {
-            if (fullRomDataTmp.at(i) != ecuCalDef[rom_number]->FullRomData.at(i))
-            {
-                qDebug() << "Diff at:" << i << fullRomDataTmp.at(i) << ecuCalDef[rom_number]->FullRomData.at(i);
-                diff = true;
-            }
-        }
-        if (!diff)
-            qDebug() << "NO DIFF";
         QString filename = "";
 
         QFileDialog saveDialog;
