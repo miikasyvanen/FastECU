@@ -45,7 +45,7 @@ QByteArray ChecksumTcuSubaruDensoSH7055::calculate_checksum(QByteArray romData)
 
         for (unsigned int j = area_start; j < area_end; j += 2)
         {
-            checksum += (uint16_t)(romData.at(j) << 8) + (uint16_t)(romData.at(j + 1));
+            checksum += ((uint8_t)romData.at(j) << 8) + ((uint8_t)romData.at(j + 1));
         }
     }
 
@@ -60,7 +60,7 @@ QByteArray ChecksumTcuSubaruDensoSH7055::calculate_checksum(QByteArray romData)
 
         QByteArray balance_value_array;
         uint32_t balance_value_array_start = 0x7fff4;
-        uint16_t balance_value = (uint16_t)(romData.at(0x7fff4) << 8) + (uint16_t)(romData.at(0x7fff5));
+        uint16_t balance_value = ((uint8_t)romData.at(0x7fff4) << 8) + ((uint8_t)romData.at(0x7fff5));
 
         msg.clear();
         msg.append(QString("Balance value before: 0x%1").arg(balance_value,4,16,QLatin1Char('0')).toUtf8());

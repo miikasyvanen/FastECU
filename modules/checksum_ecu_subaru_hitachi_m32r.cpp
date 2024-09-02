@@ -55,11 +55,11 @@ QByteArray ChecksumEcuSubaruHitachiM32r::calculate_checksum(QByteArray romData)
      * *************************************/
     for (int i = 0x6000; i < 0x8000; i += 4)
     {
-        checksum_1_value_calculated += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
-        checksum_2_value_calculated ^= (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
+        checksum_1_value_calculated += ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
+        checksum_2_value_calculated ^= ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
     }
-    checksum_1_value_stored = (romData.at(checksum_1_value_address) << 24) + (romData.at(checksum_1_value_address+1) << 16) + (romData.at(checksum_1_value_address+2) << 8) + romData.at(checksum_1_value_address+3);
-    checksum_2_value_stored = (romData.at(checksum_2_value_address) << 24) + (romData.at(checksum_2_value_address+1) << 16) + (romData.at(checksum_2_value_address+2) << 8) + romData.at(checksum_2_value_address+3);
+    checksum_1_value_stored = ((uint8_t)romData.at(checksum_1_value_address) << 24) + ((uint8_t)romData.at(checksum_1_value_address+1) << 16) + ((uint8_t)romData.at(checksum_1_value_address+2) << 8) + (uint8_t)romData.at(checksum_1_value_address+3);
+    checksum_2_value_stored = ((uint8_t)romData.at(checksum_2_value_address) << 24) + ((uint8_t)romData.at(checksum_2_value_address+1) << 16) + ((uint8_t)romData.at(checksum_2_value_address+2) << 8) + (uint8_t)romData.at(checksum_2_value_address+3);
     if (checksum_1_value_calculated != checksum_1_value_stored)
     {
         qDebug() << "Checksum 1 value mismatch!";
@@ -105,12 +105,12 @@ QByteArray ChecksumEcuSubaruHitachiM32r::calculate_checksum(QByteArray romData)
     {
         if (i < 0x10000 || (i > 0x10003 && i < 0x7fff0))
         {
-            checksum_3_value_calculated += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
-            checksum_4_value_calculated ^= (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
+            checksum_3_value_calculated += ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
+            checksum_4_value_calculated ^= ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
         }
     }
-    checksum_3_value_stored = (romData.at(checksum_3_value_address) << 24) + (romData.at(checksum_3_value_address+1) << 16) + (romData.at(checksum_3_value_address+2) << 8) + romData.at(checksum_3_value_address+3);
-    checksum_4_value_stored = (romData.at(checksum_4_value_address) << 24) + (romData.at(checksum_4_value_address+1) << 16) + (romData.at(checksum_4_value_address+2) << 8) + romData.at(checksum_4_value_address+3);
+    checksum_3_value_stored = ((uint8_t)romData.at(checksum_3_value_address) << 24) + ((uint8_t)romData.at(checksum_3_value_address+1) << 16) + ((uint8_t)romData.at(checksum_3_value_address+2) << 8) + (uint8_t)romData.at(checksum_3_value_address+3);
+    checksum_4_value_stored = ((uint8_t)romData.at(checksum_4_value_address) << 24) + ((uint8_t)romData.at(checksum_4_value_address+1) << 16) + ((uint8_t)romData.at(checksum_4_value_address+2) << 8) + (uint8_t)romData.at(checksum_4_value_address+3);
     if (checksum_3_value_calculated != checksum_3_value_stored)
     {
         qDebug() << "Checksum 3 value mismatch!";
@@ -155,7 +155,7 @@ QByteArray ChecksumEcuSubaruHitachiM32r::calculate_checksum(QByteArray romData)
     for (int i = 0x4000; i < romData.length(); i += 4)
     {
         if (i < 0x10000 || i > 0x10003)
-            checksum_5_value_calculated += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
+            checksum_5_value_calculated += ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
     }
     if (checksum_5_value_calculated != 0x5aa5)
     {

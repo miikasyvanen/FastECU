@@ -16,6 +16,8 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
      *
      *  Checksum 1 calculated between 0x18000 - 0x1dfff, 32bit sum, result at 0x7ffe8
      *  Checksum 2 calculated between 0x18000 - 0x1dfff, 32 bit XOR, result at 0x7ffec
+     *  Checksum 5 calculated between 0x4000 - 0xfffff excluding 0xffff0 - 0xffff7, 32-bit sum. Balance value is
+     *  calculated so that this matches with 0x5aa5a55a.
      *  Checksum 3 calculated between 0x0000 - 0xfffff excluding 0xffff0 - 0xffff7, 32-bit sum, result at 0x7fff0
      *  Checksum 4 calculated between 0x0000 - 0xfffff excluding 0xffff0 - 0xffff7, 32-bit XOR, result at 0x7fff4
      *
@@ -47,11 +49,11 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
      * *************************************/
     for (int i = 0x18400; i < 0x1e000; i += 4)
     {
-        checksum_1_value_calculated += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
-        checksum_2_value_calculated ^= (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
+        checksum_1_value_calculated += ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
+        checksum_2_value_calculated ^= ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
     }
-    checksum_1_value_stored = (romData.at(checksum_1_value_address) << 24) + (romData.at(checksum_1_value_address+1) << 16) + (romData.at(checksum_1_value_address+2) << 8) + romData.at(checksum_1_value_address+3);
-    checksum_2_value_stored = (romData.at(checksum_2_value_address) << 24) + (romData.at(checksum_2_value_address+1) << 16) + (romData.at(checksum_2_value_address+2) << 8) + romData.at(checksum_2_value_address+3);
+    checksum_1_value_stored = ((uint8_t)romData.at(checksum_1_value_address) << 24) + ((uint8_t)romData.at(checksum_1_value_address+1) << 16) + ((uint8_t)romData.at(checksum_1_value_address+2) << 8) + (uint8_t)romData.at(checksum_1_value_address+3);
+    checksum_2_value_stored = ((uint8_t)romData.at(checksum_2_value_address) << 24) + ((uint8_t)romData.at(checksum_2_value_address+1) << 16) + ((uint8_t)romData.at(checksum_2_value_address+2) << 8) + (uint8_t)romData.at(checksum_2_value_address+3);
     if (checksum_1_value_calculated != checksum_1_value_stored)
     {
         qDebug() << "Checksum 1 value mismatch!";
@@ -96,12 +98,12 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
     for (uint32_t i = 0x4000; i < (uint32_t)romData.length(); i += 4)
     {
         if (i != checksum_3_value_address && i != checksum_4_value_address)
-            checksum_5_value_calculated += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
+            checksum_5_value_calculated += ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
     }
     if (checksum_5_value_calculated != 0x5aa5a55a)
     {
         QByteArray balance_value_array;
-        uint32_t balance_value = (romData.at(checksum_5_balance_value_address) << 24) + (romData.at(checksum_5_balance_value_address + 1) << 16) + (romData.at(checksum_5_balance_value_address + 2) << 8) + (romData.at(checksum_5_balance_value_address + 3));
+        uint32_t balance_value = ((uint8_t)romData.at(checksum_5_balance_value_address) << 24) + ((uint8_t)romData.at(checksum_5_balance_value_address + 1) << 16) + ((uint8_t)romData.at(checksum_5_balance_value_address + 2) << 8) + ((uint8_t)romData.at(checksum_5_balance_value_address + 3));
 
         msg.clear();
         msg.append(QString("Balance value before: 0x%1").arg(balance_value,8,16,QLatin1Char('0')).toUtf8());
@@ -129,12 +131,12 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
     {
         if (i != checksum_3_value_address && i != checksum_4_value_address)
         {
-            checksum_3_value_calculated += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
-            checksum_4_value_calculated ^= (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
+            checksum_3_value_calculated += ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
+            checksum_4_value_calculated ^= ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
         }
     }
-    checksum_3_value_stored = (romData.at(checksum_3_value_address) << 24) + (romData.at(checksum_3_value_address+1) << 16) + (romData.at(checksum_3_value_address+2) << 8) + romData.at(checksum_3_value_address+3);
-    checksum_4_value_stored = (romData.at(checksum_4_value_address) << 24) + (romData.at(checksum_4_value_address+1) << 16) + (romData.at(checksum_4_value_address+2) << 8) + romData.at(checksum_4_value_address+3);
+    checksum_3_value_stored = ((uint8_t)romData.at(checksum_3_value_address) << 24) + ((uint8_t)romData.at(checksum_3_value_address+1) << 16) + ((uint8_t)romData.at(checksum_3_value_address+2) << 8) + (uint8_t)romData.at(checksum_3_value_address+3);
+    checksum_4_value_stored = ((uint8_t)romData.at(checksum_4_value_address) << 24) + ((uint8_t)romData.at(checksum_4_value_address+1) << 16) + ((uint8_t)romData.at(checksum_4_value_address+2) << 8) + (uint8_t)romData.at(checksum_4_value_address+3);
     if (checksum_3_value_calculated != checksum_3_value_stored)
     {
         qDebug() << "Checksum 3 value mismatch!";
@@ -149,7 +151,7 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
 
 /*
         QByteArray balance_value_array;
-        uint32_t balance_value = (romData.at(checksum_3_balance_value_address) << 24) + (romData.at(checksum_3_balance_value_address + 1) << 16) + (romData.at(checksum_3_balance_value_address + 2) << 8) + (romData.at(checksum_3_balance_value_address + 3));
+        uint32_t balance_value = ((uint8_t)romData.at(checksum_3_balance_value_address) << 24) + ((uint8_t)romData.at(checksum_3_balance_value_address + 1) << 16) + ((uint8_t)romData.at(checksum_3_balance_value_address + 2) << 8) + ((uint8_t)romData.at(checksum_3_balance_value_address + 3));
 
         msg.clear();
         msg.append(QString("Balance value before: 0x%1").arg(balance_value,8,16,QLatin1Char('0')).toUtf8());
@@ -189,7 +191,7 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
         {
             if (i != checksum_3_value_address && i != checksum_4_value_address)
             {
-                checksum_4_value_calculated ^= (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
+                checksum_4_value_calculated ^= ((uint8_t)romData.at(i) << 24) + ((uint8_t)romData.at(i + 1) << 16) + ((uint8_t)romData.at(i + 2) << 8) + (uint8_t)romData.at(i + 3);
             }
         }
 
