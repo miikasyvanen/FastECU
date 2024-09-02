@@ -1034,7 +1034,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             {
                 //qDebug() << "Checking definitions, please wait...";
                 fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
-                update_protocol_info(rom_number);
+                update_protocol_info(ecuCalDefIndex);
 
                 //qDebug() << "Building treewidget, please wait...";
                 calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
