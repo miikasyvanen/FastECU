@@ -89,8 +89,9 @@ public:
     void delay(int n);
 
 private:
-    QString title = "FastECU";
-    QString version = "0.0-dev0";
+    QString software_name = "FastECU";
+    QString software_title = "FastECU";
+    QString software_version = "0.0-dev0";
 
     QSplashScreen *startUpSplash;
     QLabel *startUpSplashLabel;
@@ -117,8 +118,6 @@ private:
     bool can_listener_on = false;
 
     int ecuCalDefIndex = 0;
-    struct FileActions::EcuCalDefStructure *ecuCalDef[100];
-    struct FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     int mapCellWidthSelectable = 240;
     int mapCellWidth1D = 96;
@@ -135,6 +134,8 @@ private:
     FileActions *fileActions;
     FileActions::LogValuesStructure *logValues;
     FileActions::ConfigValuesStructure *configValues;
+    FileActions::EcuCalDefStructure *ecuCalDef[100];
+    //FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     /* Flash modules */
     FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
@@ -285,6 +286,7 @@ private:
     FLASH_CLASS* connect_signals_and_run_module(FLASH_CLASS *object);
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
     void set_flash_arrow_state();
+    void update_protocol_info(int rom_number);
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
     //QString check_kernel(QString flash_method);

@@ -23,10 +23,13 @@
 #include "modules/checksum_ecu_subaru_denso_sh705x_diesel.h"
 #include "modules/checksum_ecu_subaru_denso_sh7xxx.h"
 #include "modules/checksum_ecu_subaru_hitachi_m32r.h"
+#include "modules/checksum_ecu_subaru_hitachi_sh7058.h"
 
 #include "modules/checksum_tcu_subaru_denso_sh7055.h"
 #include "modules/checksum_tcu_subaru_hitachi_m32r_can.h"
 #include "modules/checksum_tcu_mitsu_mh8104_can.h"
+
+#include <kernelmemorymodels.h>
 
 
 #ifdef WIN32
@@ -48,10 +51,11 @@ public:
     int def_map_index = 0;
     //QString ecu_protocol;
 
-    QString title;
-    QString version;
-
     struct ConfigValuesStructure {
+        QString software_name;
+        QString software_title;
+        QString software_version;
+
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
         QString window_size = "default";
@@ -110,6 +114,7 @@ public:
         QStringList flash_protocol_mode;
         QStringList flash_protocol_checksum;
         QStringList flash_protocol_read;
+        QStringList flash_protocol_test_write;
         QStringList flash_protocol_write;
         QStringList flash_protocol_flash_transport;
         QStringList flash_protocol_log_transport;
@@ -370,6 +375,7 @@ public:
         };
     } EcuCalDefStruct;
 
+    //EcuCalDefStructure *ecuCalDefTemp;
 
     enum RomInfoEnum {
         XmlId,
@@ -463,12 +469,6 @@ public:
      **********************************************/
     EcuCalDefStructure *save_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
 
-    /***********************************************
-     * Apply changes made to calibration
-     * to rom data array
-     **********************************************/
-    EcuCalDefStructure *apply_subaru_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef);
-
     /***************************
      * Read software menu file
      * for menu creation
@@ -480,7 +480,6 @@ public:
      * checksums
      **************************/
     EcuCalDefStructure *checksum_correction(FileActions::EcuCalDefStructure *ecuCalDef);
-    EcuCalDefStructure *checksum_module_subarudbw_denso32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_end);
 
     /*************************************
      * Parse expression strings for used

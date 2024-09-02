@@ -299,9 +299,6 @@ int FlashEcuSubaruMitsuM32rKline::read_mem_subaru_ecu_mitsu_kline(uint32_t start
         return NULL;
     }
 
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
-
     file.write(ecuCalDef->FullRomData);
     file.close();
 

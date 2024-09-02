@@ -306,9 +306,6 @@ int FlashEcuSubaruHitachiM32rKline::read_a0_rom_subaru_ecu_hitachi_kline(uint32_
         return NULL;
     }
 
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
-
     file.write(ecuCalDef->FullRomData);
     file.close();
 

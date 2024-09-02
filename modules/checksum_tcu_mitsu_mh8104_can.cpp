@@ -28,6 +28,8 @@ QByteArray ChecksumTcuMitsuMH8104Can::calculate_checksum(QByteArray romData)
     QByteArray msg;
     uint32_t checksum = 0;
 
+    bool checksum_ok = true;
+
     for (int i = 0x8000; i < 0x80000; i += 4)
     {
         checksum += (romData.at(i) << 24) + (romData.at(i + 1) << 16) + (romData.at(i + 2) << 8) + romData.at(i + 3);
@@ -44,6 +46,7 @@ QByteArray ChecksumTcuMitsuMH8104Can::calculate_checksum(QByteArray romData)
     if (checksum != checksum_target)
     {
         qDebug() << "Checksum value mismatch!";
+        checksum_ok = false;
 
         QByteArray balance_value_array;
 
@@ -75,12 +78,14 @@ QByteArray ChecksumTcuMitsuMH8104Can::calculate_checksum(QByteArray romData)
         romData.replace(checksum_balance_value_address, balance_value_array.length(), balance_value_array);
 
         qDebug() << "Subaru Mitsu MH8104 CAN CVT TCU checksum corrected";
-        //QMessageBox::information(this, tr("Subaru Hitachi M32R K-Line/CAN ECU Checksum"), "Checksum corrected");
     }
     else
     {
         qDebug() << "Subaru Mitsu MH8104 CAN CVT TCU checksum OK";
-        //QMessageBox::information(this, tr("Subaru Hitachi M32R K-Line/CAN ECU Checksum"), "Checksum OK");
+    }
+    if (!checksum_ok)
+    {
+        QMessageBox::information(this, tr("Subaru Hitachi M32R K-Line/CAN ECU Checksum"), "Checksums corrected");
     }
 
     return romData;

@@ -300,9 +300,6 @@ int FlashTcuSubaruHitachiM32rKline::connect_bootloader_subaru_tcu_hitachi_kline(
         return NULL;
     }
 
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
-
     file.write(ecuCalDef->FullRomData);
     file.close();
 
@@ -376,9 +373,6 @@ int FlashTcuSubaruHitachiM32rKline::connect_bootloader_subaru_tcu_hitachi_kline(
         QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
         return NULL;
     }
-
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
 
     file.write(ecuCalDef->FullRomData);
     file.close();
@@ -454,9 +448,6 @@ int FlashTcuSubaruHitachiM32rKline::connect_bootloader_subaru_tcu_hitachi_kline(
         return NULL;
     }
 
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
-
     file.write(ecuCalDef->FullRomData);
     file.close();
 
@@ -531,9 +522,6 @@ int FlashTcuSubaruHitachiM32rKline::read_a0_ram_subaru_tcu_hitachi_kline(uint32_
         QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
         return NULL;
     }
-
-    //ecuCalDef = apply_subaru_cal_changes_to_rom_data(ecuCalDef);
-    //checksum_correction(ecuCalDef);
 
     file.write(ecuCalDef->FullRomData);
     file.close();

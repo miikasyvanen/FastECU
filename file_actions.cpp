@@ -110,7 +110,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
 
     if (reader.readNextStartElement())
     {
-        if (reader.name().toUtf8() == "ecu" && reader.attributes().value("name").toUtf8() == "FastECU")
+        if (reader.name().toUtf8() == "config" && reader.attributes().value("name").toUtf8() == "FastECU")
         {
             if (reader.readNextStartElement())
             {
@@ -391,8 +391,9 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     file.resize(0);
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
-    stream.writeStartElement("ecu");
-    stream.writeAttribute("name", "FastECU");
+    stream.writeStartElement("config");
+    stream.writeAttribute("name", configValues->software_name);
+    stream.writeAttribute("version", configValues->software_version);
     stream.writeStartElement("software_settings");
 
     stream.writeStartElement("setting");
@@ -544,6 +545,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QStringList flash_protocol_mode;
     QStringList flash_protocol_checksum;
     QStringList flash_protocol_read;
+    QStringList flash_protocol_test_write;
     QStringList flash_protocol_write;
     QStringList flash_protocol_flash_transport;
     QStringList flash_protocol_log_transport;
@@ -569,7 +571,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
 
     QDomElement root = xmlBOM.documentElement();
 
-    if (root.tagName() == "ecu")
+    if (root.tagName() == "config")
     {
         QDomElement root_child = root.firstChild().toElement();
         while (!root_child.isNull())
@@ -593,6 +595,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         flash_protocol_mode.append(" ");
                         flash_protocol_checksum.append(" ");
                         flash_protocol_read.append(" ");
+                        flash_protocol_test_write.append(" ");
                         flash_protocol_write.append(" ");
                         flash_protocol_flash_transport.append(" ");
                         flash_protocol_log_transport.append(" ");
@@ -622,6 +625,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 flash_protocol_checksum.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "read")
                                 flash_protocol_read.replace(index, protocol_data.text());
+                            if (protocol_data.tagName() == "test_write")
+                                flash_protocol_test_write.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "write")
                                 flash_protocol_write.replace(index, protocol_data.text());
                             if (protocol_data.tagName() == "flash_transport")
@@ -669,7 +674,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                 {
                     if (car_model.tagName() == "car_model")
                     {
-                        //qDebug() << "Add new list";
+                        //qDebug() << "Add new vehicle";
                         configValues->flash_protocol_id.append(QString::number(id));//car_model.attribute("id","No id"));
                         configValues->flash_protocol_make.append(" ");
                         configValues->flash_protocol_model.append(" ");
@@ -684,6 +689,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         configValues->flash_protocol_mode.append(" ");
                         configValues->flash_protocol_checksum.append(" ");
                         configValues->flash_protocol_read.append(" ");
+                        configValues->flash_protocol_test_write.append(" ");
                         configValues->flash_protocol_write.append(" ");
                         configValues->flash_protocol_flash_transport.append(" ");
                         configValues->flash_protocol_log_transport.append(" ");
@@ -732,6 +738,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                         configValues->flash_protocol_mode.replace(index, flash_protocol_mode.at(i));
                                         configValues->flash_protocol_checksum.replace(index, flash_protocol_checksum.at(i));
                                         configValues->flash_protocol_read.replace(index, flash_protocol_read.at(i));
+                                        configValues->flash_protocol_test_write.replace(index, flash_protocol_test_write.at(i));
                                         configValues->flash_protocol_write.replace(index, flash_protocol_write.at(i));
                                         configValues->flash_protocol_flash_transport.replace(index, flash_protocol_flash_transport.at(i));
                                         configValues->flash_protocol_log_transport.replace(index, flash_protocol_log_transport.at(i));
@@ -786,8 +793,6 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
     }
     xmlBOM.setContent(&file);
 
-    QDomElement root = xmlBOM.documentElement();
-
     if (!modify)
     {
         logValues->dashboard_log_value_id.clear();
@@ -798,173 +803,171 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
     bool ecu_id_found = false;
     int index = 0;
 
-    if (root.tagName() == "logger")
+    QDomElement root = xmlBOM.documentElement();
+
+    if (root.tagName() == "config")
     {
-        QDomElement ecus = root.firstChild().toElement();
-        while (!ecus.isNull())
+        QDomElement logger = root.firstChild().toElement();
+        if (logger.tagName() == "logger")
         {
-            if (ecus.tagName() == "ecus")
+            QDomElement ecu = logger.firstChild().toElement();
+            while (!ecu.isNull())
             {
-                QDomElement ecu = ecus.firstChild().toElement();
-                while (!ecu.isNull())
+                if (ecu.tagName() == "ecu")
                 {
-                    if (ecu.tagName() == "ecu")
+                    QString file_ecu_id = ecu.attribute("id","No id");
+
+                    if (ecu_id == file_ecu_id)
                     {
-                        QString file_ecu_id = ecu.attribute("id","No id");
-
-                        if (ecu_id == file_ecu_id)
+                        ecu_id_found = true;
+                        //qDebug() << "Found ECU ID" << file_ecu_id;
+                        QDomElement protocol = ecu.firstChild().toElement();
+                        while (!protocol.isNull())
                         {
-                            ecu_id_found = true;
-                            //qDebug() << "Found ECU ID" << file_ecu_id;
-                            QDomElement protocol = ecu.firstChild().toElement();
-                            while (!protocol.isNull())
+                            if (protocol.tagName() == "protocol")
                             {
-                                if (protocol.tagName() == "protocol")
+                                //qDebug() << "Found protocol" << protocol.attribute("id","No id");
+                                logValues->logging_values_protocol = protocol.attribute("id","No id");
+                                QDomElement parameters = protocol.firstChild().toElement();
+                                while(!parameters.isNull())
                                 {
-                                    //qDebug() << "Found protocol" << protocol.attribute("id","No id");
-                                    logValues->logging_values_protocol = protocol.attribute("id","No id");
-                                    QDomElement parameters = protocol.firstChild().toElement();
-                                    while(!parameters.isNull())
+                                    if (parameters.tagName() == "parameters")
                                     {
-                                        if (parameters.tagName() == "parameters")
+                                        QDomElement parameter_type = parameters.firstChild().toElement();
+                                        while(!parameter_type.isNull())
                                         {
-                                            QDomElement parameter_type = parameters.firstChild().toElement();
-                                            while(!parameter_type.isNull())
+                                            if (parameter_type.tagName() == "gauges")
                                             {
-                                                if (parameter_type.tagName() == "gauges")
+                                                index = 0;
+                                                QDomElement gauges = parameter_type.firstChild().toElement();
+                                                while(!gauges.isNull())
                                                 {
-                                                    index = 0;
-                                                    QDomElement gauges = parameter_type.firstChild().toElement();
-                                                    while(!gauges.isNull())
+                                                    if (gauges.tagName() == "parameter")
                                                     {
-                                                        if (gauges.tagName() == "parameter")
-                                                        {
-                                                            if (!modify)
-                                                                logValues->dashboard_log_value_id.append(gauges.attribute("id","No id"));
-                                                            else
-                                                                gauges.attribute("id", logValues->dashboard_log_value_id.at(index));
-                                                        }
-                                                        gauges = gauges.nextSibling().toElement();
-                                                        index++;
+                                                        if (!modify)
+                                                            logValues->dashboard_log_value_id.append(gauges.attribute("id","No id"));
+                                                        else
+                                                            gauges.attribute("id", logValues->dashboard_log_value_id.at(index));
                                                     }
+                                                    gauges = gauges.nextSibling().toElement();
+                                                    index++;
                                                 }
-                                                if (parameter_type.tagName() == "lower_panel")
+                                            }
+                                            if (parameter_type.tagName() == "lower_panel")
+                                            {
+                                                index = 0;
+                                                QDomElement lower_panel = parameter_type.firstChild().toElement();
+                                                while(!lower_panel.isNull())
                                                 {
-                                                    index = 0;
-                                                    QDomElement lower_panel = parameter_type.firstChild().toElement();
-                                                    while(!lower_panel.isNull())
+                                                    if (lower_panel.tagName() == "parameter")
                                                     {
-                                                        if (lower_panel.tagName() == "parameter")
+                                                        if (!modify)
+                                                            logValues->lower_panel_log_value_id.append(lower_panel.attribute("id","No id"));
+                                                        else
                                                         {
-                                                            if (!modify)
-                                                                logValues->lower_panel_log_value_id.append(lower_panel.attribute("id","No id"));
-                                                            else
-                                                            {
-                                                                QDomElement parameter = xmlBOM.createElement("parameter");
-                                                                parameter.setAttribute("id", logValues->lower_panel_log_value_id.at(index));
-                                                                parameter.setAttribute("name", "");
+                                                            QDomElement parameter = xmlBOM.createElement("parameter");
+                                                            parameter.setAttribute("id", logValues->lower_panel_log_value_id.at(index));
+                                                            parameter.setAttribute("name", "");
 
-                                                                lower_panel.setAttribute("id", logValues->lower_panel_log_value_id.at(index));
-                                                            }
+                                                            lower_panel.setAttribute("id", logValues->lower_panel_log_value_id.at(index));
                                                         }
-                                                        lower_panel = lower_panel.nextSibling().toElement();
-                                                        index++;
                                                     }
+                                                    lower_panel = lower_panel.nextSibling().toElement();
+                                                    index++;
                                                 }
-                                                parameter_type = parameter_type.nextSibling().toElement();
                                             }
+                                            parameter_type = parameter_type.nextSibling().toElement();
                                         }
-                                        if (parameters.tagName() == "switches")
-                                        {
-                                            index = 0;
-                                            QDomElement switches = parameters.firstChild().toElement();
-                                            while(!switches.isNull())
-                                            {
-                                                if (switches.tagName() == "switch")
-                                                {
-                                                    if (!modify)
-                                                        logValues->lower_panel_switch_id.append(switches.attribute("id","No id"));
-                                                    else
-                                                        switches.attribute("id", logValues->lower_panel_switch_id.at(index));
-                                                }
-                                                switches = switches.nextSibling().toElement();
-                                                index++;
-                                            }
-                                        }
-                                        parameters = parameters.nextSibling().toElement();
                                     }
+                                    if (parameters.tagName() == "switches")
+                                    {
+                                        index = 0;
+                                        QDomElement switches = parameters.firstChild().toElement();
+                                        while(!switches.isNull())
+                                        {
+                                            if (switches.tagName() == "switch")
+                                            {
+                                                if (!modify)
+                                                    logValues->lower_panel_switch_id.append(switches.attribute("id","No id"));
+                                                else
+                                                    switches.attribute("id", logValues->lower_panel_switch_id.at(index));
+                                            }
+                                            switches = switches.nextSibling().toElement();
+                                            index++;
+                                        }
+                                    }
+                                    parameters = parameters.nextSibling().toElement();
                                 }
-                                protocol = protocol.nextSibling().toElement();
                             }
+                            protocol = protocol.nextSibling().toElement();
                         }
                     }
-                    ecu = ecu.nextSibling().toElement();
                 }
-                if (!ecu_id_found)
-                {
-                    file.resize(0);
-
-                    //qDebug() << "ECU ID not found, initializing log parameters";
-                    logValues->logging_values_protocol = logValues->log_value_protocol.at(0);
-                    for (int i = 0; i < logValues->log_value_id.length(); i++)
-                    {
-                        if (logValues->log_value_enabled.at(i) == "1" && logValues->dashboard_log_value_id.length() < 15)
-                            logValues->dashboard_log_value_id.append(logValues->log_value_id.at(i));
-                    }
-                    for (int i = 0; i < logValues->log_value_id.length(); i++)
-                    {
-                        if (logValues->log_value_enabled.at(i) == "1" && logValues->lower_panel_log_value_id.length() < 12)
-                        logValues->lower_panel_log_value_id.append(logValues->log_value_id.at(i));
-                    }
-                    for (int i = 0; i < logValues->log_switch_id.length(); i++)
-                    {
-                        if (logValues->log_switch_enabled.at(i) == "1" && logValues->lower_panel_switch_id.length() < 20)
-                        logValues->lower_panel_switch_id.append(logValues->log_switch_id.at(i));
-                    }
-                    //qDebug() << "Values initialized, creating xml data";
-                    //save_logger_conf(logValues, ecu_id);
-                    QDomElement ecu = xmlBOM.createElement("ecu");
-                    ecu.setAttribute("id", ecu_id);
-                    ecus.appendChild(ecu);
-                    QDomElement protocol = xmlBOM.createElement("protocol");
-                    protocol.setAttribute("id", logValues->logging_values_protocol);
-                    ecu.appendChild(protocol);
-                    QDomElement parameters = xmlBOM.createElement("parameters");
-                    protocol.appendChild(parameters);
-                    QDomElement gauges = xmlBOM.createElement("gauges");
-                    parameters.appendChild(gauges);
-                    for (int i = 0; i < logValues->dashboard_log_value_id.length(); i++)
-                    {
-                        QDomElement parameter = xmlBOM.createElement("parameter");
-                        gauges.appendChild(parameter);
-                        parameter.setAttribute("id", logValues->dashboard_log_value_id.at(i));
-                        parameter.setAttribute("name", "");
-                    }
-                    QDomElement lower_panel = xmlBOM.createElement("lower_panel");
-                    parameters.appendChild(lower_panel);
-                    for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
-                    {
-                        QDomElement parameter = xmlBOM.createElement("parameter");
-                        lower_panel.appendChild(parameter);
-                        parameter.setAttribute("id", logValues->lower_panel_log_value_id.at(i));
-                        parameter.setAttribute("name", "");
-                    }
-                    QDomElement switches = xmlBOM.createElement("switches");
-                    protocol.appendChild(switches);
-                    for (int i = 0; i < logValues->lower_panel_switch_id.length(); i++)
-                    {
-                        QDomElement parameter = xmlBOM.createElement("switch");
-                        switches.appendChild(parameter);
-                        parameter.setAttribute("id", logValues->lower_panel_switch_id.at(i));
-                        parameter.setAttribute("name", "");
-                    }
-                    //qDebug() << "Saving log parameters";
-                    QTextStream output(&file);
-                    output << xmlBOM.toString();
-                    file.close();
-                }
+                ecu = ecu.nextSibling().toElement();
             }
-            ecus = ecus.nextSibling().toElement();
+        }
+        if (!ecu_id_found)
+        {
+            file.resize(0);
+
+            //qDebug() << "ECU ID not found, initializing log parameters";
+            logValues->logging_values_protocol = logValues->log_value_protocol.at(0);
+            for (int i = 0; i < logValues->log_value_id.length(); i++)
+            {
+                if (logValues->log_value_enabled.at(i) == "1" && logValues->dashboard_log_value_id.length() < 15)
+                    logValues->dashboard_log_value_id.append(logValues->log_value_id.at(i));
+            }
+            for (int i = 0; i < logValues->log_value_id.length(); i++)
+            {
+                if (logValues->log_value_enabled.at(i) == "1" && logValues->lower_panel_log_value_id.length() < 12)
+                logValues->lower_panel_log_value_id.append(logValues->log_value_id.at(i));
+            }
+            for (int i = 0; i < logValues->log_switch_id.length(); i++)
+            {
+                if (logValues->log_switch_enabled.at(i) == "1" && logValues->lower_panel_switch_id.length() < 20)
+                logValues->lower_panel_switch_id.append(logValues->log_switch_id.at(i));
+            }
+            //qDebug() << "Values initialized, creating xml data";
+            //save_logger_conf(logValues, ecu_id);
+            QDomElement ecu = xmlBOM.createElement("ecu");
+            ecu.setAttribute("id", ecu_id);
+            logger.appendChild(ecu);
+            QDomElement protocol = xmlBOM.createElement("protocol");
+            protocol.setAttribute("id", logValues->logging_values_protocol);
+            ecu.appendChild(protocol);
+            QDomElement parameters = xmlBOM.createElement("parameters");
+            protocol.appendChild(parameters);
+            QDomElement gauges = xmlBOM.createElement("gauges");
+            parameters.appendChild(gauges);
+            for (int i = 0; i < logValues->dashboard_log_value_id.length(); i++)
+            {
+                QDomElement parameter = xmlBOM.createElement("parameter");
+                gauges.appendChild(parameter);
+                parameter.setAttribute("id", logValues->dashboard_log_value_id.at(i));
+                parameter.setAttribute("name", "");
+            }
+            QDomElement lower_panel = xmlBOM.createElement("lower_panel");
+            parameters.appendChild(lower_panel);
+            for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
+            {
+                QDomElement parameter = xmlBOM.createElement("parameter");
+                lower_panel.appendChild(parameter);
+                parameter.setAttribute("id", logValues->lower_panel_log_value_id.at(i));
+                parameter.setAttribute("name", "");
+            }
+            QDomElement switches = xmlBOM.createElement("switches");
+            protocol.appendChild(switches);
+            for (int i = 0; i < logValues->lower_panel_switch_id.length(); i++)
+            {
+                QDomElement parameter = xmlBOM.createElement("switch");
+                switches.appendChild(parameter);
+                parameter.setAttribute("id", logValues->lower_panel_switch_id.at(i));
+                parameter.setAttribute("name", "");
+            }
+            //qDebug() << "Saving log parameters";
+            QTextStream output(&file);
+            output << xmlBOM.toString();
+            file.close();
         }
     }
     if (modify)
@@ -995,8 +998,10 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
     //file.resize(0);
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
+    stream.writeStartElement("config");
+    stream.writeAttribute("name", configValues->software_title);
+    stream.writeAttribute("version", configValues->software_version);
     stream.writeStartElement("logger");
-    stream.writeStartElement("ecus");
     stream.writeStartElement("ecu");
     stream.writeAttribute("id", ecu_id);
     stream.writeStartElement("protocol");
@@ -1804,7 +1809,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 //qDebug() << "Map" << ecuCalDef->NameList.at(i) << "x scale";
                 if (ecuCalDef->XScaleTypeList.at(i) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(i) == "Static X Axis")
                 {
-                    qDebug() << "Static X scale";
+                    //qDebug() << "Static X scale";
                     ecuCalDef->XScaleData.replace(i, ecuCalDef->XScaleStaticDataList.at(i));
                 }
                 else if (ecuCalDef->XScaleTypeList.at(i) == "X Axis" || (ecuCalDef->XScaleTypeList.at(i) == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
@@ -1939,189 +1944,6 @@ FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::
     return 0;
 }
 
-FileActions::EcuCalDefStructure *FileActions::apply_subaru_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef)
-{
-    ConfigValuesStructure *configValues = &ConfigValuesStruct;
-
-    int storagesize = 0;
-    QString mapData;
-    bool bStatus = false;
-
-    union mapData{
-        uint8_t oneByteValue[4];
-        uint16_t twoByteValue[2];
-        uint32_t fourByteValue;
-        float floatValue;
-    } mapDataValue;
-
-    for (int i = 0; i < ecuCalDef->NameList.length(); i++)
-    {
-        if (ecuCalDef->StorageTypeList.at(i) == "uint8")
-            storagesize = 1;
-        if (ecuCalDef->StorageTypeList.at(i) == "uint16")
-            storagesize = 2;
-        if (ecuCalDef->StorageTypeList.at(i) == "uint24")
-            storagesize = 3;
-        if (ecuCalDef->StorageTypeList.at(i) == "uint32" || ecuCalDef->StorageTypeList.at(i) == "float")
-            storagesize = 4;
-        mapData.clear();
-        QStringList mapDataList = ecuCalDef->MapData.at(i).split(",");
-        if (ecuCalDef->StorageTypeList.at(i) == "bloblist")
-        {
-            storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
-            uint8_t dataByte = 0;
-            uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16);
-            for (int k = 0; k < storagesize; k++)
-            {
-                dataByte = ecuCalDef->MapData.at(i).mid(0, 2).toUInt(&bStatus, 16);
-                ecuCalDef->FullRomData[byteAddress] = dataByte;
-            }
-        }
-        else
-        {
-            for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
-            {
-                uint32_t dataByte = 0;
-                uint32_t startPos = ecuCalDef->StartPosList.at(i).toUInt(&bStatus,16);
-                uint32_t interval = ecuCalDef->IntervalList.at(i).toUInt(&bStatus,16);
-                uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
-                if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
-                    byteAddress -= 0x8000;
-
-                if (ecuCalDef->TypeList.at(i) != "Switch")
-                {
-                    if (ecuCalDef->StorageTypeList.at(i) == "float"){
-                        mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
-                    }
-                    else
-                    {
-                        mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->ToByteList.at(i), mapDataList.at(j)));
-                        mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
-                    }
-
-                    if (mapDataValue.floatValue == 0)
-                        mapDataValue.floatValue = 0.0f;
-
-                    for (int k = 0; k < storagesize; k++)
-                    {
-                        if (ecuCalDef->EndianList.at(i) == "little")
-                        {
-                            ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
-                        }
-                        else
-                        {
-                            ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
-                        }
-                    }
-                }
-            }
-
-            if (ecuCalDef->XSizeList.at(i).toUInt() > 1 && ecuCalDef->XScaleTypeList.at(i) != "Static Y Axis" && ecuCalDef->XScaleTypeList.at(i) != "Static X Axis" && ecuCalDef->XScaleNameList.at(i) != " ")
-            {
-                if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint8")
-                    storagesize = 1;
-                if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint16")
-                    storagesize = 2;
-                if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint24")
-                    storagesize = 3;
-                if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint32" || ecuCalDef->XScaleStorageTypeList.at(i) == "float")
-                    storagesize = 4;
-                mapData.clear();
-                QStringList mapDataList = ecuCalDef->XScaleData.at(i).split(",");
-                for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt(); j++)
-                {
-                    uint32_t dataByte = 0;
-                    uint32_t startPos = ecuCalDef->XScaleStartPosList.at(i).toUInt(&bStatus,16);
-                    uint32_t interval = ecuCalDef->XScaleIntervalList.at(i).toUInt(&bStatus,16);
-                    uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
-                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
-                        byteAddress -= 0x8000;
-
-                    if (ecuCalDef->XScaleTypeList.at(i) != "Switch")
-                    {
-                        if (ecuCalDef->XScaleStorageTypeList.at(i) == "float"){
-                            mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleToByteList.at(i), mapDataList.at(j)));
-                        }
-                        else
-                        {
-                            mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleToByteList.at(i), mapDataList.at(j)));
-                            mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
-                        }
-
-                        if (mapDataValue.floatValue == 0)
-                            mapDataValue.floatValue = 0.0f;
-
-                        for (int k = 0; k < storagesize; k++)
-                        {
-                            if (ecuCalDef->XScaleEndianList.at(i) == "little")
-                            {
-                                ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
-                            }
-                            else
-                            {
-                                ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
-                            }
-                        }
-                    }
-                }
-            }
-            if (ecuCalDef->YSizeList.at(i).toUInt() > 1 && ecuCalDef->YScaleTypeList.at(i) != "Static Y Axis" && ecuCalDef->XScaleTypeList.at(i) != "Static X Axis" && ecuCalDef->YScaleNameList.at(i) != " ")
-            {
-                if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint8")
-                    storagesize = 1;
-                if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint16")
-                    storagesize = 2;
-                if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint24")
-                    storagesize = 3;
-                if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint32" || ecuCalDef->YScaleStorageTypeList.at(i) == "float")
-                    storagesize = 4;
-                mapData.clear();
-                QStringList mapDataList = ecuCalDef->YScaleData.at(i).split(",");
-                for (unsigned j = 0; j < ecuCalDef->YSizeList.at(i).toUInt(); j++)
-                {
-                    uint32_t dataByte = 0;
-                    uint32_t startPos = ecuCalDef->YScaleStartPosList.at(i).toUInt(&bStatus,16);
-                    uint32_t interval = ecuCalDef->YScaleIntervalList.at(i).toUInt(&bStatus,16);
-                    uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
-                    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
-                        byteAddress -= 0x8000;
-
-                    if (ecuCalDef->YScaleTypeList.at(i) != "Switch")
-                    {
-                        if (ecuCalDef->YScaleStorageTypeList.at(i) == "float"){
-                            mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleToByteList.at(i), mapDataList.at(j)));
-                        }
-                        else
-                        {
-                            mapDataValue.floatValue = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleToByteList.at(i), mapDataList.at(j)));
-                            mapDataValue.fourByteValue = (uint32_t)(qRound(mapDataValue.floatValue));
-                        }
-
-                        if (mapDataValue.floatValue == 0)
-                            mapDataValue.floatValue = 0.0f;
-
-                        for (int k = 0; k < storagesize; k++)
-                        {
-                            if (ecuCalDef->YScaleEndianList.at(i) == "little")
-                            {
-                                ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
-                            }
-                            else
-                            {
-                                ecuCalDef->FullRomData[byteAddress + k] = (uint8_t)(mapDataValue.oneByteValue[storagesize - 1 - k]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    ecuCalDef = checksum_correction(ecuCalDef);
-
-    return ecuCalDef;
-}
-
 FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::EcuCalDefStructure *ecuCalDef)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -2134,6 +1956,19 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
     qDebug() << "Make:" << configValues->flash_protocol_selected_make;
     qDebug() << "Checksum:" << configValues->flash_protocol_selected_checksum;
 
+    QString mcu_type_string = ecuCalDef->McuType;
+    int mcu_type_index = 0;
+    uint32_t fullRomSize = ecuCalDef->FullRomData.length();
+
+    while (flashdevices[mcu_type_index].name != 0)
+    {
+        if (flashdevices[mcu_type_index].name == mcu_type_string)
+            break;
+        mcu_type_index++;
+    }
+    qDebug() << "ecuCalDef->McuType:" << ecuCalDef->McuType << configValues->flash_protocol_selected_mcu;
+    qDebug() << "Size:" << fullRomSize << flashdevices[mcu_type_index].romsize;
+
     if (configValues->flash_protocol_selected_checksum == "yes")
     {
         if (configValues->flash_protocol_selected_make == "Subaru")
@@ -2141,6 +1976,11 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             qDebug() << "ROM memory model is" << ecuCalDef->RomInfo[MemModel];
             qDebug() << "Checksum module:" << flashMethod;
 
+            if (fullRomSize != flashdevices[mcu_type_index].romsize)
+            {
+                QMessageBox::information(this, tr("Checksum module"), "Bad ROM size, make sure that you have selected correct flash method!");
+                return ecuCalDef;
+            }
             /*
             * Denso ECU
             */
@@ -2210,6 +2050,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
                 ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
             }
+            else if (flashMethod.startsWith("sub_ecu_hitachi_sh7058_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruHitachiSH7058 *checksumEcuSubaruHitachiSH7058 = new ChecksumEcuSubaruHitachiSH7058();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiSH7058->calculate_checksum(ecuCalDef->FullRomData);
+            }
             /*
             * Hitachi TCU
             */
@@ -2249,95 +2095,6 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             qDebug() << "Write canceled!";
             return NULL;
         }
-    }
-
-    return ecuCalDef;
-}
-
-FileActions::EcuCalDefStructure *FileActions::checksum_module_subarudbw_denso32bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_length)
-{
-    QByteArray checksum_array;
-
-    uint32_t checksum_area_end = checksum_area_start + checksum_area_length;
-    uint32_t checksum_dword_addr_lo = 0;
-    uint32_t checksum_dword_addr_hi = 0;
-    uint32_t checksum = 0;
-    uint32_t checksum_temp = 0;
-    uint32_t checksum_diff = 0;
-    uint32_t checksum_check = 0;
-    uint8_t checksum_block = 0;
-
-    bool checksum_ok = true;
-
-
-    for (uint32_t i = checksum_area_start; i < checksum_area_end; i+=12)
-    {
-        checksum = 0;
-        checksum_temp = 0;
-        checksum_dword_addr_lo = 0;
-        checksum_dword_addr_hi = 0;
-        checksum_diff = 0;
-
-        for (int j = 0; j < 4; j++)
-        {
-            checksum_dword_addr_lo = (checksum_dword_addr_lo << 8) + (uint8_t)(ecuCalDef->FullRomData[i + j]);
-            checksum_dword_addr_hi = (checksum_dword_addr_hi << 8) + (uint8_t)(ecuCalDef->FullRomData[i + 4 + j]);
-            checksum_diff = (checksum_diff << 8) + (uint8_t)(ecuCalDef->FullRomData[i + 8 + j]);
-        }
-        if (i == checksum_area_start && checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
-        {
-            QMessageBox::information(this, tr("32-bit checksum"), "ROM has all checksums disabled");
-            return 0;
-        }
-
-        if (checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
-        {
-            //QMessageBox::information(this, tr("32-bit checksum"), "Checksums disabled");
-        }
-        if (checksum_dword_addr_lo != 0 && checksum_dword_addr_hi != 0 && checksum_diff != 0x5aa5a55a)
-        {
-            for (uint32_t j = checksum_dword_addr_lo; j < checksum_dword_addr_hi; j+=4)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    checksum_temp = (checksum_temp << 8) + (uint8_t)(ecuCalDef->FullRomData[j + k]);
-                }
-                checksum += checksum_temp;
-            }
-        }
-        checksum_check = 0x5aa5a55a - checksum;
-
-        if (checksum_diff == checksum_check)
-        {
-            //qDebug() << "Checksum block " + QString::number(checksum_block) + " OK";
-        }
-        else
-        {
-            //qDebug() << "Checksum block " + QString::number(checksum_block) + " NOK";
-            checksum_ok = false;
-        }
-
-        checksum_array.append(checksum_dword_addr_lo >> 24);
-        checksum_array.append(checksum_dword_addr_lo >> 16);
-        checksum_array.append(checksum_dword_addr_lo >> 8);
-        checksum_array.append(checksum_dword_addr_lo);
-        checksum_array.append(checksum_dword_addr_hi >> 24);
-        checksum_array.append(checksum_dword_addr_hi >> 16);
-        checksum_array.append(checksum_dword_addr_hi >> 8);
-        checksum_array.append(checksum_dword_addr_hi);
-        checksum_array.append(checksum_check >> 24);
-        checksum_array.append(checksum_check >> 16);
-        checksum_array.append(checksum_check >> 8);
-        checksum_array.append(checksum_check);
-
-        checksum_block++;
-    }
-
-    if (!checksum_ok)
-    {
-        ecuCalDef->FullRomData.replace(checksum_area_start, checksum_area_length, checksum_array);
-        QMessageBox::information(this, tr("32-bit checksum"), "Checksums corrected");
-        //qDebug() << "Checksums corrected";
     }
 
     return ecuCalDef;
