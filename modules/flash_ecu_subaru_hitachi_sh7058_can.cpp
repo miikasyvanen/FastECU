@@ -2,7 +2,7 @@
 
 QT_CHARTS_USE_NAMESPACE
 
-FlashEcuSubaruHitachiSh7058Can::FlashEcuSubaruHitachiSh7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruHitachiSH7058Can::FlashEcuSubaruHitachiSH7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -20,7 +20,7 @@ FlashEcuSubaruHitachiSh7058Can::FlashEcuSubaruHitachiSh7058Can(SerialPortActions
     this->serial = serial;
 }
 
-void FlashEcuSubaruHitachiSh7058Can::run()
+void FlashEcuSubaruHitachiSH7058Can::run()
 {
     this->show();
 
@@ -81,19 +81,19 @@ void FlashEcuSubaruHitachiSh7058Can::run()
     switch (ret)
     {
         case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru ECU 1MB Hitachi CAN bootloader, please wait...", true, true);
+            send_log_window_message("Connecting to Hitachi SH7058 CAN bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_ecu_hitachi_can();
 
             if (result == STATUS_SUCCESS)
             {
                 if (cmd_type == "read")
                 {
-                    send_log_window_message("Reading ROM from ECU Subaru Hitachi 1MB using CAN", true, true);
+                    send_log_window_message("Reading ROM from ECU, Hitachi SH7058 using CAN", true, true);
                     result = read_mem_subaru_ecu_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
-                    send_log_window_message("Writing ROM to ECU Subaru Hitachi 1MB using CAN", true, true);
+                    send_log_window_message("Writing ROM to ECU, Hitachi SH7058 using CAN", true, true);
                     result = write_mem_subaru_ecu_hitachi_can(test_write);
                 }
             }
@@ -121,12 +121,12 @@ void FlashEcuSubaruHitachiSh7058Can::run()
     }
 }
 
-FlashEcuSubaruHitachiSh7058Can::~FlashEcuSubaruHitachiSh7058Can()
+FlashEcuSubaruHitachiSH7058Can::~FlashEcuSubaruHitachiSH7058Can()
 {
 
 }
 
-void FlashEcuSubaruHitachiSh7058Can::closeEvent(QCloseEvent *event)
+void FlashEcuSubaruHitachiSH7058Can::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
@@ -136,7 +136,7 @@ void FlashEcuSubaruHitachiSh7058Can::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSh7058Can::connect_bootloader_subaru_ecu_hitachi_can()
+int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
 {
     QByteArray output;
     QByteArray received;
@@ -346,7 +346,7 @@ int FlashEcuSubaruHitachiSh7058Can::connect_bootloader_subaru_ecu_hitachi_can()
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSh7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -576,7 +576,7 @@ int FlashEcuSubaruHitachiSh7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
  * @return success
  */
 
-int FlashEcuSubaruHitachiSh7058Can::write_mem_subaru_ecu_hitachi_can(bool test_write)
+int FlashEcuSubaruHitachiSH7058Can::write_mem_subaru_ecu_hitachi_can(bool test_write)
 {
     QByteArray filedata;
 
@@ -659,7 +659,7 @@ int FlashEcuSubaruHitachiSh7058Can::write_mem_subaru_ecu_hitachi_can(bool test_w
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSh7058Can::reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -875,7 +875,7 @@ int FlashEcuSubaruHitachiSh7058Can::reflash_block_subaru_ecu_hitachi_can(const u
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSh7058Can::erase_subaru_ecu_hitachi_can()
+int FlashEcuSubaruHitachiSH7058Can::erase_subaru_ecu_hitachi_can()
 {
     QByteArray output;
     QByteArray received;
@@ -932,7 +932,7 @@ int FlashEcuSubaruHitachiSh7058Can::erase_subaru_ecu_hitachi_can()
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruHitachiSH7058Can::subaru_ecu_hitachi_generate_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -960,7 +960,7 @@ QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_generate_can_seed_
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruHitachiSH7058Can::subaru_ecu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1008,7 +1008,7 @@ QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_calculate_seed_key
  * @return encrypted data
  */
 
-QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruHitachiSH7058Can::subaru_ecu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1028,7 +1028,7 @@ QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_encrypt_32bit_payl
     return encrypted;
 }
 
-QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruHitachiSH7058Can::subaru_ecu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1049,7 +1049,7 @@ QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_decrypt_32bit_payl
     return decrypt;
 }
 
-QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruHitachiSH7058Can::subaru_ecu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1098,7 +1098,7 @@ QByteArray FlashEcuSubaruHitachiSh7058Can::subaru_ecu_hitachi_calculate_32bit_pa
  *
  * @return parsed message
  */
-QString FlashEcuSubaruHitachiSh7058Can::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruHitachiSH7058Can::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1116,7 +1116,7 @@ QString FlashEcuSubaruHitachiSh7058Can::parse_message_to_hex(QByteArray received
  *
  * @return
  */
-int FlashEcuSubaruHitachiSh7058Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashEcuSubaruHitachiSH7058Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1155,14 +1155,14 @@ int FlashEcuSubaruHitachiSh7058Can::send_log_window_message(QString message, boo
     return STATUS_ERROR;
 }
 
-void FlashEcuSubaruHitachiSh7058Can::set_progressbar_value(int value)
+void FlashEcuSubaruHitachiSH7058Can::set_progressbar_value(int value)
 {
     if (ui->progressbar)
         ui->progressbar->setValue(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashEcuSubaruHitachiSh7058Can::delay(int timeout)
+void FlashEcuSubaruHitachiSH7058Can::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

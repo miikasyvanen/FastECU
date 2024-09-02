@@ -817,17 +817,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
     }
 
     // Stop serial timers
-    //serial_poll_timer->stop();
-    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    //serial->serial_port_list.clear();
-    //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-    //serial->serial_port_list.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
-    //QStringList spl = serial->get_serial_port_list();
-    //spl.clear();
-    //spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(0));
-    //spl.append(serial_ports.at(serial_port_list->currentIndex()).split(" - ").at(1));
     QStringList spl;
     spl.append(serial_ports.at(serial_port_list->currentIndex()));
 
@@ -838,22 +829,6 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
     if (configValues->flash_protocol_selected_make == "Subaru")
     {
-        /*
-        if (flash_transport_list->currentText() == "CAN")
-        {
-            serial->set_is_can_connection(true);
-            serial->set_is_iso15765_connection(false);
-            serial->set_is_29_bit_id(true);
-            serial->set_can_speed("500000");
-        }
-        else if (flash_transport_list->currentText() == "iso15765")
-        {
-            serial->set_is_can_connection(false);
-            serial->set_is_iso15765_connection(true);
-            serial->set_is_29_bit_id(false);
-            serial->set_can_speed("500000");
-        }
-        */
         serial->reset_connection();
         ecuid.clear();
         ecu_init_complete = false;
@@ -926,6 +901,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         else
         {
             rom_number = ecuCalDefIndex;
+            ecuCalDef[rom_number] = new FileActions::EcuCalDefStructure;
             while (ecuCalDef[rom_number]->RomInfo.length() < ecuCalDef[rom_number]->RomInfoStrings.length()){
                 ecuCalDef[rom_number]->RomInfo.append(" ");
             }
@@ -1003,9 +979,11 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_mitsu_m32r_kline"))
             flashEcuSubaruMitsuM32rKline = connect_signals_and_run_module(new FlashEcuSubaruMitsuM32rKline(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh7058_can"))
-            flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSh7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
+            flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh72543r_can"))
-            flashEcuSubaruHitachiSh72543rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiSh72543rCan(serial, ecuCalDef[rom_number], cmd_type, this));
+            flashEcuSubaruHitachiSh72543rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiSH72543rCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh72531_can"))
+            flashEcuSubaruHitachiSh72531Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSH72531Can(serial, ecuCalDef[rom_number], cmd_type, this));
 
         /*
         * Hitachi TCU
