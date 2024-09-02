@@ -1,6 +1,6 @@
-#include "flash_ecu_subaru_hitachi_sh72531_can.h"
+#include "flash_ecu_subaru_denso_sh72531_can.h"
 
-FlashEcuSubaruHitachiSH72531Can::FlashEcuSubaruHitachiSH72531Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruDensoSH72531Can::FlashEcuSubaruDensoSH72531Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -18,12 +18,12 @@ FlashEcuSubaruHitachiSH72531Can::FlashEcuSubaruHitachiSH72531Can(SerialPortActio
     this->serial = serial;
 }
 
-FlashEcuSubaruHitachiSH72531Can::~FlashEcuSubaruHitachiSH72531Can()
+FlashEcuSubaruDensoSH72531Can::~FlashEcuSubaruDensoSH72531Can()
 {
 
 }
 
-void FlashEcuSubaruHitachiSH72531Can::run()
+void FlashEcuSubaruDensoSH72531Can::run()
 {
     this->show();
 
@@ -128,7 +128,7 @@ void FlashEcuSubaruHitachiSH72531Can::run()
     }
 }
 
-void FlashEcuSubaruHitachiSH72531Can::closeEvent(QCloseEvent *event)
+void FlashEcuSubaruDensoSH72531Can::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
@@ -138,7 +138,7 @@ void FlashEcuSubaruHitachiSH72531Can::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSH72531Can::connect_bootloader()
+int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
 {
     QByteArray output;
     QByteArray received;
@@ -311,7 +311,7 @@ int FlashEcuSubaruHitachiSH72531Can::connect_bootloader()
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSH72531Can::read_memory(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -550,7 +550,7 @@ int FlashEcuSubaruHitachiSH72531Can::read_memory(uint32_t start_addr, uint32_t l
  * @return success
  */
 
-int FlashEcuSubaruHitachiSH72531Can::write_memory(bool test_write)
+int FlashEcuSubaruDensoSH72531Can::write_memory(bool test_write)
 {
     QByteArray filedata;
 
@@ -633,7 +633,7 @@ int FlashEcuSubaruHitachiSH72531Can::write_memory(bool test_write)
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSH72531Can::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -787,7 +787,7 @@ int FlashEcuSubaruHitachiSH72531Can::reflash_block(const uint8_t *newdata, const
  *
  * @return success
  */
-int FlashEcuSubaruHitachiSH72531Can::erase_memory()
+int FlashEcuSubaruDensoSH72531Can::erase_memory()
 {
     QByteArray output;
     QByteArray received;
@@ -874,7 +874,7 @@ int FlashEcuSubaruHitachiSH72531Can::erase_memory()
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruHitachiSH72531Can::generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH72531Can::generate_can_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -902,7 +902,7 @@ QByteArray FlashEcuSubaruHitachiSH72531Can::generate_can_seed_key(QByteArray req
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruHitachiSH72531Can::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH72531Can::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -951,7 +951,7 @@ QByteArray FlashEcuSubaruHitachiSH72531Can::calculate_seed_key(QByteArray reques
  * @return encrypted data
  */
 
-QByteArray FlashEcuSubaruHitachiSH72531Can::encrypt_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH72531Can::encrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -971,7 +971,7 @@ QByteArray FlashEcuSubaruHitachiSH72531Can::encrypt_payload(QByteArray buf, uint
     return encrypted;
 }
 
-QByteArray FlashEcuSubaruHitachiSH72531Can::decrypt_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH72531Can::decrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -991,7 +991,7 @@ QByteArray FlashEcuSubaruHitachiSH72531Can::decrypt_payload(QByteArray buf, uint
     return decrypt;
 }
 
-QByteArray FlashEcuSubaruHitachiSH72531Can::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH72531Can::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1040,7 +1040,7 @@ QByteArray FlashEcuSubaruHitachiSH72531Can::calculate_payload(QByteArray buf, ui
  *
  * @return parsed message
  */
-QString FlashEcuSubaruHitachiSH72531Can::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruDensoSH72531Can::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1058,7 +1058,7 @@ QString FlashEcuSubaruHitachiSH72531Can::parse_message_to_hex(QByteArray receive
  *
  * @return
  */
-int FlashEcuSubaruHitachiSH72531Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashEcuSubaruDensoSH72531Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -1097,7 +1097,7 @@ int FlashEcuSubaruHitachiSH72531Can::send_log_window_message(QString message, bo
     return STATUS_ERROR;
 }
 
-void FlashEcuSubaruHitachiSH72531Can::set_progressbar_value(int value)
+void FlashEcuSubaruDensoSH72531Can::set_progressbar_value(int value)
 {
     bool valueChanged = true;
     if (ui->progressbar)
@@ -1110,7 +1110,7 @@ void FlashEcuSubaruHitachiSH72531Can::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashEcuSubaruHitachiSH72531Can::delay(int timeout)
+void FlashEcuSubaruDensoSH72531Can::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

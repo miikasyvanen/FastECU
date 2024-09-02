@@ -2008,6 +2008,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
                 ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
+            else if (flashMethod.startsWith("sub_ecu_denso_sh72531_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
+                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x13F500, 17 * 12);
+            }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7059_can_diesel"))
             {
                 chksumModuleAvailable = true;
@@ -2092,8 +2098,8 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 
         if (msgBox->clickedButton() == cancelButton)
         {
-            qDebug() << "Write canceled!";
-            return NULL;
+            qDebug() << "Checksum calculation canceled!";
+            return ecuCalDef;
         }
     }
 

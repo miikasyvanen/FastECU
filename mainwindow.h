@@ -61,7 +61,7 @@
 #include <modules/flash_ecu_subaru_mitsu_m32r_kline.h>
 #include <modules/flash_ecu_subaru_hitachi_sh7058_can.h>
 #include <modules/flash_ecu_subaru_hitachi_sh72543r_can.h>
-#include <modules/flash_ecu_subaru_hitachi_sh72531_can.h>
+#include <modules/flash_ecu_subaru_denso_sh72531_can.h>
 
 
 #include <modules/eeprom_ecu_subaru_denso_sh705x_kline.h>
@@ -152,7 +152,7 @@ private:
     FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;
     FlashEcuSubaruHitachiSH7058Can *flashEcuSubaruHitachiSh7058Can;
     FlashEcuSubaruHitachiSH72543rCan *flashEcuSubaruHitachiSh72543rCan;
-    FlashEcuSubaruHitachiSH72531Can *flashEcuSubaruHitachiSh72531Can;
+    FlashEcuSubaruDensoSH72531Can *flashEcuSubaruHitachiSh72531Can;
 
     FlashTcuSubaruHitachiM32rKline *flashTcuSubaruHitachiM32rKline;
     FlashTcuSubaruHitachiM32rCan *flashTcuSubaruHitachiM32rCan;
