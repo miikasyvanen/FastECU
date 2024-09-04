@@ -30,6 +30,7 @@ void MainWindow::canbus_listener()
 
 bool MainWindow::ecu_init()
 {
+/*
     QString car_model;
 
     //qDebug() << "ECU init";
@@ -43,18 +44,20 @@ bool MainWindow::ecu_init()
     for (int i = 0; i < output.length(); i++)
         chksum += (uint8_t)output.at(i);
     output.append(chksum & 0xFF);
-
+*/
     if (serial->is_serial_port_open())
     {
         if (!ecu_init_complete)
         {
             if (configValues->flash_protocol_selected_make == "Subaru")
             {
-                if (configValues->flash_protocol_selected_log_protocol == "CAN" || configValues->flash_protocol_selected_log_protocol == "iso15765")
+                if (configValues->flash_protocol_selected_log_transport == "CAN" || configValues->flash_protocol_selected_log_transport == "iso15765")
                     ssm_can_init();
-                else
+                else if (configValues->flash_protocol_selected_log_transport == "K-Line")
                     //serial->fast_init(output);
                     ssm_kline_init();
+                else if (configValues->flash_protocol_selected_log_transport == "SSM")
+                    ssm_init();
             }
         }
     }
@@ -69,6 +72,100 @@ bool MainWindow::ecu_init()
     return ecu_init_complete;
 }
 
+void MainWindow::ssm_init()
+{
+    QByteArray output;
+    QByteArray received;
+
+    serial->reset_connection();
+    serial->set_serial_port_baudrate("1953");
+    serial->set_serial_port_parity(QSerialPort::EvenParity);
+    serial->open_serial_port();
+
+    qDebug() << "Using SSM1 protocol";
+
+    qDebug() << "Issue read cmd...";
+    received.clear();
+    output.clear();
+    output.append((uint8_t)0x78);
+    output.append((uint8_t)0x12);
+    output.append((uint8_t)0x34);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    //delay(1000);
+    for (int i = 0; i < 10; i++)
+    {
+        received.append(serial->read_serial_data(100, 500));
+    }
+    qDebug() << "Received:" << parse_message_to_hex(received);
+    //if (received.length() > 0)
+    //    qDebug() << "Something received" << parse_message_to_hex(received);
+    //else
+    //    qDebug() << "No response...";
+
+
+    qDebug() << "Issue init cmd...";
+    received.clear();
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x46);
+    output.append((uint8_t)0x48);
+    output.append((uint8_t)0x49);
+    serial->write_serial_data(output);
+
+    qDebug() << "Init sent, delaying 2s...";
+    //delay(2000);
+    for (int i = 0; i < 2; i++)
+    {
+        received.append(serial->read_serial_data(100, 500));
+    }
+    qDebug() << "Received:" << parse_message_to_hex(received);
+    //qDebug() << "Checking response...";
+    //received = serial->read_serial_data(100, 500);
+    received.clear();
+    output.clear();
+    output.append((uint8_t)0x12);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data(output);
+    received.append(serial->read_serial_data(100, 500));
+
+    if (received.length() > 0)
+    {
+        qDebug() << "Something received" << parse_message_to_hex(received);;
+
+        if (received.length() == (uint8_t)received.at(3) + 5)
+        {
+            ecu_init_complete = true;
+            ecuid = parse_ecuid(received);
+            qDebug() << "ECU ID:" << ecuid;
+            parse_log_value_list(received, "SSM");
+            if (ecuid == "")
+                set_status_bar_label(true, false, "");
+            else
+                set_status_bar_label(true, true, ecuid);
+
+            received = serial->read_serial_data(1, 100);
+            while(received.length() > 0)
+            {
+                ecu_init_complete = true;
+                ecuid = parse_ecuid(received);
+                parse_log_value_list(received, "SSM");
+
+                received = serial->read_serial_data(1, 100);
+                while(received.length() > 0)
+                {
+                    received = serial->read_serial_data(1, 100);
+                }
+            }
+        }
+    }
+    else
+        qDebug() << "No response...";
+
+}
+
 void MainWindow::ssm_kline_init()
 {
     QByteArray output;
@@ -79,32 +176,46 @@ void MainWindow::ssm_kline_init()
     {
         ecu_init_started = true;
 
-        //qDebug() << "K-Line SSM init with BF";
+        qDebug() << "K-Line SSM init with BF";
         output.clear();
         output.append((uint8_t)0xBF);
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        //qDebug() << "K-Line SSM init sent";
+        qDebug() << "K-Line SSM init sent";
         delay(200);
         received = serial->read_serial_data(100, 500);
-        //qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
+        qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
         if (received.length() > 0)
         {
-            qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
-            qDebug() << "ECU INIT:" << parse_message_to_hex(received);
+            //qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
+            //qDebug() << "ECU INIT:" << parse_message_to_hex(received);
 
             if (received.length() == (uint8_t)received.at(3) + 5)
             {
                 ecu_init_complete = true;
                 //set_status_bar_label(true, true, ecuid);
                 ecuid = parse_ecuid(received);
-                qDebug() << "ECU ID:" << ecuid;
+                //qDebug() << "ECU ID:" << ecuid;
                 parse_log_value_list(received, "SSM");
-                qDebug() << "ECU ID:" << ecuid;
+                //qDebug() << "ECU ID:" << ecuid;
+                if (ecuid == "")
+                    set_status_bar_label(true, false, "");
+                else
+                    set_status_bar_label(true, true, ecuid);
 
                 received = serial->read_serial_data(1, 100);
                 while(received.length() > 0)
                 {
+                    //qDebug() << "ECU ID:" << parse_ecuid(received);
+                    ecu_init_complete = true;
+                    //set_status_bar_label(true, true, ecuid);
+                    ecuid = parse_ecuid(received);
+                    parse_log_value_list(received, "SSM");
+
                     received = serial->read_serial_data(1, 100);
+                    while(received.length() > 0)
+                    {
+                        received = serial->read_serial_data(1, 100);
+                    }
                 }
             }
         }
@@ -187,7 +298,7 @@ void MainWindow::read_log_serial_data()
     {
         logparams_read_active = true;
         //qDebug() << "Read logger data from ECU";
-        if (serial->use_openport2_adapter)
+        if (serial->get_use_openport2_adapter())
             received = serial->read_serial_data(1, 100);
         else
         {
@@ -394,9 +505,9 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
             if (switch_byte_index < received.length())
             {
                 uint8_t switch_bit = logValues->log_switch_ecu_bit.at(i).toUInt();
-                qDebug() << "1" << switch_byte_index;
+                //qDebug() << "1" << switch_byte_index;
                 uint8_t value = (uint8_t)received.at(switch_byte_index);
-                qDebug() << "2";
+                //qDebug() << "2";
                 if (((value) & (1 << (switch_bit))))
                 {
                     logValues->log_switch_enabled.replace(i, "1");
@@ -419,12 +530,21 @@ QByteArray MainWindow::add_ssm_header(QByteArray output, bool dec_0x100)
     uint8_t length = output.length();
 
     output.insert(0, (uint8_t)0x80);
-    output.insert(1, (uint8_t)0x10);
+    if (ecu_radio_button->isChecked())
+    {
+        qDebug() << "ECU selected";
+        output.insert(1, (uint8_t)0x10);
+    }
+    else
+    {
+        qDebug() << "TCU selected";
+        output.insert(1, (uint8_t)0x18);
+    }
     output.insert(2, (uint8_t)0xF0);
     output.insert(3, length);
     output.append(calculate_checksum(output, dec_0x100));
 
-    //qDebug() << "Generated SSM message:" << parseMessageToHex(output);
+    qDebug() << "Generated SSM message:" << parse_message_to_hex(output);
 
     return output;
 }
@@ -450,7 +570,7 @@ void MainWindow::log_to_file(){
             QString dateTimeString = dateTime.toString("yyyy-MM-dd hh'h'mm'm'ss's'");
 
             QString log_file_name = configValues->log_files_base_directory;
-            if (configValues->log_files_base_directory.at(configValues->log_files_base_directory.length() - 1) != "/")
+            if (configValues->log_files_base_directory.at(configValues->log_files_base_directory.length() - 1) != '/')
                 log_file_name.append("/");
             log_file_name.append("fastecu_" + dateTimeString + ".csv");
 

@@ -12,7 +12,7 @@
 #include <QWidget>
 #include <QDialog>
 
-#include <serial_port_actions.h>
+#include <serial_port/serial_port_actions.h>
 #include <biu_ops_subaru_switches.h>
 #include <biu_ops_subaru_data.h>
 #include <biu_ops_subaru_input1.h>

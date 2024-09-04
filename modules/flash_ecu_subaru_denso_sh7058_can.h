@@ -14,7 +14,7 @@
 #include <kernelcomms.h>
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
-#include <serial_port_actions.h>
+#include <serial_port/serial_port_actions.h>
 #include <ui_ecu_operations.h>
 
 QT_BEGIN_NAMESPACE
@@ -32,9 +32,22 @@ public:
     explicit FlashEcuSubaruDensoSH7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
     ~FlashEcuSubaruDensoSH7058Can();
 
+    void run();
+
+signals:
+    void external_logger(QString message);
+    void external_logger(int value);
+
 private:
+    FileActions::EcuCalDefStructure *ecuCalDef;
+    QString cmd_type;
+
     #define STATUS_SUCCESS	0x00
     #define STATUS_ERROR	0x01
+
+    #define CRC32   0x5AA5A55A
+    bool crc_tab32_init = 0;
+    uint32_t crc_tab32[256];
 
     bool kill_process = false;
     bool kernel_alive = false;
@@ -66,20 +79,18 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int init_flash_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type);
-
     int connect_bootloader_subaru_denso_subarucan();
     int upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write);
+    int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
+    int write_mem_subaru_denso_subarucan(bool test_write);
     int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
     int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
     int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
     int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
+    unsigned int crc32(const unsigned char *buf, unsigned int len);
+    void init_crc32_tab( void );
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
-    void init_crc16_tab(void);
-    uint16_t crc16(const uint8_t *data, uint32_t siz);
 
     QByteArray send_subaru_sid_bf_ssm_init();
     QByteArray send_subaru_denso_sid_81_start_communication();

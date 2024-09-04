@@ -170,9 +170,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         }
     }
 
-    //qDebug() << "File index:" << file_index;
-    //qDebug() << "File name:" << configValues->ecuflash_def_filename.at(file_index);
-
     if (!cal_id_file_found)
         return ecuCalDef;
 
@@ -180,8 +177,10 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
 
     filename = configValues->ecuflash_def_filename.at(file_index);
 
-    while (ecuCalDef->RomInfo.length() < RomInfoStrings.length())
+    while (ecuCalDef->RomInfo.length() < ecuCalDef->RomInfoStrings.length())
         ecuCalDef->RomInfo.append(" ");
+
+    ecuCalDef->RomInfo.replace(DefFile, filename);
 
     QFile file(filename);
 
@@ -299,9 +298,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     sub_child = sub_child.nextSibling().toElement();
                 }
             }
-            if (selection_name == NULL)
+            if (selection_name == "")
                 selection_name.append(" ");
-            if (selection_value == NULL)
+            if (selection_value == "")
                 selection_value.append(" ");
             ecuCalDef->ScalingSelectionsNameList.append(selection_name);
             ecuCalDef->ScalingSelectionsValueList.append(selection_value);
@@ -311,7 +310,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         {
             map_defined = false;
 
-            //qDebug() << "TABLE TAG childs:" << rom_child.tagName() << rom_child.attribute("name", "n/a");
+            //qDebug() << "TABLE TAG childs:" << def_map_index << rom_child.tagName() << rom_child.attribute("name", "n/a");
             QString map_name = rom_child.attribute("name"," ");
             for (int i = 0; i < ecuCalDef->NameList.length(); i++)
             {
@@ -401,9 +400,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 rom_scale_sub_child = rom_scale_sub_child.nextSibling().toElement();
                             }
                         }
-                        if (selection_name == NULL)
+                        if (selection_name == "")
                             selection_name.append(" ");
-                        if (selection_value == NULL)
+                        if (selection_value == "")
                             selection_value.append(" ");
                         if (ecuCalDef->SelectionsNameList.at(def_map_index) == " ")
                             ecuCalDef->SelectionsNameList.replace(def_map_index, selection_name);
@@ -474,8 +473,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             if (ecuCalDef->YScaleIntervalList.at(def_map_index) == " ")
                                 ecuCalDef->YScaleIntervalList.replace(def_map_index, rom_scale_child.attribute("interval", "1"));
 
-                            if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
-                                qDebug() << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
+                            //if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
+                                //qDebug() << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
 
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")

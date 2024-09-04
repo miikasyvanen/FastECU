@@ -44,6 +44,10 @@ void MainWindow::menu_action_triggered(QString action)
         toggle_log_to_file();
 
     // ECU MENU
+    if (action == "connect_to_ecu")
+        connect_to_ecu();
+    if (action == "disconnect_from_ecu")
+        disconnect_from_ecu();
     if (action == "read_rom_from_ecu")
         start_ecu_operations("read");
     if (action == "test_write_rom_to_ecu")
@@ -65,6 +69,8 @@ void MainWindow::menu_action_triggered(QString action)
 
     if (action == "biu_communication")
         show_subaru_biu_window();
+    if (action == "get_key")
+        show_subaru_get_key_window();
 
     // HELP MENU
     if (action == "about")
@@ -753,6 +759,43 @@ void MainWindow::paste_value()
     }
 }
 
+void MainWindow::connect_to_ecu()
+{
+    ecuid.clear();
+    ecu_init_complete = false;
+    set_status_bar_label(false, false, "");
+    serial->reset_connection();
+
+    qDebug() << "Opening interface, please wait...";
+    open_serial_port();
+    if (serial->is_serial_port_open())
+    {
+        serial_port_list->setDisabled(true);
+        refresh_serial_port_list->setDisabled(true);
+        qDebug() << "Initialising ECU, please wait...";
+        ecu_init();
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Serial port"), "Could not open interface!");
+    }
+}
+
+void MainWindow::disconnect_from_ecu()
+{
+    qDebug() << "Disconnecting...";
+    ecuid.clear();
+    ecu_init_complete = false;
+    set_status_bar_label(false, false, "");
+    serial->reset_connection();
+
+    serial->set_serial_port_baudrate("4800");
+    serial->set_serial_port_parity(QSerialPort::NoParity);
+
+    serial_port_list->setEnabled(true);
+    refresh_serial_port_list->setEnabled(true);
+}
+
 void MainWindow::ecu_definition_manager()
 {
     QDialog *definitions_manager_dialog = new QDialog;
@@ -932,15 +975,15 @@ void MainWindow::show_preferences_window()
 
 void MainWindow::show_subaru_biu_window()
 {
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    serial->add_iso14230_header = false;
-    serial->is_iso14230_connection = true;
+    serial->set_add_iso14230_header(false);
+    serial->set_is_iso14230_connection(true);
     open_serial_port();
     serial->change_port_speed("10400");
     //serial->change_port_speed("4800");
@@ -950,9 +993,18 @@ void MainWindow::show_subaru_biu_window()
 
     qDebug() << "BIU stopped";
 
-    serial->add_iso14230_header = false;
-    serial_poll_timer->start();
-    ssm_init_poll_timer->start();
+    serial->set_add_iso14230_header(false);
+    //serial_poll_timer->start();
+    //ssm_init_poll_timer->start();
+}
+
+void MainWindow::show_subaru_get_key_window()
+{
+
+    GetKeyOperationsSubaru *getKeyOperationsSubaru = new GetKeyOperationsSubaru(this);
+    getKeyOperationsSubaru->show();
+
+
 }
 
 void MainWindow::winols_csv_to_romraider_xml()
@@ -1043,11 +1095,11 @@ void MainWindow::set_maptablewidget_items()
                     cellItem->setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
                 int yPos = 0;
                 int xPos = 0;
-                if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber) > 1)
+                if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toUInt() > 1)
                     yPos = i / xSize + ySizeOffset;
                 else
                     yPos = i / xSize;
-                if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber) > 1)
+                if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toUInt() > 1)
                     xPos = i - (yPos - ySizeOffset) * xSize + xSizeOffset;
                 else
                     xPos = i - (yPos - ySizeOffset) * xSize;
@@ -1087,7 +1139,7 @@ QString MainWindow::get_rom_data_value(uint8_t map_rom_number, uint32_t map_data
 
     uint32_t data_byte = 0;
     uint32_t byte_address = map_data_address + (map_value_index * map_value_storagesize);
-    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < byte_address)
+    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize.toUInt() < byte_address)
         byte_address -= 0x8000;
 
     for (int k = 0; k < map_value_storagesize; k++)
@@ -1134,7 +1186,7 @@ void MainWindow::set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_ad
         map_value_storagesize = 4;
 
     uint32_t byte_address = map_data_address + (map_value_index * map_value_storagesize);
-    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize < (170 * 1024) && byte_address > 0x27FFF)
+    if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize.toUInt() < (170 * 1024) && byte_address > 0x27FFF)
         byte_address -= 0x8000;
 
     for (int k = 0; k < map_value_storagesize; k++)
@@ -1224,14 +1276,14 @@ int MainWindow::test_haltech_ic7_display()
 
     int i = 0;
 
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
-    serial->is_iso15765_connection = true;
-    //serial->is_can_connection = true;
-    serial->is_29_bit_id = false;
-    serial->can_speed = "1000000";
+    serial->set_is_iso15765_connection(true);
+    //serial->set_is_can_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("1000000");
 
     serial->reset_connection();
     ecuid.clear();
@@ -1371,9 +1423,9 @@ int MainWindow::test_haltech_ic7_display()
     output.append((uint8_t)0x03);
     output.append((uint8_t)0xE2);
 */
-    serial->can_speed = "500000";
-    serial_poll_timer->start();
-    ssm_init_poll_timer->start();
+    serial->set_can_speed("500000");
+    //serial_poll_timer->start();
+    //ssm_init_poll_timer->start();
 
     return 0;
 }
@@ -1408,15 +1460,15 @@ int MainWindow::simulate_obd()
 
     qDebug() << "Simulating OBD communications";
 
-    serial_poll_timer->stop();
-    ssm_init_poll_timer->stop();
+    //serial_poll_timer->stop();
+    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
 
-    serial->add_iso14230_header = true;
+    serial->set_add_iso14230_header(true);
     open_serial_port();
     serial->change_port_speed("10400");
 

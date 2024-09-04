@@ -10,9 +10,6 @@
     <height>768</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>FastECU for OEM</string>
-  </property>
   <property name="styleSheet">
    <string notr="true">QScrollBar::vertical {              
         border: 1px solid #999999;
@@ -75,37 +72,10 @@ QScrollBar::sub-line:horizontal {
     </sizepolicy>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="2" column="0">
-     <widget class="QWidget" name="logBoxWidget" native="true">
-      <property name="contextMenuPolicy">
-       <enum>Qt::CustomContextMenu</enum>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <property name="spacing">
-        <number>6</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <layout class="QHBoxLayout" name="logBoxLayout"/>
-       </item>
-      </layout>
-     </widget>
-    </item>
     <item row="1" column="0">
      <widget class="QWidget" name="switchBoxWidget" native="true">
       <property name="contextMenuPolicy">
-       <enum>Qt::CustomContextMenu</enum>
+       <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_5">
        <property name="spacing">
@@ -125,6 +95,33 @@ QScrollBar::sub-line:horizontal {
        </property>
        <item>
         <layout class="QHBoxLayout" name="switchBoxLayout"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QWidget" name="logBoxWidget" native="true">
+      <property name="contextMenuPolicy">
+       <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <layout class="QHBoxLayout" name="logBoxLayout"/>
        </item>
       </layout>
      </widget>
@@ -156,14 +153,14 @@ QScrollBar::sub-line:horizontal {
        <item>
         <widget class="QSplitter" name="splitter_2">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="childrenCollapsible">
           <bool>false</bool>
          </property>
          <widget class="QSplitter" name="splitter">
           <property name="orientation">
-           <enum>Qt::Vertical</enum>
+           <enum>Qt::Orientation::Vertical</enum>
           </property>
           <property name="childrenCollapsible">
            <bool>false</bool>
@@ -238,15 +235,6 @@ QScrollBar::sub-line:horizontal {
                 </color>
                </brush>
               </colorrole>
-              <colorrole role="NoRole">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
-                </color>
-               </brush>
-              </colorrole>
              </active>
              <inactive>
               <colorrole role="Midlight">
@@ -300,15 +288,6 @@ QScrollBar::sub-line:horizontal {
                  <red>255</red>
                  <green>255</green>
                  <blue>255</blue>
-                </color>
-               </brush>
-              </colorrole>
-              <colorrole role="NoRole">
-               <brush brushstyle="NoBrush">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
                 </color>
                </brush>
               </colorrole>
@@ -368,15 +347,6 @@ QScrollBar::sub-line:horizontal {
                 </color>
                </brush>
               </colorrole>
-              <colorrole role="NoRole">
-               <brush brushstyle="NoBrush">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
-                </color>
-               </brush>
-              </colorrole>
              </disabled>
             </palette>
            </property>
@@ -386,7 +356,7 @@ QScrollBar::sub-line:horizontal {
             </font>
            </property>
            <property name="editTriggers">
-            <set>QAbstractItemView::NoEditTriggers</set>
+            <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
            </property>
            <property name="showDropIndicator" stdset="0">
             <bool>false</bool>
@@ -470,15 +440,6 @@ QScrollBar::sub-line:horizontal {
                 </color>
                </brush>
               </colorrole>
-              <colorrole role="NoRole">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
-                </color>
-               </brush>
-              </colorrole>
              </active>
              <inactive>
               <colorrole role="Midlight">
@@ -532,15 +493,6 @@ QScrollBar::sub-line:horizontal {
                  <red>255</red>
                  <green>255</green>
                  <blue>255</blue>
-                </color>
-               </brush>
-              </colorrole>
-              <colorrole role="NoRole">
-               <brush brushstyle="NoBrush">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
                 </color>
                </brush>
               </colorrole>
@@ -600,15 +552,6 @@ QScrollBar::sub-line:horizontal {
                 </color>
                </brush>
               </colorrole>
-              <colorrole role="NoRole">
-               <brush brushstyle="NoBrush">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
-                </color>
-               </brush>
-              </colorrole>
              </disabled>
             </palette>
            </property>
@@ -632,16 +575,16 @@ QScrollBar::sub-line:horizontal {
          </widget>
          <widget class="QMdiArea" name="mdiArea">
           <property name="contextMenuPolicy">
-           <enum>Qt::CustomContextMenu</enum>
+           <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
           </property>
           <property name="styleSheet">
            <string notr="true"/>
           </property>
           <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOn</enum>
+           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
           </property>
           <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOn</enum>
+           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
           </property>
           <property name="background">
            <brush brushstyle="SolidPattern">
@@ -666,12 +609,18 @@ QScrollBar::sub-line:horizontal {
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>

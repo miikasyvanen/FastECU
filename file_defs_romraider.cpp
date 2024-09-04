@@ -421,10 +421,11 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
 
     filename = configValues->romraider_def_filename.at(file_index);
 
-    while (ecuCalDef->RomInfo.length() < RomInfoStrings.length())
+    while (ecuCalDef->RomInfo.length() < ecuCalDef->RomInfoStrings.length())
         ecuCalDef->RomInfo.append(" ");
 
-    qDebug() << "Open file:" << filename;
+    ecuCalDef->RomInfo.replace(DefFile, filename);
+
     QFile file(filename);
 
     if (!file.open(QIODevice::ReadOnly ))
@@ -496,8 +497,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                         else if (rom_id_child.tagName() == "checksummodule")
                             checksummodule = rom_id_child.text();
                         else if (rom_id_child.tagName() == "flashmethod")
-                            //flashmethod = rom_id_child.text();
-                            flashmethod = configValues->flash_protocol_selected_family;
+                            flashmethod = rom_id_child.text();
+                            //flashmethod = configValues->flash_protocol_selected_family;
                         else if (rom_id_child.tagName() == "filesize")
                             filesize = rom_id_child.text();
 

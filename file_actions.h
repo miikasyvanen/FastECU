@@ -14,9 +14,23 @@
 #include <QElapsedTimer>
 #include <QDateTime>
 #include <QDirIterator>
+#include <QPushButton>
 
 #include <string.h>
 #include <iostream>
+#include <math.h>
+
+#include "modules/checksum_ecu_subaru_denso_sh705x_diesel.h"
+#include "modules/checksum_ecu_subaru_denso_sh7xxx.h"
+#include "modules/checksum_ecu_subaru_hitachi_m32r.h"
+#include "modules/checksum_ecu_subaru_hitachi_sh7058.h"
+
+#include "modules/checksum_tcu_subaru_denso_sh7055.h"
+#include "modules/checksum_tcu_subaru_hitachi_m32r_can.h"
+#include "modules/checksum_tcu_mitsu_mh8104_can.h"
+
+#include <kernelmemorymodels.h>
+
 
 #ifdef WIN32
     #include <windows.h>
@@ -38,6 +52,10 @@ public:
     //QString ecu_protocol;
 
     struct ConfigValuesStructure {
+        QString software_name;
+        QString software_title;
+        QString software_version;
+
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
         QString window_size = "default";
@@ -96,6 +114,7 @@ public:
         QStringList flash_protocol_mode;
         QStringList flash_protocol_checksum;
         QStringList flash_protocol_read;
+        QStringList flash_protocol_test_write;
         QStringList flash_protocol_write;
         QStringList flash_protocol_flash_transport;
         QStringList flash_protocol_log_transport;
@@ -109,7 +128,7 @@ public:
         QStringList flash_protocol_kernel;
         QStringList flash_protocol_kernel_addr;
         QStringList flash_protocol_description;
-        QStringList flash_protocol_family;
+        QStringList flash_protocol_protocol_name;
 
         QString flash_protocol_selected_id;
         QString flash_protocol_selected_make;
@@ -120,7 +139,7 @@ public:
         QString flash_protocol_selected_flash_transport;
         QString flash_protocol_selected_log_transport;
         QString flash_protocol_selected_log_protocol;
-        QString flash_protocol_selected_family;
+        QString flash_protocol_selected_protocol_name;
         QString flash_protocol_selected_description;
 
     } ConfigValuesStruct;
@@ -318,25 +337,45 @@ public:
         bool use_romraider_definition;
         bool use_ecuflash_definition;
 
+        QStringList RomInfoStrings = {
+            "XmlId",
+            "InternalIdAddress",
+            "Make",
+            "Model",
+            "Submodel",
+            "Market",
+            "Transmission",
+            "Year",
+            "ECU ID",
+            "Internal ID",
+            "Memory Model",
+            "Checksum Module",
+            "Rom Base",
+            "Flash Method",
+            "File Size",
+            "Def File",
+    /*
+            "XmlId",
+            "InternalIdAddress",
+            "Make",
+            "Model",
+            "SubModel",
+            "Market",
+            "Transmission",
+            "Year",
+            "EcuId",
+            "InternalIdString",
+            "MemModel",
+            "ChecksumModule",
+            "RomBase",
+            "FlashMethod",
+            "FileSize",
+            "DefFile",
+    */
+        };
     } EcuCalDefStruct;
 
-    QStringList RomInfoStrings = {
-        "XmlId",
-        "InternalIdAddress",
-        "Make",
-        "Model",
-        "SubModel",
-        "Market",
-        "Transmission",
-        "Year",
-        "EcuId",
-        "InternalIdString",
-        "MemModel",
-        "ChecksumModule",
-        "RomBase",
-        "FlashMethod",
-        "FileSize",
-    };
+    //EcuCalDefStructure *ecuCalDefTemp;
 
     enum RomInfoEnum {
         XmlId,
@@ -354,6 +393,7 @@ public:
         RomBase,
         FlashMethod,
         FileSize,
+        DefFile,
     };
 
     /****************************************************
@@ -429,12 +469,6 @@ public:
      **********************************************/
     EcuCalDefStructure *save_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString fileName);
 
-    /***********************************************
-     * Apply changes made to calibration
-     * to rom data array
-     **********************************************/
-    EcuCalDefStructure *apply_subaru_cal_changes_to_rom_data(FileActions::EcuCalDefStructure *ecuCalDef);
-
     /***************************
      * Read software menu file
      * for menu creation
@@ -446,7 +480,6 @@ public:
      * checksums
      **************************/
     EcuCalDefStructure *checksum_correction(FileActions::EcuCalDefStructure *ecuCalDef);
-    EcuCalDefStructure *checksum_module_subarudbw(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t checksum_area_start, uint32_t checksum_area_end);
 
     /*************************************
      * Parse expression strings for used

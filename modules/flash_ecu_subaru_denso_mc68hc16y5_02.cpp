@@ -1,8 +1,10 @@
 #include "flash_ecu_subaru_denso_mc68hc16y5_02.h"
 
 FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::EcuOperationsWindow)
+    : QDialog(parent)
+    , ui(new Ui::EcuOperationsWindow)
+    , ecuCalDef(ecuCalDef)
+    , cmd_type(cmd_type)
 {
     ui->setupUi(this);
 
@@ -14,6 +16,10 @@ FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortAct
         this->setWindowTitle("Read ROM from ECU");
 
     this->serial = serial;
+}
+
+void FlashEcuSubaruDensoMC68HC16Y5_02::run()
+{
     this->show();
 
     int result = STATUS_ERROR;
@@ -37,6 +43,8 @@ FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortAct
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
 
+    emit external_logger("Starting");
+
     if (cmd_type == "read")
     {
         send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
@@ -56,11 +64,11 @@ FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortAct
     }
 
     // Set serial port
-    serial->is_iso14230_connection = false;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    serial->serial_port_baudrate = "4800";
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_serial_port_baudrate("4800");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -79,6 +87,7 @@ FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortAct
 
             if (result == STATUS_SUCCESS && !kernel_alive)
             {
+                emit external_logger("Preparing, please wait...");
                 send_log_window_message("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
                 result = upload_kernel_subaru_denso_kline_wrx02(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
@@ -86,15 +95,18 @@ FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortAct
             {
                 if (cmd_type == "read")
                 {
+                    emit external_logger("Reading ROM, please wait...");
                     send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
-                    result = read_mem_subaru_denso_kline_16bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    result = read_mem_subaru_denso_kline_16bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
+                    emit external_logger("Writing ROM, please wait...");
                     send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
-                    result = write_mem_subaru_denso_kline_16bit(ecuCalDef, test_write);
+                    result = write_mem_subaru_denso_kline_16bit(test_write);
                 }
             }
+            emit external_logger("Finished");
 
             if (result == STATUS_SUCCESS)
             {
@@ -129,83 +141,6 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::closeEvent(QCloseEvent *bar)
     kill_process = true;
 }
 
-int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_denso_kline_wrx02(FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type)
-{
-    bool ok = false;
-
-    mcu_type_string = ecuCalDef->McuType;
-    mcu_type_index = 0;
-
-    while (flashdevices[mcu_type_index].name != 0)
-    {
-        if (flashdevices[mcu_type_index].name == mcu_type_string)
-            break;
-        mcu_type_index++;
-    }
-    QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
-
-    int result = STATUS_ERROR;
-
-    kernel = ecuCalDef->Kernel;
-    flash_method = ecuCalDef->FlashMethod;
-
-    if (cmd_type == "read")
-    {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-    else if (cmd_type == "write")
-    {
-        test_write = false;
-        send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
-
-    // Set serial port
-    serial->is_iso14230_connection = true;
-    serial->is_can_connection = false;
-    serial->is_iso15765_connection = false;
-    serial->is_29_bit_id = false;
-    tester_id = 0xF0;
-    target_id = 0x10;
-    // Open serial port
-    serial->open_serial_port();
-
-    QMessageBox::information(this, tr("Connecting to ECU"), "Turn ignition ON and press OK to start initializing connection");
-    //QMessageBox::information(this, tr("Connecting to ECU"), "Press OK to start countdown!");
-
-    send_log_window_message("Connecting to Subaru 02 16-bit K-line bootloader, please wait...", true, true);
-    result = connect_bootloader_subaru_denso_kline_wrx02();
-
-    if (result == STATUS_SUCCESS && !kernel_alive)
-    {
-        send_log_window_message("Initializing Subaru 02 16-bit K-Line kernel upload, please wait...", true, true);
-        result = upload_kernel_subaru_denso_kline_wrx02(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
-    }
-    if (result == STATUS_SUCCESS)
-    {
-        if (cmd_type == "read")
-        {
-            send_log_window_message("Reading ROM from Subaru 02 16-bit using K-Line", true, true);
-            result = read_mem_subaru_denso_kline_16bit(ecuCalDef, flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-        }
-        else if (cmd_type == "test_write" || cmd_type == "write")
-        {
-            send_log_window_message("Writing ROM to Subaru 02 16-bit using K-Line", true, true);
-            result = write_mem_subaru_denso_kline_16bit(ecuCalDef, test_write);
-        }
-    }
-    return result;
-}
-
 int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx02()
 {
     QByteArray output;
@@ -219,7 +154,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
 
     // Change serial speed and set 'line end checks' to low level
     serial->change_port_speed("9600");
-    serial->set_lec_lines(serial->requestToSendDisabled, serial->dataTerminalDisabled);
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
@@ -234,8 +169,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     //received = serial->write_serial_data_echo_check(output);
     serial->write_serial_data_echo_check(output);
     send_log_window_message("Sent to bootloader: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent to bootloader: " + parse_message_to_hex(output);
     received = serial->read_serial_data(output.length(), serial_read_short_timeout);
     send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response from bootloader: " + parse_message_to_hex(received);
 
     if (flash_method.endsWith("_ecutek"))
         denso_bootloader_init_response_wrx02_ok = denso_bootloader_init_response_ecutek_wrx02_ok;
@@ -298,7 +235,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     }
 
     //serial->change_port_speed("9600");
-    serial->add_iso14230_header = false;
+    serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -345,14 +282,16 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     send_log_window_message("Requesting kernel ID", true, true);
     qDebug() << "Requesting kernel ID";
 
+    delay(1500);
     serial->change_port_speed("39473");
-    delay(200);
     received.clear();
     while (received == "")
     {
         received = request_kernel_id();
         delay(500);
     }
+    received.remove(0, 5);
+    received.remove(received.length() - 1, 1);
     send_log_window_message("Kernel ID: " + received, true, true);
     qDebug() << "Kernel ID: " << parse_message_to_hex(received);
 
@@ -364,7 +303,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
 /*******************************************************
  *  Read ROM 16bit K-Line ECUs
  ******************************************************/
-int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -415,11 +354,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(FileActi
             received.clear();
             for (unsigned int j = flashdevices[mcu_type_index].rblocks->start; j < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len); j++)
             {
-                received.append((uint8_t)0x00);
+                received.append((uint8_t)0xff);
             }
             mapdata.append(received);
 
-            addr = 0x028000;
+            addr = flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len;
         }
 
         output.clear();
@@ -451,6 +390,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(FileActi
         else
         {
             //qDebug() << "ERROR IN DATA RECEIVE!";
+            return STATUS_ERROR;
         }
 
         cplen = (numblocks * pagesize);
@@ -488,7 +428,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(FileActi
 /*******************************************************
  *  Write ROM 16bit K-Line ECUs
  ******************************************************/
-int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(FileActions::EcuCalDefStructure *ecuCalDef, bool test_write)
+int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool test_write)
 {
     QByteArray filedata;
     QByteArray output;
@@ -505,6 +445,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(FileAct
 
     unsigned bcnt = 0;
     unsigned blockno;
+
+    set_progressbar_value(0);
 
     for (int i = 0; i < filedata.length(); i++)
     {
@@ -560,6 +502,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(FileAct
                 }*/
             }
         }
+        set_progressbar_value(100);
 
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
@@ -677,6 +620,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc_16bit_kline(const uint8_t *sr
             chksum = calculate_checksum(output, false);
             output.append((uint8_t)chksum & 0xFF);
 
+            delay(100);
             received = serial->write_serial_data_echo_check(output);
             //qDebug() << hex << chunk_cnt << output.length() << start << pagesize << parse_message_to_hex(output);
 
@@ -824,7 +768,7 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
 
     request_denso_kernel_id = false;
 
-    //qDebug() << "kernel ID:" << parse_message_to_hex(kernelid);
+    qDebug() << "kernel ID:" << parse_message_to_hex(kernelid);
 
     return kernelid;
 }
@@ -958,8 +902,14 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::send_log_window_message(QString message, b
 
 void FlashEcuSubaruDensoMC68HC16Y5_02::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
+        valueChanged = ui->progressbar->value() != value;
         ui->progressbar->setValue(value);
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 

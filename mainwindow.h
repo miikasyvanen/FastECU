@@ -22,40 +22,55 @@
 #include <QCheckBox>
 #include <QStandardItemModel>
 #include <QStackedWidget>
+#include <QSplashScreen>
 
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
 #include <protocol_select.h>
+#include <vehicle_select.h>
 #include <definition_file_convert.h>
 #include <biu_operations_subaru.h>
-#include <ecu_operations_nissan.h>
-#include <ecu_operations_mercedes.h>
-#include <ecu_operations_subaru.h>
-#include <ecu_operations_manual.h>
+#include <get_key_operations_subaru.h>
+//#include <ecu_operations_nissan.h>
+//#include <ecu_operations_mercedes.h>
+//#include <ecu_operations_subaru.h>
+//#include <ecu_operations_manual.h>
 #include <file_actions.h>
 #include <logbox.h>
 #include <settings.h>
-#include <serial_port_actions.h>
+#include <serial_port/serial_port_actions.h>
 
 // Flash modules
 #include <modules/flash_ecu_subaru_denso_mc68hc16y5_02.h>
 #include <modules/flash_ecu_subaru_denso_sh7055_02.h>
-#include <modules/flash_ecu_subaru_denso_sh705x_can.h>
-#include <modules/flash_ecu_subaru_denso_sh7055_04.h>
+#include <modules/flash_ecu_subaru_denso_sh705x_densocan.h>
+#include <modules/flash_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/flash_ecu_subaru_denso_sh7058_can.h>
 #include <modules/flash_ecu_subaru_denso_sh7058_can_diesel.h>
 
-#include <modules/flash_ecu_subaru_uinisia_jecs_m32r.h>
-#include <modules/flash_ecu_subaru_hitachi_m32r_02.h>
-#include <modules/flash_ecu_subaru_hitachi_m32r_06.h>
+#include <modules/flash_ecu_subaru_unisia_jecs.h>
+#include <modules/flash_ecu_subaru_unisia_jecs_m32r.h>
+#include <modules/flash_ecu_subaru_hitachi_m32r_kline.h>
 #include <modules/flash_ecu_subaru_hitachi_m32r_can.h>
+#include <modules/flash_tcu_subaru_hitachi_m32r_kline.h>
+#include <modules/flash_tcu_subaru_hitachi_m32r_can.h>
+#include <modules/flash_tcu_cvt_subaru_hitachi_m32r_can.h>
+#include <modules/flash_tcu_subaru_denso_sh705x_can.h>
+#include <modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.h>
+#include <modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.h>
+#include <modules/flash_ecu_subaru_mitsu_m32r_kline.h>
+#include <modules/flash_ecu_subaru_hitachi_sh7058_can.h>
+#include <modules/flash_ecu_subaru_hitachi_sh72543r_can.h>
+#include <modules/flash_ecu_subaru_denso_sh72531_can.h>
 
-#include <modules/eeprom_ecu_subaru_denso_kline.h>
-#include <modules/eeprom_ecu_subaru_denso_can.h>
+
+#include <modules/eeprom_ecu_subaru_denso_sh705x_kline.h>
+#include <modules/eeprom_ecu_subaru_denso_sh705x_can.h>
 
 
-#include <modules/flash_ecu_subaru_denso_sh7xxx_can.h>
+#include <modules/flash_ecu_subaru_denso_sh7xxx_densocan.h>
 //
+#include <remote_utility/remote_utility.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -69,13 +84,25 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QString peerAddress = "", QWidget *parent = nullptr);
     ~MainWindow();
 
     void delay(int n);
 
 private:
-    const char *sw_version = "FastECU v0.3b";
+    QString software_name = "FastECU";
+    QString software_title = "FastECU";
+    QString software_version = "0.0-dev0";
+
+    QSplashScreen *startUpSplash;
+    QLabel *startUpSplashLabel;
+    QProgressBar *startUpSplashProgressBar;
+
+    QString peerAddress;
+    QSplashScreen *splash;
+    QWebSocket *clientWebSocket;
+    RemoteUtility *remote_utility;
+    const char *sw_version = "FastECU v0.0.1";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
     static const QColor YELLOW_LIGHT_OFF;
@@ -92,7 +119,6 @@ private:
     bool can_listener_on = false;
 
     int ecuCalDefIndex = 0;
-    struct FileActions::EcuCalDefStructure *ecuCalDef[100];
 
     int mapCellWidthSelectable = 240;
     int mapCellWidth1D = 96;
@@ -109,31 +135,42 @@ private:
     FileActions *fileActions;
     FileActions::LogValuesStructure *logValues;
     FileActions::ConfigValuesStructure *configValues;
-    EcuOperationsSubaru *ecuOperationsSubaru;
-    EcuOperationsMercedes *ecuOperationsRenault;
+    FileActions::EcuCalDefStructure *ecuCalDef[100];
+    //FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     /* Flash modules */
+    FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
     FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
-    FlashEcuSubaruDensoSH705xCan *flashEcuSubaruDensoSH705xCan;
-    FlashEcuSubaruDensoSH7055_04 *flashEcuSubaruDensoSH7055_04;
+    FlashEcuSubaruDensoSH705xKline *flashEcuSubaruDensoSH705xKline;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
     FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
-    FlashEcuSubaruHitachiM32R_02 *flashEcuSubaruHitachiM32R_02;
-    FlashEcuSubaruHitachiM32R_06 *flashEcuSubaruHitachiM32R_06;
-    FlashEcuSubaruHitachiCan *flashEcuSubaruHitachiCan;
+    FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecsM32r;
+    FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
+    FlashEcuSubaruHitachiM32rCan *flashEcuSubaruHitachiM32rCan;
+    FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;
+    FlashEcuSubaruHitachiSH7058Can *flashEcuSubaruHitachiSh7058Can;
+    FlashEcuSubaruHitachiSH72543rCan *flashEcuSubaruHitachiSh72543rCan;
+    FlashEcuSubaruDensoSH72531Can *flashEcuSubaruHitachiSh72531Can;
 
-    EepromEcuSubaruDensoKline *eepromEcuSubaruDensoKline;
-    EepromEcuSubaruDensoCan *eepromEcuSubaruDensoCan;
+    FlashTcuSubaruHitachiM32rKline *flashTcuSubaruHitachiM32rKline;
+    FlashTcuSubaruHitachiM32rCan *flashTcuSubaruHitachiM32rCan;
+    FlashTcuCvtSubaruHitachiM32rCan *flashTcuCvtSubaruHitachiM32rCan;
+    FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
+    FlashTcuCvtSubaruMitsuMH8104Can *flashTcuCvtSubaruMitsuMH8104Can;
+    FlashTcuCvtSubaruMitsuMH8111Can *flashTcuCvtSubaruMitsuMH8111Can;
 
-    FlashEcuSubaruDensoSH7xxxCan *flashEcuSubaruDensoSH7xxxCan;
+    EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
+    EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;
+
+    FlashEcuSubaruDensoSH7xxxDensoCan *flashEcuSubaruDensoSH7xxxCan;
 
 
     /* Flash modules */
 
     SerialPortActions *serial;
-    QTimer *serial_poll_timer;
+    //QTimer *serial_poll_timer;
     uint16_t serial_poll_timer_timeout = 500;
     QString serial_port_baudrate = "4800";
     QString default_serial_port_baudrate = "4800";
@@ -175,7 +212,7 @@ private:
     QString protocol = "";
     QString log_protocol = "";
 
-    QTimer *ssm_init_poll_timer;
+    //QTimer *ssm_init_poll_timer;
     uint16_t ssm_init_poll_timer_timeout = 250;
 
     QTimer *logging_poll_timer;
@@ -191,6 +228,9 @@ private:
 
     LogBox *logBoxes;
 
+    QRadioButton *ecu_radio_button;
+    QRadioButton *tcu_radio_button;
+
     QTreeWidget treeWidget;
     CalibrationTreeWidget *calibrationTreeWidget = new CalibrationTreeWidget();
 
@@ -199,6 +239,7 @@ private:
 
     QMenu *mainWindowMenu;
 
+    QPushButton *refresh_serial_port_list;
     QComboBox *serial_port_list;
     QComboBox *flash_transport_list;
     QComboBox *log_transport_list;
@@ -217,6 +258,8 @@ private:
 
     Ui::MainWindow *ui;
 
+    bool eventFilter(QObject *target, QEvent *event);
+
     // fileactions.c
     bool open_calibration_file(QString filename);
     void save_calibration_file();
@@ -227,6 +270,7 @@ private:
     // log_operations
     void kline_listener();
     void canbus_listener();
+    void ssm_init();
     void ssm_kline_init();
     void ssm_can_init();
     QString parse_log_params(QByteArray received, QString protocol);
@@ -239,10 +283,16 @@ private:
     void change_log_values(int tabIndex, QString protocol);
 
     // mainwindow.c
+    //Connect signals for any flash class and execute ::run() method
+    template <typename FLASH_CLASS>
+    FLASH_CLASS* connect_signals_and_run_module(FLASH_CLASS *object);
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
     void set_flash_arrow_state();
+    void update_protocol_info(int rom_number);
     QStringList create_flash_transports_list();
     QStringList create_log_transports_list();
+    //QString check_kernel(QString flash_method);
+    void setSplashScreenProgress(QString text, int incValue);
 
     // menuactions.c
     void inc_dec_value(QString action);
@@ -250,6 +300,8 @@ private:
     void interpolate_value(QString action);
     void copy_value();
     void paste_value();
+    void connect_to_ecu();
+    void disconnect_from_ecu();
     void ecu_definition_manager();
     void logger_definition_manager();
     void winols_csv_to_romraider_xml();
@@ -268,6 +320,7 @@ private:
     void toggle_can_listener();
     int simulate_obd();
     void show_subaru_biu_window();
+    void show_subaru_get_key_window();
 
     //#include <modules/flash_sti04.h>
 
@@ -278,6 +331,11 @@ protected:
     void resizeEvent( QResizeEvent * event);
 
 private slots:
+    //External logger slot for string messages
+    void external_logger(QString message);
+    //External progress bar slot
+    void external_logger_set_progressbar_value(int value);
+
     // calibrationtreewidget.c
     void calibration_files_treewidget_item_selected(QTreeWidgetItem* item);
     void calibration_data_treewidget_item_selected(QTreeWidgetItem* item);
@@ -295,13 +353,14 @@ private slots:
     // mainwindow.c
     void select_protocol();
     void select_protocol_finished(int result);
+    void select_vehicle();
+    void select_vehicle_finished(int result);
     void log_transport_changed();
     void flash_transport_changed();
     void check_serial_ports();
     void open_serial_port();
     int can_listener();
     int start_ecu_operations(QString cmd_type);
-    int start_manual_ecu_operations();
     void close_calibration();
     void close_calibration_map(QObject* obj);
     void change_gauge_values();
