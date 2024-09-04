@@ -963,9 +963,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         /*
         * Unisia Jecs ECU
         */
-        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_92"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_m3779x"))
             flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_97"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_m3775x"))
             flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_"))
             flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));

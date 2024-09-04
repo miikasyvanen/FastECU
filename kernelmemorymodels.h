@@ -21,7 +21,7 @@ enum mcu_type {
     SH72543R,
     MH8104,
     MH8111,
-    M37790,
+    M3779x,
     M3775x,
     SH_INVALID
 };
@@ -230,19 +230,19 @@ const struct eepromblock eblocks_SH7051[] = {
     {0x00000000,    0x00000100},
 };
 
-const struct flashblock fblocks_M37790[] = {
+const struct flashblock fblocks_M3779x[] = {
     {0x00008000,    0x0000FFFF},
     };
 
-const struct ramblock rblocks_M37790[] = {
+const struct ramblock rblocks_M3779x[] = {
     {0x00001000,    0x000014FF},
     };
 
-const struct kernelblock kblocks_M37790[] = {
+const struct kernelblock kblocks_M3779x[] = {
     {0x00000000,    0x00000100},
     };
 
-const struct eepromblock eblocks_M37790[] = {
+const struct eepromblock eblocks_M3779x[] = {
     {0x00000000,    0x00000100},
     };
 
@@ -459,7 +459,7 @@ const struct flashdev_t flashdevices[] = {
     { "SH72543R", SH72543R, 2 * 1024 * 1024, 2, fblocks_SH72543R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "MH8104", MH8104, 512 * 1024, 4, fblocks_MH8104, rblocks_MH8104, kblocks_MH8104, eblocks_MH8104 },
     { "MH8111", MH8111, 3 * 512 * 1024, 4, fblocks_MH8111, rblocks_MH8111, kblocks_MH8111, eblocks_MH8111 },
-    { "M37790", M37790, 64 * 1024, 1, fblocks_M37790, rblocks_M37790, kblocks_M37790, eblocks_M37790 },
+    { "M3779x", M3779x, 64 * 1024, 1, fblocks_M3779x, rblocks_M3779x, kblocks_M3779x, eblocks_M3779x },
     { "M3775x", M3775x, 64 * 1024, 1, fblocks_M3775x, rblocks_M3775x, kblocks_M3775x, eblocks_M3775x },
     { 0, SH_INVALID, 0, 0, 0, 0, 0, 0},
 };
