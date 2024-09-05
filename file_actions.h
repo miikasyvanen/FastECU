@@ -1,6 +1,7 @@
 #ifndef FILE_ACTIONS_H
 #define FILE_ACTIONS_H
 
+#include <QApplication>
 #include <QWidget>
 #include <QFileDialog>
 #include <QDomDocument>
@@ -89,13 +90,13 @@ public:
 
         QStringList calibration_files;
         QStringList romraider_definition_files;
-        QString ecuflash_definition_files_directory = definition_files_base_directory + "/ecuflash";
-        QString romraider_logger_definition_file = definition_files_base_directory + "/romraider/logger_METRIC_EN_v370.xml";
+        QString ecuflash_definition_files_directory;
+        QString romraider_logger_definition_file;
         QString kernel_files;
 
-        QString use_romraider_definitions = "enabled";
-        QString use_ecuflash_definitions = "enabled";
-        QString primary_definition_base = "ecuflash";
+        QString use_romraider_definitions = "disabled";
+        QString use_ecuflash_definitions = "disbled";
+        QString primary_definition_base;
 
         QStringList ecuflash_def_cal_id;
         QStringList ecuflash_def_cal_id_addr;

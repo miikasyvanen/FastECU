@@ -10,8 +10,26 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     QDir currentPath(QDir::currentPath());
     QDir copyConfigFromDirectory;
     QDir copyKernelsFromDirectory;
-    qDebug() << "APP DIRECTORY:" << currentPath.absolutePath();
     QStringList isDevPath = currentPath.absolutePath().split("build");
+
+#ifdef Q_OS_LINUX
+    QString AppFilePath = QApplication::applicationFilePath();
+    QString AppRootPath = AppFilePath.split("usr").at(0);
+    QString filename;
+    QDirIterator it(AppRootPath, QStringList() << "*.*", QDir::Files, QDirIterator::Subdirectories);
+
+    qDebug() << "App path:" << AppFilePath;
+    qDebug() << "App root path:" << AppRootPath;
+/*
+    while (it.hasNext())
+    {
+        filename = it.next();
+        qDebug() << "Files in AppImage:" << filename;
+    }
+*/
+#endif
+
+    qDebug() << "APP DIRECTORY:" << currentPath.absolutePath();
 
     if (isDevPath.length() > 1)
     {
@@ -67,8 +85,10 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
             qDebug() << "Sorted dir by date:" << configDirList.at(i).absoluteFilePath() << configDirList.at(i).lastModified();;
         }
         // Copy latest version directory path
-        if (configDirList.length())
+        if (configDirList.length() > 1)
             latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
+        //else
+        //    latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
 
         // Check if current fastecu version directory exists in users home config folder
         if (!QDir(configValues->version_config_directory).exists()){
