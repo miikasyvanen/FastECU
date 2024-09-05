@@ -90,9 +90,9 @@ public:
     void delay(int n);
 
 private:
-    QString software_name = "FastECU";
-    QString software_title = "FastECU";
-    QString software_version = "0.0-dev0";
+    QString software_name;
+    QString software_title;
+    QString software_version;
 
     QSplashScreen *startUpSplash;
     QLabel *startUpSplashLabel;
@@ -102,7 +102,6 @@ private:
     QSplashScreen *splash;
     QWebSocket *clientWebSocket;
     RemoteUtility *remote_utility;
-    const char *sw_version = "FastECU v0.0.1";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
     static const QColor YELLOW_LIGHT_OFF;

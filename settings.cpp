@@ -150,7 +150,7 @@ QVBoxLayout *Settings::create_files_config_page(FileActions::ConfigValuesStructu
     QGroupBox *log_files_group = new QGroupBox(tr("Logfiles Directory"));
 
     log_files_dir_lineedit = new QLineEdit;
-    log_files_dir_lineedit->setText(configValues->log_files_directory);
+    log_files_dir_lineedit->setText(configValues->datalog_files_directory);
 
     QPushButton *log_files_dir_browse_button = new QPushButton;
     log_files_dir_browse_button->setIcon(QIcon(":/icons/document-open.png"));
@@ -326,16 +326,16 @@ void Settings::set_log_files_dir()
 {
 
     QString logfiles_dir = QFileDialog::getExistingDirectory(this, tr("Select logfiles directory"),
-                                                 configValues->log_files_directory,
+                                                 configValues->datalog_files_directory,
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
 
 
     qDebug() << "Selected path:" << logfiles_dir;
     if (!logfiles_dir.isEmpty()){
-        configValues->log_files_directory = logfiles_dir;
+        configValues->datalog_files_directory = logfiles_dir;
         log_files_dir_lineedit->clear();
-        log_files_dir_lineedit->setText(configValues->log_files_directory);
+        log_files_dir_lineedit->setText(configValues->datalog_files_directory);
     }
 }
 

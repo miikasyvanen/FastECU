@@ -45,9 +45,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->move(screenGeometry.center() - startUpSplash->rect().center());
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
-
-    this->setWindowTitle(software_title + " " + software_version);
-
 #ifdef Q_OS_LINUX
     //send_log_window_message("Running on Linux Desktop ", true, false);
     //serialPort = serialPortLinux;
@@ -71,16 +68,20 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     fileActions = new FileActions();
     configValues = &fileActions->ConfigValuesStruct;
 
-    configValues->software_name = software_name;
-    configValues->software_title = software_title;
-    configValues->software_version = software_version;
+    software_name = configValues->software_name;
+    software_title = configValues->software_title;
+    software_version = configValues->software_version;
+    this->setWindowTitle(software_title + " " + software_version);
+
+    //configValues->base_directory.append("/" + configValues->software_version);
+    fileActions->check_config_dir(configValues);
 
     //fileActions->check_config_dir(configValues);
     configValues = fileActions->read_config_file(configValues);
 
     fileActions->read_protocols_file(configValues);
     qDebug() << "ECU protocols read";
-    qDebug() << "Protocols ID:" << configValues->flash_protocol_selected_id.toInt();
+    qDebug() << "Protocols ID:" << configValues->flash_protocol_selected_id + "/" + QString::number(configValues->flash_protocol_id.length());
 
     if (configValues->flash_protocol_selected_id.toInt() > configValues->flash_protocol_id.length())
         configValues->flash_protocol_selected_id = "0";
@@ -1063,10 +1064,10 @@ bool MainWindow::open_calibration_file(QString filename)
         ecuCalDef[ecuCalDefIndex]->RomInfo.append(" ");
 
     ecuCalDef[ecuCalDefIndex] = fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], filename);
-    update_protocol_info(ecuCalDefIndex);
-
     if(ecuCalDef[ecuCalDefIndex] != NULL)
     {
+        update_protocol_info(ecuCalDefIndex);
+
         calibrationTreeWidget->buildCalibrationFilesTree(ecuCalDefIndex, ui->calibrationFilesTreeWidget, ecuCalDef[ecuCalDefIndex]);
         calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[ecuCalDefIndex]);
 

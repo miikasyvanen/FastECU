@@ -74,7 +74,7 @@ void MainWindow::menu_action_triggered(QString action)
 
     // HELP MENU
     if (action == "about")
-        QMessageBox::information(this, tr(sw_version), "FastECU is open source tuning software for Subaru ECUs and\n"
+        QMessageBox::information(this, tr("FastECU"), "FastECU is open source tuning software for Subaru ECUs and\n"
                                                             "later also modifying BIU and ECUs of other car makes.\n"
                                                             "\n"
                                                             "This is the first test version for read and write ECU ROM\n"

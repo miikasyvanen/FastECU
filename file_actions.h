@@ -52,9 +52,9 @@ public:
     //QString ecu_protocol;
 
     struct ConfigValuesStructure {
-        QString software_name;
-        QString software_title;
-        QString software_version;
+        QString software_name = "FastECU";
+        QString software_title = "FastECU";
+        QString software_version = "0.0-dev0";
 
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
@@ -63,29 +63,35 @@ public:
         QString window_height = "default";
         QString toolbar_iconsize = "32";
 
-        QString app_base_directory = ".";
-        QString home_base_directory = QDir::homePath() + "/FastECU_OEM";
-        QString base_directory = app_base_directory;
-        QString calibration_files_base_directory = base_directory + "/calibrations";
-        QString config_base_directory = base_directory + "/config";
-        QString definition_files_base_directory = base_directory + "/definitions";
-        QString kernel_files_base_directory = base_directory + "/kernels/";
-        QString log_files_base_directory = base_directory + "/logs";
+#ifdef Q_OS_LINUX
+        QString app_base_config_directory = QDir::homePath() + "/.config/fastecu/";
+#elif defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+        QString app_base_config_directory = QDir::homePath() + "/AppData/Local/fastecu/";
+#endif
+        QString base_config_directory = app_base_config_directory;
+        QString calibration_files_base_directory = base_config_directory + software_version + "/calibrations/";
+        QString config_files_base_directory = base_config_directory + software_version + "/config/";
+        QString definition_files_base_directory = base_config_directory + software_version + "/definitions/";
+        QString kernel_files_base_directory = base_config_directory + software_version + "/kernels/";
+        QString datalog_files_base_directory = base_config_directory + software_version + "/logs/";
 
-        QString config_file = config_base_directory + "/fastecu.cfg";
-        QString menu_config_file = config_base_directory + "/menu.cfg";
-        QString logger_config_file = config_base_directory + "/logger.cfg";
-        QString protocols_file = config_base_directory + "/protocols.cfg";
+        QString version_config_directory;
+        QString calibration_files_directory;
+        QString config_files_directory;
+        QString definition_files_directory;
+        QString kernel_files_directory;
+        QString datalog_files_directory;
+
+        QString config_file = "fastecu.cfg";
+        QString menu_file = "menu.cfg";
+        QString logger_file = "logger.cfg";
+        QString protocols_file = "protocols.cfg";
 
         QStringList calibration_files;
-        QString calibration_files_directory = calibration_files_base_directory;
         QStringList romraider_definition_files;
         QString ecuflash_definition_files_directory = definition_files_base_directory + "/ecuflash";
         QString romraider_logger_definition_file = definition_files_base_directory + "/romraider/logger_METRIC_EN_v370.xml";
-        QString definition_files_directory = definition_files_base_directory;
-        QString kernel_files_directory = kernel_files_base_directory;
         QString kernel_files;
-        QString log_files_directory = log_files_base_directory;
 
         QString use_romraider_definitions = "enabled";
         QString use_ecuflash_definitions = "enabled";
