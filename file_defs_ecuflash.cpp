@@ -30,6 +30,12 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
     bool cal_id_addr_found = false;
     bool ecu_id_found = false;
 
+    if(!configValues->ecuflash_definition_files_directory.length())
+    {
+        qDebug() << "No EcuFlash definition files directory";
+        return configValues;
+    }
+
     if (QDir(configValues->ecuflash_definition_files_directory).exists())
     {
         QDirIterator it(dir, QStringList() << "*.xml", QDir::Files, QDirIterator::Subdirectories);
@@ -43,7 +49,7 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
             QFile file(filename);
             if (!file.open(QIODevice::ReadOnly ))
             {
-                QMessageBox::warning(this, tr("Ecu definition file"), "Unable to open ecuflash definition file " + filename + " for reading");
+                QMessageBox::warning(this, tr("Ecu definition file"), "Unable to open EcuFlash definition file " + filename + " for reading");
             }
 
             QDomDocument xmlBOM;

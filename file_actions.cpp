@@ -383,7 +383,9 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             {
                                 if (reader.name().toUtf8() == "value")
                                 {
-                                    configValues->romraider_definition_files.append(reader.attributes().value("data").toString());
+                                    QString filename = reader.attributes().value("data").toString();
+                                    if (filename != "")
+                                        configValues->romraider_definition_files.append(reader.attributes().value("data").toString());
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -634,7 +636,7 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeStartElement("setting");
     stream.writeAttribute("name", "logfiles_directory");
     stream.writeStartElement("value");
-    stream.writeAttribute("data", configValues->datalog_files_base_directory);
+    stream.writeAttribute("data", configValues->datalog_files_directory);
     stream.writeEndElement();
     stream.writeEndElement();
 

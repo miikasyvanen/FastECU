@@ -116,8 +116,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
         this->setWindowState(Qt::WindowMaximized);
 
     setSplashScreenProgress("Preparing ROM definitions...", 10);
-    if (!configValues->romraider_definition_files.length() && !configValues->primary_definition_base.contains("ecuflash"))
-        QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use definition manager at 'Edit' menu to choose file(s)");
+    if (!configValues->romraider_definition_files.length() && !configValues->ecuflash_definition_files_directory.length())
+        QMessageBox::warning(this, tr("Ecu definition file"), "No definition file(s), use 'Settings' in 'Edit' menu to choose file(s)");
 
     setSplashScreenProgress("Preparing EcuFlash ROM definitions...", 10);
     fileActions->create_ecuflash_def_id_list(configValues);

@@ -298,11 +298,11 @@ void Settings::set_romraider_logger_file()
     else
         file_dir.append("./");
     QString filename = QFileDialog::getOpenFileName(this, tr("Add RomRaider logger file"), file_dir, tr("RomRaider logger file (*.xml)"));
-
+    qDebug() << "Filename:" << filename;
     if (filename.isEmpty())
         QMessageBox::information(this, tr("RomRaider logger file"), "No file selected");
     else
-        configValues->romraider_logger_definition_file.append(filename);
+        configValues->romraider_logger_definition_file = filename;
 
 }
 
