@@ -64,9 +64,9 @@ public:
         QString toolbar_iconsize = "32";
 
 #ifdef Q_OS_LINUX
-        QString app_base_config_directory = QDir::homePath() + "/.config/fastecu/";
+        QString app_base_config_directory = QDir::homePath() + "/.config/FastECU/";
 #elif defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-        QString app_base_config_directory = QDir::homePath() + "/AppData/Local/fastecu/";
+        QString app_base_config_directory = QDir::homePath() + "/AppData/Local/FastECU/";
 #endif
         QString base_config_directory = app_base_config_directory;
         QString calibration_files_base_directory = base_config_directory + software_version + "/calibrations/";
