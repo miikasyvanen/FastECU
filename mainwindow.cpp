@@ -982,8 +982,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh72543r_can"))
             flashEcuSubaruHitachiSh72543rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiSH72543rCan(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh72531_can"))
-            flashEcuSubaruHitachiSh72531Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH72531Can(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh72531_can"))
+            flashEcuSubaruDensoSh72531Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH72531Can(serial, ecuCalDef[rom_number], cmd_type, this));
 
         /*
         * Hitachi TCU
