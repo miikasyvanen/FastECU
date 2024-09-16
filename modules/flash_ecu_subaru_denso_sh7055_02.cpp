@@ -710,6 +710,7 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc_kline_32bit(const uint8_t *src, u
         return STATUS_ERROR;
     }
 
+    ecucrc32 = 0;
     imgcrc32 = crc32(src, pagesize);
     if (received.length() > 3)
         ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
@@ -998,14 +999,15 @@ int FlashEcuSubaruDensoSH7055_02::flash_block_kline_32bit(const uint8_t *src, ui
         set_progressbar_value(pleft);
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         send_log_window_message(msg, true, true);
 
     }   //while len
 
     send_log_window_message("npk_raw_flashblock: write complete.", true, true);
     received = serial->read_serial_data(100, serial_read_short_timeout);
-    return 0;
+
+    return STATUS_SUCCESS;
 }
 
 

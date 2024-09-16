@@ -63,6 +63,7 @@
 #include <modules/flash_ecu_subaru_hitachi_sh72543r_can.h>
 #include <modules/flash_ecu_subaru_denso_sh72531_can.h>
 
+#include <modules/unbrick/flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.h>
 
 #include <modules/eeprom_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/eeprom_ecu_subaru_denso_sh705x_can.h>
@@ -140,6 +141,7 @@ private:
     /* Flash modules */
     FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
+    FlashEcuUnbrickSubaruDensoMC68HC16Y5_02 *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
     FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
     FlashEcuSubaruDensoSH705xKline *flashEcuSubaruDensoSH705xKline;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;

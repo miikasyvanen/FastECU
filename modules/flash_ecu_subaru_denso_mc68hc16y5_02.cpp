@@ -82,7 +82,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     switch (ret)
     {
         case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
+            send_log_window_message("Connecting to Subaru 01-05 16-bit K-Line bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_kline_wrx02();
 
             if (result == STATUS_SUCCESS && !kernel_alive)
@@ -96,13 +96,13 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
                 if (cmd_type == "read")
                 {
                     emit external_logger("Reading ROM, please wait...");
-                    send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
+                    send_log_window_message("Reading ROM from Subaru 01-05 16-bit using K-Line", true, true);
                     result = read_mem_subaru_denso_kline_16bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
-                    send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
+                    send_log_window_message("Writing ROM to Subaru 01-05 16-bit using K-Line", true, true);
                     result = write_mem_subaru_denso_kline_16bit(test_write);
                 }
             }
@@ -196,17 +196,20 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     send_log_window_message("Checking if Kernel already uploaded, requesting kernel ID", true, true);
     serial->change_port_speed("39473");
 
-    received = request_kernel_id();
-    qDebug() << parse_message_to_hex(received);
-    if (received.length() > 0)
+    for (int i = 0; i < 10; i++)
     {
-        send_log_window_message("Kernel already uploaded, requesting kernel ID", true, true);
-        delay(100);
+        received = request_kernel_id();
+        qDebug() << parse_message_to_hex(received);
+        if (received.length() > 0)
+        {
+            send_log_window_message("Kernel already uploaded, requesting kernel ID", true, true);
+            delay(100);
 
-        kernel_alive = true;
-        return STATUS_SUCCESS;
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
+        delay(500);
     }
-
     return STATUS_ERROR;
 }
 
@@ -323,7 +326,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
     if (start_addr == 0 && length == 0)
     {
         start_addr = 0;
-        length = 0x030000;
+        length = 0x028000;
     }
     end_addr = start_addr + length;
 
@@ -350,7 +353,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
 
         if (addr >= flashdevices[mcu_type_index].rblocks->start && addr < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len))
         {
-
             received.clear();
             for (unsigned int j = flashdevices[mcu_type_index].rblocks->start; j < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len); j++)
             {

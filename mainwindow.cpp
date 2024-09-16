@@ -939,6 +939,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name == "sub_ecu_denso_sh7058")
             flashEcuSubaruDensoSH705xKline = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xKline(serial, ecuCalDef[rom_number], cmd_type, this));
+
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unbrick_denso_mc68hc16y5_02"))
+            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuUnbrickSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
         /*
         * Denso TCU
         */

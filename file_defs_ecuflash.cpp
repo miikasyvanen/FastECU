@@ -479,9 +479,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             if (ecuCalDef->YScaleIntervalList.at(def_map_index) == " ")
                                 ecuCalDef->YScaleIntervalList.replace(def_map_index, rom_scale_child.attribute("interval", "1"));
 
-                            //if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
-                                //qDebug() << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
-
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
                             {
@@ -581,8 +578,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ecuCalDef->YScaleAddressList.replace(def_map_index, rom_scale_child.attribute("address", " "));
                                 ecuCalDef->YSizeList.replace(def_map_index, rom_scale_child.attribute("elements", " "));
                             }
-                            if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
-                                qDebug() << i << ":" << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
                             i++;
                         }
                     }

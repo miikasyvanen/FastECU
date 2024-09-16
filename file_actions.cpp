@@ -1848,10 +1848,18 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
-    //ecuCalDef->RomId = selected_id;
-    //qDebug() << "File size =" << ecuCalDef->FileSize;
 
-    QByteArray padding;// = QByteArray("\x00", 0x8000);
+    for (int i = 0; i < ecuCalDef->NameList.length(); i++)
+    {
+        if (ecuCalDef->AddressList.at(i).toUInt() > ecuCalDef->FullRomData.length() || ecuCalDef->XScaleAddressList.at(i).toUInt() > ecuCalDef->FullRomData.length() || ecuCalDef->YScaleAddressList.at(i).toUInt() > ecuCalDef->FullRomData.length())
+        {
+            QMessageBox::warning(this, tr("File size error"), "Error in expected ROM size!");
+            ecuCalDef->NameList.clear();
+            return ecuCalDef;
+        }
+    }
+
+    QByteArray padding;
     padding.clear();
     if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < 190 * 1024)
     {
@@ -2197,6 +2205,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 chksumModuleAvailable = true;
                 ChecksumEcuSubaruHitachiSH7058 *checksumEcuSubaruHitachiSH7058 = new ChecksumEcuSubaruHitachiSH7058();
                 ecuCalDef->FullRomData = checksumEcuSubaruHitachiSH7058->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            else if (flashMethod.startsWith("sub_ecu_hitachi_sh72543r"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruHitachiSh72543r *checksumEcuSubaruHitachiSh72543r = new ChecksumEcuSubaruHitachiSh72543r();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiSh72543r->calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
             * Hitachi TCU
