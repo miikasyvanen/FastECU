@@ -196,14 +196,15 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
         {
+            response.clear();
+            response.append(received);
             response.remove(0, 7);
-            response.remove(8, 8);
+            response.remove(8, received.length() - 1);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
             send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
         else
@@ -215,6 +216,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
 
     QString ecuid = QString::fromUtf8(response);
     send_log_window_message("Init Success: ECU ID = " + ecuid, true, true);
+    qDebug() << "Init Success: ECU ID = " + ecuid;
 
     send_log_window_message("Initializing bootloader...", true, true);
     qDebug() << "Initializing bootloader...";
@@ -233,6 +235,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x03)
         {
             req_10_03_connected = true;
+            connected = true;
             QByteArray response = received;
             response.remove(0, 6);
             QString msg;
@@ -244,10 +247,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
         else
-        {
             send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
-            return STATUS_ERROR;
-        }
     }
 
     output[4] = ((uint8_t)0x10);
@@ -263,6 +263,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x43)
         {
             req_10_43_connected = true;
+            connected = true;
             QByteArray response = received;
             response.remove(0, 6);
             QString msg;
@@ -274,11 +275,11 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
         else
-        {
             send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
-            return STATUS_ERROR;
-        }
     }
+
+    if (!connected)
+        return STATUS_ERROR;
 
     send_log_window_message("Starting seed request...", true, true);
     qDebug() << "Starting seed request...";
