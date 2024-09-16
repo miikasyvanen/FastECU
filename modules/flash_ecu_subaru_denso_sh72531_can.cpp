@@ -152,6 +152,9 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         return STATUS_ERROR;
     }
 
+    bool req_10_03_connected = false;
+    bool req_10_43_connected = false;
+
     bool connected = false;
     int try_count = 0;
 
@@ -168,13 +171,12 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     output.append((uint8_t)0xE0);
     output[4] = (uint8_t)0x09;
     output[5] = (uint8_t)0x04;
-
+/*
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
-        //delay(50);
         received = serial->read_serial_data(20, 200);
         if (received != "")
         {
@@ -183,46 +185,99 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             qDebug() << try_count << ": 0x09 0x04 response:" << parse_message_to_hex(received) << received;
         }
         try_count++;
-        //delay(try_timeout);
     }
-
-    response = received;
-    response.remove(0, 7);
-    response.remove(8, 8);
-    QString tcuid = QString::fromUtf8(response);
-    send_log_window_message("Init Success: ECU ID = " + tcuid, true, true);
-
-    int ret = QMessageBox::warning(this, tr("Init was Ok?"),
-                                   tr("Continue?"),
-                                   QMessageBox::Ok | QMessageBox::Cancel,
-                                   QMessageBox::Ok);
-    switch (ret)
+*/
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
     {
-    case QMessageBox::Ok:
-        send_log_window_message("Let's start...", true, true);
-        break;
-    case QMessageBox::Cancel:
-        return STATUS_ERROR;
-        this->close();
-        break;
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
+        {
+            response.remove(0, 7);
+            response.remove(8, 8);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+
+            qDebug() << "Response:" << parse_message_to_hex(received);
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
+            return STATUS_ERROR;
+        }
     }
+
+    QString ecuid = QString::fromUtf8(response);
+    send_log_window_message("Init Success: ECU ID = " + ecuid, true, true);
 
     send_log_window_message("Initializing bootloader...", true, true);
     qDebug() << "Initializing bootloader...";
 
-    output[4] = (uint8_t)0x10;
-    output[5] = (uint8_t)0x43;
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+    connected = false;
+    output[4] = ((uint8_t)0x10);
+    output[5] = ((uint8_t)0x03);
+
     serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-
-    if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
     {
-        send_log_window_message("Failed to initialise bootloader", true, true);
+        if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x03)
+        {
+            req_10_03_connected = true;
+            QByteArray response = received;
+            response.remove(0, 6);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
 
-        //return STATUS_ERROR;
+            qDebug() << "Response:" << parse_message_to_hex(received);
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
+            return STATUS_ERROR;
+        }
+    }
+
+    output[4] = ((uint8_t)0x10);
+    output[5] = ((uint8_t)0x43);
+
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x43)
+        {
+            req_10_43_connected = true;
+            QByteArray response = received;
+            response.remove(0, 6);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+
+            qDebug() << "Response:" << parse_message_to_hex(received);
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
+            return STATUS_ERROR;
+        }
     }
 
     send_log_window_message("Starting seed request...", true, true);
@@ -230,16 +285,30 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
 
     output[4] = (uint8_t)0x27;
     output[5] = (uint8_t)0x61;
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
     {
-        send_log_window_message("Bad response to seed request", true, true);
+        if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x61)
+        {
+            QByteArray response = received;
+            response.remove(0, 6);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
 
-        //return STATUS_ERROR;
+            qDebug() << "Response:" << parse_message_to_hex(received);
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
+            return STATUS_ERROR;
+        }
     }
 
     send_log_window_message("Seed request ok", true, true);
@@ -261,16 +330,30 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     output[7] = (uint8_t)seed_key.at(1);
     output[8] = (uint8_t)seed_key.at(2);
     output[9] = (uint8_t)seed_key.at(3);
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x62)
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
     {
-        send_log_window_message("Bad response to seed request", true, true);
+        if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x61)
+        {
+            QByteArray response = received;
+            response.remove(0, 6);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
 
-        //return STATUS_ERROR;
+            qDebug() << "Response:" << parse_message_to_hex(received);
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
+            return STATUS_ERROR;
+        }
     }
 
     send_log_window_message("Seed key ok", true, true);
@@ -285,24 +368,37 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0x10);
-    output.append((uint8_t)0x42);
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+    if (req_10_03_connected)
+        output.append((uint8_t)0x02);
+    if (req_10_43_connected)
+        output.append((uint8_t)0x42);
+
     serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-
-    if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
     {
-        send_log_window_message("Bad response to jumping to onboard kernel", true, true);
+        if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x02)
+        {
+            QByteArray response = received;
+            response.remove(0, 6);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
 
-        // return STATUS_ERROR;
+            qDebug() << "Response:" << parse_message_to_hex(received);
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
+            return STATUS_ERROR;
+        }
     }
 
-    send_log_window_message("Test script complete", true, true);
     return STATUS_SUCCESS;
 }
 
