@@ -416,10 +416,10 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Seed request ok";
 
     seed.clear();
-    seed.append(received.at(2+4));
-    seed.append(received.at(3+4));
-    seed.append(received.at(4+4));
-    seed.append(received.at(5+4));
+    seed.append(received.at(6));
+    seed.append(received.at(7));
+    seed.append(received.at(8));
+    seed.append(received.at(9));
 
     seed.append((uint8_t)0xD3);
     seed.append((uint8_t)0x80);

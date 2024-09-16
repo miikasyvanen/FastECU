@@ -169,8 +169,8 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0x09;
-    output[5] = (uint8_t)0x04;
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x04);
 /*
     while (try_count < 6 && connected == false)
     {
@@ -324,12 +324,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     send_log_window_message("Sending seed key...", true, true);
     qDebug() << "Sending seed key...";
 
-    output[4] = (uint8_t)0x27;
-    output[5] = (uint8_t)0x62;
-    output[6] = (uint8_t)seed_key.at(0);
-    output[7] = (uint8_t)seed_key.at(1);
-    output[8] = (uint8_t)seed_key.at(2);
-    output[9] = (uint8_t)seed_key.at(3);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x62);
+    output.append(seed_key);
     serial->write_serial_data_echo_check(output);
     send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
     qDebug() << "Sent:" << parse_message_to_hex(output);
