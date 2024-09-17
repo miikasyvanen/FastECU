@@ -285,10 +285,12 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     delay(1500);
     serial->change_port_speed("39473");
     received.clear();
-    while (received == "")
+    int loop_count = 0;
+    while (received == "" && loop_count < 5)
     {
         received = request_kernel_id();
         delay(500);
+        loop_count++;
     }
     received.remove(0, 5);
     received.remove(received.length() - 1, 1);
