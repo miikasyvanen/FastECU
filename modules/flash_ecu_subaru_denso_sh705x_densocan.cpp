@@ -818,7 +818,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::check_romcrc_denso_sh705x_densocan(const 
         {
             qDebug() << "Crop msg";
             received.remove(0, 2);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else

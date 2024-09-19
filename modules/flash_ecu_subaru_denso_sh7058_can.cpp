@@ -1306,7 +1306,7 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
         {
             qDebug() << "Crop msg";
             received.remove(0, 2);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else

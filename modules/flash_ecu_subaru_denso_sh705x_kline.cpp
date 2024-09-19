@@ -761,7 +761,7 @@ int FlashEcuSubaruDensoSH705xKline::check_romcrc_denso_sh705x_kline(const uint8_
         if (len > 5)
         {
             received.remove(0, 3);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else

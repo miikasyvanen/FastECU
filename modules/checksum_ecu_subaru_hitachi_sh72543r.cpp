@@ -73,6 +73,10 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
     uint32_t uVar4 = 0;
     uint32_t pbVar5;
 
+    uint32_t value = (uint8_t)romData.at(0x6000) << 8;
+    msg.clear();
+    msg.append(QString("Value in 0x6000 << 8: 0x%1").arg(value,8,16,QLatin1Char('0')).toUtf8());
+    qDebug() << msg;
     // FUN_000620be, fff8065a = uVar4, DAT_000622cc = (short)uVar4;
     for (pbVar5 = 0x6014; pbVar5 < 0x1ffff2; pbVar5+=1)
     {
@@ -80,7 +84,7 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
         {
             //uVar2 = (((uint8_t)romData.at(pbVar5) << 24) | ((uint8_t)romData.at(pbVar5 + 1) << 16) | ((uint8_t)romData.at(pbVar5 + 2) << 8) | ((uint8_t)romData.at(pbVar5 + 3) << 0)) << 8;
             //uVar2 = (((uint8_t)romData.at(pbVar5 + 2) << 8) | ((uint8_t)romData.at(pbVar5 + 3) << 0)) << 8;
-            uVar2 = (uint8_t)romData.at(pbVar5 + 3) << 8;
+            uVar2 = (uint8_t)romData.at(pbVar5) << 8;
             for (uVar1 = 0; uVar1 < 8; uVar1++) {
                 uVar3 = uVar4 & 0xffff;
                 uVar4 = uVar3 << 1;

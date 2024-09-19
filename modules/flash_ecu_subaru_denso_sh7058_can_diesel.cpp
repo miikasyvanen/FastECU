@@ -1159,7 +1159,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc_denso_subarucan(const uint8
         {
             qDebug() << "Crop msg";
             received.remove(0, 2);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else

@@ -700,7 +700,7 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc_kline_32bit(const uint8_t *src, u
         if (len > 5)
         {
             received.remove(0, 3);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else
