@@ -290,6 +290,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     received.clear();
     while (received == "")
     {
+        if (kill_process)
+            return STATUS_ERROR;
         received = request_kernel_id();
         delay(500);
     }
@@ -720,6 +722,10 @@ static unsigned int crc_table[256] = {
 unsigned int FlashEcuSubaruDensoMC68HC16Y5_02::crc32(const unsigned char *buf, unsigned int len)
 {
     unsigned int crc = 0xFFFFFFFF;
+
+    if (!crc_tab32_init)
+        init_crc32_tab();
+
     if (buf == NULL)
         return 0L;
     while (len--)
@@ -727,6 +733,28 @@ unsigned int FlashEcuSubaruDensoMC68HC16Y5_02::crc32(const unsigned char *buf, u
 
     return crc ^ 0xFFFFFFFF;
 }
+
+void FlashEcuSubaruDensoMC68HC16Y5_02::init_crc32_tab(void) {
+    uint32_t i, j;
+    uint32_t crc, c;
+
+    for (i=0; i<256; i++) {
+        crc = 0;
+        c = (uint32_t)i;
+
+        for (j=0; j<8; j++) {
+            if ( (crc ^ c) & 0x00000001 )
+                crc = ( crc >> 1 ) ^ CRC32;
+            else
+                crc =   crc >> 1;
+            c = c >> 1;
+        }
+        crc_tab32[i] = crc;
+    }
+
+    crc_tab32_init = 1;
+
+}  /* init_crc32_tab */
 
 QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_init()
 {
@@ -774,11 +802,6 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
 
     return kernelid;
 }
-
-
-
-
-
 
 /*
  * Add SSM header to message

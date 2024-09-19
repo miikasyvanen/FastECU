@@ -46,6 +46,10 @@ private:
     #define STATUS_SUCCESS	0x00
     #define STATUS_ERROR	0x01
 
+    uint32_t CRC32 = 0xEDB88320;
+    bool crc_tab32_init = 0;
+    uint32_t crc_tab32[256];
+
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
@@ -88,6 +92,7 @@ private:
     int write_mem_subaru_denso_kline_16bit(bool test_write);
     int get_changed_blocks_16bit_kline(const uint8_t *src, int *modified);
     int check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    void init_crc32_tab(void);
     unsigned int crc32(const unsigned char *buf, unsigned int len);
 
     QByteArray request_kernel_init();

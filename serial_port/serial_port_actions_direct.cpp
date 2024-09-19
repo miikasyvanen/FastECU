@@ -569,6 +569,8 @@ QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
     QByteArray received;
     QByteArray msg;
 
+    msg.append((uint8_t)0x00);
+
     if (is_serial_port_open())
     {
         if (add_iso14230_header)
@@ -581,8 +583,7 @@ QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
         }
         for (int i = 0; i < output.length(); i++)
         {
-            msg.clear();
-            msg.append(output.at(i));
+            msg[0] = output.at(i);
             serial->write(msg, 1);
         }
         //qDebug() << "Data sent:" << parse_message_to_hex(output);
@@ -599,6 +600,8 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
     QByteArray received;
     QByteArray msg;
 
+    msg.append((uint8_t)0x00);
+
     if (is_serial_port_open())
     {
         if (add_iso14230_header)
@@ -611,8 +614,7 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
         }
         for (int i = 0; i < output.length(); i++)
         {
-            msg.clear();
-            msg.append(output.at(i));
+            msg[0] = output.at(i);
             serial->write(msg, 1);
             // Add serial echo read during transmit to speed up a little
             if (serial->bytesAvailable())
@@ -1297,7 +1299,7 @@ void SerialPortActionsDirect::reportJ2534Error()
 
 void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
 {
-    if (error != QSerialPort::NoError)
+    //if (error != QSerialPort::NoError)
         qDebug() << "Error:" << error;
 
     if (error == QSerialPort::NoError)

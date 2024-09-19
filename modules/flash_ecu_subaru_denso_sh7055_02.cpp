@@ -751,7 +751,7 @@ unsigned int FlashEcuSubaruDensoSH7055_02::crc32(const unsigned char *buf, unsig
     return crc ^ 0xFFFFFFFF;
 }
 
-void FlashEcuSubaruDensoSH7055_02::init_crc32_tab( void ) {
+void FlashEcuSubaruDensoSH7055_02::init_crc32_tab(void) {
     uint32_t i, j;
     uint32_t crc, c;
 

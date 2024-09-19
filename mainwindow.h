@@ -139,13 +139,23 @@ private:
     //FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     /* Flash modules */
+    /* Denso ECU */
     FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
-    FlashEcuUnbrickSubaruDensoMC68HC16Y5_02 *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
     FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
     FlashEcuSubaruDensoSH705xKline *flashEcuSubaruDensoSH705xKline;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
+    FlashEcuSubaruDensoSH72531Can *flashEcuSubaruDensoSh72531Can;
+    /* Denso ECU unbrick */
+    FlashEcuUnbrickSubaruDensoMC68HC16Y5_02 *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
+    /* Denso ECU EEPROM */
+    EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
+    EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;
+    /* Denso TCU */
+    FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
+
+    /* Hitachi ECU */
     FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
     FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecsM32r;
     FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
@@ -153,21 +163,16 @@ private:
     FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;
     FlashEcuSubaruHitachiSH7058Can *flashEcuSubaruHitachiSh7058Can;
     FlashEcuSubaruHitachiSH72543rCan *flashEcuSubaruHitachiSh72543rCan;
-    FlashEcuSubaruDensoSH72531Can *flashEcuSubaruHitachiSh72531Can;
-
+    /* Hitachi TCU */
     FlashTcuSubaruHitachiM32rKline *flashTcuSubaruHitachiM32rKline;
     FlashTcuSubaruHitachiM32rCan *flashTcuSubaruHitachiM32rCan;
     FlashTcuCvtSubaruHitachiM32rCan *flashTcuCvtSubaruHitachiM32rCan;
-    FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
+
+    /* Mitsu TCU */
     FlashTcuCvtSubaruMitsuMH8104Can *flashTcuCvtSubaruMitsuMH8104Can;
     FlashTcuCvtSubaruMitsuMH8111Can *flashTcuCvtSubaruMitsuMH8111Can;
 
-    EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
-    EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;
-
     FlashEcuSubaruDensoSH7xxxDensoCan *flashEcuSubaruDensoSH7xxxCan;
-
-
     /* Flash modules */
 
     SerialPortActions *serial;
