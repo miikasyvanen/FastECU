@@ -24,13 +24,15 @@
 #define SID_OE_KERNEL_CRC                       0x02
 #define SID_OE_KERNEL_READ_AREA                 0x03
 #define SID_OE_KERNEL_PROG_VOLT                 0x04
+#define SID_OE_KERNEL_UNK_1                     0x05
+#define SID_OE_KERNEL_UNK_2                     0x06
 
-#define SID_OE_KERNEL_FLASH_ENABLE				0x20;
-#define SID_OE_KERNEL_FLASH_DISABLE				0x21;
-#define SID_OE_KERNEL_WRITE_FLASH_BUFFER		0x22;
-#define SID_OE_KERNEL_VALIDATE_FLASH_BUFFER		0x23;
-#define SID_OE_KERNEL_COMMIT_FLASH_BUFFER       0x24;
-#define SID_OE_KERNEL_BLANK_16K_PAGE            0x25;
+#define SID_OE_KERNEL_FLASH_ENABLE				0x20
+#define SID_OE_KERNEL_FLASH_DISABLE				0x21
+#define SID_OE_KERNEL_WRITE_FLASH_BUFFER		0x22
+#define SID_OE_KERNEL_VALIDATE_FLASH_BUFFER		0x23
+#define SID_OE_KERNEL_COMMIT_FLASH_BUFFER       0x24
+#define SID_OE_KERNEL_BLANK_16K_PAGE            0x25
 
 /****************************************
  * NisProg based kernels k-line commands

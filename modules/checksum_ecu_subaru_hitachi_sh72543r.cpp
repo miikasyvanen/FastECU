@@ -15,39 +15,28 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
     /*************
      *
      * LF79002P
+     *
      * UndefinedFunction_00077508
      * FUN_00077562
      * FUN_000775ca
      * FUN_0007763e
-     * FUN_0007763e
      *
      * sVar6 != *DAT_000b2644
-     * *DAT_000b2ddc = sVar6
+     * *DAT_000b2ddc = sVar6;
+     *
+     * 0x10000 - 0x63930
+     * 0x63930 - 0x1fffe0
      *
      *
-     * UndefinedFunction_0006e69c
-     * FUN_0006e706
-     * FUN_0006e76e
+     * 000b2c7e d6 57           mov.l      @(DAT_000b2ddc,pc),r6                            = FFF80AF2h
+     * 000b2ddc - FFF80AF2h
      *
-     * UndefinedFunction_00062064
-     * FUN_000620be
-     * FUN_00062126
+     * 000b25b2 d6 24           mov.l      @(DAT_000b2644,pc),r6                            = FFF80AF2h
+     * 000b2644 - FFF80AF2h
      *
-     * FUN_00078ca6
-     * 0x6000 = 0x5555
-     * 0x1ffff2 = 0xAAAA
+     * DAT_fff806d0
+     * DAT_fff806d2
      *
-     * UndefinedFunction_0006e69c
-     *
-     * 0x10000 - 0x51070
-     * 0x51070 - 0x1fffe0
-     *
-     *
-     * 0x6c == 0x6010
-     *
-     *
-     * *DAT_00096550 (0xFFF80A8E) == 0x1fffe4-0x1fffe5
-     * *DAT_00096ccc = sVar6;
      *
      *
      */
@@ -100,7 +89,7 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
     bool bVar1 = false;
     uint8_t bVar3;
     uint32_t iVar4;
-    uint32_t puVar2 = 0;
+    uint16_t puVar2 = 0;
     uint32_t uVar5 = 0;
     uint32_t uVar6 = 0;
 
@@ -108,12 +97,12 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
     iVar4 = 0;
     uVar5 = uVar4 * 2;
 
-    if (((uint16_t)uVar4 & 0x8000) != 0)
+    if (((int)(short)uVar4 & 0x8000U) != 0)
         uVar5++;
     uVar5 ^= uVar4;
     // DAT_000622d0 = uVar5
     msg.clear();
-    msg.append(QString("uVar5: 0x%1").arg(uVar5,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("uVar5: 0x%1").arg(uVar5,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
 
     uVar6 = puVar2;
@@ -138,11 +127,8 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
     uint16_t uVar11;
     uint32_t puVar12;
 
-    // *DAT_000622ac = (short)uVar11;
     uint32_t param_1 = 0x10000;
     uint32_t param_2 = 0x63930;
-    //uint32_t param_2 = 0x633c0;
-    //uint32_t param_2 = 0x51070;
 
     uint16_t romdata = ((uint8_t)romData.at(param_1) << 8) + (uint8_t)romData.at(param_1 + 1);
     uVar11 = (romdata >> 0xf) | (romdata << 1);
@@ -155,10 +141,9 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
     }
 
     uint32_t chksum = uVar11 & 0xffff;
-
+/*
     param_1 = 0x78c0;
     param_2 = 0x10000;
-    //uint32_t param_2 = 0x51070;
 
     romdata = ((uint8_t)romData.at(param_1) << 8) + (uint8_t)romData.at(param_1 + 1);
     uVar11 = (romdata >> 0xf) | (romdata << 1);
@@ -169,18 +154,14 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
         uVar11 = romdata + (uVar11 & 0xffff);
         uVar11 = (uVar11 >> 0xf) | (uVar11 << 1);
     }
-
+*/
     uint32_t chksum2 = 0;//uVar11 & 0xFFFF;
 
     msg.clear();
-    msg.append(QString("uVar11: 0x%1").arg(uVar11,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("uVar11: 0x%1").arg(uVar11,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
 
-    // *DAT_000622b4 = (ushort)uVar11;
-    // *DAT_000622b8 = *DAT_000622b8 | 1;
     param_1 = 0x63930;
-    //param_1 = 0x633c0;
-    //param_1 = 0x51070;
     param_2 = 0x1fffe0;
 
     romdata = ((uint8_t)romData.at(param_1) << 8) + (uint8_t)romData.at(param_1 + 1);
@@ -200,30 +181,31 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
     // *DAT_000622bc = (uint)*DAT_000622b4 + *DAT_000622ac * 0x10000;
 
     msg.clear();
-    msg.append(QString("uVar11: 0x%1").arg(uVar11,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("uVar11: 0x%1").arg(uVar11,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
 
     msg.clear();
-    msg.append(QString("chksum: 0x%1").arg(chksum,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("chksum: 0x%1").arg(chksum,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
 
     msg.clear();
-    msg.append(QString("uVar2: 0x%1").arg(uVar2,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("uVar2: 0x%1").arg(uVar2,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
     msg.clear();
-    msg.append(QString("uVar3: 0x%1").arg(uVar3,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("uVar3: 0x%1").arg(uVar3,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
     msg.clear();
-    msg.append(QString("uVar4: 0x%1").arg(uVar4,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("uVar5: 0x%1").arg(uVar5,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
     msg.clear();
-    msg.append(QString("iVar4: 0x%1").arg(iVar4,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("uVar6: 0x%1").arg(uVar6,8,16,QLatin1Char('0')).toUtf8());
+    qDebug() << msg;
+
+    msg.clear();
+    msg.append(QString("uVar4: 0x%1").arg(uVar4,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
     msg.clear();
-    msg.append(QString("uVar5: 0x%1").arg(uVar5,4,16,QLatin1Char('0')).toUtf8());
-    qDebug() << msg;
-    msg.clear();
-    msg.append(QString("uVar6: 0x%1").arg(uVar6,4,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("iVar4: 0x%1").arg(iVar4,8,16,QLatin1Char('0')).toUtf8());
     qDebug() << msg;
 
     return romData;

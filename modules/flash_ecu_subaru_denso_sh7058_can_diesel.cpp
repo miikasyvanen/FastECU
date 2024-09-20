@@ -1426,6 +1426,10 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block_denso_subarucan(const uint8_
             }
         }
 
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        send_log_window_message(msg, true, true);
+
         remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
@@ -1441,7 +1445,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block_denso_subarucan(const uint8_
             curspeed += 1;
         }
 
-        tleft = remain / curspeed;  //s
+        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
         if (tleft > 9999) {
             tleft = 9999;
         }
@@ -1449,11 +1453,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block_denso_subarucan(const uint8_
 
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
-
-        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
-        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        send_log_window_message(msg, true, true);
-
     }
 
     return STATUS_SUCCESS;
