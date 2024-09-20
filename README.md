@@ -70,6 +70,7 @@ Support forum found here: https://www.fastecu.fi/forum/
 
 ### Unbrick with FastECU (bench flash)
 - Forester/Impreza/Legacy 16bit Denso 2001-2005 BDM/K-Line (HC16/160KB)
+- HC16 TPU flashing also under development. Ability to revert locked ECUs back to stock.
   
 ### Unbrick with FastECU-m32r-flasher (bench flash)
 - **Supported models**
