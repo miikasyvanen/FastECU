@@ -37,7 +37,7 @@ Support forum found here: https://www.fastecu.fi/forum/
 ### Flashing with OBD
 - **Supported ECU models**
   - Subaru Forester, Impreza, Legacy Turbo 1999-2000 K-Line (UJ WA12212920/128KB)
-  - Forester/Impreza/Legacy 16bit Denso 2001-2005 BDM/K-Line (HC16/160KB)
+  - Forester/Impreza/Legacy 16bit Denso 2001-2005 K-Line (HC16/160KB)
   - Subaru Forester JDM Cross Sports (SH7055)
   - Subaru Legacy JDM GT MY03+ (SH7055)
   - Subaru Legacy JDM GT MY05+ (SH7058)
