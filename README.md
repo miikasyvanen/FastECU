@@ -50,7 +50,7 @@ Support forum found here: https://www.fastecu.fi/forum/
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)
   - Subaru Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)
   - Subaru Forester, Impreza, Legacy, BRZ 2013+ CAN-bus (Denso SH72531/1.25MB)
-  - Subaru Forester 2013+ CAN (Hitachi SH7254/2MB)
+  - Subaru Forester 2013+ CAN (Hitachi SH72543/2MB)
 
 - **Supported TCU models**
   - CAN (Denso SH7055/512KB)
