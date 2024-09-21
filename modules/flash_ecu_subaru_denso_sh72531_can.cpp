@@ -86,7 +86,7 @@ void FlashEcuSubaruDensoSH72531Can::run()
     switch (ret)
     {
         case QMessageBox::Ok:
-            send_log_window_message("Connecting to ECU Hitachi SH72531 CAN bootloader, please wait...", true, true);
+            send_log_window_message("Connecting to ECU Denso SH72531 CAN bootloader, please wait...", true, true);
             result = connect_bootloader();
 
             if (result == STATUS_SUCCESS)
@@ -94,13 +94,13 @@ void FlashEcuSubaruDensoSH72531Can::run()
                 if (cmd_type == "read")
                 {
                     emit external_logger("Reading ROM, please wait...");
-                    send_log_window_message("Not yet implemented: Reading ROM from ECU, Hitachi SH72531 using CAN", true, true);
+                    send_log_window_message("Reading ROM from ECU, Denso SH72531 using CAN", true, true);
                     result = read_memory(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
-                    send_log_window_message("Not yet implemented: Writing ROM to ECU, Hitachi SH72531 using CAN", true, true);
+                    send_log_window_message("Writing ROM to ECU, Denso SH72531 using CAN", true, true);
                     result = write_memory(test_write);
                 }
             }
@@ -134,7 +134,7 @@ void FlashEcuSubaruDensoSH72531Can::closeEvent(QCloseEvent *event)
 }
 
 /*
- * Connect to Subaru TCU Hitachi CAN bootloader
+ * Connect to Subaru TCU Denso CAN bootloader
  *
  * @return success
  */
@@ -697,7 +697,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
 }
 
 /*
- * Read memory from Subaru TCU Hitachi CAN bootloader
+ * Read memory from Subaru TCU Denso CAN bootloader
  *
  * @return success
  */
@@ -823,11 +823,11 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
         output[6] = (uint8_t)((addr >> 16) & 0xFF);
         output[7] = (uint8_t)((addr >> 8) & 0xFF);
         output[8] = (uint8_t)(addr & 0xFF);
-        send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+        //send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
 
         received = serial->read_serial_data(270, 2000);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+        //send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
         if ((uint8_t)received.at(4) != 0xF7)
         {
@@ -838,7 +838,7 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
         pagedata.clear();
         pagedata = received.remove(0, 5);
 
-        send_log_window_message("Received pagedata: " + parse_message_to_hex(pagedata), true, true);
+        //send_log_window_message("Received pagedata: " + parse_message_to_hex(pagedata), true, true);
         mapdata.append(pagedata);
 
         // don't count skipped first bytes //
@@ -912,20 +912,12 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     mapdata = decrypt_payload(mapdata, mapdata.length());
 
     // need to pad out first 0x8000 bytes with 0xFF
-    int i;
     QByteArray padBytes;
-    for (i = 0; i < 0x8000; i++)
-    {
-        padBytes[i] = (uint8_t)0xFF;
-    }
+    padBytes.fill((uint8_t)0xFF, 0x8000);
     mapdata = mapdata.insert(0, padBytes);
 
-    int k;
     QByteArray endBytes;
-    for (k = 0; k < 0x100; k++)
-    {
-        endBytes[k] = (uint8_t)0xFF;
-    }
+    endBytes.fill((uint8_t)0xFF, 0x100);
     mapdata = mapdata.insert(0x13FF00, endBytes);
 
     ecuCalDef->FullRomData = mapdata;
@@ -935,7 +927,7 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
 }
 
 /*
- * Write memory to Subaru Hitachi CAN 32bit TCUs, on board kernel
+ * Write memory to Subaru Denso CAN 32bit TCUs, on board kernel
  *
  * @return success
  */
@@ -950,7 +942,7 @@ int FlashEcuSubaruDensoSH72531Can::write_memory(bool test_write)
 
     int block_modified[16] = {0,1};   // assume blocks after 0x8000 are modified
 
-    unsigned bcnt;  // 13 blocks in M32R_512kB, but kernelmemorymodels.h has 11. Of these 11, the first 3 are not flashed by OBK
+    unsigned bcnt;
     unsigned blockno;
 
     //encrypt the data
@@ -1083,11 +1075,11 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
         data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
-        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        //send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         //qDebug() << "Kernel data:" << parse_message_to_hex(output);
         //delay(20);
         received = serial->read_serial_data(5, receive_timeout);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+        //send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
         if (received == "" || (uint8_t)received.at(3) != 0xE8 || (uint8_t)received.at(4) != 0xF6)
             return STATUS_ERROR;
@@ -1173,7 +1165,7 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
 }
 
 /*
- * Erase Subaru Hitachi TCU CAN (iso15765)
+ * Erase Subaru Denso ECU CAN (iso15765)
  *
  * @return success
  */
