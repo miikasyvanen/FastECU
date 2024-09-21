@@ -37,42 +37,42 @@ Support forum found here: https://www.fastecu.fi/forum/
 ### Flashing with OBD
 - **Supported ECU models**
   - Subaru Forester, Impreza, Legacy Turbo 1999-2000 K-Line (UJ WA12212920/128KB)
-  - Forester/Impreza/Legacy 16bit Denso 2001-2005 K-Line (HC16/160KB)
-  - Subaru Forester JDM Cross Sports (SH7055)
-  - Subaru Legacy JDM GT MY03+ (SH7055)
-  - Subaru Legacy JDM GT MY05+ (SH7058)
-  - Subaru Impreza WRX/STi MY06-07 (SH7058)
-  - Subaru Impreza WRX/STi MY08+ (SH7058S)
-  - Subaru Impreza, Legacy Diesel MY07+ EURO4 (SH7058S)
-  - Subaru Impreza, Legacy Diesel MY11+ EURO5 CAN (SH7059)
+  - Forester/Impreza/Legacy 16bit Denso 2001-2005 K-Line (Denso HC16/160KB)
+  - Subaru Forester JDM Cross Sports (Denso SH7055/512KB)
+  - Subaru Legacy JDM GT MY03+ (Denso SH7055/512KB)
+  - Subaru Legacy JDM GT MY05+ (Denso SH7058/1MB)
+  - Subaru Impreza WRX/STi MY06-07 (Denso SH7058/1MB)
+  - Subaru Impreza WRX/STi MY08+ (Denso SH7058S/1MB)
+  - Subaru Impreza, Legacy Diesel MY07+ EURO4 (Denso SH7058S/1MB)
+  - Subaru Impreza, Legacy Diesel MY11+ EURO5 CAN (Denso SH7059/1536KB)
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)
+  - Subaru Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)
+  - Subaru Forester, Impreza, Legacy, BRZ 2013+ CAN-bus (Denso SH72531/1.25MB)
+  - Subaru Forester 2013+ CAN (Hitachi SH7254/2MB)
 
 - **Supported TCU models**
   - CAN (Denso SH7055/512KB)
-  - CAN (Denso SH7058/1024KB)
+  - CAN (Denso SH7058/1MB)
   - CVT CAN (Hitachi M32176F4/512KB)
   - K-Line (Hitachi M32176F4/512KB)
   - CAN (Hitachi M32176F4/512KB)
   - TCU CVT CAN (Mitsubishi MH8104/512KB)
-  - TCU CVT CAN (Mitsubishi MH8111/1536KB)
+  - TCU CVT CAN (Mitsubishi MH8111/1.5MB)
 
 - **ECU models currently under development**
+  - Subaru Impreza, Legacy Diesel MY17+ EURO6 CAN (SH72543/2MB)
 
 - **ECU models planned**
   - Subaru Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)
   - Subaru Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)
-  - Subaru Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)
   - Subaru Forester 2013+ CAN (Hitachi SH7059/1.5MB)
-  - Subaru Forester 2013+ CAN (Hitachi SH7254/2MB)
-  - Subaru Impreza, Legacy Diesel MY17+ EURO6 CAN (SH72543)
 
 ### Unbrick with FastECU (bench flash)
 - Forester/Impreza/Legacy 16bit Denso 2001-2005 BDM/K-Line (HC16/160KB)
-- HC16 TPU flashing also under development. Ability to revert locked ECUs back to stock.
   
-### Unbrick with FastECU-m32r-flasher (bench flash)
+### Unbrick with FastECU-m32r-flasher (bench flash) *will be moved to FastECU at some point*
 - **Supported models**
   - Subaru Forester, Impreza, Legacy Turbo MY99-00 (UJ WA12212920/128KB)
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB) 
