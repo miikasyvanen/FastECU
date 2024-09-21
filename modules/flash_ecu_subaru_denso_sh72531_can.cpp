@@ -1158,15 +1158,16 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
 
         blockaddr = start_address + blockctr * 256;
         output.clear();
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x07);
-        output.append((uint8_t)0xE0);
-        output.append((uint8_t)0xB6);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)(blockaddr >> 16) & 0xFF);
-        output.append((uint8_t)(blockaddr >> 8) & 0xFF);
-        output.append((uint8_t)blockaddr & 0xFF);
+        output.resize(265); //256 + header 9 bytes
+        output[0] = (uint8_t)0x00;
+        output[1] = (uint8_t)0x00;
+        output[2] = (uint8_t)0x07;
+        output[3] = (uint8_t)0xE0;
+        output[4] = (uint8_t)0xB6;
+        output[5] = (uint8_t)0x00;
+        output[6] = (uint8_t)(blockaddr >> 16) & 0xFF;
+        output[7] = (uint8_t)(blockaddr >> 8) & 0xFF;
+        output[8] = (uint8_t)blockaddr & 0xFF;
         //qDebug() << "Data header:" << parse_message_to_hex(output);
 
         for (int i = 0; i < 256; i++)
@@ -1265,28 +1266,47 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
     delay(1000);
     received = serial->read_serial_data(20, 500);
     send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-    //delay(200);
-    //received = serial->read_serial_data(20, 500);
-    //send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-
-    if (received.length() > 6)
+    if (received.length() != 7)
     {
-        if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-        {
-            send_log_window_message("ROM checksum error: " + parse_message_to_hex(received), true, true);
-            qDebug() << "ROM checksum error: " + parse_message_to_hex(received);
-            return STATUS_ERROR;
-        }
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        send_log_window_message("Checksum not verified", true, true);
+        qDebug() << "Checksum not verified";
+        return STATUS_ERROR;
     }
     else
     {
-        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
-        return STATUS_ERROR;
-    }
+        if ((uint8_t)received.at(4) != 0x7F || (uint8_t)received.at(5) != 0x31 || (uint8_t)received.at(6) != 0x78)
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            send_log_window_message("Checksum not verified", true, true);
+            qDebug() << "Checksum not verified";
+            return STATUS_ERROR;
+        }
+        else
+        {
+            delay(200);
+            received = serial->read_serial_data(20, 500);
+            send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
 
-    send_log_window_message("Checksum verified", true, true);
-    qDebug() << "Checksum verified";
+            if (received.length() > 6)
+            {
+                if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+                {
+                    send_log_window_message("ROM checksum error: " + parse_message_to_hex(received), true, true);
+                    qDebug() << "ROM checksum error: " + parse_message_to_hex(received);
+                    return STATUS_ERROR;
+                }
+            }
+            else
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        send_log_window_message("Checksum verified", true, true);
+        qDebug() << "Checksum verified";
+    }
 
     set_progressbar_value(100);
 
