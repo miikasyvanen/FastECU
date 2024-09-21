@@ -177,6 +177,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             return STATUS_ERROR;
         }
     }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response:" << parse_message_to_hex(received);
+
     response.clear();
     response.append(received);
     response.remove(0, 7);
@@ -185,17 +193,13 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     msg.clear();
     for (int i = 0; i < response.length(); i++)
         msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
 
     QString ecuid = QString::fromUtf8(response);
     send_log_window_message("Init Success: ECU ID = " + ecuid, true, true);
     qDebug() << "Init Success: ECU ID = " + ecuid;
 
-
     send_log_window_message("Checking access method", true, true);
     qDebug() << "Checking access method";
-
 
     // Check if ECU is in car
     output.clear();
@@ -217,6 +221,11 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
             qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
         }
+    }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
     }
     send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response:" << parse_message_to_hex(received);
@@ -242,12 +251,17 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
         }
     }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
     send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response:" << parse_message_to_hex(received);
 
     if ((uint8_t)received.at(7) != 0xFF)
     {
-        send_log_window_message("In Car Programming, accessing, please wait...", true, true);
+        send_log_window_message("In car programming: accessing, please wait...", true, true);
         delay(500);
 
         output.clear();
@@ -269,6 +283,11 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
                 send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                 qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
             }
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
         }
         send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
         qDebug() << "Response:" << parse_message_to_hex(received);
@@ -445,6 +464,11 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
                 return STATUS_ERROR;
             }
         }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
         send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
         qDebug() << "Response:" << parse_message_to_hex(received);
 
@@ -483,6 +507,11 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
                 return STATUS_ERROR;
             }
         }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
         send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
         qDebug() << "Response:" << parse_message_to_hex(received);
 
@@ -510,6 +539,11 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
                 return STATUS_ERROR;
             }
         }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
         send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
         qDebug() << "Response:" << parse_message_to_hex(received);
 
@@ -534,6 +568,11 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
                 qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
                 return STATUS_ERROR;
             }
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
         }
         send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
         qDebug() << "Response:" << parse_message_to_hex(received);
@@ -573,7 +612,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     }
     else
     {
-        send_log_window_message("Bench Programming, accessing, please wait...", true, true);
+        send_log_window_message("Bench programming: accessing, please wait...", true, true);
         delay(500);
         output.clear();
         output.append((uint8_t)0x00);
@@ -582,16 +621,25 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0xE0);
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x43);
-        send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-
-        if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
+        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Response:" << parse_message_to_hex(received);
+        if (received.length() > 5)
+        {
+            if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        else
         {
             send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
             return STATUS_ERROR;
         }
 
@@ -605,15 +653,25 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0xE0);
         output.append((uint8_t)0x27);
         output.append((uint8_t)0x61);
-        send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
+        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Response:" << parse_message_to_hex(received);
+        if (received.length() > 5)
+        {
+            if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        else
         {
             send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
             return STATUS_ERROR;
         }
 
@@ -641,15 +699,25 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)seed_key.at(1));
         output.append((uint8_t)seed_key.at(2));
         output.append((uint8_t)seed_key.at(3));
-        send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x62)
+        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Response:" << parse_message_to_hex(received);
+        if (received.length() > 5)
+        {
+            if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x62)
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        else
         {
             send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
             return STATUS_ERROR;
         }
 
@@ -666,14 +734,17 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0xE0);
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x42);
-        send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Response:" << parse_message_to_hex(received);
         delay(50);
         received = serial->read_serial_data(20, 200);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Response:" << parse_message_to_hex(received);
         bool init_ready = false;
         while (!init_ready && try_count < 50)
         {
@@ -697,7 +768,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
 }
 
 /*
- * Read memory from Subaru TCU Denso CAN bootloader
+ * Read memory from Subaru ECU Denso CAN bootloader
  *
  * @return success
  */
@@ -742,17 +813,24 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     output.append((uint8_t)0x13);
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
-
-
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(20, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
+    if (received.length() > 7)
     {
-        send_log_window_message("Bad response to setting dump start & length", true, true);
-
+        if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
+        {
+            send_log_window_message("Bad response to setting dump start & length: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Bad response to setting dump start & length: " + parse_message_to_hex(received);
+            //return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        send_log_window_message("Bad response to setting dump start & length: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Bad response to setting dump start & length: " + parse_message_to_hex(received);
         //return STATUS_ERROR;
     }
 
@@ -772,17 +850,24 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     output.append((uint8_t)0x13);
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
-
-
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(20, 200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
+    if (received.length() > 7)
     {
-        send_log_window_message("Bad response to setting dump start & length", true, true);
-
+        if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
+        {
+            send_log_window_message("Bad response to setting dump start & length: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Bad response to setting dump start & length: " + parse_message_to_hex(received);
+            //return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        send_log_window_message("Bad response to setting dump start & length: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Bad response to setting dump start & length: " + parse_message_to_hex(received);
         //return STATUS_ERROR;
     }
 
@@ -796,6 +881,9 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0xB7);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
 
     set_progressbar_value(0);
@@ -829,12 +917,21 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
         received = serial->read_serial_data(270, 2000);
         //send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
-        if ((uint8_t)received.at(4) != 0xF7)
+        if (received.length() > 4)
         {
-            send_log_window_message("Page data request failed!", true, true);
+            if ((uint8_t)received.at(4) != 0xF7)
+            {
+                send_log_window_message("Page data request failed: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Page data request failed: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            send_log_window_message("Page data request failed: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Page data request failed: " + parse_message_to_hex(received);
             return STATUS_ERROR;
         }
-
         pagedata.clear();
         pagedata = received.remove(0, 5);
 
@@ -898,15 +995,20 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
-        received = serial->read_serial_data(270, 500);
-        if (received != "")
+        received = serial->read_serial_data(20, 500);
+        if (received.length() > 4)
         {
-            connected = true;
-            send_log_window_message(QString::number(try_count) + ": 0x37 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << try_count << ": 0x37 response:" << parse_message_to_hex(received);
+            if ((uint8_t)received.at(4) != 0x77)
+                send_log_window_message("." + parse_message_to_hex(received), false, false);
+            else
+            {
+                connected = true;
+                send_log_window_message("", false, true);
+                send_log_window_message("Stop request response: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Stop request response:" << parse_message_to_hex(received);
+            }
         }
         try_count++;
-        //delay(try_timeout);
     }
 
     mapdata = decrypt_payload(mapdata, mapdata.length());
@@ -954,7 +1056,7 @@ int FlashEcuSubaruDensoSH72531Can::write_memory(bool test_write)
     }
 
     bcnt = 0;
-    send_log_window_message("Blocks to flash : ", true, false);
+    send_log_window_message("Blocks to flash: ", true, false);
     for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
         if (block_modified[blockno]) {
             send_log_window_message(QString::number(blockno) + ", ", false, false);
@@ -965,10 +1067,10 @@ int FlashEcuSubaruDensoSH72531Can::write_memory(bool test_write)
 
     if (bcnt)
     {
-        send_log_window_message("--- erasing ECU flash memory ---", true, true);
+        send_log_window_message("--- Erasing ECU flash memory ---", true, true);
         if (erase_memory())
         {
-            send_log_window_message("--- erasing did not complete successfully ---", true, true);
+            send_log_window_message("--- Erasing did not complete successfully ---", true, true);
             return STATUS_ERROR;
         }
 
@@ -983,7 +1085,7 @@ int FlashEcuSubaruDensoSH72531Can::write_memory(bool test_write)
             }
         }
 
-        send_log_window_message("--- start writing ROM file to ECU flash memory ---", true, true);
+        send_log_window_message("--- Start writing ROM file to ECU flash memory ---", true, true);
         for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)  // hack so that only 1 flash loop done for the entire ROM above 0x8000
         {
             if (block_modified[blockno])
@@ -1081,8 +1183,20 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
         received = serial->read_serial_data(5, receive_timeout);
         //send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
-        if (received == "" || (uint8_t)received.at(3) != 0xE8 || (uint8_t)received.at(4) != 0xF6)
+        if (received.length() > 4)
+        {
+            if ((uint8_t)received.at(3) != 0xE8 || (uint8_t)received.at(4) != 0xF6)
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
+        }
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
         set_progressbar_value(pleft);
@@ -1109,21 +1223,24 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
         serial->write_serial_data_echo_check(output);
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
-        //delay(50);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        if (received != "")
+        if (received.length() > 4)
         {
-            connected = true;
-            send_log_window_message(QString::number(try_count) + ": 0x37 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << try_count << ": 0x37 response:" << parse_message_to_hex(received);
+            if ((uint8_t)received.at(4) != 0x77)
+            {
+                send_log_window_message("." + parse_message_to_hex(received), false, false);
+            }
+            else if ((uint8_t)received.at(4) == 0x77)
+            {
+                connected = true;
+                send_log_window_message("", false, true);
+                send_log_window_message("Closed succesfully: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Closed succesfully: " + parse_message_to_hex(received);
+            }
         }
         try_count++;
-        //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x77)
-        send_log_window_message("No or bad response received", true, true);
-    //return STATUS_ERROR;
 
     delay(100);
 
@@ -1142,19 +1259,31 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
-
     serial->write_serial_data_echo_check(output);
     send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    delay(200);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(1000);
     received = serial->read_serial_data(20, 500);
     send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-    delay(200);
-    received = serial->read_serial_data(20, 500);
-    send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
+    //delay(200);
+    //received = serial->read_serial_data(20, 500);
+    //send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
 
-    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-        send_log_window_message("No or bad response received", true, true);
-    //return STATUS_ERROR;
+    if (received.length() > 6)
+    {
+        if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+        {
+            send_log_window_message("ROM checksum error: " + parse_message_to_hex(received), true, true);
+            qDebug() << "ROM checksum error: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
+    }
 
     send_log_window_message("Checksum verified", true, true);
     qDebug() << "Checksum verified";
@@ -1174,14 +1303,17 @@ int FlashEcuSubaruDensoSH72531Can::erase_memory()
     QByteArray output;
     QByteArray received;
 
+    bool connected = false;
+    int try_count = 0;
+
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
-    send_log_window_message("Settting flash start & length", true, true);
-    qDebug() << "Settting flash start & length";
+    send_log_window_message("Setting flash start & length", true, true);
+    qDebug() << "Setting flash start & length";
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -1199,18 +1331,25 @@ int FlashEcuSubaruDensoSH72531Can::erase_memory()
     output.append((uint8_t)0x13);
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
-
-
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(200);
     received = serial->read_serial_data(20, 500);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
+    if (received.length() > 7)
     {
-        send_log_window_message("Bad response to setting dump start & length", true, true);
-
-        //return STATUS_ERROR;
+        if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
+        {
+            send_log_window_message("Setting flash start & length failed: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Setting flash start & length failed: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        send_log_window_message("Setting flash start & length failed: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Setting flash start & length failed: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
     }
 
     send_log_window_message("Erasing ECU ROM", true, true);
@@ -1229,24 +1368,44 @@ int FlashEcuSubaruDensoSH72531Can::erase_memory()
     output.append((uint8_t)0xff);
     output.append((uint8_t)0xff);
     output.append((uint8_t)0xff);
-
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(500);
 
-    received = serial->read_serial_data(20, 500);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-
-    delay(200);
-
-    while ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+    connected = false;
+    try_count = 0;
+    while (try_count < 20 && connected == false)
     {
         received = serial->read_serial_data(20, 500);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-        delay(100);
+        if (received.length() > 6)
+        {
+            if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+            {
+                send_log_window_message(".", false, false);
+            }
+            else if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
+            {
+                connected = true;
+                send_log_window_message("", false, true);
+            }
+        }
+        else
+        {
+            send_log_window_message(".", false, false);
+        }
+        delay(500);
+        try_count++;
+    }
+    if (!connected)
+    {
+        send_log_window_message("Flash area erase failed: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Flash area erase failed: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
     }
 
     send_log_window_message("Erased! Starting Writing! Do Not Power Off!", true, true);
+    qDebug() << "Erased! Starting Writing! Do Not Power Off!";
 
     return STATUS_SUCCESS;
 }
