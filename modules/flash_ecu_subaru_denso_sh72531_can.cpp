@@ -154,6 +154,27 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
 
     int try_count = 0;
 
+    send_log_window_message("Checking if OBK is active...", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x5F);
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(50);
+    received = serial->read_serial_data(6, serial_read_short_timeout);
+
+    if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x5f)
+    {
+        send_log_window_message("OBK is active!: " + parse_message_to_hex(received), true, true);
+        qDebug() << "OBK is active!: " + parse_message_to_hex(received);
+        return STATUS_SUCCESS;
+    }
+
     send_log_window_message("Checking ECU ID", true, true);
     qDebug() << "Checking ECU ID";
 
