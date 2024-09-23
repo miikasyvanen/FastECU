@@ -1299,7 +1299,7 @@ void SerialPortActionsDirect::reportJ2534Error()
 
 void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
 {
-    //if (error != QSerialPort::NoError)
+    if (error != QSerialPort::NoError)
         qDebug() << "Error:" << error;
 
     if (error == QSerialPort::NoError)
