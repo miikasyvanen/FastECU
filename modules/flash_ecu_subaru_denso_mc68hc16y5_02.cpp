@@ -105,10 +105,6 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
                     emit external_logger("Writing ROM, please wait...");
                     send_log_window_message("Writing ROM to Subaru 01-05 16-bit using K-Line", true, true);
                     result = write_mem(test_write);
-                    delay(1000);
-                    send_log_window_message("TRY2: Writing ROM to Subaru 01-05 16-bit using K-Line after delay", true, true);
-                    result = connect_bootloader_subaru_denso_kline_wrx02();
-                    result = write_mem(test_write);
                 }
             }
             emit external_logger("Finished");
