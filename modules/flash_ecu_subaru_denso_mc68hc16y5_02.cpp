@@ -73,6 +73,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
@@ -103,6 +104,10 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
                 {
                     emit external_logger("Writing ROM, please wait...");
                     send_log_window_message("Writing ROM to Subaru 01-05 16-bit using K-Line", true, true);
+                    result = write_mem(test_write);
+                    delay(1000);
+                    send_log_window_message("TRY2: Writing ROM to Subaru 01-05 16-bit using K-Line after delay", true, true);
+                    result = connect_bootloader_subaru_denso_kline_wrx02();
                     result = write_mem(test_write);
                 }
             }
@@ -191,7 +196,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
         return STATUS_SUCCESS;
     }
 
-    delay(500);
+    delay(100);
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     send_log_window_message("Checking if Kernel already uploaded, requesting kernel ID", true, true);
     serial->change_port_speed("62500");
@@ -254,9 +260,12 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     file_len = file.size();
     pl_len = (file_len + 3) & ~3;
     pl_encr = file.readAll();
-    len = pl_len &= ~3;
+    while (pl_encr.length() % 0x10)
+        pl_encr.append((uint8_t)0x00);
+    //len = pl_len;
+    len = pl_encr.length();
 /*
-    QFile kernelfile("kernels/hc16_kernel_decrypted.bin");
+    QFile kernelfile("kernels/ecuflash_hc16_kernel_106_decrypted.bin.bin");
     if (!kernelfile.open(QIODevice::ReadWrite ))
     {
         send_log_window_message("Unable to open kernel file for reading", true, true);
@@ -273,11 +282,9 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
         pl_encr[i] = (uint8_t)(pl_encr[i] ^ 0x55) + 0x10;
         //chk_sum += pl_encr[i];
     }
-    pl_encr[2]= (uint8_t)0x39;
-    pl_encr[3]= (uint8_t)0x41;
 
     msg.clear();
-    msg.append(QString("Start address to upload kernel: 0x%1").arg(start_address,8,16,QLatin1Char('0')).toUtf8());
+    msg.append(QString("Start address to upload kernel: 0x%1, length: 0x%2").arg(start_address,8,16,QLatin1Char('0')).arg(len,4,16,QLatin1Char('0')).toUtf8());
     send_log_window_message(msg, true, true);
     qDebug() << msg;
 
@@ -336,6 +343,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
         }
         delay(200);
     }
+
     return STATUS_ERROR;
 }
 
@@ -654,6 +662,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
     qDebug() << "Sent: " + parse_message_to_hex(output);
     //delay(200);
     received = serial->read_serial_data(10, serial_read_extra_long_timeout);
+    int try_count = 0;
+    while (received.length() < 10 && try_count < 20)
+    {
+        received.append(serial->read_serial_data(10, serial_read_extra_short_timeout));
+        try_count++;
+        delay(100);
+    }
     qDebug() << "Received: " + parse_message_to_hex(received);
     if (received.length() > 9)
     {
