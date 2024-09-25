@@ -818,7 +818,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::check_romcrc_denso_sh705x_densocan(const 
         {
             qDebug() << "Crop msg";
             received.remove(0, 2);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else
@@ -1089,6 +1089,11 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block_denso_sh705x_densocan(const u
                 //qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
             }
         }
+
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        send_log_window_message(msg, true, true);
+
         remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
@@ -1104,7 +1109,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block_denso_sh705x_densocan(const u
             curspeed += 1;
         }
 
-        tleft = remain / curspeed;  //s
+        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
         if (tleft > 9999) {
             tleft = 9999;
         }
@@ -1112,11 +1117,6 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block_denso_sh705x_densocan(const u
 
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
-
-        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
-        msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        send_log_window_message(msg, true, true);
-
     }
 
     return STATUS_SUCCESS;

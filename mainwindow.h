@@ -63,6 +63,7 @@
 #include <modules/flash_ecu_subaru_hitachi_sh72543r_can.h>
 #include <modules/flash_ecu_subaru_denso_sh72531_can.h>
 
+#include <modules/unbrick/flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.h>
 
 #include <modules/eeprom_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/eeprom_ecu_subaru_denso_sh705x_can.h>
@@ -90,9 +91,9 @@ public:
     void delay(int n);
 
 private:
-    QString software_name = "FastECU";
-    QString software_title = "FastECU";
-    QString software_version = "0.0-dev0";
+    QString software_name;
+    QString software_title;
+    QString software_version;
 
     QSplashScreen *startUpSplash;
     QLabel *startUpSplashLabel;
@@ -102,7 +103,6 @@ private:
     QSplashScreen *splash;
     QWebSocket *clientWebSocket;
     RemoteUtility *remote_utility;
-    const char *sw_version = "FastECU v0.0.1";
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;
     static const QColor YELLOW_LIGHT_OFF;
@@ -139,12 +139,23 @@ private:
     //FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
     /* Flash modules */
+    /* Denso ECU */
     FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
     FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
     FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
     FlashEcuSubaruDensoSH705xKline *flashEcuSubaruDensoSH705xKline;
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
+    FlashEcuSubaruDensoSH72531Can *flashEcuSubaruDensoSh72531Can;
+    /* Denso ECU unbrick */
+    FlashEcuUnbrickSubaruDensoMC68HC16Y5_02 *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
+    /* Denso ECU EEPROM */
+    EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
+    EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;
+    /* Denso TCU */
+    FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
+
+    /* Hitachi ECU */
     FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
     FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecsM32r;
     FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
@@ -152,21 +163,17 @@ private:
     FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;
     FlashEcuSubaruHitachiSH7058Can *flashEcuSubaruHitachiSh7058Can;
     FlashEcuSubaruHitachiSH72543rCan *flashEcuSubaruHitachiSh72543rCan;
-    FlashEcuSubaruDensoSH72531Can *flashEcuSubaruDensoSh72531Can;
 
+    /* Hitachi TCU */
     FlashTcuSubaruHitachiM32rKline *flashTcuSubaruHitachiM32rKline;
     FlashTcuSubaruHitachiM32rCan *flashTcuSubaruHitachiM32rCan;
     FlashTcuCvtSubaruHitachiM32rCan *flashTcuCvtSubaruHitachiM32rCan;
-    FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
+
+    /* Mitsu TCU */
     FlashTcuCvtSubaruMitsuMH8104Can *flashTcuCvtSubaruMitsuMH8104Can;
     FlashTcuCvtSubaruMitsuMH8111Can *flashTcuCvtSubaruMitsuMH8111Can;
 
-    EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
-    EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;
-
     FlashEcuSubaruDensoSH7xxxDensoCan *flashEcuSubaruDensoSH7xxxCan;
-
-
     /* Flash modules */
 
     SerialPortActions *serial;
@@ -300,11 +307,12 @@ private:
     void interpolate_value(QString action);
     void copy_value();
     void paste_value();
-    void connect_to_ecu();
+    int connect_to_ecu();
     void disconnect_from_ecu();
     void ecu_definition_manager();
     void logger_definition_manager();
     void winols_csv_to_romraider_xml();
+    void set_realtime_state(bool state);
     void toggle_realtime();
     void toggle_log_to_file();
     void set_maptablewidget_items();

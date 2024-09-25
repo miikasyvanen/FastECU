@@ -73,6 +73,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
@@ -82,7 +83,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     switch (ret)
     {
         case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru 02 32-bit K-Line bootloader, please wait...", true, true);
+            send_log_window_message("Connecting to Subaru 01-05 16-bit K-Line bootloader, please wait...", true, true);
             result = connect_bootloader_subaru_denso_kline_wrx02();
 
             if (result == STATUS_SUCCESS && !kernel_alive)
@@ -96,14 +97,14 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
                 if (cmd_type == "read")
                 {
                     emit external_logger("Reading ROM, please wait...");
-                    send_log_window_message("Reading ROM from Subaru 02 32-bit using K-Line", true, true);
-                    result = read_mem_subaru_denso_kline_16bit(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    send_log_window_message("Reading ROM from Subaru 01-05 16-bit using K-Line", true, true);
+                    result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
-                    send_log_window_message("Writing ROM to Subaru 02 32-bit using K-Line", true, true);
-                    result = write_mem_subaru_denso_kline_16bit(test_write);
+                    send_log_window_message("Writing ROM to Subaru 01-05 16-bit using K-Line", true, true);
+                    result = write_mem(test_write);
                 }
             }
             emit external_logger("Finished");
@@ -191,29 +192,38 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
         return STATUS_SUCCESS;
     }
 
-    delay(10);
+    delay(100);
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     send_log_window_message("Checking if Kernel already uploaded, requesting kernel ID", true, true);
-    serial->change_port_speed("39473");
+    serial->change_port_speed("62500");
+    //serial->change_port_speed("39473");
 
-    received = request_kernel_id();
-    qDebug() << parse_message_to_hex(received);
-    if (received.length() > 0)
+    for (int i = 0; i < 10; i++)
     {
-        send_log_window_message("Kernel already uploaded, requesting kernel ID", true, true);
-        delay(100);
+        if (kill_process)
+            return STATUS_ERROR;
 
-        kernel_alive = true;
-        return STATUS_SUCCESS;
+        received = request_kernel_id();
+        qDebug() << parse_message_to_hex(received);
+        if (received.length() > 0)
+        {
+            received.remove(0, 5);
+            received.remove(received.length() - 1, 1);
+            send_log_window_message("Kernel ID: " + received, true, true);
+            qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+            delay(100);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
+        delay(200);
     }
-
     return STATUS_ERROR;
 }
 
 int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QString kernel, uint32_t kernel_start_addr)
 {
     QFile file(kernel);
-    QFile encrypted_kernel(kernel);
 
     QByteArray output;
     QByteArray received;
@@ -225,8 +235,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     uint32_t len = 0;
     uint8_t chk_sum = 0;
 
-    start_address = kernel_start_addr;//flashdevices[mcu_type_index].kblocks->start;
-    qDebug() << "Start address to upload kernel:" << hex << start_address;
+    start_address = kernel_start_addr;
 
     if (!serial->is_serial_port_open())
     {
@@ -245,9 +254,35 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     }
 
     file_len = file.size();
-    pl_len = file_len;
+    pl_len = (file_len + 3) & ~3;
     pl_encr = file.readAll();
-    len = pl_len;
+    while (pl_encr.length() % 0x10)
+        pl_encr.append((uint8_t)0x00);
+    //len = pl_len;
+    len = pl_encr.length();
+/*
+    QFile kernelfile("kernels/ecuflash_hc16_kernel_106_decrypted.bin.bin");
+    if (!kernelfile.open(QIODevice::ReadWrite ))
+    {
+        send_log_window_message("Unable to open kernel file for reading", true, true);
+        return -1;
+    }
+    for (uint32_t i = 0; i < len; i++) {
+        pl_encr[i] = (uint8_t)(pl_encr[i] - 0x10) ^ 0x55;
+        //chk_sum += pl_encr[i];
+    }
+    kernelfile.write(pl_encr);
+    kernelfile.close();
+*/
+    for (uint32_t i = 0; i < len; i++) {
+        pl_encr[i] = (uint8_t)(pl_encr[i] ^ 0x55) + 0x10;
+        //chk_sum += pl_encr[i];
+    }
+
+    msg.clear();
+    msg.append(QString("Start address to upload kernel: 0x%1, length: 0x%2").arg(start_address,8,16,QLatin1Char('0')).arg(len,4,16,QLatin1Char('0')).toUtf8());
+    send_log_window_message(msg, true, true);
+    qDebug() << msg;
 
     output.clear();
     output.append((uint8_t)(SID_OE_UPLOAD_KERNEL) & 0xFF);
@@ -257,7 +292,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     output.append((uint8_t)(len >> 8) & 0xFF);
     output.append((uint8_t)len & 0xFF);
 
-    //pl_encr = sub_transform_wrx02_kernel_block();
     output.append(pl_encr);
     chk_sum = calculate_checksum(output, true);
     output.append((uint8_t)chk_sum);
@@ -283,29 +317,36 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     qDebug() << "Requesting kernel ID";
 
     delay(1500);
-    serial->change_port_speed("39473");
+    serial->change_port_speed("62500");
+    //serial->change_port_speed("39473");
     received.clear();
-    int loop_count = 0;
-    while (received == "" && loop_count < 5)
+    for (int i = 0; i < 10; i++)
     {
+        if (kill_process)
+            return STATUS_ERROR;
+
         received = request_kernel_id();
-        delay(500);
-        loop_count++;
+        qDebug() << parse_message_to_hex(received);
+        if (received.length() > 0)
+        {
+            received.remove(0, 5);
+            received.remove(received.length() - 1, 1);
+            send_log_window_message("Kernel ID: " + received, true, true);
+            qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+            delay(100);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
+        delay(200);
     }
-    received.remove(0, 5);
-    received.remove(received.length() - 1, 1);
-    send_log_window_message("Kernel ID: " + received, true, true);
-    qDebug() << "Kernel ID: " << parse_message_to_hex(received);
 
-    delay(200);
-
-    return STATUS_SUCCESS;
+    return STATUS_ERROR;
 }
 
 /*******************************************************
  *  Read ROM 16bit K-Line ECUs
  ******************************************************/
-int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -325,7 +366,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
     if (start_addr == 0 && length == 0)
     {
         start_addr = 0;
-        length = 0x030000;
+        length = 0x028000;
     }
     end_addr = start_addr + length;
 
@@ -352,7 +393,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
 
         if (addr >= flashdevices[mcu_type_index].rblocks->start && addr < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len))
         {
-
             received.clear();
             for (unsigned int j = flashdevices[mcu_type_index].rblocks->start; j < (flashdevices[mcu_type_index].rblocks->start + flashdevices[mcu_type_index].rblocks->len); j++)
             {
@@ -382,16 +422,20 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
         delay(10);
         received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
 
-        if (received.startsWith("\xbe\xef"))
+        if (received.length() > 5)
         {
-            received.remove(0, 5);
-            received.remove(received.length() - 1, 1);
-            mapdata.append(received);
-            //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
+            if ((uint8_t)received.at(0) == ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SID_OE_KERNEL_START_COMM & 0xFF))
+            {
+                received.remove(0, 5);
+                received.remove(received.length() - 1, 1);
+                mapdata.append(received);
+                //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
+            }
         }
         else
         {
-            //qDebug() << "ERROR IN DATA RECEIVE!";
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
             return STATUS_ERROR;
         }
 
@@ -430,7 +474,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem_subaru_denso_kline_16bit(uint32_t
 /*******************************************************
  *  Write ROM 16bit K-Line ECUs
  ******************************************************/
-int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool test_write)
+int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
 {
     QByteArray filedata;
     QByteArray output;
@@ -455,17 +499,17 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool te
         data_array[i] = filedata.at(i);
     }
 
-    send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
-    send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+    send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
+    send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
-    if (get_changed_blocks_16bit_kline(data_array, block_modified))
+    if (get_changed_blocks(data_array, block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
     }
 
     bcnt = 0;
-    send_log_window_message("Different blocks : ", true, false);
+    send_log_window_message("Different blocks: ", true, false);
     for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
         if (block_modified[blockno]) {
             send_log_window_message(QString::number(blockno) + ", ", false, false);
@@ -492,7 +536,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool te
         {
             if (block_modified[blockno])
             {
-/*                if (reflash_block_16bit_kline(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
                 {
                     send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -501,15 +545,15 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool te
                 {
                     flashbytesindex += flashdevices[mcu_type_index].fblocks[blockno].len;
                     send_log_window_message("Block " + QString::number(blockno) + " reflash complete.", true, true);
-                }*/
+                }
             }
         }
         set_progressbar_value(100);
 
-        send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
-        send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+        send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
+        send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
-        if (get_changed_blocks_16bit_kline(data_array, block_modified))
+        if (get_changed_blocks(data_array, block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -547,7 +591,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem_subaru_denso_kline_16bit(bool te
 /*******************************************************
  *  Compare ROM 16bit K-Line ECUs
  ******************************************************/
-int FlashEcuSubaruDensoMC68HC16Y5_02::get_changed_blocks_16bit_kline(const uint8_t *src, int *modified)
+int FlashEcuSubaruDensoMC68HC16Y5_02::get_changed_blocks(const uint8_t *src, int *modified)
 {
     unsigned blockno;
     QByteArray msg;
@@ -567,7 +611,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::get_changed_blocks_16bit_kline(const uint8
         //qDebug() << msg;
         send_log_window_message(msg, true, false);
         // do CRC comparison with ECU //
-        if (check_romcrc_16bit_kline(&src[0], bs, blen, &modified[blockno])) {
+        if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
             return -1;
         }
     }
@@ -579,153 +623,565 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::get_changed_blocks_16bit_kline(const uint8
 /*******************************************************
  *  ROM CRC 16bit K-Line ECUs
  ******************************************************/
-int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
+int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
 {
     QByteArray output;
     QByteArray received;
     QByteArray msg;
     uint32_t datalen = 0;
     uint16_t chksum;
-    uint16_t chunko;
-    uint16_t pagesize = ROMCRC_CHUNKSIZE_16BIT;
-    uint32_t imgcrc;
-    uint32_t romcrc;
-
-    len = (len + ROMCRC_LENMASK_16BIT) & ~ROMCRC_LENMASK_16BIT;
-
-    chunko = start / ROMCRC_CHUNKSIZE_16BIT;
+    uint16_t pagesize = len;
+    uint32_t imgcrc32;
+    uint32_t ecucrc32;
 
     datalen = 8;
+    flash_write_init = false;
 
-    for (uint32_t i = 0; i < len; i += ROMCRC_ITERSIZE_16BIT, chunko += ROMCRC_NUMCHUNKS_16BIT)
+    output.clear();
+    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)SID_OE_KERNEL_CRC & 0xFF);
+    output.append((uint8_t)(start >> 24) & 0xFF);
+    output.append((uint8_t)(start >> 16) & 0xFF);
+    output.append((uint8_t)(start >> 8) & 0xFF);
+    output.append((uint8_t)start & 0xFF);
+    output.append((uint8_t)0x00 & 0xFF);
+    output.append((uint8_t)(pagesize >> 16) & 0xFF);
+    output.append((uint8_t)(pagesize >> 8) & 0xFF);
+    output.append((uint8_t)pagesize & 0xFF);
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
+    //delay(50);
+    received = serial->write_serial_data_echo_check(output);
+    qDebug() << "Sent: " + parse_message_to_hex(output);
+    //delay(200);
+    received = serial->read_serial_data(10, serial_read_extra_long_timeout);
+    int try_count = 0;
+    while (received.length() < 10 && try_count < 20)
     {
-        unsigned chunk_cnt;
-        for (chunk_cnt = 0; chunk_cnt < ROMCRC_NUMCHUNKS_16BIT; chunk_cnt++) {
-            if (kill_process)
-                return STATUS_ERROR;
-
-            output.clear();
-            output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-            output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
-            output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
-            output.append((uint8_t)(datalen + 1) & 0xFF);
-            output.append((uint8_t)SID_OE_KERNEL_CRC & 0xFF);
-            output.append((uint8_t)(start >> 24) & 0xFF);
-            output.append((uint8_t)(start >> 16) & 0xFF);
-            output.append((uint8_t)(start >> 8) & 0xFF);
-            output.append((uint8_t)start & 0xFF);
-            output.append((uint8_t)0x00 & 0xFF);
-            output.append((uint8_t)(pagesize >> 16) & 0xFF);
-            output.append((uint8_t)(pagesize >> 8) & 0xFF);
-            output.append((uint8_t)pagesize & 0xFF);
-
-            chksum = calculate_checksum(output, false);
-            output.append((uint8_t)chksum & 0xFF);
-
-            delay(100);
-            received = serial->write_serial_data_echo_check(output);
-            //qDebug() << hex << chunk_cnt << output.length() << start << pagesize << parse_message_to_hex(output);
-
-            delay(50);
-            received = serial->read_serial_data(50, serial_read_long_timeout);
-            delay(50);
-            received = serial->read_serial_data(50, serial_read_long_timeout);
-
-            imgcrc = crc32(src + start, pagesize);
-            //romcrc = byte_to_int32(received);
-            romcrc = ((received.at(0) & 0xFF) << 24) + ((received.at(1) & 0xFF) << 16) + ((received.at(2) & 0xFF) << 8) + (received.at(3) & 0xFF);
-
-            //qDebug() << hex << chunk_cnt << received.length() << parse_message_to_hex(received) << "->" << hex << imgcrc;
-            qDebug() << hex << chunk_cnt << received.length() << parse_message_to_hex(received) << romcrc << "->" << hex << imgcrc;
-
-            start += ROMCRC_CHUNKSIZE_16BIT;
+        received.append(serial->read_serial_data(10, serial_read_extra_short_timeout));
+        try_count++;
+        delay(100);
+    }
+    qDebug() << "Received: " + parse_message_to_hex(received);
+    if (received.length() > 9)
+    {
+        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x42)
+        {
+            send_log_window_message("", false, true);
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
         }
+    }
+    else
+    {
+        send_log_window_message("", false, true);
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
+    }
 
-        if (imgcrc == romcrc)
-            continue;
+    if (received.length())
+    {
+        if (received.at(0) == 0x7f)
+        {
+            send_log_window_message("", false, true);
+            send_log_window_message("Failed: Wrong answer from ECU", true, true);
+            return STATUS_ERROR;
+        }
+        uint8_t len = (uint8_t)received.at(0);
+        if (len > 5)
+        {
+            received.remove(0, 5);
+            received.remove(received.length() - 1, 1);
 
+        }
+    }
+    else
+    {
+        send_log_window_message("", false, true);
+        send_log_window_message("Failed: No answer from ECU", true, true);
+        return STATUS_ERROR;
+    }
+
+    ecucrc32 = 0;
+    imgcrc32 = crc32(src, pagesize);
+    if (received.length() > 3)
+        ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
+    msg.clear();
+    msg.append(QString("ROM CRC: 0x%1 IMG CRC: 0x%2").arg(ecucrc32,8,16,QLatin1Char('0')).arg(imgcrc32,8,16,QLatin1Char('0')).toUtf8());
+    qDebug() << msg;
+
+    QString ecu_crc32 = QString("%1").arg((uint32_t)ecucrc32,8,16,QLatin1Char('0')).toUpper();
+    QString img_crc32 = QString("%1").arg((uint32_t)imgcrc32,8,16,QLatin1Char('0')).toUpper();
+    msg = QString("\t" + ecu_crc32 + "\t" + img_crc32).toUtf8();
+    send_log_window_message(msg, false, false);
+    if (ecucrc32 != imgcrc32)
+    {
         send_log_window_message("\tNO", false, true);
-
-        //confirmed bad CRC, we can exit
         *modified = 1;
-
+        serial->read_serial_data(100, serial_read_short_timeout);
         return 0;
-    }   //for
+    }
 
     send_log_window_message("\tYES", false, true);
     *modified = 0;
     serial->read_serial_data(100, serial_read_short_timeout);
     return 0;
-
-badexit:
-    serial->read_serial_data(100, serial_read_short_timeout);
-    return -1;
 }
-
-static unsigned int crc_table[256] = {
-   0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
-   0x706af48fL, 0xe963a535L, 0x9e6495a3L, 0x0edb8832L, 0x79dcb8a4L,
-   0xe0d5e91eL, 0x97d2d988L, 0x09b64c2bL, 0x7eb17cbdL, 0xe7b82d07L,
-   0x90bf1d91L, 0x1db71064L, 0x6ab020f2L, 0xf3b97148L, 0x84be41deL,
-   0x1adad47dL, 0x6ddde4ebL, 0xf4d4b551L, 0x83d385c7L, 0x136c9856L,
-   0x646ba8c0L, 0xfd62f97aL, 0x8a65c9ecL, 0x14015c4fL, 0x63066cd9L,
-   0xfa0f3d63L, 0x8d080df5L, 0x3b6e20c8L, 0x4c69105eL, 0xd56041e4L,
-   0xa2677172L, 0x3c03e4d1L, 0x4b04d447L, 0xd20d85fdL, 0xa50ab56bL,
-   0x35b5a8faL, 0x42b2986cL, 0xdbbbc9d6L, 0xacbcf940L, 0x32d86ce3L,
-   0x45df5c75L, 0xdcd60dcfL, 0xabd13d59L, 0x26d930acL, 0x51de003aL,
-   0xc8d75180L, 0xbfd06116L, 0x21b4f4b5L, 0x56b3c423L, 0xcfba9599L,
-   0xb8bda50fL, 0x2802b89eL, 0x5f058808L, 0xc60cd9b2L, 0xb10be924L,
-   0x2f6f7c87L, 0x58684c11L, 0xc1611dabL, 0xb6662d3dL, 0x76dc4190L,
-   0x01db7106L, 0x98d220bcL, 0xefd5102aL, 0x71b18589L, 0x06b6b51fL,
-   0x9fbfe4a5L, 0xe8b8d433L, 0x7807c9a2L, 0x0f00f934L, 0x9609a88eL,
-   0xe10e9818L, 0x7f6a0dbbL, 0x086d3d2dL, 0x91646c97L, 0xe6635c01L,
-   0x6b6b51f4L, 0x1c6c6162L, 0x856530d8L, 0xf262004eL, 0x6c0695edL,
-   0x1b01a57bL, 0x8208f4c1L, 0xf50fc457L, 0x65b0d9c6L, 0x12b7e950L,
-   0x8bbeb8eaL, 0xfcb9887cL, 0x62dd1ddfL, 0x15da2d49L, 0x8cd37cf3L,
-   0xfbd44c65L, 0x4db26158L, 0x3ab551ceL, 0xa3bc0074L, 0xd4bb30e2L,
-   0x4adfa541L, 0x3dd895d7L, 0xa4d1c46dL, 0xd3d6f4fbL, 0x4369e96aL,
-   0x346ed9fcL, 0xad678846L, 0xda60b8d0L, 0x44042d73L, 0x33031de5L,
-   0xaa0a4c5fL, 0xdd0d7cc9L, 0x5005713cL, 0x270241aaL, 0xbe0b1010L,
-   0xc90c2086L, 0x5768b525L, 0x206f85b3L, 0xb966d409L, 0xce61e49fL,
-   0x5edef90eL, 0x29d9c998L, 0xb0d09822L, 0xc7d7a8b4L, 0x59b33d17L,
-   0x2eb40d81L, 0xb7bd5c3bL, 0xc0ba6cadL, 0xedb88320L, 0x9abfb3b6L,
-   0x03b6e20cL, 0x74b1d29aL, 0xead54739L, 0x9dd277afL, 0x04db2615L,
-   0x73dc1683L, 0xe3630b12L, 0x94643b84L, 0x0d6d6a3eL, 0x7a6a5aa8L,
-   0xe40ecf0bL, 0x9309ff9dL, 0x0a00ae27L, 0x7d079eb1L, 0xf00f9344L,
-   0x8708a3d2L, 0x1e01f268L, 0x6906c2feL, 0xf762575dL, 0x806567cbL,
-   0x196c3671L, 0x6e6b06e7L, 0xfed41b76L, 0x89d32be0L, 0x10da7a5aL,
-   0x67dd4accL, 0xf9b9df6fL, 0x8ebeeff9L, 0x17b7be43L, 0x60b08ed5L,
-   0xd6d6a3e8L, 0xa1d1937eL, 0x38d8c2c4L, 0x4fdff252L, 0xd1bb67f1L,
-   0xa6bc5767L, 0x3fb506ddL, 0x48b2364bL, 0xd80d2bdaL, 0xaf0a1b4cL,
-   0x36034af6L, 0x41047a60L, 0xdf60efc3L, 0xa867df55L, 0x316e8eefL,
-   0x4669be79L, 0xcb61b38cL, 0xbc66831aL, 0x256fd2a0L, 0x5268e236L,
-   0xcc0c7795L, 0xbb0b4703L, 0x220216b9L, 0x5505262fL, 0xc5ba3bbeL,
-   0xb2bd0b28L, 0x2bb45a92L, 0x5cb36a04L, 0xc2d7ffa7L, 0xb5d0cf31L,
-   0x2cd99e8bL, 0x5bdeae1dL, 0x9b64c2b0L, 0xec63f226L, 0x756aa39cL,
-   0x026d930aL, 0x9c0906a9L, 0xeb0e363fL, 0x72076785L, 0x05005713L,
-   0x95bf4a82L, 0xe2b87a14L, 0x7bb12baeL, 0x0cb61b38L, 0x92d28e9bL,
-   0xe5d5be0dL, 0x7cdcefb7L, 0x0bdbdf21L, 0x86d3d2d4L, 0xf1d4e242L,
-   0x68ddb3f8L, 0x1fda836eL, 0x81be16cdL, 0xf6b9265bL, 0x6fb077e1L,
-   0x18b74777L, 0x88085ae6L, 0xff0f6a70L, 0x66063bcaL, 0x11010b5cL,
-   0x8f659effL, 0xf862ae69L, 0x616bffd3L, 0x166ccf45L, 0xa00ae278L,
-   0xd70dd2eeL, 0x4e048354L, 0x3903b3c2L, 0xa7672661L, 0xd06016f7L,
-   0x4969474dL, 0x3e6e77dbL, 0xaed16a4aL, 0xd9d65adcL, 0x40df0b66L,
-   0x37d83bf0L, 0xa9bcae53L, 0xdebb9ec5L, 0x47b2cf7fL, 0x30b5ffe9L,
-   0xbdbdf21cL, 0xcabac28aL, 0x53b39330L, 0x24b4a3a6L, 0xbad03605L,
-   0xcdd70693L, 0x54de5729L, 0x23d967bfL, 0xb3667a2eL, 0xc4614ab8L,
-   0x5d681b02L, 0x2a6f2b94L, 0xb40bbe37L, 0xc30c8ea1L, 0x5a05df1bL,
-   0x2d02ef8dL
-};
 
 unsigned int FlashEcuSubaruDensoMC68HC16Y5_02::crc32(const unsigned char *buf, unsigned int len)
 {
     unsigned int crc = 0xFFFFFFFF;
+
+    if (!crc_tab32_init)
+        init_crc32_tab();
+
     if (buf == NULL)
         return 0L;
     while (len--)
-        crc = crc_table[((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8);
+        crc = crc_tab32[((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8);
 
     return crc ^ 0xFFFFFFFF;
+}
+
+void FlashEcuSubaruDensoMC68HC16Y5_02::init_crc32_tab(void) {
+    uint32_t i, j;
+    uint32_t crc, c;
+
+    for (i=0; i<256; i++) {
+        crc = 0;
+        c = (uint32_t)i;
+
+        for (j=0; j<8; j++) {
+            if ( (crc ^ c) & 0x00000001 )
+                crc = ( crc >> 1 ) ^ CRC32;
+            else
+                crc =   crc >> 1;
+            c = c >> 1;
+        }
+        crc_tab32[i] = crc;
+    }
+
+    crc_tab32_init = 1;
+
+}  /* init_crc32_tab */
+
+int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    uint32_t datalen = 0;
+    uint16_t chksum;
+
+    datalen = 0;
+    output.clear();
+    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)(0x05 & 0xFF));
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
+    received = serial->write_serial_data_echo_check(output);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(200);
+    received = serial->read_serial_data(10, serial_read_short_timeout);
+    qDebug() << "Response:" << parse_message_to_hex(received);
+    if (received.length() > 9)
+    {
+        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x45)
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+            //return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+        //return STATUS_ERROR;
+    }
+
+    datalen = 0;
+    output.clear();
+    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)(0x06 & 0xFF));
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
+    received = serial->write_serial_data_echo_check(output);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(200);
+    received = serial->read_serial_data(10, serial_read_short_timeout);
+    qDebug() << "Response:" << parse_message_to_hex(received);
+    if (received.length() > 9)
+    {
+        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x46)
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
+        else
+        {
+            flashblocksize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            msg.clear();
+            msg.append(QString("Flashblock size: 0x%1").arg(flashblocksize,4,16,QLatin1Char('0')).toUtf8());
+            send_log_window_message(msg, true, true);
+            qDebug() << msg;
+        }
+    }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
+    }
+
+
+    uint8_t SID_OE_KERNEL_CMD = 0;
+    if (test_write)
+        SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_FLASH_DISABLE & 0xFF);
+    else if (!test_write)
+        SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_FLASH_ENABLE & 0xFF);
+
+    datalen = 0;
+    output.clear();
+    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)(SID_OE_KERNEL_CMD & 0xFF));
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
+    received = serial->write_serial_data_echo_check(output);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    delay(200);
+    received = serial->read_serial_data(8, serial_read_short_timeout);
+    qDebug() << "Response:" << parse_message_to_hex(received);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SID_OE_KERNEL_CMD | 0x40))
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
+    }
+    flash_write_init = true;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ *  Reflash ROM 32bit K-Line ECUs
+ *
+ *  @return
+ */
+int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+{
+    int errval;
+
+    uint32_t start = 0;
+    uint32_t len = 0;
+    uint32_t datalen = 0;
+    uint16_t pagesize = 0x200;
+    uint16_t chksum;
+
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    if (!flash_write_init)
+        if (init_flash_write())
+            return STATUS_ERROR;
+
+    if (blockno >= fdt->numblocks) {
+        send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
+        return STATUS_ERROR;
+    }
+
+    start = fdt->fblocks[blockno].start;
+    len = fdt->fblocks[blockno].len;
+
+    QString start_addr = QString("%1").arg((uint32_t)start,8,16,QLatin1Char('0')).toUpper();
+    QString length = QString("%1").arg((uint32_t)len,8,16,QLatin1Char('0')).toUpper();
+    msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
+    send_log_window_message(msg, true, true);
+
+    datalen = 0;
+    output.clear();
+    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)(SID_OE_KERNEL_PROG_VOLT & 0xFF));
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
+    received = serial->write_serial_data_echo_check(output);
+    qDebug() << "Sent:" << parse_message_to_hex(output);
+    //delay(50);
+    received = serial->read_serial_data(8, serial_read_short_timeout);
+    qDebug() << "Response:" << parse_message_to_hex(received);
+    if (received.length() > 7)
+    {
+        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x44)
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
+    }
+    float prog_voltage = (((uint8_t)received.at(5) << 8) + (uint8_t)received.at(6)) / 50.0;
+    send_log_window_message("Programming voltage: " + QString::number(prog_voltage) + "V", true, true);
+    qDebug() << "Programming voltage: " + QString::number(prog_voltage) + "V";
+    //delay(500);
+
+    if (flash_block(newdata, start, len)) {
+        send_log_window_message("Reflash error! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands!", true, true);
+        return STATUS_ERROR;
+    }
+
+    send_log_window_message("Flash block ok", true, true);
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ * Flash block 16bit K-Line ECUs
+ *
+ * @return
+ */
+int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t start, uint32_t len)
+{
+
+    // program 128-byte chunks //
+    uint32_t remain = len;
+    uint32_t byteindex = flashbytesindex;
+    uint32_t datalen = 0;
+    uint32_t blockstart = start;
+    uint32_t imgcrc32 = 0;
+    uint32_t flashblockstart = start;
+    uint16_t blocksize = 0x200;
+    uint16_t chksum;
+
+    QElapsedTimer timer;
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    unsigned long chrono;
+    unsigned curspeed, tleft;
+
+    flashblocksize = 0x1000;
+
+    if (!test_write)
+    {
+        datalen = 4;
+        output.clear();
+        output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+        output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+        output.append((uint8_t)(datalen + 1) & 0xFF);
+        output.append((uint8_t)(SID_OE_KERNEL_BLANK_16K_PAGE & 0xFF));
+        output.append((uint8_t)(start >> 24) & 0xFF);
+        output.append((uint8_t)(start >> 16) & 0xFF);
+        output.append((uint8_t)(start >> 8) & 0xFF);
+        output.append((uint8_t)start & 0xFF);
+
+        chksum = calculate_checksum(output, false);
+        output.append((uint8_t)chksum & 0xFF);
+        received = serial->write_serial_data_echo_check(output);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        delay(500);
+        received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+        qDebug() << "Response:" << parse_message_to_hex(received);
+        if (received.length() > 7)
+        {
+            if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x65)
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
+    }
+
+    timer.start();
+    while (remain) {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        datalen = blocksize + 4; // 0x200 + 4
+        output.clear();
+        output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+        output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+        output.append((uint8_t)(datalen + 1) & 0xFF);
+        output.append((uint8_t)(SID_OE_KERNEL_WRITE_FLASH_BUFFER & 0xFF));
+        output.append((uint8_t)(start >> 24) & 0xFF);
+        output.append((uint8_t)(start >> 16) & 0xFF);
+        output.append((uint8_t)(start >> 8) & 0xFF);
+        output.append((uint8_t)start & 0xFF);
+        for (unsigned int i = start; i < (start + blocksize); i++)
+        {
+            output.append(src[i]);
+        }
+        chksum = calculate_checksum(output, false);
+        output.append((uint8_t)chksum & 0xFF);
+        serial->write_serial_data_echo_check(output);
+        //qDebug() << "Sent:" << parse_message_to_hex(output);
+        delay(50);
+        received = serial->read_serial_data(6, serial_read_long_timeout);
+        qDebug() << "Response:" << parse_message_to_hex(received);
+        uint8_t loopcount = 0;
+        while (received.length() && loopcount < 10)
+        {
+            if ((uint8_t)received.at(0) != 0xBE)
+                received.remove(0, 1);
+            received.append(serial->read_serial_data(6, 1));
+            loopcount++;
+        }
+        if (received.length() > 5)
+        {
+            if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x62)
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
+
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        send_log_window_message(msg, true, true);
+
+        remain -= blocksize;
+        start += blocksize;
+        byteindex += blocksize;
+        //src += blocksize;
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (!chrono) {
+            chrono += 1;
+        }
+        curspeed = blocksize * (1000.0f / chrono);  //avg B/s
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
+        if (tleft > 9999) {
+            tleft = 9999;
+        }
+        tleft++;
+
+        float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
+        set_progressbar_value(pleft);
+
+        if ((flashblockstart + flashblocksize) == start)
+        {
+            send_log_window_message("Flashblock: write complete, validating... ", true, false);
+            imgcrc32 = crc32(&src[flashblockstart], flashblocksize);
+
+            uint8_t SID_OE_KERNEL_CMD = 0;
+            if (test_write)
+            {
+                SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_VALIDATE_FLASH_BUFFER & 0xFF);
+            }
+            else if (!test_write)
+            {
+                SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_COMMIT_FLASH_BUFFER & 0xFF);
+            }
+
+            datalen = 10;
+            output.clear();
+            output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+            output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+            output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+            output.append((uint8_t)(datalen + 1) & 0xFF);
+            output.append((uint8_t)(SID_OE_KERNEL_CMD & 0xFF));
+            output.append((uint8_t)(flashblockstart >> 24) & 0xFF);
+            output.append((uint8_t)(flashblockstart >> 16) & 0xFF);
+            output.append((uint8_t)(flashblockstart >> 8) & 0xFF);
+            output.append((uint8_t)flashblockstart & 0xFF);
+            output.append((uint8_t)(flashblocksize >> 8) & 0xFF);
+            output.append((uint8_t)flashblocksize & 0xFF);
+            output.append((uint8_t)(imgcrc32 >> 24) & 0xFF);
+            output.append((uint8_t)(imgcrc32 >> 16) & 0xFF);
+            output.append((uint8_t)(imgcrc32 >> 8) & 0xFF);
+            output.append((uint8_t)imgcrc32 & 0xFF);
+            chksum = calculate_checksum(output, false);
+            output.append((uint8_t)chksum & 0xFF);
+            received = serial->write_serial_data_echo_check(output);
+            qDebug() << "Sent:" << parse_message_to_hex(output);
+            delay(200);
+            received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+            qDebug() << "Response:" << parse_message_to_hex(received);
+            if (received.length() > 5)
+            {
+                if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SID_OE_KERNEL_CMD + 0x40))
+                {
+                    send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                    qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                    return STATUS_ERROR;
+                }
+            }
+            else
+            {
+                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
+            }
+            send_log_window_message("ok", false, true);
+            flashblockstart += flashblocksize;
+        }
+    }
+
+    received = serial->read_serial_data(100, serial_read_short_timeout);
+
+    return STATUS_SUCCESS;
+}
+
+
+bool FlashEcuSubaruDensoMC68HC16Y5_02::check_programming_voltage(double voltage)
+{
+    return (voltage > 11.4 && voltage < 12.6);
 }
 
 QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_init()
@@ -774,11 +1230,6 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
 
     return kernelid;
 }
-
-
-
-
-
 
 /*
  * Add SSM header to message

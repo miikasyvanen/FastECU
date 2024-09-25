@@ -262,6 +262,13 @@ const struct eepromblock eblocks_M3775x[] = {
     {0x00000000,    0x00000100},
     };
 
+const struct flashblock fblocks_MC68HC16Y5_TPU[] = {
+    {0x00000000,    0x00001000},
+    {0x00001000,    0x00001000},
+    {0x00002000,    0x00001000},
+    {0x00003000,    0x00001000},
+    };
+
 const struct flashblock fblocks_MC68HC16Y5[] = {
     {0x00000000,    0x00004000},
     {0x00004000,    0x00004000},
@@ -273,7 +280,7 @@ const struct flashblock fblocks_MC68HC16Y5[] = {
     {0x0001C000,    0x00004000},
     {0x00028000,    0x00004000},
     {0x0002C000,    0x00004000},
-};
+    };
 
 const struct ramblock rblocks_MC68HC16Y5[] = {
     {0x00020000,    0x00008000},

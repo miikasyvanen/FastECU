@@ -30,6 +30,12 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
     bool cal_id_addr_found = false;
     bool ecu_id_found = false;
 
+    if(!configValues->ecuflash_definition_files_directory.length())
+    {
+        qDebug() << "No EcuFlash definition files directory";
+        return configValues;
+    }
+
     if (QDir(configValues->ecuflash_definition_files_directory).exists())
     {
         QDirIterator it(dir, QStringList() << "*.xml", QDir::Files, QDirIterator::Subdirectories);
@@ -43,7 +49,7 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
             QFile file(filename);
             if (!file.open(QIODevice::ReadOnly ))
             {
-                QMessageBox::warning(this, tr("Ecu definition file"), "Unable to open ecuflash definition file " + filename + " for reading");
+                QMessageBox::warning(this, tr("Ecu definition file"), "Unable to open EcuFlash definition file " + filename + " for reading");
             }
 
             QDomDocument xmlBOM;
@@ -473,9 +479,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             if (ecuCalDef->YScaleIntervalList.at(def_map_index) == " ")
                                 ecuCalDef->YScaleIntervalList.replace(def_map_index, rom_scale_child.attribute("interval", "1"));
 
-                            //if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
-                                //qDebug() << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
-
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
                             {
@@ -575,8 +578,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ecuCalDef->YScaleAddressList.replace(def_map_index, rom_scale_child.attribute("address", " "));
                                 ecuCalDef->YSizeList.replace(def_map_index, rom_scale_child.attribute("elements", " "));
                             }
-                            if (ecuCalDef->NameList.at(def_map_index) == "Primary Open Loop Fueling A (Failsafe)")
-                                qDebug() << i << ":" << def_map_index << cal_id << ecuCalDef->NameList.at(def_map_index) << ecuCalDef->XSizeList.at(def_map_index) << ecuCalDef->YSizeList.at(def_map_index);
                             i++;
                         }
                     }

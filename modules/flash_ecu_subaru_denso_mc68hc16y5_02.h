@@ -46,12 +46,17 @@ private:
     #define STATUS_SUCCESS	0x00
     #define STATUS_ERROR	0x01
 
+    uint32_t CRC32 = 0xEDB88320;
+    bool crc_tab32_init = 0;
+    uint32_t crc_tab32[256];
+
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
 
+    bool flash_write_init = false;
     int result;
     int mcu_type_index;
     int bootloader_start_countdown = 3;
@@ -66,6 +71,7 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint32_t flashblocksize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
@@ -84,11 +90,16 @@ private:
     int connect_bootloader_subaru_denso_kline_wrx02();
     int upload_kernel_subaru_denso_kline_wrx02(QString kernel, uint32_t kernel_start_addr);
 
-    int read_mem_subaru_denso_kline_16bit(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_kline_16bit(bool test_write);
-    int get_changed_blocks_16bit_kline(const uint8_t *src, int *modified);
-    int check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    int read_mem(uint32_t start_addr, uint32_t length);
+    int write_mem(bool test_write);
+    int init_flash_write();
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int flash_block(const uint8_t *src, uint32_t start, uint32_t len);
+    int get_changed_blocks(const uint8_t *src, int *modified);
+    int check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    void init_crc32_tab(void);
     unsigned int crc32(const unsigned char *buf, unsigned int len);
+    bool check_programming_voltage(double voltage);
 
     QByteArray request_kernel_init();
     QByteArray request_kernel_id();
@@ -107,4 +118,4 @@ private:
 
 };
 
-#endif // FLASHDENSOWRX02_H
+#endif // FLASH_ECU_SUBARU_DENSO_MC68HC16Y5_02_H

@@ -170,6 +170,7 @@ void MainWindow::ssm_kline_init()
 {
     QByteArray output;
     QByteArray received;
+    int loopcount = 0;
 
     //qDebug() << "ECU K-Line INIT";
     if (!ecu_init_started)
@@ -182,43 +183,58 @@ void MainWindow::ssm_kline_init()
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
         qDebug() << "K-Line SSM init sent";
         delay(200);
-        received = serial->read_serial_data(100, 500);
+        received = serial->read_serial_data(100, 200);
         qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
-        if (received.length() > 0)
+        while (received.length() < 4 && loopcount < 10)
         {
-            //qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3));
-            //qDebug() << "ECU INIT:" << parse_message_to_hex(received);
+            received.append(serial->read_serial_data(100, 50));
+            loopcount++;
+        }
+        if (received.length() < 4)
+            return;
 
-            if (received.length() == (uint8_t)received.at(3) + 5)
+        qDebug() << "SSM Init response header received";
+        loopcount = 0;
+        while (received.length() < (uint8_t)received.at(3) + 5 && loopcount < 10)
+        {
+            received.append(serial->read_serial_data(100, 50));
+            loopcount++;
+        }
+        if (received.length() < (uint8_t)received.at(3) + 5)
+            return;
+
+        qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3)) << received.length();
+        if (received.length() >= (uint8_t)received.at(3) + 5)
+        {
+            ecu_init_complete = true;
+            //set_status_bar_label(true, true, ecuid);
+            ecuid = parse_ecuid(received);
+            qDebug() << "ECU ID:" << ecuid;
+            parse_log_value_list(received, "SSM");
+            //qDebug() << "ECU ID:" << ecuid;
+            if (ecuid == "")
+                set_status_bar_label(true, false, "");
+            else
+                set_status_bar_label(true, true, ecuid);
+            return;
+        }
+        /*
+        received.append(serial->read_serial_data(10, 100));
+        while(received.length() > 0)
+        {
+            //qDebug() << "ECU ID:" << parse_ecuid(received);
+            ecu_init_complete = true;
+            //set_status_bar_label(true, true, ecuid);
+            ecuid = parse_ecuid(received);
+            parse_log_value_list(received, "SSM");
+
+            received = serial->read_serial_data(1, 100);
+            while(received.length() > 0)
             {
-                ecu_init_complete = true;
-                //set_status_bar_label(true, true, ecuid);
-                ecuid = parse_ecuid(received);
-                //qDebug() << "ECU ID:" << ecuid;
-                parse_log_value_list(received, "SSM");
-                //qDebug() << "ECU ID:" << ecuid;
-                if (ecuid == "")
-                    set_status_bar_label(true, false, "");
-                else
-                    set_status_bar_label(true, true, ecuid);
-
                 received = serial->read_serial_data(1, 100);
-                while(received.length() > 0)
-                {
-                    //qDebug() << "ECU ID:" << parse_ecuid(received);
-                    ecu_init_complete = true;
-                    //set_status_bar_label(true, true, ecuid);
-                    ecuid = parse_ecuid(received);
-                    parse_log_value_list(received, "SSM");
-
-                    received = serial->read_serial_data(1, 100);
-                    while(received.length() > 0)
-                    {
-                        received = serial->read_serial_data(1, 100);
-                    }
-                }
             }
         }
+*/
     }
     ecu_init_started = false;
 }
@@ -623,8 +639,8 @@ void MainWindow::log_to_file(){
             QDateTime dateTime = dateTime.currentDateTime();
             QString dateTimeString = dateTime.toString("yyyy-MM-dd hh'h'mm'm'ss's'");
 
-            QString log_file_name = configValues->log_files_base_directory;
-            if (configValues->log_files_base_directory.at(configValues->log_files_base_directory.length() - 1) != '/')
+            QString log_file_name = configValues->datalog_files_base_directory;
+            if (configValues->datalog_files_base_directory.at(configValues->datalog_files_base_directory.length() - 1) != '/')
                 log_file_name.append("/");
             log_file_name.append("fastecu_" + dateTimeString + ".csv");
 

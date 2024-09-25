@@ -700,7 +700,7 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc_kline_32bit(const uint8_t *src, u
         if (len > 5)
         {
             received.remove(0, 3);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else
@@ -710,6 +710,7 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc_kline_32bit(const uint8_t *src, u
         return STATUS_ERROR;
     }
 
+    ecucrc32 = 0;
     imgcrc32 = crc32(src, pagesize);
     if (received.length() > 3)
         ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
@@ -750,7 +751,7 @@ unsigned int FlashEcuSubaruDensoSH7055_02::crc32(const unsigned char *buf, unsig
     return crc ^ 0xFFFFFFFF;
 }
 
-void FlashEcuSubaruDensoSH7055_02::init_crc32_tab( void ) {
+void FlashEcuSubaruDensoSH7055_02::init_crc32_tab(void) {
     uint32_t i, j;
     uint32_t crc, c;
 
@@ -972,6 +973,10 @@ int FlashEcuSubaruDensoSH7055_02::flash_block_kline_32bit(const uint8_t *src, ui
             return STATUS_ERROR;
         }
 
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        send_log_window_message(msg, true, true);
+
         remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
@@ -988,7 +993,7 @@ int FlashEcuSubaruDensoSH7055_02::flash_block_kline_32bit(const uint8_t *src, ui
             curspeed += 1;
         }
 
-        tleft = remain / curspeed;  //s
+        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
         if (tleft > 9999) {
             tleft = 9999;
         }
@@ -996,16 +1001,12 @@ int FlashEcuSubaruDensoSH7055_02::flash_block_kline_32bit(const uint8_t *src, ui
 
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
-
-        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        send_log_window_message(msg, true, true);
-
-    }   //while len
+    }
 
     send_log_window_message("npk_raw_flashblock: write complete.", true, true);
     received = serial->read_serial_data(100, serial_read_short_timeout);
-    return 0;
+
+    return STATUS_SUCCESS;
 }
 
 
