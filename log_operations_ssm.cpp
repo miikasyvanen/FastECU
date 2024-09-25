@@ -243,9 +243,63 @@ void MainWindow::ssm_can_init()
 {
     QByteArray output;
     QByteArray received;
+    uint32_t control_unit_addr = 0;
+
+    if (ecu_radio_button->isChecked())
+        control_unit_addr = 0x7E0;
+    else if (tcu_radio_button->isChecked())
+        control_unit_addr = 0x7E1;
+
+    const uint8_t cu_addr_b3 = (uint8_t)((control_unit_addr >> 24) & 0xFF);
+    const uint8_t cu_addr_b2 = (uint8_t)((control_unit_addr >> 16) & 0xFF);
+    const uint8_t cu_addr_b1 = (uint8_t)((control_unit_addr >> 8) & 0xFF);
+    const uint8_t cu_addr_b0 = (uint8_t)(control_unit_addr & 0xFF);
+
+    qDebug() << Q_FUNC_INFO << configValues->flash_protocol_selected_log_protocol;
 
     if (configValues->flash_protocol_selected_log_protocol == "CAN")
         received = serial->read_serial_data(100, 500);
+    else if (configValues->flash_protocol_selected_log_transport == "iso15765")
+    {
+        // Set serial port
+        serial->reset_connection();
+        serial->set_is_iso14230_connection(false);
+        serial->set_add_iso14230_header(false);
+        serial->set_is_can_connection(false);
+        serial->set_is_iso15765_connection(true);
+        serial->set_is_29_bit_id(false);
+        serial->set_can_speed("500000");
+        serial->set_iso15765_source_address(control_unit_addr);
+        serial->set_iso15765_destination_address(0x7E8);
+        // Open serial port
+        serial->open_serial_port();
+
+        output.clear();
+        output.append(cu_addr_b3);
+        output.append(cu_addr_b2);
+        output.append(cu_addr_b1);
+        output.append(cu_addr_b0);
+        output.append((uint8_t)0x22);
+        output.append((uint8_t)0xF1);
+        output.append((uint8_t)0x82);
+        serial->write_serial_data_echo_check(output);
+        received = serial->read_serial_data(100, 100);
+        if (received.length() > 7 &&
+            (uint8_t)received.at(4) == 0x62 &&
+            (uint8_t)received.at(5) == 0xF1 &&
+            (uint8_t)received.at(6) == 0x82)
+        {
+            ecu_init_complete = true;
+            received = received.remove(0, 7);
+            QString msg;
+            for (int i = 0; i < received.length(); i++)
+            {
+                msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            }
+            qDebug() << "ECU ID" << msg;
+            set_status_bar_label(true, true, msg);
+        }
+    }
 }
 
 void MainWindow::log_ssm_values()

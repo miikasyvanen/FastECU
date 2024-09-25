@@ -163,6 +163,7 @@ private:
     FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;
     FlashEcuSubaruHitachiSH7058Can *flashEcuSubaruHitachiSh7058Can;
     FlashEcuSubaruHitachiSH72543rCan *flashEcuSubaruHitachiSh72543rCan;
+
     /* Hitachi TCU */
     FlashTcuSubaruHitachiM32rKline *flashTcuSubaruHitachiM32rKline;
     FlashTcuSubaruHitachiM32rCan *flashTcuSubaruHitachiM32rCan;
