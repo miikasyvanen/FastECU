@@ -11,6 +11,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     QDir copyConfigFromDirectory;
     QDir copyKernelsFromDirectory;
     QStringList isDevPath = currentPath.absolutePath().split("build");
+    bool isDevFile = false;
 
 #ifdef Q_OS_LINUX
     QString AppFilePath = QApplication::applicationFilePath();
@@ -30,10 +31,15 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
 #endif
 
     qDebug() << "APP DIRECTORY:" << currentPath.absolutePath();
-
-    if (isDevPath.length() > 1)
+    if(QFileInfo::exists("./build.txt"))
     {
-        qDebug() << "App is started on dev path, base path set to:" + isDevPath.at(0);
+        isDevFile = true;
+        qDebug() << "build.txt found";
+    }
+    qDebug() << "isDevPath length" << isDevPath.length();
+    if (isDevPath.length() > 1 || isDevFile)
+    {
+        qDebug() << "App is started on dev path, base path set to:" + currentPath.absolutePath();//isDevPath.at(0);
         configValues->base_config_directory = currentPath.absolutePath();
         configValues->version_config_directory = currentPath.absolutePath();
         configValues->calibration_files_directory = configValues->base_config_directory + "/calibrations/";
@@ -145,48 +151,6 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     }
 
 
-/*
-    if (!QDir(configValues->calibration_files_base_directory).exists()){
-        QDir().mkdir(configValues->calibration_files_base_directory);
-        QDir dir("calibrations/");
-        foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
-            QFile().copy("calibrations/" + entry.fileName(), configValues->calibration_files_base_directory + "/" + entry.fileName());
-        }
-    }
-    if (!QDir(configValues->config_base_directory).exists()){
-        QDir().mkdir(configValues->config_base_directory);
-        save_config_file(configValues);
-    }
-    QDir dir("config/");
-    foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
-        qDebug() << "Check file" << entry.fileName();
-        if(!QFileInfo::exists(configValues->config_base_directory + "/" + entry.fileName()))
-        {
-            qDebug() << "File" << entry.fileName() << "does not exists, copying...";
-            QFile().copy("config/" + entry.fileName(), configValues->config_base_directory + "/" + entry.fileName());
-        }
-    }
-    if (!QDir(configValues->definition_files_base_directory).exists()){
-        QDir().mkdir(configValues->definition_files_base_directory);
-
-        QString source_dir = "definitions/";
-        QString target_dir = configValues->definition_files_base_directory;
-        bool cover_file_if_exist = false;
-
-        copy_directory_files(source_dir, target_dir, cover_file_if_exist);
-
-    }
-    if (!QDir(configValues->kernel_files_base_directory).exists()){
-        QDir().mkdir(configValues->kernel_files_base_directory);
-        QDir dir("kernels/");
-        foreach (const QFileInfo& entry, dir.entryInfoList((QStringList() << "*.*", QDir::Files))){
-            QFile().copy("kernels/" + entry.fileName(), configValues->kernel_files_base_directory + "/" + entry.fileName());
-        }
-    }
-    if (!QDir(configValues->log_files_base_directory).exists()){
-        QDir().mkdir(configValues->log_files_base_directory);
-    }
-*/
     return configValues;
 }
 
@@ -483,7 +447,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Kernel files directory:" << configValues->kernel_files_directory;
                         }
-                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "logfiles_directory")
+                        else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "datalog_files_directory")
                         {
                             while(reader.readNextStartElement())
                             {
@@ -952,17 +916,17 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                 if (ecu.tagName() == "ecu")
                 {
                     QString file_ecu_id = ecu.attribute("id","No id");
-
+                    QString ecu_id_active = ecu.attribute("active","false");
                     if (ecu_id == file_ecu_id)
                     {
                         ecu_id_found = true;
-                        //qDebug() << "Found ECU ID" << file_ecu_id;
+                        qDebug() << "Found ECU ID" << file_ecu_id;
                         QDomElement protocol = ecu.firstChild().toElement();
                         while (!protocol.isNull())
                         {
                             if (protocol.tagName() == "protocol")
                             {
-                                //qDebug() << "Found protocol" << protocol.attribute("id","No id");
+                                qDebug() << "Found protocol" << protocol.attribute("id","No id");
                                 logValues->logging_values_protocol = protocol.attribute("id","No id");
                                 QDomElement parameters = protocol.firstChild().toElement();
                                 while(!parameters.isNull())
@@ -1046,7 +1010,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
         {
             file.resize(0);
 
-            //qDebug() << "ECU ID not found, initializing log parameters";
+            qDebug() << "ECU ID not found, initializing log parameters";
             logValues->logging_values_protocol = logValues->log_value_protocol.at(0);
             for (int i = 0; i < logValues->log_value_id.length(); i++)
             {

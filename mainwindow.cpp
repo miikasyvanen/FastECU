@@ -360,7 +360,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
         int switchBoxCount = 20;
         int logBoxCount = 12;
 
-        update_logboxes(protocol);
+        //update_logboxes(log_protocol);
+        update_logboxes(configValues->flash_protocol_selected_log_protocol);
     }
 
     serial_port = serial_port_prefix + configValues->serial_port;
@@ -804,6 +805,9 @@ int MainWindow::can_listener()
 
 int MainWindow::start_ecu_operations(QString cmd_type)
 {
+    set_realtime_state(false);
+    toggle_realtime();
+
     int rom_number = 0;
 
     QTreeWidgetItem *selectedItem = NULL;

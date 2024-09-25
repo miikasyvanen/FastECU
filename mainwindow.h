@@ -306,11 +306,12 @@ private:
     void interpolate_value(QString action);
     void copy_value();
     void paste_value();
-    void connect_to_ecu();
+    int connect_to_ecu();
     void disconnect_from_ecu();
     void ecu_definition_manager();
     void logger_definition_manager();
     void winols_csv_to_romraider_xml();
+    void set_realtime_state(bool state);
     void toggle_realtime();
     void toggle_log_to_file();
     void set_maptablewidget_items();

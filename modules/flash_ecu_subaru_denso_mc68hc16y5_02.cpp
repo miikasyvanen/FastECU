@@ -1057,7 +1057,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         chksum = calculate_checksum(output, false);
         output.append((uint8_t)chksum & 0xFF);
         serial->write_serial_data_echo_check(output);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(50);
         received = serial->read_serial_data(6, serial_read_long_timeout);
         qDebug() << "Response:" << parse_message_to_hex(received);
