@@ -74,7 +74,7 @@ void MainWindow::menu_action_triggered(QString action)
 
     // HELP MENU
     if (action == "about")
-        QMessageBox::information(this, tr(sw_version), "FastECU is open source tuning software for Subaru ECUs and\n"
+        QMessageBox::information(this, tr("FastECU"), "FastECU is open source tuning software for Subaru ECUs and\n"
                                                             "later also modifying BIU and ECUs of other car makes.\n"
                                                             "\n"
                                                             "This is the first test version for read and write ECU ROM\n"
@@ -759,7 +759,7 @@ void MainWindow::paste_value()
     }
 }
 
-void MainWindow::connect_to_ecu()
+int MainWindow::connect_to_ecu()
 {
     ecuid.clear();
     ecu_init_complete = false;
@@ -773,12 +773,22 @@ void MainWindow::connect_to_ecu()
         serial_port_list->setDisabled(true);
         refresh_serial_port_list->setDisabled(true);
         qDebug() << "Initialising ECU, please wait...";
-        ecu_init();
+        int loopcount = 0;
+        while (!ecu_init_complete && loopcount < 5)
+        {
+            ecu_init();
+            delay(500);
+            loopcount++;
+        }
+        if (!ecu_init_complete)
+            disconnect_from_ecu();
     }
     else
     {
         QMessageBox::warning(this, tr("Serial port"), "Could not open interface!");
+        return STATUS_ERROR;
     }
+    return STATUS_SUCCESS;
 }
 
 void MainWindow::disconnect_from_ecu()
@@ -846,8 +856,9 @@ void MainWindow::logger_definition_manager()
 
 }
 
-void MainWindow::toggle_realtime()
+void MainWindow::set_realtime_state(bool state)
 {
+    QAction *logger;
     QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
     foreach (QMenu *menu, menus) {
         foreach (QAction *action, menu->actions()) {
@@ -857,13 +868,46 @@ void MainWindow::toggle_realtime()
 
             } else {
                 if (action->text() == "Logging")
-                    logging_state = action->isChecked();
+                {
+                    action->setChecked(state);
+                }
+            }
+        }
+    }
+}
+
+void MainWindow::toggle_realtime()
+{
+    QAction *logger;
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    foreach (QMenu *menu, menus) {
+        foreach (QAction *action, menu->actions()) {
+            if (action->isSeparator()) {
+
+            } else if (action->menu()) {
+
+            } else {
+                if (action->text() == "Logging")
+                {
+                    logger = action;
+                    logging_state = logger->isChecked();
+                }
             }
         }
     }
 
     if (logging_state)
     {
+        qDebug() << "Start datalog";
+        if (!ecu_init_complete)
+        {
+            if (connect_to_ecu())
+            {
+                QMessageBox::information(this, tr("ECU connection"), "Unable to connect to ECU");
+                logger->setChecked(false);
+                return;
+            }
+        }
         logging_counter = 0;
         logging_state = true;
         log_ssm_values();
@@ -871,6 +915,7 @@ void MainWindow::toggle_realtime()
     }
     else
     {
+        qDebug() << "Stop datalog";
         if (log_file_open){
             log_file_open = false;
             log_file.close();
@@ -881,6 +926,8 @@ void MainWindow::toggle_realtime()
         log_ssm_values();
         delay(200);
         logparams_poll_timer->stop();
+
+        //disconnect_from_ecu();
     }
 }
 

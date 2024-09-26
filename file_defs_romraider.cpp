@@ -11,16 +11,22 @@ FileActions::ConfigValuesStructure *FileActions::create_romraider_def_id_list(Co
     bool cal_id_addr_found = false;
     bool ecu_id_found = false;
 
+    if(!configValues->romraider_definition_files.length())
+    {
+        qDebug() << "No RomRaider definition files";
+        return configValues;
+    }
+
     for (int i = 0; i < configValues->romraider_definition_files.length(); i++)
     {
         filename = configValues->romraider_definition_files.at(i);
 
-        //qDebug() << "Reading RomRaider ID's from file:" << filename;
+        qDebug() << "Reading RomRaider ID's from file:" << filename;
 
         QFile file(filename);
         if (!file.open(QIODevice::ReadOnly ))
         {
-            QMessageBox::warning(this, tr("Ecu definition file"), "Unable to open ecuflash definition file " + filename + " for reading");
+            QMessageBox::warning(this, tr("Ecu definition file"), "Unable to open romraider definition file " + filename + " for reading");
         }
 
         QDomDocument xmlBOM;

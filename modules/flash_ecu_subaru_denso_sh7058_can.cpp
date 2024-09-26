@@ -226,13 +226,13 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x41 || (uint8_t)received.at(1+4) == 0x00)
+        if ((uint8_t)received.at(4) == 0x41 && (uint8_t)received.at(5) == 0x00)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -257,13 +257,13 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x49 || (uint8_t)received.at(1+4) == 0x02)
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -289,13 +289,13 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x49 || (uint8_t)received.at(1+4) == 0x06)
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x06)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -326,14 +326,14 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x50 || (uint8_t)received.at(1+4) == 0x03)
+        if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x03)
         {
             req_10_03_connected = true;
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -358,14 +358,14 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x50 || (uint8_t)received.at(1+4) == 0x43)
+        if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x43)
         {
             req_10_43_connected = true;
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -390,13 +390,13 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x67 || (uint8_t)received.at(1+4) == 0x01)
+        if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x01)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -416,10 +416,10 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Seed request ok";
 
     seed.clear();
-    seed.append(received.at(2+4));
-    seed.append(received.at(3+4));
-    seed.append(received.at(4+4));
-    seed.append(received.at(5+4));
+    seed.append(received.at(6));
+    seed.append(received.at(7));
+    seed.append(received.at(8));
+    seed.append(received.at(9));
 
     seed.append((uint8_t)0xD3);
     seed.append((uint8_t)0x80);
@@ -448,13 +448,13 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x67 || (uint8_t)received.at(1+4) == 0x02)
+        if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x02)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -490,13 +490,13 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x50 || (uint8_t)received.at(1+4) == 0x02)
+        if ((uint8_t)received.at(4) == 0x50 && ((uint8_t)received.at(5) == 0x02 || (uint8_t)received.at(5) == 0x42))
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -607,13 +607,13 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, 10);
-    if (received.length())
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0+4) == 0x34 || (uint8_t)received.at(1+4) == 0x20)
+        if ((uint8_t)received.at(4) == 0x34 || (uint8_t)received.at(5) == 0x20)
         {
             connected = true;
             QByteArray response = received;
-            response.remove(0, 2+4);
+            response.remove(0, 6);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
@@ -622,6 +622,8 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
 
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
+        else
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
     }
 
     if (!connected)
@@ -697,9 +699,9 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, 10);
-    if (received.length())
+    if (received.length() > 4)
     {
-        if ((uint8_t)received.at(0+4) == 0x77)
+        if ((uint8_t)received.at(4) == 0x77)
         {
             connected = true;
             QByteArray response = received;
@@ -712,6 +714,8 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
 
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
+        else
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
     }
     if (!connected)
         return STATUS_ERROR;
@@ -735,9 +739,9 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(20, 10);
-    if (received.length())
+    if (received.length() > 4)
     {
-        if ((uint8_t)received.at(0+4) == 0x71)
+        if ((uint8_t)received.at(4) == 0x71)
         {
             connected = true;
             QByteArray response = received;
@@ -750,6 +754,8 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
 
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
+        else
+            send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
     }
 
     if (!connected)
@@ -803,7 +809,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
 
 
 /*
- * Read memory from Subaru Denso CAN 32bit ECUs, nisprog kernel
+ * Read memory from Subaru Denso CAN (iso15765) 32bit ECUs
  *
  * @return success
  */
@@ -877,13 +883,15 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
         received = serial->read_serial_data(1, serial_read_timeout);
         //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
 
-        if (received.length()) {
+        if (received.length() > 1) {
             if ((uint8_t)received.at(0) != SID_CAN_START_COMM || (uint8_t)received.at(1) != SID_CAN_DUMP_ROM)
             {
                 send_log_window_message("Page data request failed!", true, true);
                 send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
+            else
+                send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
         }
         timeout = 0;
         pagedata.clear();
@@ -954,163 +962,6 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
     return STATUS_SUCCESS;
 }
 
-/*
- * Read memory from Subaru Denso CAN (iso15765) 32bit ECUs, nisprog kernel
- *
- * @return success
- */
-/*
-int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
-{
-    QElapsedTimer timer;
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    QByteArray pagedata;
-    QByteArray mapdata;
-    uint32_t cplen = 0;
-    uint32_t timeout = 0;
-
-    uint32_t pagesize = 0x400;
-
-    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
-    uint32_t addr = start_addr - skip_start;
-    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
-
-    send_log_window_message("Start reading ROM, please wait..." + received, true, true);
-    qDebug() << "Start reading ROM, please wait...";
-
-    // send 0xD8 command to kernel to dump the chunk from ROM
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)(SID_DUMP_ROM_CAN + 0x06));
-
-    set_progressbar_value(0);
-
-    mapdata.clear();
-
-    while (willget)
-    {
-        if (kill_process)
-            return STATUS_ERROR;
-
-        uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
-        float pleft = 0;
-        unsigned long chrono;
-
-        //uint32_t curblock = (addr / pagesize);
-
-
-        pleft = (float)(addr - start_addr) / (float)length * 100.0f;
-        set_progressbar_value(pleft);
-
-        //length = 256;
-
-        output[6] = (uint8_t)((pagesize >> 24) & 0xFF);
-        output[7] = (uint8_t)((pagesize >> 16) & 0xFF);
-        output[8] = (uint8_t)((pagesize >> 8) & 0xFF);
-        output[9] = (uint8_t)((addr >> 24) & 0xFF);
-        output[10] = (uint8_t)((addr >> 16) & 0xFF);
-        output[11] = (uint8_t)((addr >> 8) & 0xFF);
-
-        int try_count = 0;
-        bool connected = false;
-        while (try_count < 6 && connected == false)
-        {
-            serial->write_serial_data_echo_check(output);
-            //qDebug() << "0xD8 message sent to kernel initiate dump:" << parse_message_to_hex(output);
-            //delay(5);
-            received = serial->read_serial_data(1, 10);
-            //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
-
-            if (received.length())
-            {
-                if ((uint8_t)received.at(0) != SID_START_COMM_CAN || ((uint8_t)received.at(1) & 0xF8) != SID_DUMP_ROM_CAN)
-                {
-                    send_log_window_message("Page data request failed!", true, true);
-                    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-                    return STATUS_ERROR;
-                }
-                else
-                {
-                    connected = true;
-                    continue;
-                }
-            }
-            else
-                send_log_window_message("No response from ECU, re-trying...", true, true);
-            try_count++;
-        }
-        timeout = 0;
-        pagedata.clear();
-        int length = 7;
-        while ((uint32_t)pagedata.length() < pagesize && timeout < 1000)
-        {
-            received = serial->read_serial_data(1, 50);
-            if (((uint32_t)pagedata.length() + 7) > pagesize)
-                length = pagesize - (uint32_t)pagedata.length();
-            pagedata.append(received, length);
-            timeout++;
-        }
-        if (timeout >= 1000)
-        {
-            send_log_window_message("Page data timeout!", true, true);
-            return STATUS_ERROR;
-        }
-        mapdata.append(pagedata);
-
-        // don't count skipped first bytes //
-        cplen = (numblocks * pagesize) - skip_start; //this is the actual # of valid bytes in buf[]
-        skip_start = 0;
-
-        chrono = timer.elapsed();
-        timer.start();
-
-        if (cplen > 0 && chrono > 0)
-            curspeed = cplen * (1000.0f / chrono);
-
-        if (!curspeed) {
-            curspeed += 1;
-        }
-
-        tleft = (willget / curspeed) % 9999;
-        tleft++;
-
-        QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
-        QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        send_log_window_message(msg, true, true);
-        delay(1);
-
-        // and drop extra bytes at the end //
-        uint32_t extrabytes = (cplen + len_done);   //hypothetical new length
-        if (extrabytes > length) {
-            cplen -= (extrabytes - length);
-            //thus, (len_done + cplen) will not exceed len
-        }
-
-        // increment addr, len, etc //
-        len_done += cplen;
-        addr += (numblocks * pagesize);
-        willget -= (numblocks * pagesize);
-    }
-
-    send_log_window_message("ROM read ready", true, true);
-    qDebug() << "ROM read ready";
-    qDebug() << "Map data length:" << mapdata.length() / 1024.0 << "kbytes";
-
-    ecuCalDef->FullRomData = mapdata;
-    set_progressbar_value(100);
-
-    return STATUS_SUCCESS;
-}
-*/
 /*
  * Write memory to Subaru Denso CAN (iso15765) 32bit ECUs, nisprog kernel
  *
@@ -1293,7 +1144,7 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
     received.clear();
     received = serial->read_serial_data(10, serial_read_extra_long_timeout);
     qDebug() << "Received: " + parse_message_to_hex(received);
-    if (received.length())
+    if (received.length() > 1)
     {
         if (received.at(0) == 0x7f)
         {
@@ -1306,7 +1157,7 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
         {
             qDebug() << "Crop msg";
             received.remove(0, 2);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else
@@ -1434,7 +1285,7 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
     received = serial->read_serial_data(3, serial_read_short_timeout);
     qDebug() << parse_message_to_hex(received);
 
-    if (received.length())
+    if (received.length() > 1)
     {
         if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FLASH)
         {
@@ -1472,7 +1323,7 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
 
     qDebug() << parse_message_to_hex(received);
 
-    if (received.length())
+    if (received.length() > 1)
     {
         if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_EB)
         {
@@ -1560,7 +1411,7 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
         received = serial->write_serial_data_echo_check(output);
 
         received = serial->read_serial_data(3, serial_read_long_timeout);
-        if (received.length())
+        if (received.length() > 1)
         {
             if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_WB)
             {
@@ -1574,6 +1425,10 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
                 //qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
             }
         }
+
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        send_log_window_message(msg, true, true);
 
         remain -= blocksize;
         start += blocksize;
@@ -1590,7 +1445,7 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
             curspeed += 1;
         }
 
-        tleft = remain / curspeed;  //s
+        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
         if (tleft > 9999) {
             tleft = 9999;
         }
@@ -1598,11 +1453,6 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
 
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
-
-        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
-        msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        send_log_window_message(msg, true, true);
-
     }
 
     return STATUS_SUCCESS;

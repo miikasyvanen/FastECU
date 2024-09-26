@@ -63,6 +63,7 @@ SOURCES += \
     modules/checksum_ecu_subaru_denso_sh7xxx.cpp \
     modules/checksum_ecu_subaru_hitachi_m32r.cpp \
     modules/checksum_ecu_subaru_hitachi_sh7058.cpp \
+    modules/checksum_ecu_subaru_hitachi_sh72543r.cpp \
     modules/checksum_tcu_mitsu_mh8104_can.cpp \
     modules/checksum_tcu_subaru_denso_sh7055.cpp \
     modules/checksum_tcu_subaru_hitachi_m32r_can.cpp \
@@ -89,6 +90,7 @@ SOURCES += \
     modules/flash_tcu_subaru_denso_sh705x_can.cpp \
     modules/flash_tcu_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_subaru_hitachi_m32r_kline.cpp \
+    modules/unbrick/flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.cpp \
     protocol_select.cpp \
     remote_utility/remote_utility.cpp \
     serial_port/serial_port_actions.cpp \
@@ -119,6 +121,7 @@ HEADERS += \
     modules/checksum_ecu_subaru_denso_sh7xxx.h \
     modules/checksum_ecu_subaru_hitachi_m32r.h \
     modules/checksum_ecu_subaru_hitachi_sh7058.h \
+    modules/checksum_ecu_subaru_hitachi_sh72543r.h \
     modules/checksum_tcu_mitsu_mh8104_can.h \
     modules/checksum_tcu_subaru_denso_sh7055.h \
     modules/checksum_tcu_subaru_hitachi_m32r_can.h \
@@ -145,6 +148,7 @@ HEADERS += \
     modules/flash_tcu_subaru_denso_sh705x_can.h \
     modules/flash_tcu_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_subaru_hitachi_m32r_kline.h \
+    modules/unbrick/flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.h \
     protocol_select.h \
     remote_utility/remote_utility.h \
     serial_port/qtrohelper.hpp \

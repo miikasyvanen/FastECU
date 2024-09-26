@@ -761,7 +761,7 @@ int FlashEcuSubaruDensoSH705xKline::check_romcrc_denso_sh705x_kline(const uint8_
         if (len > 5)
         {
             received.remove(0, 3);
-            received.remove(4, received.length() - 1);
+            received.remove(received.length() - 1, 1);
         }
     }
     else
@@ -1033,6 +1033,10 @@ int FlashEcuSubaruDensoSH705xKline::flash_block_denso_sh705x_kline(const uint8_t
             return STATUS_ERROR;
         }
 
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        send_log_window_message(msg, true, true);
+
         remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
@@ -1049,7 +1053,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block_denso_sh705x_kline(const uint8_t
             curspeed += 1;
         }
 
-        tleft = remain / curspeed;  //s
+        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
         if (tleft > 9999) {
             tleft = 9999;
         }
@@ -1057,12 +1061,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block_denso_sh705x_kline(const uint8_t
 
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
-
-        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        send_log_window_message(msg, true, true);
-
-    }   //while len
+    }
 
     send_log_window_message("npk_raw_flashblock: write complete.", true, true);
     received = serial->read_serial_data(100, serial_read_short_timeout);

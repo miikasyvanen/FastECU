@@ -48,7 +48,7 @@ private:
 
     #define KERNEL_MAXSIZE_SUB 8*1024U
 
-    #define CRC32   0x5AA5A55A
+    uint32_t CRC32 = 0x5AA5A55A;
     bool crc_tab32_init = 0;
     uint32_t crc_tab32[256];
 
@@ -97,7 +97,7 @@ private:
     int reflash_block_kline_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     unsigned int crc32(const unsigned char *buf, unsigned int len);
-    void init_crc32_tab( void );
+    void init_crc32_tab(void);
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
 
     QByteArray send_subaru_sid_bf_ssm_init();
