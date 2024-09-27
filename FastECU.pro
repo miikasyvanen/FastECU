@@ -202,7 +202,7 @@ DISTFILES += \
     definitions/A8DH200Z.xml \
     definitions/ecu_defs.xml \
     definitions/logger_METRIC_EN_v370.xml \
-    external/FastECU-mc68hc16-flasher.zip \
+    external/FastECU-mc68hc16-bdm.ino \
     fastecu.rc \
     kernels/ssmk_CAN_SH7055.bin \
     kernels/ssmk_CAN_SH7058.bin \
