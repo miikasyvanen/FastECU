@@ -925,6 +925,15 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         if (configValues->flash_protocol_selected_protocol_name.endsWith("_densocan"))
             flashEcuSubaruDensoSH705xDensoCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xDensoCan(serial, ecuCalDef[rom_number], cmd_type, this));
         /*
+        * Denso ECU Boot Mode
+        */
+
+        /*
+        * Denso ECU BDM
+        */
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_02_bdm"))
+            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuUnbrickSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
+        /*
         * Denso ECU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_02"))
@@ -945,11 +954,6 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruDensoSH705xKline = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xKline(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh72531_can"))
             flashEcuSubaruDensoSh72531Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH72531Can(serial, ecuCalDef[rom_number], cmd_type, this));
-        /*
-        * Denso ECU unbrick
-        */
-        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unbrick_denso_mc68hc16y5_02"))
-            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuUnbrickSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
         /*
         * Denso TCU
         */
@@ -973,14 +977,32 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_can_diesel"))
             eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
         /*
+        * Unisia Jecs ECU Boot Mode
+        */
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_20_bootmode"))
+            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_30_bootmode"))
+            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+
+        /*
         * Unisia Jecs ECU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_m3779x"))
             flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_m3775x"))
             flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial, ecuCalDef[rom_number], cmd_type, this));
-        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_"))
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_20"))
             flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_30"))
+            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_40"))
+            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_70"))
+            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        /*
+        * Hitachi ECU Boot Mode
+        */
+
         /*
         * Hitachi ECU
         */
