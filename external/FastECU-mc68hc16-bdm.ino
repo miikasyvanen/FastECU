@@ -1,3 +1,26 @@
+/**********************************************
+*
+* Arduino code to get MC68HC916Y5 to BDM mode
+* and to upload kernel to read and write ECU
+*
+* Intended to use to recovery of bricked ECU
+* or reverting locked ECU to stock.
+*
+* Usage: From serial terminal, i.e. Arduino serial monitor:
+* > rpmem <addr_start> <block_length> hex
+* This will print requested data as hex in single line to be able
+* to copy/paste it to preferred hex editor and save as a bin file.
+*
+* On FastECU for reading: select MC68HC916Y5 BDM protocol, select used arduino board
+* from serial port list, click read and wait ROM to download.
+*
+* On FastECU for writing: select MC68HC916Y5 BDM protocol, select used arduino board
+* from serial port list, click write to upload MC68HC916Y5 kernel. After kernel upload,
+* change to normal MC68HC916Y5 protocol, select used OBD adapter from serial port list,
+* and click test write/write to write ROM to ECU.
+*
+**********************************************/
+
 int DSO_pin = 2;        // PORTD pin1
 int DSI_pin = 3;        // PORTD pin0
 int RESET_pin = 4;      // PORTD pin4
