@@ -70,10 +70,10 @@ Support forum found here: https://www.fastecu.fi/forum/
   - Subaru Forester 2013+ CAN (Hitachi SH7059/1.5MB)
 
 ### Unbrick with FastECU (bench flash)
-- Forester/Impreza/Legacy 16bit Denso 2001-2005 BDM/K-Line (HC16/160KB) **ROM currently, TPU also coming**
-  
-### Unbrick with FastECU-m32r-flasher (bench flash) !*will be moved to FastECU at some point*!
-- **Supported models**
+- **BDM**
+  - Forester/Impreza/Legacy 16bit Denso 2001-2005 BDM/K-Line (HC16/160KB) **ROM currently, TPU also coming**
+ 
+- **Bootmode**
   - Subaru Forester, Impreza, Legacy Turbo MY99-00 (UJ WA12212920/128KB)
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212920/128KB) 
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
