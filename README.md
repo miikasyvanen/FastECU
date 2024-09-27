@@ -38,6 +38,7 @@ Support forum found here: https://www.fastecu.fi/forum/
 - **Supported ECU models**
   - Subaru Forester, Impreza, Legacy Turbo 1999-2000 K-Line (UJ WA12212920/128KB)
   - Forester/Impreza/Legacy 16bit Denso 2001-2005 K-Line (Denso HC16/160KB)
+  - Forester/Impreza/Legacy 16bit Denso 2001-2005 K-Line (Denso HC16 TPU/4KB)
   - Subaru Forester JDM Cross Sports (Denso SH7055/512KB)
   - Subaru Legacy JDM GT MY03+ (Denso SH7055/512KB)
   - Subaru Legacy JDM GT MY05+ (Denso SH7058/1MB)
@@ -71,7 +72,7 @@ Support forum found here: https://www.fastecu.fi/forum/
 
 ### Unbrick with FastECU (bench flash)
 - **BDM**
-  - Forester/Impreza/Legacy 16bit Denso 2001-2005 BDM/K-Line (HC16/160KB) **ROM currently, TPU also coming**
+  - Forester/Impreza/Legacy 16bit Denso 2001-2005 BDM/K-Line (HC16/160KB) **ROM implemented, TPU also coming**
  
 - **Bootmode**
   - Subaru Forester, Impreza, Legacy Turbo MY99-00 (UJ WA12212920/128KB)
