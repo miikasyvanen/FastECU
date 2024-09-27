@@ -53,6 +53,8 @@ public:
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
 
+    int echo_check_timout = 5000;
+
     uint8_t iso14230_startbyte = 0;
     uint8_t iso14230_tester_id = 0;
     uint8_t iso14230_target_id = 0;

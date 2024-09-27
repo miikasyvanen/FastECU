@@ -620,14 +620,14 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
             if (serial->bytesAvailable())
                 received.append(serial->read(1));
         }
-        QTime dieTime = QTime::currentTime().addMSecs(5000);
+        QTime dieTime = QTime::currentTime().addMSecs(echo_check_timout);
         //qDebug() << "Data sent:" << parse_message_to_hex(output);
 
         while (received.length() < output.length() && (QTime::currentTime() < dieTime))
         {
             if (serial->bytesAvailable())
             {
-                dieTime = QTime::currentTime().addMSecs(5000);
+                dieTime = QTime::currentTime().addMSecs(echo_check_timout);
                 received.append(serial->read(1));
             }
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
