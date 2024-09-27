@@ -24,8 +24,6 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
 
     int result = STATUS_ERROR;
 
-    //result = init_flash_subaru_unisia_jecs();
-
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 

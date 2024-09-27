@@ -175,6 +175,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response from bootloader: " + parse_message_to_hex(received);
 
+    /******************************
+     *
+     * Response is in TPU flash location loc_60684
+     *
+     *****************************/
     if (flash_method.endsWith("_ecutek"))
         denso_bootloader_init_response_wrx02_ok = denso_bootloader_init_response_ecutek_wrx02_ok;
     if (flash_method.endsWith("_cobb"))

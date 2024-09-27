@@ -12,8 +12,12 @@ ChecksumTcuSubaruDensoSH7055::~ChecksumTcuSubaruDensoSH7055()
 
 QByteArray ChecksumTcuSubaruDensoSH7055::calculate_checksum(QByteArray romData)
 {
-    // Checksum is calulated by adding 16bit values from each area. As added bytes are 16bit,
-    // every area size (16bit byte count) needs to multiply by 2
+    /*******************
+     *
+     * Checksum is calulated by adding 16bit values from each area. As added bytes are 16bit,
+     * every area size (16bit byte count) needs to multiply by 2
+     *
+     ******************/
 
     QStringList checksum_areas = {  "0x1000", "0x0800",
                                     "0x3000", "0x003a",
