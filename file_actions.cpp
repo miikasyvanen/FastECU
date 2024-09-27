@@ -640,6 +640,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QString filename = configValues->protocols_file;
 
     QStringList flash_protocol_name;
+    QStringList flash_protocol_alias;
     QStringList flash_protocol_ecu;
     QStringList flash_protocol_mcu;
     QStringList flash_protocol_mode;
@@ -689,6 +690,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         //qDebug() << "Protocol";
                         flash_protocol_name.append(" ");
                         flash_protocol_name.replace(index, protocol.attribute("name","No name"));
+                        flash_protocol_alias.append(" ");
+                        flash_protocol_alias.replace(index, protocol.attribute("alias","No alias"));
 
                         flash_protocol_ecu.append(" ");
                         flash_protocol_mcu.append(" ");
@@ -776,6 +779,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                     {
                         //qDebug() << "Add new vehicle";
                         configValues->flash_protocol_id.append(QString::number(id));//car_model.attribute("id","No id"));
+                        configValues->flash_protocol_alias.append(" ");
                         configValues->flash_protocol_make.append(" ");
                         configValues->flash_protocol_model.append(" ");
                         configValues->flash_protocol_version.append(" ");
@@ -833,6 +837,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 {
                                     if (flash_protocol_protocol_name.at(i) == configValues->flash_protocol_protocol_name.at(index))
                                     {
+                                        configValues->flash_protocol_alias.replace(index, flash_protocol_alias.at(i));
                                         configValues->flash_protocol_ecu.replace(index, flash_protocol_ecu.at(i));
                                         configValues->flash_protocol_mcu.replace(index, flash_protocol_mcu.at(i));
                                         configValues->flash_protocol_mode.replace(index, flash_protocol_mode.at(i));
@@ -1776,7 +1781,38 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
+        QDialog *definitionDialog = new QDialog(this);
+        QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+        QLabel *label = new QLabel("Unable to find definition for selected ROM file!\n\nSelect option:");
+        QRadioButton *radioButton1 = new QRadioButton("Create new definition file template");
+        radioButton1->setChecked(true);
+        QRadioButton *radioButton2 = new QRadioButton("Use existing definition file as base");
+        QRadioButton *radioButton3 = new QRadioButton("Continue without definition file (not recommended)");
+
+        QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+
+        vBoxLayout->addWidget(label);
+        vBoxLayout->addWidget(radioButton1);
+        vBoxLayout->addWidget(radioButton2);
+        vBoxLayout->addWidget(radioButton3);
+        vBoxLayout->addWidget(buttonBox);
+
+        int result = definitionDialog->exec();
+        if(result == QDialog::Accepted)
+            qDebug() << "Dialog accepted";
+        else
+            qDebug() << "Dialog rejected";
+
+        if(radioButton1->isChecked())
+            qDebug() << radioButton1->text();
+        if(radioButton2->isChecked())
+            qDebug() << radioButton2->text();
+        if(radioButton3->isChecked())
+            qDebug() << radioButton3->text();
+
+
+        //QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
         ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
         ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
         ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
@@ -1787,7 +1823,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         //ecuCalDef->RomInfo.replace(Transmission, transmission);
         //ecuCalDef->RomInfo.replace(MemModel, memmodel);
         //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-        ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
+        //ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
         ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
         ecuCalDef->RomInfo.replace(DefFile, " ");
     }

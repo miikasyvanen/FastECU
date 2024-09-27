@@ -515,6 +515,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                         qDebug() << "XML ID:" << xmlid << cal_id;
                         if (ecuCalDef->RomInfo.at(XmlId) == " ")
                         {
+                            bool flashmethod_alias_found = false;
                             ecuCalDef->RomInfo.replace(XmlId, xmlid);
                             ecuCalDef->RomInfo.replace(InternalIdAddress, internalidaddress);
                             ecuCalDef->RomInfo.replace(InternalIdString, internalidstring);
@@ -529,6 +530,20 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                             ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
                             ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
                             ecuCalDef->RomInfo.replace(FileSize, filesize);
+                            for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
+                            {
+                                QStringList aliases =  configValues->flash_protocol_alias.at(i).split(",");
+                                for (int j = 0; j < aliases.length(); j++)
+                                {
+                                    if (aliases.at(j) == flashmethod)
+                                    {
+                                        flashmethod_alias_found = true;
+                                        qDebug() << "Alias: " << flashmethod;
+                                        qDebug() << "Protocol:" << configValues->flash_protocol_protocol_name.at(i);
+                                        ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_protocol_name.at(i));
+                                    }
+                                }
+                            }
                         }
 
                         if (inherits_another_def)

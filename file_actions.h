@@ -16,6 +16,11 @@
 #include <QDateTime>
 #include <QDirIterator>
 #include <QPushButton>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QRadioButton>
+#include <QComboBox>
+#include <QDialogButtonBox>
 
 #include <string.h>
 #include <iostream>
@@ -109,6 +114,7 @@ public:
         QStringList romraider_def_filename;
 
         QStringList flash_protocol_id;
+        QStringList flash_protocol_alias;
         QStringList flash_protocol_make;
         QStringList flash_protocol_model;
         QStringList flash_protocol_version;
