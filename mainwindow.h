@@ -64,6 +64,7 @@
 #include <modules/flash_ecu_subaru_denso_sh72531_can.h>
 
 #include <modules/unbrick/flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.h>
+#include <modules/unbrick/flash_ecu_subaru_unisia_jecs_m32r_boot_mode.h>
 
 #include <modules/eeprom_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/eeprom_ecu_subaru_denso_sh705x_can.h>
@@ -158,6 +159,7 @@ private:
     /* Hitachi ECU */
     FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
     FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecsM32r;
+    FlashEcuSubaruUnisiaJecsM32rBootMode *flashEcuSubaruUnisiaJecsM32rBootMode;
     FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
     FlashEcuSubaruHitachiM32rCan *flashEcuSubaruHitachiM32rCan;
     FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;

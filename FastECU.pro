@@ -84,13 +84,13 @@ SOURCES += \
     modules/flash_ecu_subaru_mitsu_m32r_kline.cpp \
     modules/flash_ecu_subaru_unisia_jecs.cpp \
     modules/flash_ecu_subaru_unisia_jecs_m32r.cpp \
-    modules/flash_ecu_subaru_unisia_jecs_m32r_boot_mode.cpp \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.cpp \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.cpp \
     modules/flash_tcu_subaru_denso_sh705x_can.cpp \
     modules/flash_tcu_subaru_hitachi_m32r_can.cpp \
     modules/flash_tcu_subaru_hitachi_m32r_kline.cpp \
+    modules/unbrick/flash_ecu_subaru_unisia_jecs_m32r_boot_mode.cpp \
     modules/unbrick/flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.cpp \
     protocol_select.cpp \
     remote_utility/remote_utility.cpp \
@@ -143,13 +143,13 @@ HEADERS += \
     modules/flash_ecu_subaru_mitsu_m32r_kline.h \
     modules/flash_ecu_subaru_unisia_jecs.h \
     modules/flash_ecu_subaru_unisia_jecs_m32r.h \
-    modules/flash_ecu_subaru_unisia_jecs_m32r_boot_mode.h \
     modules/flash_tcu_cvt_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8104_can.h \
     modules/flash_tcu_cvt_subaru_mitsu_mh8111_can.h \
     modules/flash_tcu_subaru_denso_sh705x_can.h \
     modules/flash_tcu_subaru_hitachi_m32r_can.h \
     modules/flash_tcu_subaru_hitachi_m32r_kline.h \
+    modules/unbrick/flash_ecu_subaru_unisia_jecs_m32r_boot_mode.h \
     modules/unbrick/flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.h \
     protocol_select.h \
     remote_utility/remote_utility.h \
@@ -213,12 +213,17 @@ DISTFILES += \
     kernels/ssmk_SH7058_EEPSCI4.bin \
     kernels/ssmk_can_sh7055.bin \
     kernels/ssmk_can_sh7058.bin \
+    kernels/ssmk_can_sh7059d_euro5.bin \
     kernels/ssmk_can_tp_sh7058.bin \
     kernels/ssmk_can_tp_sh7058d_euro4.bin \
+    kernels/ssmk_can_tp_sh7059d_euro5.bin \
     kernels/ssmk_hc16.bin \
     kernels/ssmk_hc16_decryp.bin \
     kernels/ssmk_kline_sh7055.bin \
     kernels/ssmk_kline_sh7058.bin \
+    kernels/ssmk_mc68hc916y5.bin \
+    kernels/ssmk_tcu_can_sh7055_35.bin \
+    kernels/ssmk_tcu_can_sh7058.bin \
     precompiled/FastECU-Linux.zip \
     precompiled/FastECU-Win7-64bit.zip \
     precompiled/FastECU-Windows.zip

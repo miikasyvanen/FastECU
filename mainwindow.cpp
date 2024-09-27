@@ -980,9 +980,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Unisia Jecs ECU Boot Mode
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_20_bootmode"))
-            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+            flashEcuSubaruUnisiaJecsM32rBootMode = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32rBootMode(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_30_bootmode"))
-            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+            flashEcuSubaruUnisiaJecsM32rBootMode = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32rBootMode(serial, ecuCalDef[rom_number], cmd_type, this));
 
         /*
         * Unisia Jecs ECU
