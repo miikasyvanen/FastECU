@@ -259,15 +259,15 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 ecuCalDef->RomInfo.replace(InternalIdAddress, internalidaddress);
                 ecuCalDef->RomInfo.replace(InternalIdString, internalidstring);
                 ecuCalDef->RomInfo.replace(EcuId, ecuid);
-                ecuCalDef->RomInfo.replace(Year, year);
-                ecuCalDef->RomInfo.replace(Market, market);
                 ecuCalDef->RomInfo.replace(Make, make);
+                ecuCalDef->RomInfo.replace(Market, market);
                 ecuCalDef->RomInfo.replace(Model, model);
                 ecuCalDef->RomInfo.replace(SubModel, submodel);
                 ecuCalDef->RomInfo.replace(Transmission, transmission);
+                ecuCalDef->RomInfo.replace(Year, year);
+                ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
                 ecuCalDef->RomInfo.replace(MemModel, memmodel);
                 ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-                ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
                 ecuCalDef->RomInfo.replace(FileSize, filesize);
                 for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
                 {

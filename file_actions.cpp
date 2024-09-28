@@ -1,6 +1,7 @@
 #include "file_actions.h"
 
-FileActions::FileActions()
+FileActions::FileActions(QWidget *parent)
+    : QWidget(parent)
 {
 
 }
@@ -1651,6 +1652,292 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(Fi
     return ecuCalDef;
 }
 
+FileActions::EcuCalDefStructure *FileActions::create_new_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString filename;
+    QFileDialog saveDialog;
+    bool isFileSelected = false;
+
+    QDialog *definitionDialog = new QDialog(this);
+    QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+    QLabel *label = new QLabel("Please provide ROM ID Information:");
+    vBoxLayout->addWidget(label);
+
+    QHBoxLayout *hBoxLayout = new QHBoxLayout();
+    QVBoxLayout *labelVBoxLayout = new QVBoxLayout();
+    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+    {
+        QLabel *label = new QLabel(ecuCalDef->RomInfoStrings.at(i));
+        labelVBoxLayout->addWidget(label);
+    }
+
+    QVBoxLayout *lineEditVBoxLayout = new QVBoxLayout();
+    QList<QLineEdit*> lineEditList;
+    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+    {
+        lineEditList.append(new QLineEdit());
+        lineEditVBoxLayout->addWidget(lineEditList.at(i));
+    }
+
+    hBoxLayout->addLayout(labelVBoxLayout);
+    hBoxLayout->addLayout(lineEditVBoxLayout);
+    vBoxLayout->addLayout(hBoxLayout);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    vBoxLayout->addWidget(buttonBox);
+    connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+    int result = definitionDialog->exec();
+    if(result == QDialog::Accepted)
+    {
+        // 0x0C6D57
+        while (filename.isEmpty() && !isFileSelected)
+        {
+            saveDialog.setDefaultSuffix("xml");
+            filename = QFileDialog::getSaveFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+            if (filename.isEmpty()){
+                QDialog *definitionDialog = new QDialog(this);
+                QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+                QLabel *label = new QLabel("No file selected!\n\nIf you still want to create file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+                QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+                connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+                connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+                vBoxLayout->addWidget(label);
+                vBoxLayout->addWidget(buttonBox);
+
+                int result = definitionDialog->exec();
+                if(result == QDialog::Rejected)
+                    isFileSelected = true;
+            }
+        }
+        if(filename.endsWith(QString(".")))
+            filename.remove(filename.length() - 1, 1);
+        if(!filename.endsWith(QString(".xml")))
+            filename.append(QString(".xml"));
+
+        QFile file(filename);
+        QFileInfo fileInfo(file.fileName());
+        //file_name_str = fileInfo.fileName();
+
+        if (!file.open(QIODevice::ReadWrite ))
+        {
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for reading");
+            return NULL;
+        }
+
+        QString checksum_module = configValues->flash_protocol_selected_protocol_name;
+        checksum_module.remove(0, 3);
+        checksum_module.insert(0, "checksum");
+
+        QXmlStreamWriter stream(&file);
+        file.resize(0);
+        stream.setAutoFormatting(true);
+        stream.writeStartDocument();
+        stream.writeStartElement("rom");
+        stream.writeStartElement("romid");
+
+        for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+        {
+            qDebug() << lineEditList.at(i)->text();
+            stream.writeTextElement(ecuCalDef->RomInfoNames.at(i), lineEditList.at(i)->text());
+        }
+        stream.writeEndElement();
+        stream.writeTextElement("include", "");
+        stream.writeEndElement();
+
+        file.close();
+    }
+
+    return ecuCalDef;
+}
+
+FileActions::EcuCalDefStructure *FileActions::use_existing_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString filename;
+    QFileDialog openDialog;
+    QFileDialog saveDialog;
+    bool isFileSelected = false;
+
+    while (filename.isEmpty() && !isFileSelected)
+    {
+        openDialog.setDefaultSuffix("xml");
+        filename = QFileDialog::getOpenFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+        if (filename.isEmpty()){
+            QDialog *definitionDialog = new QDialog(this);
+            QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+            QLabel *label = new QLabel("No file selected!\n\nIf you still want to select file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+            QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+            connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+            connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+            vBoxLayout->addWidget(label);
+            vBoxLayout->addWidget(buttonBox);
+
+            int result = definitionDialog->exec();
+            if(result == QDialog::Rejected)
+                isFileSelected = true;
+        }
+    }
+
+    QFile file(filename);
+    QFileInfo fileInfo(file.fileName());
+    //file_name_str = fileInfo.fileName();
+
+    if (!file.open(QIODevice::ReadOnly ))
+    {
+        QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for reading");
+        return NULL;
+    }
+    QStringList defData;
+    while(!file.atEnd())
+    {
+        defData.append(file.readLine());
+    }
+    file.close();
+
+    QString xml_id;
+    QString xml_id_addr;
+/*
+    for (int i = 0; i < defData.length(); i++)
+    {
+        if (defData.at(i).contains("<internalidaddress>"))
+        {
+            QString lineData = defData.at(i);
+            xml_id_addr = "0x" + lineData.split(">").at(1).split("<").at(0);
+            qDebug() << "Parsed ECU ID address:" << xml_id_addr;
+        }
+    }
+    for (int i = 0; i < defData.length(); i++)
+    {
+        if (defData.at(i).contains("<xmlid>"))
+        {
+            QString lineData = defData.at(i);
+            xml_id = lineData.split(">").at(1).split("<").at(0);
+            qDebug() << "Parsed ECU ID:" << xml_id;
+            //lineData.replace(id_start, id_end - id_start, xml_id);
+        }
+    }
+*/
+    QDialog *definitionDialog = new QDialog(this);
+    QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+    QLabel *label = new QLabel("Please provide ROM ID Information:");
+    vBoxLayout->addWidget(label);
+
+    QHBoxLayout *hBoxLayout = new QHBoxLayout();
+    QVBoxLayout *labelVBoxLayout = new QVBoxLayout();
+    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+    {
+        QLabel *label = new QLabel(ecuCalDef->RomInfoStrings.at(i));
+        labelVBoxLayout->addWidget(label);
+    }
+
+    QVBoxLayout *lineEditVBoxLayout = new QVBoxLayout();
+    QList<QLineEdit*> lineEditList;
+    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+    {
+        lineEditList.append(new QLineEdit());
+        lineEditVBoxLayout->addWidget(lineEditList.at(i));
+    }
+
+    hBoxLayout->addLayout(labelVBoxLayout);
+    hBoxLayout->addLayout(lineEditVBoxLayout);
+    vBoxLayout->addLayout(hBoxLayout);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    vBoxLayout->addWidget(buttonBox);
+    connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+    int result = definitionDialog->exec();
+    //QSize size = this->size();
+    //size = this->parentWidget()->size();
+    //qDebug() << "Screen size" << size;
+    if(result == QDialog::Accepted)
+    {
+        filename.clear();
+        while (filename.isEmpty() && !isFileSelected)
+        {
+            saveDialog.setDefaultSuffix("xml");
+            filename = QFileDialog::getSaveFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+            if (filename.isEmpty()){
+                QDialog *definitionDialog = new QDialog(this);
+                QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+                QLabel *label = new QLabel("No file selected!\n\nIf you still want to create file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+                QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+                connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+                connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+                vBoxLayout->addWidget(label);
+                vBoxLayout->addWidget(buttonBox);
+
+                int result = definitionDialog->exec();
+                if(result == QDialog::Rejected)
+                    isFileSelected = true;
+            }
+        }
+        if(filename.endsWith(QString(".")))
+            filename.remove(filename.length() - 1, 1);
+        if(!filename.endsWith(QString(".xml")))
+            filename.append(QString(".xml"));
+
+        QFile file(filename);
+        QFileInfo fileInfo(file.fileName());
+        //file_name_str = fileInfo.fileName();
+
+        if (!file.open(QIODevice::ReadWrite ))
+        {
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for reading");
+            return NULL;
+        }
+
+        QString checksum_module = ecuCalDef->RomInfo.at(FlashMethod);
+        checksum_module.remove(0, 3);
+        checksum_module.insert(0, "checksum");
+
+        QXmlStreamWriter stream(&file);
+        file.resize(0);
+
+        int index = 0;
+        qDebug() << "Check header end index";
+        while (index < defData.length())
+        {
+            if(defData.at(index).contains("</romid>"))
+                break;
+            index++;
+        }
+        if (index == defData.length())
+            index--;
+        qDebug() << "Write to file";
+        stream.setAutoFormatting(true);
+        stream.writeStartDocument();
+        stream.writeStartElement("rom");
+        stream.writeStartElement("romid");
+        for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+        {
+            qDebug() << lineEditList.at(i)->text();
+            stream.writeTextElement(ecuCalDef->RomInfoNames.at(i), lineEditList.at(i)->text());
+        }
+        stream.writeEndElement();
+/*
+        stream.writeTextElement("include", "");
+        stream.writeEndElement();
+*/
+        QTextStream out(&file);
+        for (int i = index; i < defData.length(); i++)
+            out << defData.at(i);
+
+        file.close();
+    }
+
+    return ecuCalDef;
+}
+
 FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -1784,19 +2071,21 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         QDialog *definitionDialog = new QDialog(this);
         QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
         QLabel *label = new QLabel("Unable to find definition for selected ROM file!\n\nSelect option:");
-        QRadioButton *radioButton1 = new QRadioButton("Create new definition file template");
-        radioButton1->setChecked(true);
-        QRadioButton *radioButton2 = new QRadioButton("Use existing definition file as base");
-        QRadioButton *radioButton3 = new QRadioButton("Continue without definition file (not recommended)");
+        QRadioButton *createNewRadioButton = new QRadioButton("Create new definition file template");
+        QRadioButton *useExistingRadioButton = new QRadioButton("Use existing definition file as base");
+        QRadioButton *continueWithoutRadioButton = new QRadioButton("Continue without definition file (not recommended)");
 
         QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
         connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
 
         vBoxLayout->addWidget(label);
-        vBoxLayout->addWidget(radioButton1);
-        vBoxLayout->addWidget(radioButton2);
-        vBoxLayout->addWidget(radioButton3);
+        vBoxLayout->addWidget(createNewRadioButton);
+        vBoxLayout->addWidget(useExistingRadioButton);
+        vBoxLayout->addWidget(continueWithoutRadioButton);
         vBoxLayout->addWidget(buttonBox);
+        //createNewRadioButton->setChecked(true);
+        useExistingRadioButton->setChecked(true);
+        //continueWithoutRadioButton->setChecked(true);
 
         int result = definitionDialog->exec();
         if(result == QDialog::Accepted)
@@ -1804,32 +2093,58 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         else
             qDebug() << "Dialog rejected";
 
-        if(radioButton1->isChecked())
-            qDebug() << radioButton1->text();
-        if(radioButton2->isChecked())
-            qDebug() << radioButton2->text();
-        if(radioButton3->isChecked())
-            qDebug() << radioButton3->text();
+        if(createNewRadioButton->isChecked()){
+            qDebug() << createNewRadioButton->text();
+            create_new_definition_for_rom(ecuCalDef);
+        }
+        else if(useExistingRadioButton->isChecked()){
+            qDebug() << useExistingRadioButton->text();
+            use_existing_definition_for_rom(ecuCalDef);
+        }
+        else if(continueWithoutRadioButton->isChecked())
+        {
+            qDebug() << continueWithoutRadioButton->text();
 
 
-        //QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
-        ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
-        ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
-        ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
-        ecuCalDef->RomInfo.replace(EcuId, selected_id);
-        ecuCalDef->RomInfo.replace(Make, configValues->flash_protocol_selected_make);
-        //ecuCalDef->RomInfo.replace(Model, configValues->flash_protocol_selected_model);
-        //ecuCalDef->RomInfo.replace(SubModel, submodel);
-        //ecuCalDef->RomInfo.replace(Transmission, transmission);
-        //ecuCalDef->RomInfo.replace(MemModel, memmodel);
-        //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-        //ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
-        ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
-        ecuCalDef->RomInfo.replace(DefFile, " ");
+            //QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
+            ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
+            ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
+            ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
+            ecuCalDef->RomInfo.replace(EcuId, selected_id);
+            ecuCalDef->RomInfo.replace(Make, configValues->flash_protocol_selected_make);
+            //ecuCalDef->RomInfo.replace(Model, configValues->flash_protocol_selected_model);
+            //ecuCalDef->RomInfo.replace(SubModel, submodel);
+            //ecuCalDef->RomInfo.replace(Transmission, transmission);
+            //ecuCalDef->RomInfo.replace(MemModel, memmodel);
+            //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
+            //ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
+            ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
+            ecuCalDef->RomInfo.replace(DefFile, " ");
+        }
     }
 
+    QString checksum_module = ecuCalDef->RomInfo.at(FlashMethod);
+    checksum_module.remove(0, 3);
+    checksum_module.insert(0, "checksum");
+    for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
+    {
+        if (configValues->flash_protocol_protocol_name.at(i) == ecuCalDef->RomInfo.at(FlashMethod))
+        {
+            configValues->flash_protocol_selected_id = configValues->flash_protocol_id.at(i);
+            configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(i);
+            configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(i);
+            configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(i);
+            configValues->flash_protocol_selected_protocol_name = configValues->flash_protocol_protocol_name.at(i);
+            configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(i);
+            configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(i);
+            configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(i);
+            configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(i);
+        }
+    }
     if (configValues->flash_protocol_selected_checksum == "yes")
-        ecuCalDef->RomInfo.replace(ChecksumModule, configValues->flash_protocol_selected_protocol_name);
+        ecuCalDef->RomInfo.replace(ChecksumModule, checksum_module);
+    if (configValues->flash_protocol_selected_checksum == "n/a")
+        ecuCalDef->RomInfo.replace(ChecksumModule, "Not implemented yet");
     if (configValues->flash_protocol_selected_checksum == "no")
         ecuCalDef->RomInfo.replace(ChecksumModule, "No checksums");
 
