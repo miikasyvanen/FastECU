@@ -14,7 +14,7 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
 {
     /*******************
      *
-     * Checksum_6010 is calculated between 0x6000 - 0x1fffff, 16bit summation, balance value at 0x6c and 0x6010
+     * Checksum is calculated between 0x6000 - 0x1fffff, 16bit summation, balance value is word at 0x1ffffe
      * PTR_DAT_000b446c
      *
      ******************/
