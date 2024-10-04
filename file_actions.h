@@ -23,6 +23,7 @@
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QLineEdit>
+#include <QTextEdit>
 
 #include <string.h>
 #include <iostream>
@@ -63,7 +64,7 @@ public:
     struct ConfigValuesStructure {
         QString software_name = "FastECU";
         QString software_title = "FastECU";
-        QString software_version = "0.0-dev0";
+        QString software_version = "0.1.0-beta.1";
 
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
@@ -389,6 +390,42 @@ public:
             "rombase",
             "filesize",
             "deffile",
+        };
+
+        QStringList DefHeaderStrings = {
+            "XML ID",
+            "Internal ID Address",
+            "Internal ID String",
+            "ECU ID",
+            "Make",
+            "Market",
+            "Model",
+            "Submodel",
+            "Transmission",
+            "Year",
+            "Flash Method",
+            "Memory Model",
+            "Checksum Module",
+            "Include",
+            "Notes",
+        };
+
+        QStringList DefHeaderNames = {
+            "xmlid",
+            "internalidaddress",
+            "internalidstring",
+            "ecuid",
+            "make",
+            "market",
+            "model",
+            "submodel",
+            "transmission",
+            "year",
+            "flashmethod",
+            "memmodel",
+            "checksummodule",
+            "include",
+            "notes",
         };
 
     } EcuCalDefStruct;

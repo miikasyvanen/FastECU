@@ -1662,34 +1662,43 @@ FileActions::EcuCalDefStructure *FileActions::create_new_definition_for_rom(File
 
     QDialog *definitionDialog = new QDialog(this);
     QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
-    QLabel *label = new QLabel("Please provide ROM ID Information:");
+    QLabel *label = new QLabel("Please provide ROM Information:");
     vBoxLayout->addWidget(label);
 
-    QHBoxLayout *hBoxLayout = new QHBoxLayout();
-    QVBoxLayout *labelVBoxLayout = new QVBoxLayout();
-    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
-    {
-        QLabel *label = new QLabel(ecuCalDef->RomInfoStrings.at(i));
-        labelVBoxLayout->addWidget(label);
-    }
-
-    QVBoxLayout *lineEditVBoxLayout = new QVBoxLayout();
+    QGridLayout *defHeaderGridLayout = new QGridLayout();
     QList<QLineEdit*> lineEditList;
-    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+    QList<QTextEdit*> textEditList;
+    int index = 0;
+    qDebug() << "Create header";
+    for (int i = 0; i < ecuCalDef->DefHeaderNames.length(); i++)
     {
-        lineEditList.append(new QLineEdit());
-        lineEditVBoxLayout->addWidget(lineEditList.at(i));
-    }
+        QLabel *label = new QLabel(ecuCalDef->DefHeaderStrings.at(index));
+        defHeaderGridLayout->addWidget(label, index, 0);
 
-    hBoxLayout->addLayout(labelVBoxLayout);
-    hBoxLayout->addLayout(lineEditVBoxLayout);
-    vBoxLayout->addLayout(hBoxLayout);
+        if (ecuCalDef->DefHeaderNames.at(i) == "notes")
+        {
+            textEditList.append(new QTextEdit());
+            textEditList.at(textEditList.length()-1)->setObjectName(ecuCalDef->DefHeaderNames.at(i));
+            //textEditList.at(textEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(textEditList.at(textEditList.length()-1), index+1, 0, 1, 2);
+        }
+        else
+        {
+            lineEditList.append(new QLineEdit());
+            lineEditList.at(lineEditList.length()-1)->setObjectName(ecuCalDef->DefHeaderNames.at(i));
+            //lineEditList.at(lineEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(lineEditList.at(lineEditList.length()-1), index, 1);
+        }
+        index++;
+    }
+    vBoxLayout->addLayout(defHeaderGridLayout);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     vBoxLayout->addWidget(buttonBox);
     connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
 
+    definitionDialog->setMinimumWidth(500);
     int result = definitionDialog->exec();
     if(result == QDialog::Accepted)
     {
@@ -1725,28 +1734,47 @@ FileActions::EcuCalDefStructure *FileActions::create_new_definition_for_rom(File
 
         if (!file.open(QIODevice::ReadWrite ))
         {
-            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for reading");
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for writing");
             return NULL;
         }
 
+        QString rombase;
         QString checksum_module = configValues->flash_protocol_selected_protocol_name;
         checksum_module.remove(0, 3);
         checksum_module.insert(0, "checksum");
 
+        configValues->ecuflash_def_filename.append(filename);
+
         QXmlStreamWriter stream(&file);
         file.resize(0);
         stream.setAutoFormatting(true);
+        stream.setAutoFormattingIndent(2);
         stream.writeStartDocument();
         stream.writeStartElement("rom");
         stream.writeStartElement("romid");
 
-        for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+        int index = 0;
+        for (int i = 0; i < ecuCalDef->DefHeaderNames.length(); i++)
         {
-            qDebug() << lineEditList.at(i)->text();
-            stream.writeTextElement(ecuCalDef->RomInfoNames.at(i), lineEditList.at(i)->text());
+            if (ecuCalDef->DefHeaderNames.at(i) != "include" && ecuCalDef->DefHeaderNames.at(i) != "notes")
+            {
+                if(ecuCalDef->DefHeaderNames.at(i) == "internalidstring")
+                    configValues->ecuflash_def_cal_id.append(lineEditList.at(i)->text());
+                if(ecuCalDef->DefHeaderNames.at(i) == "internalidaddress")
+                    configValues->ecuflash_def_cal_id_addr.append(lineEditList.at(i)->text());
+                if(ecuCalDef->DefHeaderNames.at(i) == "ecuid")
+                    configValues->ecuflash_def_ecu_id.append(lineEditList.at(i)->text());
+
+                qDebug() << lineEditList.at(i)->text();
+                stream.writeTextElement(ecuCalDef->RomInfoNames.at(i), lineEditList.at(i)->text());
+                index++;
+            }
         }
         stream.writeEndElement();
-        stream.writeTextElement("include", "");
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("include", lineEditList.at(index)->text());
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("notes", textEditList.at(0)->toPlainText());
         stream.writeEndElement();
 
         file.close();
@@ -1803,61 +1831,91 @@ FileActions::EcuCalDefStructure *FileActions::use_existing_definition_for_rom(Fi
 
     QString xml_id;
     QString xml_id_addr;
-/*
+    QStringList headerData;
+    int endIndex = 0;
+
     for (int i = 0; i < defData.length(); i++)
     {
-        if (defData.at(i).contains("<internalidaddress>"))
+        if (!defData.at(i).contains("<") && !defData.at(i).contains(">"))
+            continue;
+        for (int j = 0; j < ecuCalDef->DefHeaderNames.length(); j++)
         {
-            QString lineData = defData.at(i);
-            xml_id_addr = "0x" + lineData.split(">").at(1).split("<").at(0);
-            qDebug() << "Parsed ECU ID address:" << xml_id_addr;
+            QString parsedHeaderName = defData.at(i).split("<").at(1).split(">").at(0);
+            if (parsedHeaderName == ecuCalDef->DefHeaderNames.at(j))
+            {
+                qDebug() << parsedHeaderName;
+                headerData.append(ecuCalDef->DefHeaderNames.at(j));
+                if (parsedHeaderName != "notes")
+                    headerData.append(defData.at(i).split(">").at(1).split("<").at(0));
+                if (parsedHeaderName == "notes")
+                {
+                    QString lineData;
+                    parsedHeaderName.clear();
+
+                    lineData.append(defData.at(i).split(">").at(1).split("<").at(0));
+                    if (defData.at(i).contains("</") && defData.at(i).contains(">"))
+                        parsedHeaderName = defData.at(i).split("</").at(1).split(">").at(0);
+                    while (parsedHeaderName != "notes")
+                    {
+                        i++;
+                        if (defData.at(i).contains("</") && defData.at(i).contains(">"))
+                        {
+                            parsedHeaderName = defData.at(i).split("</").at(1).split(">").at(0);
+                            lineData.append(defData.at(i).split("</").at(0));
+                        }
+                        else
+                            lineData.append(defData.at(i));
+
+                        qDebug() << "Test:" << parsedHeaderName;
+                    }
+                    headerData.append(lineData);
+                }
+                endIndex = i;
+            }
         }
     }
-    for (int i = 0; i < defData.length(); i++)
-    {
-        if (defData.at(i).contains("<xmlid>"))
-        {
-            QString lineData = defData.at(i);
-            xml_id = lineData.split(">").at(1).split("<").at(0);
-            qDebug() << "Parsed ECU ID:" << xml_id;
-            //lineData.replace(id_start, id_end - id_start, xml_id);
-        }
-    }
-*/
+    endIndex++;
+
     QDialog *definitionDialog = new QDialog(this);
     QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
-    QLabel *label = new QLabel("Please provide ROM ID Information:");
+    QLabel *label = new QLabel("Please provide ROM Information:");
     vBoxLayout->addWidget(label);
 
-    QHBoxLayout *hBoxLayout = new QHBoxLayout();
-    QVBoxLayout *labelVBoxLayout = new QVBoxLayout();
-    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
-    {
-        QLabel *label = new QLabel(ecuCalDef->RomInfoStrings.at(i));
-        labelVBoxLayout->addWidget(label);
-    }
-
-    QVBoxLayout *lineEditVBoxLayout = new QVBoxLayout();
+    QGridLayout *defHeaderGridLayout = new QGridLayout();
     QList<QLineEdit*> lineEditList;
-    for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+    QList<QTextEdit*> textEditList;
+    int index = 0;
+    qDebug() << "Create header";
+    for (int i = 0; i < headerData.length(); i+=2)
     {
-        lineEditList.append(new QLineEdit());
-        lineEditVBoxLayout->addWidget(lineEditList.at(i));
-    }
+        QLabel *label = new QLabel(ecuCalDef->DefHeaderStrings.at(index));
+        defHeaderGridLayout->addWidget(label, index, 0);
 
-    hBoxLayout->addLayout(labelVBoxLayout);
-    hBoxLayout->addLayout(lineEditVBoxLayout);
-    vBoxLayout->addLayout(hBoxLayout);
+        if (headerData.at(i) == "notes")
+        {
+            textEditList.append(new QTextEdit());
+            textEditList.at(textEditList.length()-1)->setObjectName(headerData.at(i));
+            textEditList.at(textEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(textEditList.at(textEditList.length()-1), index+1, 0, 1, 2);
+        }
+        else
+        {
+            lineEditList.append(new QLineEdit());
+            lineEditList.at(lineEditList.length()-1)->setObjectName(headerData.at(i));
+            lineEditList.at(lineEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(lineEditList.at(lineEditList.length()-1), index, 1);
+        }
+        index++;
+    }
+    vBoxLayout->addLayout(defHeaderGridLayout);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     vBoxLayout->addWidget(buttonBox);
     connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
 
+    definitionDialog->setMinimumWidth(500);
     int result = definitionDialog->exec();
-    //QSize size = this->size();
-    //size = this->parentWidget()->size();
-    //qDebug() << "Screen size" << size;
     if(result == QDialog::Accepted)
     {
         filename.clear();
@@ -1892,45 +1950,55 @@ FileActions::EcuCalDefStructure *FileActions::use_existing_definition_for_rom(Fi
 
         if (!file.open(QIODevice::ReadWrite ))
         {
-            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for reading");
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for writing");
             return NULL;
         }
 
+        QString rombase;
         QString checksum_module = ecuCalDef->RomInfo.at(FlashMethod);
         checksum_module.remove(0, 3);
         checksum_module.insert(0, "checksum");
 
+        configValues->ecuflash_def_filename.append(filename);
+
         QXmlStreamWriter stream(&file);
         file.resize(0);
 
-        int index = 0;
-        qDebug() << "Check header end index";
-        while (index < defData.length())
-        {
-            if(defData.at(index).contains("</romid>"))
-                break;
-            index++;
-        }
-        if (index == defData.length())
-            index--;
         qDebug() << "Write to file";
         stream.setAutoFormatting(true);
+        stream.setAutoFormattingIndent(2);
         stream.writeStartDocument();
         stream.writeStartElement("rom");
         stream.writeStartElement("romid");
-        for (int i = 0; i < ecuCalDef->RomInfoStrings.length(); i++)
+        int index = 0;
+        for (int i = 0; i < headerData.length(); i+=2)
         {
-            qDebug() << lineEditList.at(i)->text();
-            stream.writeTextElement(ecuCalDef->RomInfoNames.at(i), lineEditList.at(i)->text());
+            if(headerData.at(i) == "internalidstring")
+                configValues->ecuflash_def_cal_id.append(lineEditList.at(index)->text());
+            if(headerData.at(i) == "internalidaddress")
+                configValues->ecuflash_def_cal_id_addr.append(lineEditList.at(index)->text());
+            if(headerData.at(i) == "ecuid")
+                configValues->ecuflash_def_ecu_id.append(lineEditList.at(index)->text());
+
+            if (headerData.at(i) != "include" && headerData.at(i) != "notes")
+            {
+                qDebug() << lineEditList.at(index)->text();
+                stream.writeTextElement(headerData.at(i), lineEditList.at(index)->text());
+                index++;
+            }
         }
         stream.writeEndElement();
-/*
-        stream.writeTextElement("include", "");
-        stream.writeEndElement();
-*/
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("include", lineEditList.at(index)->text());
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("notes", textEditList.at(0)->toPlainText());
+        stream.writeCharacters("\n");
+
         QTextStream out(&file);
-        for (int i = index; i < defData.length(); i++)
+        for (int i = endIndex; i < defData.length(); i++)
             out << defData.at(i);
+
+        stream.writeEndElement();
 
         file.close();
     }
@@ -2073,7 +2141,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         QLabel *label = new QLabel("Unable to find definition for selected ROM file!\n\nSelect option:");
         QRadioButton *createNewRadioButton = new QRadioButton("Create new definition file template");
         QRadioButton *useExistingRadioButton = new QRadioButton("Use existing definition file as base");
-        QRadioButton *continueWithoutRadioButton = new QRadioButton("Continue without definition file (not recommended)");
+        QRadioButton *continueWithoutRadioButton = new QRadioButton("Continue without definition file");
 
         QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
         connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
@@ -2084,8 +2152,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         vBoxLayout->addWidget(continueWithoutRadioButton);
         vBoxLayout->addWidget(buttonBox);
         //createNewRadioButton->setChecked(true);
-        useExistingRadioButton->setChecked(true);
-        //continueWithoutRadioButton->setChecked(true);
+        //useExistingRadioButton->setChecked(true);
+        continueWithoutRadioButton->setChecked(true);
 
         int result = definitionDialog->exec();
         if(result == QDialog::Accepted)
@@ -2163,6 +2231,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
+    ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {

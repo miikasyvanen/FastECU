@@ -905,16 +905,15 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                     return 0;
                 }
             }
-
-/*
-            ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
-            ecuCalDef[rom_number]->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
+            if (ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod) == "")
+            {
+                ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+                update_protocol_info(rom_number);
+            }
             ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
-*/
-            //update_protocol_info(rom_number);
 
             if (configValues->flash_protocol_selected_checksum != "n/a")
                 ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
@@ -933,10 +932,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDef[rom_number]->RomInfo.append(" ");
             }
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+            update_protocol_info(rom_number);
             ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+
         }
 
         qDebug() << "Protocol to use:" << configValues->flash_protocol_selected_protocol_name;
