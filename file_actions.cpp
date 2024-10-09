@@ -67,8 +67,8 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         configValues->menu_file = configValues->config_files_directory + "menu.cfg";
         configValues->protocols_file = configValues->config_files_directory + "protocols.cfg";
         configValues->logger_file = configValues->config_files_directory + "logger.cfg";
-        copyConfigFromDirectory.setPath("./config");
-        copyKernelsFromDirectory.setPath("./kernels");
+        copyConfigFromDirectory.setPath(AppRootPath + "./config");
+        copyKernelsFromDirectory.setPath(AppRootPath + "./kernels");
     }
 
     qDebug() << copyConfigFromDirectory.absolutePath();
