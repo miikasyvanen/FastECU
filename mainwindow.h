@@ -202,19 +202,20 @@ private:
     enum RomInfoEnum {
         XmlId,
         InternalIdAddress,
+        InternalIdString,
+        EcuId,
         Make,
+        Market,
         Model,
         SubModel,
-        Market,
         Transmission,
         Year,
-        EcuId,
-        InternalIdString,
+        FlashMethod,
         MemModel,
         ChecksumModule,
         RomBase,
-        FlashMethod,
         FileSize,
+        DefFile,
     };
 
     QString ecuid = "";

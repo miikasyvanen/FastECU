@@ -2,6 +2,7 @@
 #define FILE_ACTIONS_H
 
 #include <QApplication>
+#include <QDesktopWidget>
 #include <QWidget>
 #include <QFileDialog>
 #include <QDomDocument>
@@ -16,6 +17,13 @@
 #include <QDateTime>
 #include <QDirIterator>
 #include <QPushButton>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QRadioButton>
+#include <QComboBox>
+#include <QDialogButtonBox>
+#include <QLineEdit>
+#include <QTextEdit>
 
 #include <string.h>
 #include <iostream>
@@ -47,7 +55,7 @@ class FileActions : public QWidget
     Q_OBJECT
 
 public:
-    FileActions();
+    FileActions(QWidget *parent = nullptr);
 
     uint8_t float_precision = 15;
     int def_map_index = 0;
@@ -56,7 +64,7 @@ public:
     struct ConfigValuesStructure {
         QString software_name = "FastECU";
         QString software_title = "FastECU";
-        QString software_version = "0.0-dev0";
+        QString software_version = "0.1.0-beta.1";
 
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
@@ -109,6 +117,7 @@ public:
         QStringList romraider_def_filename;
 
         QStringList flash_protocol_id;
+        QStringList flash_protocol_alias;
         QStringList flash_protocol_make;
         QStringList flash_protocol_model;
         QStringList flash_protocol_version;
@@ -346,41 +355,79 @@ public:
         bool use_ecuflash_definition;
 
         QStringList RomInfoStrings = {
-            "XmlId",
-            "InternalIdAddress",
+            "XML ID",
+            "Internal ID Address",
+            "Internal ID String",
+            "ECU ID",
             "Make",
+            "Market",
             "Model",
             "Submodel",
-            "Market",
             "Transmission",
             "Year",
-            "ECU ID",
-            "Internal ID",
+            "Flash Method",
             "Memory Model",
             "Checksum Module",
             "Rom Base",
-            "Flash Method",
             "File Size",
             "Def File",
-    /*
-            "XmlId",
-            "InternalIdAddress",
+        };
+
+        QStringList RomInfoNames = {
+            "xmlid",
+            "internalidaddress",
+            "internalidstring",
+            "ecuid",
+            "make",
+            "market",
+            "model",
+            "submodel",
+            "transmission",
+            "year",
+            "flashmethod",
+            "memmodel",
+            "checksummodule",
+            "rombase",
+            "filesize",
+            "deffile",
+        };
+
+        QStringList DefHeaderStrings = {
+            "XML ID",
+            "Internal ID Address",
+            "Internal ID String",
+            "ECU ID",
             "Make",
-            "Model",
-            "SubModel",
             "Market",
+            "Model",
+            "Submodel",
             "Transmission",
             "Year",
-            "EcuId",
-            "InternalIdString",
-            "MemModel",
-            "ChecksumModule",
-            "RomBase",
-            "FlashMethod",
-            "FileSize",
-            "DefFile",
-    */
+            "Flash Method",
+            "Memory Model",
+            "Checksum Module",
+            "Include",
+            "Notes",
         };
+
+        QStringList DefHeaderNames = {
+            "xmlid",
+            "internalidaddress",
+            "internalidstring",
+            "ecuid",
+            "make",
+            "market",
+            "model",
+            "submodel",
+            "transmission",
+            "year",
+            "flashmethod",
+            "memmodel",
+            "checksummodule",
+            "include",
+            "notes",
+        };
+
     } EcuCalDefStruct;
 
     //EcuCalDefStructure *ecuCalDefTemp;
@@ -388,18 +435,18 @@ public:
     enum RomInfoEnum {
         XmlId,
         InternalIdAddress,
+        InternalIdString,
+        EcuId,
         Make,
+        Market,
         Model,
         SubModel,
-        Market,
         Transmission,
         Year,
-        EcuId,
-        InternalIdString,
+        FlashMethod,
         MemModel,
         ChecksumModule,
         RomBase,
-        FlashMethod,
         FileSize,
         DefFile,
     };
@@ -464,6 +511,9 @@ public:
     QString parse_hex_ecuid(uint8_t byte);
     EcuCalDefStructure *parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii);
     EcuCalDefStructure *parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii);
+
+    EcuCalDefStructure *create_new_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef);
+    EcuCalDefStructure *use_existing_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef);
 
     /***********************************************
      * Open ECU ROM file, including possible

@@ -1,6 +1,7 @@
 #include "file_actions.h"
 
-FileActions::FileActions()
+FileActions::FileActions(QWidget *parent)
+    : QWidget(parent)
 {
 
 }
@@ -66,8 +67,8 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         configValues->menu_file = configValues->config_files_directory + "menu.cfg";
         configValues->protocols_file = configValues->config_files_directory + "protocols.cfg";
         configValues->logger_file = configValues->config_files_directory + "logger.cfg";
-        copyConfigFromDirectory.setPath("./config");
-        copyKernelsFromDirectory.setPath("./kernels");
+        copyConfigFromDirectory.setPath(AppRootPath + "./config");
+        copyKernelsFromDirectory.setPath(AppRootPath + "./kernels");
     }
 
     qDebug() << copyConfigFromDirectory.absolutePath();
@@ -640,6 +641,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QString filename = configValues->protocols_file;
 
     QStringList flash_protocol_name;
+    QStringList flash_protocol_alias;
     QStringList flash_protocol_ecu;
     QStringList flash_protocol_mcu;
     QStringList flash_protocol_mode;
@@ -689,6 +691,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         //qDebug() << "Protocol";
                         flash_protocol_name.append(" ");
                         flash_protocol_name.replace(index, protocol.attribute("name","No name"));
+                        flash_protocol_alias.append(" ");
+                        flash_protocol_alias.replace(index, protocol.attribute("alias","No alias"));
 
                         flash_protocol_ecu.append(" ");
                         flash_protocol_mcu.append(" ");
@@ -776,6 +780,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                     {
                         //qDebug() << "Add new vehicle";
                         configValues->flash_protocol_id.append(QString::number(id));//car_model.attribute("id","No id"));
+                        configValues->flash_protocol_alias.append(" ");
                         configValues->flash_protocol_make.append(" ");
                         configValues->flash_protocol_model.append(" ");
                         configValues->flash_protocol_version.append(" ");
@@ -833,6 +838,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 {
                                     if (flash_protocol_protocol_name.at(i) == configValues->flash_protocol_protocol_name.at(index))
                                     {
+                                        configValues->flash_protocol_alias.replace(index, flash_protocol_alias.at(i));
                                         configValues->flash_protocol_ecu.replace(index, flash_protocol_ecu.at(i));
                                         configValues->flash_protocol_mcu.replace(index, flash_protocol_mcu.at(i));
                                         configValues->flash_protocol_mode.replace(index, flash_protocol_mode.at(i));
@@ -1646,6 +1652,360 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(Fi
     return ecuCalDef;
 }
 
+FileActions::EcuCalDefStructure *FileActions::create_new_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString filename;
+    QFileDialog saveDialog;
+    bool isFileSelected = false;
+
+    QDialog *definitionDialog = new QDialog(this);
+    QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+    QLabel *label = new QLabel("Please provide ROM Information:");
+    vBoxLayout->addWidget(label);
+
+    QGridLayout *defHeaderGridLayout = new QGridLayout();
+    QList<QLineEdit*> lineEditList;
+    QList<QTextEdit*> textEditList;
+    int index = 0;
+    qDebug() << "Create header";
+    for (int i = 0; i < ecuCalDef->DefHeaderNames.length(); i++)
+    {
+        QLabel *label = new QLabel(ecuCalDef->DefHeaderStrings.at(index));
+        defHeaderGridLayout->addWidget(label, index, 0);
+
+        if (ecuCalDef->DefHeaderNames.at(i) == "notes")
+        {
+            textEditList.append(new QTextEdit());
+            textEditList.at(textEditList.length()-1)->setObjectName(ecuCalDef->DefHeaderNames.at(i));
+            //textEditList.at(textEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(textEditList.at(textEditList.length()-1), index+1, 0, 1, 2);
+        }
+        else
+        {
+            lineEditList.append(new QLineEdit());
+            lineEditList.at(lineEditList.length()-1)->setObjectName(ecuCalDef->DefHeaderNames.at(i));
+            //lineEditList.at(lineEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(lineEditList.at(lineEditList.length()-1), index, 1);
+        }
+        index++;
+    }
+    vBoxLayout->addLayout(defHeaderGridLayout);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    vBoxLayout->addWidget(buttonBox);
+    connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+    definitionDialog->setMinimumWidth(500);
+    int result = definitionDialog->exec();
+    if(result == QDialog::Accepted)
+    {
+        // 0x0C6D57
+        while (filename.isEmpty() && !isFileSelected)
+        {
+            saveDialog.setDefaultSuffix("xml");
+            filename = QFileDialog::getSaveFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+            if (filename.isEmpty()){
+                QDialog *definitionDialog = new QDialog(this);
+                QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+                QLabel *label = new QLabel("No file selected!\n\nIf you still want to create file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+                QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+                connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+                connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+                vBoxLayout->addWidget(label);
+                vBoxLayout->addWidget(buttonBox);
+
+                int result = definitionDialog->exec();
+                if(result == QDialog::Rejected)
+                    isFileSelected = true;
+            }
+        }
+        if(filename.endsWith(QString(".")))
+            filename.remove(filename.length() - 1, 1);
+        if(!filename.endsWith(QString(".xml")))
+            filename.append(QString(".xml"));
+
+        QFile file(filename);
+        QFileInfo fileInfo(file.fileName());
+        //file_name_str = fileInfo.fileName();
+
+        if (!file.open(QIODevice::ReadWrite ))
+        {
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for writing");
+            return NULL;
+        }
+
+        QString rombase;
+        QString checksum_module = configValues->flash_protocol_selected_protocol_name;
+        checksum_module.remove(0, 3);
+        checksum_module.insert(0, "checksum");
+
+        configValues->ecuflash_def_filename.append(filename);
+
+        QXmlStreamWriter stream(&file);
+        file.resize(0);
+        stream.setAutoFormatting(true);
+        stream.setAutoFormattingIndent(2);
+        stream.writeStartDocument();
+        stream.writeStartElement("rom");
+        stream.writeStartElement("romid");
+
+        int index = 0;
+        for (int i = 0; i < ecuCalDef->DefHeaderNames.length(); i++)
+        {
+            if (ecuCalDef->DefHeaderNames.at(i) != "include" && ecuCalDef->DefHeaderNames.at(i) != "notes")
+            {
+                if(ecuCalDef->DefHeaderNames.at(i) == "internalidstring")
+                    configValues->ecuflash_def_cal_id.append(lineEditList.at(i)->text());
+                if(ecuCalDef->DefHeaderNames.at(i) == "internalidaddress")
+                    configValues->ecuflash_def_cal_id_addr.append(lineEditList.at(i)->text());
+                if(ecuCalDef->DefHeaderNames.at(i) == "ecuid")
+                    configValues->ecuflash_def_ecu_id.append(lineEditList.at(i)->text());
+
+                qDebug() << lineEditList.at(i)->text();
+                stream.writeTextElement(ecuCalDef->RomInfoNames.at(i), lineEditList.at(i)->text());
+                index++;
+            }
+        }
+        stream.writeEndElement();
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("include", lineEditList.at(index)->text());
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("notes", textEditList.at(0)->toPlainText());
+        stream.writeEndElement();
+
+        file.close();
+    }
+
+    return ecuCalDef;
+}
+
+FileActions::EcuCalDefStructure *FileActions::use_existing_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString filename;
+    QFileDialog openDialog;
+    QFileDialog saveDialog;
+    bool isFileSelected = false;
+
+    while (filename.isEmpty() && !isFileSelected)
+    {
+        openDialog.setDefaultSuffix("xml");
+        filename = QFileDialog::getOpenFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+        if (filename.isEmpty()){
+            QDialog *definitionDialog = new QDialog(this);
+            QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+            QLabel *label = new QLabel("No file selected!\n\nIf you still want to select file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+            QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+            connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+            connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+            vBoxLayout->addWidget(label);
+            vBoxLayout->addWidget(buttonBox);
+
+            int result = definitionDialog->exec();
+            if(result == QDialog::Rejected)
+                isFileSelected = true;
+        }
+    }
+
+    QFile file(filename);
+    QFileInfo fileInfo(file.fileName());
+    //file_name_str = fileInfo.fileName();
+
+    if (!file.open(QIODevice::ReadOnly ))
+    {
+        QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for reading");
+        return NULL;
+    }
+    QStringList defData;
+    while(!file.atEnd())
+    {
+        defData.append(file.readLine());
+    }
+    file.close();
+
+    QString xml_id;
+    QString xml_id_addr;
+    QStringList headerData;
+    int endIndex = 0;
+
+    for (int i = 0; i < defData.length(); i++)
+    {
+        if (!defData.at(i).contains("<") && !defData.at(i).contains(">"))
+            continue;
+        for (int j = 0; j < ecuCalDef->DefHeaderNames.length(); j++)
+        {
+            QString parsedHeaderName = defData.at(i).split("<").at(1).split(">").at(0);
+            if (parsedHeaderName == ecuCalDef->DefHeaderNames.at(j))
+            {
+                qDebug() << parsedHeaderName;
+                headerData.append(ecuCalDef->DefHeaderNames.at(j));
+                if (parsedHeaderName != "notes")
+                    headerData.append(defData.at(i).split(">").at(1).split("<").at(0));
+                if (parsedHeaderName == "notes")
+                {
+                    QString lineData;
+                    parsedHeaderName.clear();
+
+                    lineData.append(defData.at(i).split(">").at(1).split("<").at(0));
+                    if (defData.at(i).contains("</") && defData.at(i).contains(">"))
+                        parsedHeaderName = defData.at(i).split("</").at(1).split(">").at(0);
+                    while (parsedHeaderName != "notes")
+                    {
+                        i++;
+                        if (defData.at(i).contains("</") && defData.at(i).contains(">"))
+                        {
+                            parsedHeaderName = defData.at(i).split("</").at(1).split(">").at(0);
+                            lineData.append(defData.at(i).split("</").at(0));
+                        }
+                        else
+                            lineData.append(defData.at(i));
+
+                        qDebug() << "Test:" << parsedHeaderName;
+                    }
+                    headerData.append(lineData);
+                }
+                endIndex = i;
+            }
+        }
+    }
+    endIndex++;
+
+    QDialog *definitionDialog = new QDialog(this);
+    QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+    QLabel *label = new QLabel("Please provide ROM Information:");
+    vBoxLayout->addWidget(label);
+
+    QGridLayout *defHeaderGridLayout = new QGridLayout();
+    QList<QLineEdit*> lineEditList;
+    QList<QTextEdit*> textEditList;
+    int index = 0;
+    qDebug() << "Create header";
+    for (int i = 0; i < headerData.length(); i+=2)
+    {
+        QLabel *label = new QLabel(ecuCalDef->DefHeaderStrings.at(index));
+        defHeaderGridLayout->addWidget(label, index, 0);
+
+        if (headerData.at(i) == "notes")
+        {
+            textEditList.append(new QTextEdit());
+            textEditList.at(textEditList.length()-1)->setObjectName(headerData.at(i));
+            textEditList.at(textEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(textEditList.at(textEditList.length()-1), index+1, 0, 1, 2);
+        }
+        else
+        {
+            lineEditList.append(new QLineEdit());
+            lineEditList.at(lineEditList.length()-1)->setObjectName(headerData.at(i));
+            lineEditList.at(lineEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(lineEditList.at(lineEditList.length()-1), index, 1);
+        }
+        index++;
+    }
+    vBoxLayout->addLayout(defHeaderGridLayout);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    vBoxLayout->addWidget(buttonBox);
+    connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+    definitionDialog->setMinimumWidth(500);
+    int result = definitionDialog->exec();
+    if(result == QDialog::Accepted)
+    {
+        filename.clear();
+        while (filename.isEmpty() && !isFileSelected)
+        {
+            saveDialog.setDefaultSuffix("xml");
+            filename = QFileDialog::getSaveFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+            if (filename.isEmpty()){
+                QDialog *definitionDialog = new QDialog(this);
+                QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+                QLabel *label = new QLabel("No file selected!\n\nIf you still want to create file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+                QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+                connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+                connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+                vBoxLayout->addWidget(label);
+                vBoxLayout->addWidget(buttonBox);
+
+                int result = definitionDialog->exec();
+                if(result == QDialog::Rejected)
+                    isFileSelected = true;
+            }
+        }
+        if(filename.endsWith(QString(".")))
+            filename.remove(filename.length() - 1, 1);
+        if(!filename.endsWith(QString(".xml")))
+            filename.append(QString(".xml"));
+
+        QFile file(filename);
+        QFileInfo fileInfo(file.fileName());
+        //file_name_str = fileInfo.fileName();
+
+        if (!file.open(QIODevice::ReadWrite ))
+        {
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for writing");
+            return NULL;
+        }
+
+        QString rombase;
+        QString checksum_module = ecuCalDef->RomInfo.at(FlashMethod);
+        checksum_module.remove(0, 3);
+        checksum_module.insert(0, "checksum");
+
+        configValues->ecuflash_def_filename.append(filename);
+
+        QXmlStreamWriter stream(&file);
+        file.resize(0);
+
+        qDebug() << "Write to file";
+        stream.setAutoFormatting(true);
+        stream.setAutoFormattingIndent(2);
+        stream.writeStartDocument();
+        stream.writeStartElement("rom");
+        stream.writeStartElement("romid");
+        int index = 0;
+        for (int i = 0; i < headerData.length(); i+=2)
+        {
+            if(headerData.at(i) == "internalidstring")
+                configValues->ecuflash_def_cal_id.append(lineEditList.at(index)->text());
+            if(headerData.at(i) == "internalidaddress")
+                configValues->ecuflash_def_cal_id_addr.append(lineEditList.at(index)->text());
+            if(headerData.at(i) == "ecuid")
+                configValues->ecuflash_def_ecu_id.append(lineEditList.at(index)->text());
+
+            if (headerData.at(i) != "include" && headerData.at(i) != "notes")
+            {
+                qDebug() << lineEditList.at(index)->text();
+                stream.writeTextElement(headerData.at(i), lineEditList.at(index)->text());
+                index++;
+            }
+        }
+        stream.writeEndElement();
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("include", lineEditList.at(index)->text());
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("notes", textEditList.at(0)->toPlainText());
+        stream.writeCharacters("\n");
+
+        QTextStream out(&file);
+        for (int i = endIndex; i < defData.length(); i++)
+            out << defData.at(i);
+
+        stream.writeEndElement();
+
+        file.close();
+    }
+
+    return ecuCalDef;
+}
+
 FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -1776,24 +2136,82 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
-        ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
-        ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
-        ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
-        ecuCalDef->RomInfo.replace(EcuId, selected_id);
-        ecuCalDef->RomInfo.replace(Make, configValues->flash_protocol_selected_make);
-        //ecuCalDef->RomInfo.replace(Model, configValues->flash_protocol_selected_model);
-        //ecuCalDef->RomInfo.replace(SubModel, submodel);
-        //ecuCalDef->RomInfo.replace(Transmission, transmission);
-        //ecuCalDef->RomInfo.replace(MemModel, memmodel);
-        //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-        ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
-        ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
-        ecuCalDef->RomInfo.replace(DefFile, " ");
+        QDialog *definitionDialog = new QDialog(this);
+        QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+        QLabel *label = new QLabel("Unable to find definition for selected ROM file!\n\nSelect option:");
+        QRadioButton *createNewRadioButton = new QRadioButton("Create new definition file template");
+        QRadioButton *useExistingRadioButton = new QRadioButton("Use existing definition file as base");
+        QRadioButton *continueWithoutRadioButton = new QRadioButton("Continue without definition file");
+
+        QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+        connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+        vBoxLayout->addWidget(label);
+        vBoxLayout->addWidget(createNewRadioButton);
+        vBoxLayout->addWidget(useExistingRadioButton);
+        vBoxLayout->addWidget(continueWithoutRadioButton);
+        vBoxLayout->addWidget(buttonBox);
+        //createNewRadioButton->setChecked(true);
+        //useExistingRadioButton->setChecked(true);
+        continueWithoutRadioButton->setChecked(true);
+
+        int result = definitionDialog->exec();
+        if(result == QDialog::Accepted)
+        {
+            if(createNewRadioButton->isChecked()){
+                qDebug() << createNewRadioButton->text();
+                create_new_definition_for_rom(ecuCalDef);
+            }
+            else if(useExistingRadioButton->isChecked()){
+                qDebug() << useExistingRadioButton->text();
+                use_existing_definition_for_rom(ecuCalDef);
+            }
+        }
+        if(continueWithoutRadioButton->isChecked() || result == QDialog::Rejected)
+        {
+            qDebug() << continueWithoutRadioButton->text();
+
+
+            //QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
+            ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
+            ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
+            ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
+            ecuCalDef->RomInfo.replace(EcuId, selected_id);
+            ecuCalDef->RomInfo.replace(Make, configValues->flash_protocol_selected_make);
+            //ecuCalDef->RomInfo.replace(Model, configValues->flash_protocol_selected_model);
+            //ecuCalDef->RomInfo.replace(SubModel, submodel);
+            //ecuCalDef->RomInfo.replace(Transmission, transmission);
+            //ecuCalDef->RomInfo.replace(MemModel, memmodel);
+            //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
+            //ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
+            ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
+            ecuCalDef->RomInfo.replace(DefFile, " ");
+        }
     }
 
+    QString checksum_module = ecuCalDef->RomInfo.at(FlashMethod);
+    checksum_module.remove(0, 3);
+    checksum_module.insert(0, "checksum");
+    for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
+    {
+        if (configValues->flash_protocol_protocol_name.at(i) == ecuCalDef->RomInfo.at(FlashMethod))
+        {
+            configValues->flash_protocol_selected_id = configValues->flash_protocol_id.at(i);
+            configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(i);
+            configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(i);
+            configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(i);
+            configValues->flash_protocol_selected_protocol_name = configValues->flash_protocol_protocol_name.at(i);
+            configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(i);
+            configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(i);
+            configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(i);
+            configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(i);
+        }
+    }
     if (configValues->flash_protocol_selected_checksum == "yes")
-        ecuCalDef->RomInfo.replace(ChecksumModule, configValues->flash_protocol_selected_protocol_name);
+        ecuCalDef->RomInfo.replace(ChecksumModule, checksum_module);
+    if (configValues->flash_protocol_selected_checksum == "n/a")
+        ecuCalDef->RomInfo.replace(ChecksumModule, "Not implemented yet");
     if (configValues->flash_protocol_selected_checksum == "no")
         ecuCalDef->RomInfo.replace(ChecksumModule, "No checksums");
 
@@ -1812,6 +2230,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
+    ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {

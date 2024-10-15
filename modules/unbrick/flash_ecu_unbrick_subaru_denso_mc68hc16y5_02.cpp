@@ -287,7 +287,8 @@ int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::write_mem()
 
     flash_block(&data_array[0], &flashdevices[mcu_type_index], 0);
 
-    qDebug() << "Set SCIB baudrate to 39473 and enable it";
+    // Change baudrate (kernel do this anyway)
+    qDebug() << "Set SCIB baudrate to 62500 and enable it";
     QString cmd_wr_response = "ACK_CMD_WDMEM";
     QString wr_response = "ACK_WR";
     msg = QString("wdmem 0xFFC28 0x4").toUtf8();

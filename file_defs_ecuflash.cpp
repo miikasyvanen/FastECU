@@ -254,20 +254,37 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             }
             if (ecuCalDef->RomInfo.at(XmlId) == " ")
             {
+                bool flashmethod_alias_found = false;
                 ecuCalDef->RomInfo.replace(XmlId, xmlid);
                 ecuCalDef->RomInfo.replace(InternalIdAddress, internalidaddress);
                 ecuCalDef->RomInfo.replace(InternalIdString, internalidstring);
                 ecuCalDef->RomInfo.replace(EcuId, ecuid);
-                ecuCalDef->RomInfo.replace(Year, year);
-                ecuCalDef->RomInfo.replace(Market, market);
                 ecuCalDef->RomInfo.replace(Make, make);
+                ecuCalDef->RomInfo.replace(Market, market);
                 ecuCalDef->RomInfo.replace(Model, model);
                 ecuCalDef->RomInfo.replace(SubModel, submodel);
                 ecuCalDef->RomInfo.replace(Transmission, transmission);
+                ecuCalDef->RomInfo.replace(Year, year);
+                ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
                 ecuCalDef->RomInfo.replace(MemModel, memmodel);
                 ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-                ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
                 ecuCalDef->RomInfo.replace(FileSize, filesize);
+                for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
+                {
+                    QStringList aliases =  configValues->flash_protocol_alias.at(i).split(",");
+                    for (int j = 0; j < aliases.length(); j++)
+                    {
+                        if (aliases.at(j) == flashmethod)
+                        {
+                            flashmethod_alias_found = true;
+                            qDebug() << "Alias: " << flashmethod;
+                            qDebug() << "Protocol:" << configValues->flash_protocol_protocol_name.at(i);
+                            ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_protocol_name.at(i));
+                        }
+                    }
+                    if (flashmethod_alias_found)
+                        break;
+                }
             }
         }
         else if (rom_child.tagName() == "include")

@@ -65,7 +65,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 #endif
 
     setSplashScreenProgress("Reading config files...", 10);
-    fileActions = new FileActions();
+    fileActions = new FileActions(this);
     configValues = &fileActions->ConfigValuesStruct;
 
     software_name = configValues->software_name;
@@ -548,12 +548,34 @@ void MainWindow::select_vehicle_finished(int result)
 
 void MainWindow::update_protocol_info(int rom_number)
 {
+    qDebug() << "Update protocol info by selected ROM";
+    for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
+    {
+        if (configValues->flash_protocol_protocol_name.at(i) == ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod))
+        {
+            qDebug() << "Protocol name for selected ROM found:" << configValues->flash_protocol_protocol_name.at(i);
+            configValues->flash_protocol_selected_id = configValues->flash_protocol_id.at(i);
+            configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(i);
+            configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(i);
+            configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(i);
+            configValues->flash_protocol_selected_protocol_name = configValues->flash_protocol_protocol_name.at(i);
+            configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(i);
+            configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(i);
+            configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(i);
+            configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(i);
+        }
+    }
+    qDebug() << "Protocol info for selected ROM updated";
+    status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
+
+/*
     ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
     ecuCalDef[rom_number]->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
     ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
-    ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+    ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
     ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
     ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+*/
 }
 
 void MainWindow::set_flash_arrow_state()
@@ -883,16 +905,15 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                     return 0;
                 }
             }
-
-/*
-            ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
-            ecuCalDef[rom_number]->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
+            if (ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod) == "")
+            {
+                ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+                update_protocol_info(rom_number);
+            }
             ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
-            ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(FlashMethod));
+            ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
-*/
-            update_protocol_info(rom_number);
 
             if (configValues->flash_protocol_selected_checksum != "n/a")
                 ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
@@ -911,10 +932,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 ecuCalDef[rom_number]->RomInfo.append(" ");
             }
             ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
+            update_protocol_info(rom_number);
             ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
             ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
+
         }
 
         qDebug() << "Protocol to use:" << configValues->flash_protocol_selected_protocol_name;
@@ -1129,7 +1152,7 @@ void MainWindow::save_calibration_file()
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
-    update_protocol_info(rom_number);
+    //update_protocol_info(rom_number);
 
     ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
     if (ecuCalDef[rom_number] != NULL)
@@ -1154,7 +1177,7 @@ void MainWindow::save_calibration_file_as()
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
-    update_protocol_info(rom_number);
+    //update_protocol_info(rom_number);
 
     ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
     if (ecuCalDef[rom_number] != NULL)
@@ -1175,6 +1198,8 @@ void MainWindow::save_calibration_file_as()
             return;
         }
 
+        if(filename.endsWith(QString(".")))
+            filename.remove(filename.length() - 1, 1);
         if(!filename.endsWith(QString(".bin")))
              filename.append(QString(".bin"));
 
@@ -1255,7 +1280,7 @@ void MainWindow::checkbox_state_changed(int state)
             {
                 QStringList switch_data = switch_states.at(i + 1).split(" ");
                 uint32_t byte_address = ecuCalDef[map_rom_number]->AddressList.at(map_number).toUInt(&bStatus, 16);
-                if (ecuCalDef[map_rom_number]->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize.toUInt() < (170 * 1024) && byte_address > 0x27FFF)
+                if (ecuCalDef[map_rom_number]->RomInfo.at(fileActions->FlashMethod) == "wrx02" && ecuCalDef[map_rom_number]->FileSize.toUInt() < (170 * 1024) && byte_address > 0x27FFF)
                     byte_address -= 0x8000;
                 if ((switch_states.at(i) == "off" || switch_states.at(i) == "disabled") && state == 0)
                 {
@@ -1292,18 +1317,19 @@ void MainWindow::calibration_files_treewidget_item_selected(QTreeWidgetItem* ite
         item->setCheckState(0, Qt::Unchecked);
     }
 
-    int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
+    int rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
 
     selectedItem->setCheckState(0, Qt::Checked);
 
     QString romId = selectedItem->text(1);
 
-    calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[romNumber]);
+    calibrationTreeWidget->buildCalibrationDataTree(ui->calibrationDataTreeWidget, ecuCalDef[rom_number]);
+    update_protocol_info(rom_number);
 /*
     QComboBox *flash_method_list = ui->toolBar->findChild<QComboBox*>("flash_method_list");
     for (int i = 0; i < flash_method_list->count(); i++)
     {
-        if(ecuCalDef[romNumber]->RomInfo.at(FlashMethod) == flash_method_list->itemText(i))
+        if(ecuCalDef[romNumber]->RomInfo.at(fileActions->FlashMethod) == flash_method_list->itemText(i))
         {
             flash_method_list->setCurrentIndex(i);
         }
