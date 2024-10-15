@@ -2145,6 +2145,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
         QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
         connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+        connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
 
         vBoxLayout->addWidget(label);
         vBoxLayout->addWidget(createNewRadioButton);
@@ -2157,19 +2158,17 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
         int result = definitionDialog->exec();
         if(result == QDialog::Accepted)
-            qDebug() << "Dialog accepted";
-        else
-            qDebug() << "Dialog rejected";
-
-        if(createNewRadioButton->isChecked()){
-            qDebug() << createNewRadioButton->text();
-            create_new_definition_for_rom(ecuCalDef);
+        {
+            if(createNewRadioButton->isChecked()){
+                qDebug() << createNewRadioButton->text();
+                create_new_definition_for_rom(ecuCalDef);
+            }
+            else if(useExistingRadioButton->isChecked()){
+                qDebug() << useExistingRadioButton->text();
+                use_existing_definition_for_rom(ecuCalDef);
+            }
         }
-        else if(useExistingRadioButton->isChecked()){
-            qDebug() << useExistingRadioButton->text();
-            use_existing_definition_for_rom(ecuCalDef);
-        }
-        else if(continueWithoutRadioButton->isChecked())
+        if(continueWithoutRadioButton->isChecked() || result == QDialog::Rejected)
         {
             qDebug() << continueWithoutRadioButton->text();
 
