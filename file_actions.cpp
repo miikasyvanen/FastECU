@@ -14,9 +14,13 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     QStringList isDevPath = currentPath.absolutePath().split("build");
     bool isDevFile = false;
 
-#ifdef Q_OS_LINUX
     QString AppFilePath = QApplication::applicationFilePath();
+#ifdef Q_OS_LINUX
     QString AppRootPath = AppFilePath.split("usr").at(0);
+#endif
+#ifdef Q_OS_WIN
+    QString AppRootPath = currentPath.absolutePath();
+#endif
     QString filename;
     QDirIterator it(AppRootPath, QStringList() << "*.*", QDir::Files, QDirIterator::Subdirectories);
 
@@ -29,7 +33,6 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         qDebug() << "Files in AppImage:" << filename;
     }
 */
-#endif
 
     qDebug() << "APP DIRECTORY:" << currentPath.absolutePath();
     if(QFileInfo::exists("./build.txt"))
@@ -115,17 +118,17 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         QFile configFile(latest_config_dir + "/config/fastecu.cfg");
         configFile.copy(configValues->config_files_directory + "fastecu.cfg");
     }
-
-    // If rest of config files doesn't exist, copy them
-    foreach (const QFileInfo& entry, copyConfigFromDirectory.entryInfoList((QStringList() << "*.*", QDir::Files))){
-        qDebug() << "Check file" << entry.fileName();
-        if(!QFileInfo::exists(configValues->config_files_directory + entry.fileName()))
+    QDirIterator configs(":/config/", QDirIterator::Subdirectories);
+    while (configs.hasNext()) {
+        qDebug() << "Check file" << configs.next();
+        if(!QFileInfo::exists(configValues->config_files_directory + configs.fileName()))
         {
-            qDebug() << "File" << entry.fileName() << "doesn't exists, copy file...";
-            QFile().copy(copyConfigFromDirectory.absolutePath() + "/" + entry.fileName(), configValues->config_files_directory + entry.fileName());
+            qDebug() << "File" << configs.fileName() << "doesn't exists, copy file...";
+            QFile::copy(":/config/" + configs.fileName(), configValues->config_files_directory + configs.fileName());
+            QFile file(configValues->config_files_directory + configs.fileName());
+            file.setPermissions(QFile::ReadUser | QFile::WriteUser);
         }
     }
-
     // Check if fastecu definition files directory exists
     if (!QDir(configValues->definition_files_directory).exists()){
         QDir().mkdir(configValues->definition_files_directory);
@@ -135,14 +138,15 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     if (!QDir(configValues->kernel_files_directory).exists()){
         QDir().mkdir(configValues->kernel_files_directory);
     }
-
-    // If kernel files doesn't exist, copy them
-    foreach (const QFileInfo& entry, copyKernelsFromDirectory.entryInfoList((QStringList() << "*.*", QDir::Files))){
-        qDebug() << "Check file" << entry.fileName();
-        if(!QFileInfo::exists(configValues->kernel_files_directory + entry.fileName()))
+    QDirIterator kernels(":/kernels/", QDirIterator::Subdirectories);
+    while (kernels.hasNext()) {
+        qDebug() << "Check file" << kernels.next();
+        if(!QFileInfo::exists(configValues->kernel_files_directory + kernels.fileName()))
         {
-            qDebug() << "File" << entry.fileName() << "doesn't exists, copy file...";
-            QFile().copy(copyKernelsFromDirectory.absolutePath() + "/" + entry.fileName(), configValues->kernel_files_directory + entry.fileName());
+            qDebug() << "File" << kernels.fileName() << "doesn't exists, copy file...";
+            QFile::copy(":/kernels/" + kernels.fileName(), configValues->kernel_files_directory + kernels.fileName());
+            QFile file(configValues->kernel_files_directory + kernels.fileName());
+            file.setPermissions(QFile::ReadUser | QFile::WriteUser);
         }
     }
 
@@ -195,12 +199,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
     //ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QDomDocument xmlBOM;
-    //QFile file(configValues->config_base_directory + "/fastecu.cfg");
     QFile file(configValues->config_file);
     qDebug() << "Looking config file from:" << configValues->config_file;
     if (!file.open(QIODevice::ReadOnly ))
     {
-        QMessageBox::warning(this, tr("Config file"), "Unable to open application config file for reading");
+        QMessageBox::warning(this, tr("Config file"), "Unable to open application config file '" + file.fileName() + "' for reading");
         return configValues;
     }
 
@@ -482,7 +485,7 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
 
     QFile file(configValues->config_file);
     if (!file.open(QIODevice::ReadWrite)) {
-        QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
+        QMessageBox::warning(this, tr("Config file"), "Unable to open config file '" + file.fileName() + "' for writing");
         return 0;
     }
 
@@ -665,7 +668,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
 
     QFile file(filename);
     if(!file.open(QFile::ReadWrite | QFile::Text)) {
-        QMessageBox::warning(this, tr("Protocols file"), "Unable to open protocols file for reading");
+        QMessageBox::warning(this, tr("Protocols file"), "Unable to open protocols file '" + file.fileName() + "' for reading");
         return NULL;
     }
     xmlBOM.setContent(&file);
@@ -876,11 +879,6 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
         }
     }
 
-
-
-
-
-
     return configValues;
 }
 
@@ -894,7 +892,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
 
     QFile file(filename);
     if(!file.open(QFile::ReadWrite | QFile::Text)) {
-        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger config file for reading");
+        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger config file '" + file.fileName() + "' for reading");
         return NULL;
     }
     xmlBOM.setContent(&file);
@@ -1094,7 +1092,7 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
 
     QFile file(configValues->logger_file);
     if (!file.open(QIODevice::ReadWrite)) {
-        QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
+        QMessageBox::warning(this, tr("Config file"), "Unable to open logger config file '" + file.fileName() + "' for writing");
         return 0;
     }
     QXmlStreamReader reader;
@@ -1161,7 +1159,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_definition_file()
     //qDebug() << "Logger filename =" << filename;
     QFile file(filename);
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger definition file for reading");
+        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger definition file '" + file.fileName() + "' for reading");
         return logValues;
     }
     xmlBOM.setContent(&file);
@@ -1365,7 +1363,7 @@ QSignalMapper *FileActions::read_menu_file(QMenuBar *menubar, QToolBar *toolBar)
     if (!file.open(QIODevice::ReadOnly ))
     {
         // Error while loading file
-        QMessageBox::warning(this, tr("Ecu menu file"), "Unable to open ecu menu file");
+        QMessageBox::warning(this, tr("Ecu menu file"), "Unable to open menu config file '" + file.fileName() + "' for reading");
         return mapper;
     }
     // Set data into the QDomDocument before processing

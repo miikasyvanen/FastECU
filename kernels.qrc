@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>kernels/ssmk_can_sh7055.bin</file>
+        <file>kernels/ssmk_can_sh7058.bin</file>
+        <file>kernels/ssmk_can_sh7059d_euro5.bin</file>
+        <file>kernels/ssmk_can_tp_sh7058.bin</file>
+        <file>kernels/ssmk_can_tp_sh7058d_euro4.bin</file>
+        <file>kernels/ssmk_can_tp_sh7059d_euro5.bin</file>
+        <file>kernels/ssmk_kline_sh7055.bin</file>
+        <file>kernels/ssmk_kline_sh7058.bin</file>
+        <file>kernels/ssmk_mc68hc916y5.bin</file>
+        <file>kernels/ssmk_tcu_can_sh7055_35.bin</file>
+        <file>kernels/ssmk_tcu_can_sh7058.bin</file>
+    </qresource>
+</RCC>

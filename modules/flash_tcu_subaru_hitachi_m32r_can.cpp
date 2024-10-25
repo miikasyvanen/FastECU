@@ -616,7 +616,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start
     ecuCalDef->FullFileName = filename;
     ecuCalDef->FileName = file_name_str;
     send_log_window_message("TCU ROM saved successfully", true, true);
-
+    */
     // test of chart drawing
     /*
     QLineSeries *series = new QLineSeries();
@@ -1146,7 +1146,7 @@ uint8_t FlashTcuSubaruHitachiM32RCan::cks_add8(QByteArray chksum_data, unsigned 
 {
     uint16_t sum = 0;
     uint8_t data[chksum_data.length()];
-/*
+
     for (int i = 0; i < chksum_data.length(); i++)
     {
         data[i] = chksum_data.at(i);
@@ -1276,7 +1276,7 @@ QByteArray FlashEcuSubaruDensoSH705xCan::send_subaru_denso_sid_81_start_communic
 
     return received;
 }
-/*
+*/
 
 /*
  * Start diagnostic connection
@@ -1654,187 +1654,8 @@ QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_calculate_32bit_payl
 }
 
 
-/*
- * Request kernel init
- *
- * @return
- */
-/*
-QByteArray FlashEcuSubaruDensoSH705xCan::request_kernel_init()
-{
-    QByteArray output;
-    QByteArray received;
-
-    request_denso_kernel_init = true;
-
-    output.clear();
-    /*
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
-    */
-    //output.append((uint8_t)SID_KERNEL_INIT);
-    /*
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    */
-    //received = serial->write_serial_data_echo_check(output);
-    //delay(500);
-    //received = serial->read_serial_data(100, serial_read_short_timeout);
-
-    //request_denso_kernel_init = false;
-
-    //return received;
-//}
-//*/
-
-/*
- * Request kernel id
- *
- * @return kernel id
- */
-/*
-QByteArray FlashEcuSubaruDensoSH705xCan::request_kernel_id()
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    QByteArray kernelid;
-
-    request_denso_kernel_id = true;
-
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
-    output.append((uint8_t)SID_START_COMM_CAN);
-    output.append((uint8_t)0xA0);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-
-    received = serial->write_serial_data_echo_check(output);
-    delay(100);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
-
-    received.remove(0, 2);
-    kernelid = received;
-
-    while (received != "")
-    {
-        received = serial->read_serial_data(1, serial_read_short_timeout);
-        received.remove(0, 2);
-        kernelid.append(received);
-    }
-
-    request_denso_kernel_id = false;
-
-    return kernelid;
-}
-*/
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
- * Add SSM header to message
- *
- * @return parsed message
- */
-/*
-QByteArray FlashEcuSubaruDensoSH705xCan::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
-{
-    uint8_t length = output.length();
-
-    output.insert(0, (uint8_t)0x80);
-    output.insert(1, target_id & 0xFF);
-    output.insert(2, tester_id & 0xFF);
-    output.insert(3, length);
-
-    output.append(calculate_checksum(output, dec_0x100));
-
-    //send_log_window_message("Send: " + parse_message_to_hex(output), true, true);
-    //qDebug () << "Send:" << parse_message_to_hex(output);
-    return output;
-}
-*/
-
-/*
- * Calculate SSM checksum to message
- *
- * @return 8-bit checksum
- */
-/*
-uint8_t FlashEcuSubaruDensoSH705xCan::calculate_checksum(QByteArray output, bool dec_0x100)
-{
-    uint8_t checksum = 0;
-
-    for (uint16_t i = 0; i < output.length(); i++)
-        checksum += (uint8_t)output.at(i);
-
-    if (dec_0x100)
-        checksum = (uint8_t) (0x100 - checksum);
-
-    return checksum;
-}
-*/
-
-/*
- * Countdown prior power on
- *
- * @return
- */
-/*
-int FlashEcuSubaruDensoSH705xCan::connect_bootloader_start_countdown(int timeout)
-{
-    for (int i = timeout; i > 0; i--)
-    {
-        if (kill_process)
-            break;
-        send_log_window_message("Starting in " + QString::number(i), true, true);
-        //qDebug() << "Countdown:" << i;
-        delay(1000);
-    }
-    if (!kill_process)
-    {
-        send_log_window_message("Initializing connection, please wait...", true, true);
-        delay(1500);
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
-}
-*/
 
 
 

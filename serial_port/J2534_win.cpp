@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include "j2534_win.h"
+#include "J2534_win.h"
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
 #else
 #include <dlfcn.h>

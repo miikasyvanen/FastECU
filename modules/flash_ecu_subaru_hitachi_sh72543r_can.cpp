@@ -1,6 +1,6 @@
 #include "flash_ecu_subaru_hitachi_sh72543r_can.h"
 
-QT_CHARTS_USE_NAMESPACE
+//QT_CHARTS_USE_NAMESPACE
 
 FlashEcuSubaruHitachiSH72543rCan::FlashEcuSubaruHitachiSH72543rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

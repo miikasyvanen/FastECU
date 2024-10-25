@@ -1077,7 +1077,10 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block_denso_sh705x_densocan(const u
                 QString blockno = QString("%1").arg((uint16_t)num_128_byte_blocks,4,16,QLatin1Char('0')).toUpper();
                 QString blocks = QString("%1").arg((uint16_t)(i & 0xFFFF),4,16,QLatin1Char('0')).toUpper();
 
-                msg.append(QString("Flashing of 128 byte block unsuccessful, stopping... (" + blockno + "/" + blocks+ ")"));
+                msg.clear();
+                QString str = "Flashing of 128 byte block unsuccessful, stopping... (" + blockno + "/" + blocks+ ")";
+                msg.append(str.toUtf8());
+                //msg.append(QString("Flashing of 128 byte block unsuccessful, stopping... (" + blockno + "/" + blocks+ ")"));
                 send_log_window_message(msg, true, true);
                 qDebug() << "Flashing of 128 byte block unsuccessful, stopping";
                 qDebug() << blockno << "/" << blocks;

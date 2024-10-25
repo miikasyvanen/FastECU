@@ -2,7 +2,9 @@
 #define FILE_ACTIONS_H
 
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QWidget>
+#include <QScreen>
+//#include <QDesktopWidget>
 #include <QWidget>
 #include <QFileDialog>
 #include <QDomDocument>
@@ -64,7 +66,7 @@ public:
     struct ConfigValuesStructure {
         QString software_name = "FastECU";
         QString software_title = "FastECU";
-        QString software_version = "0.1.0-beta.1";
+        QString software_version = "0.1.0-beta.2";
 
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";

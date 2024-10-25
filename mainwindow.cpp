@@ -24,7 +24,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     startUpSplash = new QSplashScreen(startUpSplashImage);
     QVBoxLayout *startUpSplashLayout = new QVBoxLayout(startUpSplash);
-    startUpSplashLayout->setMargin(0);
+    //startUpSplashLayout->setMargin(0);
     startUpSplashLayout->setSpacing(0);
     startUpSplashLayout->setAlignment(Qt::AlignBottom);
     startUpSplashLabel = new QLabel(QString("Starting FastECU..."));

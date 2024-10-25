@@ -5,11 +5,20 @@ QT += charts
 
 CONFIG += c++11
 
+# Do static build for Windows to have only on portable .exe file that
+# includes everything. On Linux x86_64 and aarch64 use AppImage and/or Flatpack.
+win32 {
+    # For static build
+    CONFIG += -static
+    QMAKE_LFLAGS += -static -static-libgcc -static-libstdc++ -lstdc++
+    #QMAKE_LFLAGS += -Wl,-Bdynamic -lxkbcommon-x11 -lgbm -lEGL -lxkbcommon -ludev -lGL
+    DEFINES += STATIC
+}
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DEPRECATED_WARNINGS QT_SSL
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -184,8 +193,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    config.qrc \
     icons.qrc \
-    images.qrc
+    images.qrc \
+    kernels.qrc
 
 DISTFILES += \
     LICENSE \
