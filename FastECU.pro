@@ -212,8 +212,8 @@ DISTFILES += \
     appdata/fastecu_256x256.png \
     appdata/fastecu_32x32.png \
     appdata/fastecu_64x64.png \
-    appdata/org.flatpak.fastecu.desktop \
-    appdata/org.flatpak.fastecu.metainfo.xml \
+    appdata/fi.fastecu.fastecu.desktop \
+    appdata/fi.fastecu.fastecu.metainfo.xml \
     config/fastecu.cfg \
     config/logger.cfg \
     config/menu.cfg \
@@ -227,6 +227,15 @@ DISTFILES += \
     definitions/logger_METRIC_EN_v370.xml \
     external/FastECU-mc68hc16-bdm.ino \
     fastecu.rc \
+    flatpak/fi.fastecu.FastECU.desktop \
+    flatpak/fi.fastecu.FastECU.ico \
+    flatpak/fi.fastecu.FastECU.metainfo.xml \
+    flatpak/fi.fastecu.FastECU.yml \
+    flatpak/fi.fastecu.FastECU_128x128.png \
+    flatpak/fi.fastecu.FastECU_16x16.png \
+    flatpak/fi.fastecu.FastECU_256x256.png \
+    flatpak/fi.fastecu.FastECU_32x32.png \
+    flatpak/fi.fastecu.FastECU_64x64.png \
     kernels/ssmk_CAN_SH7055.bin \
     kernels/ssmk_CAN_SH7058.bin \
     kernels/ssmk_HC16.bin \
