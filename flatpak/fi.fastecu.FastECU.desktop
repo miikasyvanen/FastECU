@@ -2,9 +2,9 @@
 Name=FastECU
 GenericName=FastECU
 Comment=FastECU engine management tuning software. 
-Exec=/usr/bin/flatpak run --command=FastECU --filesystem=home --device=all org.flatpak.fastecu
+Exec=/usr/bin/flatpak run --command=FastECU fi.fastecu.fastecu
 Terminal=false
-Icon=org.flatpak.FastECU
+Icon=fi.fastecu.FastECU
 Type=Application
 X-KDE-PluginInfo-Website=http://flatpak.org
 Categories=Qt;KDE;Development

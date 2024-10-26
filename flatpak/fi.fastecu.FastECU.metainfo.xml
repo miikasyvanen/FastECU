@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component type="desktop">
-  <id>org.flatpak.FastECU</id>
+  <id>fi.fastecu.FastECU</id>
   <content_rating type="oars-1.0" />
-  <developer id="org.flatpak">
+  <developer id="fi.fastecu">
     <name>Miika Syvänen</name>
   </developer>
-  <launchable type="desktop-id">org.flatpak.FastECU.desktop</launchable>
+  <launchable type="desktop-id">fi.fastecu.FastECU.desktop</launchable>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
   <name>FastECU</name>
