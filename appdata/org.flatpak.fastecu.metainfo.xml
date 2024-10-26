@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component type="desktop">
-  <id>org.flatpak.fastecu</id>
+  <id>org.flatpak.FastECU</id>
   <developer_name>Miika Syvänen</developer_name>
-  <launchable type="desktop-id">org.flatpak.fastecu.desktop</launchable>
+  <launchable type="desktop-id">org.flatpak.FastECU.desktop</launchable>
+  <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
   <name>FastECU</name>
   <summary>FastECU engine management system tuning software</summary>
@@ -15,7 +16,7 @@
   <categories>
     <category>Utility</category>
   </categories>
-  <url type="homepage">https://github.com/miikasyvanen/fastecu</url>
+  <url type="homepage">https://github.com/miikasyvanen/FastECU</url>
   <url type="bugtracker">https://github.com/miikasyvanen/fastecu/issues</url>
   <project_group>FastECU</project_group>
   <update_contact>info_AT_fastecu.fi</update_contact>
