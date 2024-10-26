@@ -17,6 +17,8 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     QString AppFilePath = QApplication::applicationFilePath();
 #ifdef Q_OS_LINUX
     QString AppRootPath = AppFilePath.split("usr").at(0);
+    if (AppRootPath.contains("FastECU"))
+        AppRootPath = currentPath.absolutePath();
 #endif
 #ifdef Q_OS_WIN
     QString AppRootPath = currentPath.absolutePath();

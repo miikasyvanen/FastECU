@@ -188,9 +188,14 @@ FORMS += \
     vehicle_select.ui
 
 # Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+flatpak {
+    target.path = /app/bin
+    !isEmpty(target.path): INSTALLS += target
+} else {
+    qnx: target.path = /tmp/$${TARGET}/bin
+    else: unix:!android: target.path = /opt/$${TARGET}/bin
+    !isEmpty(target.path): INSTALLS += target
+}
 
 RESOURCES += \
     config.qrc \
