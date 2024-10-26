@@ -207,6 +207,13 @@ DISTFILES += \
     LICENSE \
     README.md \
     USING.txt \
+    appdata/fastecu_128x128.png \
+    appdata/fastecu_16x16.png \
+    appdata/fastecu_256x256.png \
+    appdata/fastecu_32x32.png \
+    appdata/fastecu_64x64.png \
+    appdata/org.flatpak.fastecu.desktop \
+    appdata/org.flatpak.fastecu.metainfo.xml \
     config/fastecu.cfg \
     config/logger.cfg \
     config/menu.cfg \
