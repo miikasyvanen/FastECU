@@ -29,7 +29,7 @@
 #include <protocol_select.h>
 #include <vehicle_select.h>
 #include <definition_file_convert.h>
-#include <biu_operations_subaru.h>
+#include <modules/biu/biu_operations_subaru.h>
 #include <get_key_operations_subaru.h>
 //#include <ecu_operations_nissan.h>
 //#include <ecu_operations_mercedes.h>
@@ -63,8 +63,8 @@
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh72531_can.h>
 
-#include <modules/unbrick/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
-#include <modules/unbrick/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>
+#include <modules/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
+#include <modules/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>
 
 #include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_can.h>
