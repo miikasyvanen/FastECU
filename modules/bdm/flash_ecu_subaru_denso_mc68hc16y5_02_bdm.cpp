@@ -1,6 +1,6 @@
-#include "flash_ecu_unbrick_subaru_denso_mc68hc16y5_02.h"
+#include "flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h"
 
-FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::FlashEcuUnbrickSubaruDensoMC68HC16Y5_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruDensoMC68HC16Y5_02_BDM::FlashEcuSubaruDensoMC68HC16Y5_02_BDM(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -18,7 +18,7 @@ FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::FlashEcuUnbrickSubaruDensoMC68HC16Y5_02
     this->serial = serial;
 }
 
-void FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::run()
+void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::run()
 {
     this->show();
 
@@ -113,12 +113,12 @@ void FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::run()
     }
 }
 
-FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::~FlashEcuUnbrickSubaruDensoMC68HC16Y5_02()
+FlashEcuSubaruDensoMC68HC16Y5_02_BDM::~FlashEcuSubaruDensoMC68HC16Y5_02_BDM()
 {
 
 }
 
-void FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::closeEvent(QCloseEvent *bar)
+void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::closeEvent(QCloseEvent *bar)
 {
     kill_process = true;
 }
@@ -126,7 +126,7 @@ void FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::closeEvent(QCloseEvent *bar)
 /*******************************************************
  *  Read ROM 16bit K-Line ECUs
  ******************************************************/
-int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -247,7 +247,7 @@ int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint3
     return STATUS_SUCCESS;
 }
 
-int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::write_mem()
+int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
 {
     QByteArray output;
     QByteArray received;
@@ -381,7 +381,7 @@ int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::write_mem()
     return STATUS_SUCCESS;
 }
 
-int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
+int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
     QByteArray output;
     QByteArray received;
@@ -497,7 +497,7 @@ int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *newdata,
  *
  * @return parsed message
  */
-QString FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruDensoMC68HC16Y5_02_BDM::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -515,7 +515,7 @@ QString FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::parse_message_to_hex(QByteArray
  *
  * @return
  */
-int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::send_log_window_message(QString message, bool timestamp, bool linefeed)
+int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::send_log_window_message(QString message, bool timestamp, bool linefeed)
 {
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
@@ -554,14 +554,14 @@ int FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::send_log_window_message(QString mes
     return STATUS_ERROR;
 }
 
-void FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::set_progressbar_value(int value)
+void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::set_progressbar_value(int value)
 {
     if (ui->progressbar)
         ui->progressbar->setValue(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashEcuUnbrickSubaruDensoMC68HC16Y5_02::delay(int timeout)
+void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

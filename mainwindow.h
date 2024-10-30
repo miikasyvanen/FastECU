@@ -149,7 +149,7 @@ private:
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
     FlashEcuSubaruDensoSH72531Can *flashEcuSubaruDensoSh72531Can;
     /* Denso ECU unbrick */
-    FlashEcuUnbrickSubaruDensoMC68HC16Y5_02 *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
+    FlashEcuSubaruDensoMC68HC16Y5_02_BDM *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
     /* Denso ECU EEPROM */
     EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
     EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;

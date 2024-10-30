@@ -955,7 +955,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Denso ECU BDM
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_02_bdm"))
-            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuUnbrickSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
+            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02_BDM(serial, ecuCalDef[rom_number], cmd_type, this));
         /*
         * Denso ECU
         */

@@ -1,4 +1,4 @@
-#include "flash_ecu_subaru_unisia_jecs_m32r_boot_mode.h"
+#include "flash_ecu_subaru_unisia_jecs_m32r_bootmode.h"
 
 FlashEcuSubaruUnisiaJecsM32rBootMode::FlashEcuSubaruUnisiaJecsM32rBootMode(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
