@@ -180,7 +180,8 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
         qDebug() << "Result check OK";
         result = STATUS_NOERROR;
     }
-    qDebug() << "Result check failed, not maybe an j2534 interface!";
+    else
+        qDebug() << "Result check failed, not maybe an j2534 interface!";
     //qDebug() << "Received:" << parseMessageToHex(received);
 
     return result;
