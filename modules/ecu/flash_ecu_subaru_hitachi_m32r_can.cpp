@@ -159,12 +159,15 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(100, serial_read_short_timeout);
+    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response:" << parse_message_to_hex(received);
     if (received.length() > 6)
     {
         if ((uint8_t)received.at(4) == 0x7F && (uint8_t)received.at(5) == 0xB7 && (uint8_t)received.at(6) == 0x13)
         {
             send_log_window_message("OBK active, don't continue bootloader access...", true, true);
             qDebug() << "OBK active, don't continue bootloader access...";
+            kernel_alive = true;
             return STATUS_SUCCESS;
         }
     }
@@ -187,18 +190,22 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(100, serial_read_short_timeout);
+    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response:" << parse_message_to_hex(received);
     if (received.length() > 14)
     {
         if ((uint8_t)received.at(4) != 0x49 || (uint8_t)received.at(5) != 0x04)
         {
-            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-            return STATUS_ERROR;
+            send_log_window_message("Bad response from ECU", true, true);
+            qDebug() << "Bad response from ECU";
+            //return STATUS_ERROR;
         }
     }
     else
     {
-        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
+        send_log_window_message("Bad response from ECU", true, true);
+        qDebug() << "Bad response from ECU";
+        //return STATUS_ERROR;
     }
     send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response:" << parse_message_to_hex(received);
@@ -208,6 +215,9 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     response.remove(8, received.length() - 1);
     QString ecuid = QString::fromUtf8(response);
     send_log_window_message("Init Success: ECU ID = " + ecuid, true, true);
+
+    send_log_window_message("Requesting CAL ID...", true, true);
+    qDebug() << "Requesting CAL ID...";
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -220,21 +230,23 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     qDebug() << "Sent:" << parse_message_to_hex(output);
     delay(50);
     received = serial->read_serial_data(100, serial_read_short_timeout);
+    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response:" << parse_message_to_hex(received);
     if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) != 0xEA)
         {
-            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-            return STATUS_ERROR;
+            send_log_window_message("Bad response from ECU", true, true);
+            qDebug() << "Bad response from ECU";
+            //return STATUS_ERROR;
         }
     }
     else
     {
-        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
+        send_log_window_message("Bad response from ECU", true, true);
+        qDebug() << "Bad response from ECU";
+        //return STATUS_ERROR;
     }
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
 
     response.clear();
     response.append(received);
@@ -435,8 +447,15 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
                 {
                     send_log_window_message("Bad response to seed request", true, true);
+                    qDebug() << "Bad response to seed request";
                     return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Bad response to seed request", true, true);
+                qDebug() << "Bad response to seed request";
+                return STATUS_ERROR;
             }
             send_log_window_message("Seed request ok", true, true);
             qDebug() << "Seed request ok";
@@ -471,8 +490,15 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
                 {
                     send_log_window_message("Failed! Possible wrong seed key!", true, true);
+                    qDebug() << "Failed! Possible wrong seed key!";
                     return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Failed! Possible wrong seed key!", true, true);
+                qDebug() << "Failed! Possible wrong seed key!";
+                return STATUS_ERROR;
             }
             send_log_window_message("Seed key ok", true, true);
             qDebug() << "Seed key ok";
@@ -592,12 +618,18 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             qDebug() << "Response:" << parse_message_to_hex(received);
             if (received.length() > 7)
             {
-                if ((uint8_t)received.at(4) != 0x74 && (uint8_t)received.at(5) != 0x20 && (uint8_t)received.at(6) != 0x01 && (uint8_t)received.at(7) != 0x04)
+                if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
                 {
                     send_log_window_message("Kernel not verified to be running!", true, true);
-                    //kernel_alive = true;
+                    qDebug() << "Kernel not verified to be running!";
                     return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Kernel not verified to be running!", true, true);
+                qDebug() << "Kernel not verified to be running!";
+                return STATUS_ERROR;
             }
         }
         else
@@ -623,10 +655,16 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             {
                 if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
                 {
-                    send_log_window_message("Failed to initialise bootloader", true, true);
-
-                    //return STATUS_ERROR;
+                    send_log_window_message("Failed to initialise bootloader!", true, true);
+                    qDebug() << "Failed to initialise bootloader!";
+                    return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Failed to initialise bootloader!", true, true);
+                qDebug() << "Failed to initialise bootloader!";
+                return STATUS_ERROR;
             }
 
             send_log_window_message("Starting seed request...", true, true);
@@ -650,9 +688,16 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             {
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
                 {
-                    send_log_window_message("Bad response to seed request", true, true);
+                    send_log_window_message("Bad response to seed request!", true, true);
+                    qDebug() << "Bad response to seed request!";
                     return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Bad response to seed request!", true, true);
+                qDebug() << "Bad response to seed request!";
+                return STATUS_ERROR;
             }
             send_log_window_message("Seed request ok", true, true);
             qDebug() << "Seed request ok";
@@ -687,8 +732,15 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
                 {
                     send_log_window_message("Failed! Possible wrong seed key!", true, true);
+                    qDebug() << "Failed! Possible wrong seed key!";
                     return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Failed! Possible wrong seed key!", true, true);
+                qDebug() << "Failed! Possible wrong seed key!";
+                return STATUS_ERROR;
             }
             send_log_window_message("Seed key ok", true, true);
             qDebug() << "Seed key ok";
@@ -714,8 +766,15 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
                 if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
                 {
                     send_log_window_message("Bad response to jumping to onboard kernel", true, true);
+                    qDebug() << "Bad response to jumping to onboard kernel";
                     return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Bad response to jumping to onboard kernel", true, true);
+                qDebug() << "Bad response to jumping to onboard kernel";
+                return STATUS_ERROR;
             }
             send_log_window_message("Jump to kernel ok", true, true);
             qDebug() << "Jump to kernel ok";
@@ -745,16 +804,24 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             qDebug() << "Response:" << parse_message_to_hex(received);
             if (received.length() > 7)
             {
-                if ((uint8_t)received.at(4) != 0x74 && (uint8_t)received.at(5) != 0x20 && (uint8_t)received.at(6) != 0x01 && (uint8_t)received.at(7) != 0x04)
+                if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
                 {
-                    send_log_window_message("Kernel verified to be running", true, true);
-
-                    kernel_alive = true;
-                    //return STATUS_SUCCESS;
+                    send_log_window_message("Kernel not verified to be running!", true, true);
+                    qDebug() << "Kernel not verified to be running!";
+                    return STATUS_ERROR;
                 }
+            }
+            else
+            {
+                send_log_window_message("Kernel not verified to be running!", true, true);
+                qDebug() << "Kernel not verified to be running!";
+                return STATUS_ERROR;
             }
         }
         send_log_window_message("ECU inittialised, continue...", true, true);
+        qDebug() << "ECU inittialised, continue...";
+
+        kernel_alive = true;
         return STATUS_SUCCESS;
     }
     return STATUS_ERROR;
@@ -1272,6 +1339,9 @@ int FlashEcuSubaruHitachiM32rCan::erase_memory()
     QByteArray output;
     QByteArray received;
 
+    bool connected = false;
+    int try_count = 0;
+
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
@@ -1301,19 +1371,37 @@ int FlashEcuSubaruHitachiM32rCan::erase_memory()
     received = serial->read_serial_data(20, 200);
     send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response:" << parse_message_to_hex(received);
-    if (received.length() > 4)
+    while (try_count < 20 && connected == false)
     {
-
-    while ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+        received = serial->read_serial_data(20, 500);
+        if (received.length() > 6)
+        {
+            if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+            {
+                send_log_window_message(".", false, false);
+            }
+            else if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
+            {
+                connected = true;
+                send_log_window_message("", false, true);
+            }
+        }
+        else
+        {
+            send_log_window_message(".", false, false);
+        }
+        delay(500);
+        try_count++;
+    }
+    if (!connected)
     {
-        received = serial->read_serial_data(20, 200);
-        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-        delay(100);
+        send_log_window_message("Flash area erase failed: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Flash area erase failed: " + parse_message_to_hex(received);
+        return STATUS_ERROR;
     }
 
-    //    return 0;
-
-    QMessageBox::information(this, tr("ECU was erased?"), "Press OK to start flash download");
+    send_log_window_message("Flash erased! Starting flash write, do not power off!", true, true);
+    qDebug() << "Flash erased! Starting flash write, do not power off!";
 
     return STATUS_SUCCESS;
 }

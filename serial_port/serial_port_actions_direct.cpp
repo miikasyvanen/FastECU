@@ -887,11 +887,11 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
 
     outbuf.length = sizeof(outbuf.data);
 
-    //    if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
-    //    {
-    //        serial[0] = 0;
-    //        return false;
-    //    }
+    if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
+    {
+        serial[0] = 0;
+        return false;
+    }
 
     memcpy(serial,outbuf.data,outbuf.length);
     serial[outbuf.length] = 0;
@@ -949,10 +949,12 @@ int SerialPortActionsDirect::init_j2534_connection()
         return STATUS_ERROR;
     }
 
-    //qDebug() << "J2534 API Version:" << strApiVersion;
-    //qDebug() << "J2534 DLL Version:" << strDllVersion;
-    //qDebug() << "Device Firmware Version:" << strFirmwareVersion;
-    //qDebug() << "Device Serial Number:" << strSerial;
+    strFirmwareVersion[strlen(strFirmwareVersion)-1] = '\0';
+    strSerial[strlen(strSerial)-1] = '\0';
+    qDebug() << "J2534 API Version:" << strApiVersion;
+    qDebug() << "J2534 DLL Version:" << strDllVersion;
+    qDebug() << "Device Firmware Version:" << strFirmwareVersion;
+    qDebug() << "Device Serial Number:" << strSerial;
 
     // Create J2534 to device connections
     if (is_iso15765_connection)
