@@ -1276,8 +1276,6 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
     send_log_window_message("Verifying checksum", true, true);
     qDebug() << "Verifying checksum";
 
-    connected = false;
-    try_count = 0;
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1452,8 +1450,8 @@ int FlashEcuSubaruDensoSH72531Can::erase_memory()
         return STATUS_ERROR;
     }
 
-    send_log_window_message("Erased! Starting Writing! Do Not Power Off!", true, true);
-    qDebug() << "Erased! Starting Writing! Do Not Power Off!";
+    send_log_window_message("Flash erased! Starting flash write, do not power off!", true, true);
+    qDebug() << "Flash erased! Starting flash write, do not power off!";
 
     return STATUS_SUCCESS;
 }

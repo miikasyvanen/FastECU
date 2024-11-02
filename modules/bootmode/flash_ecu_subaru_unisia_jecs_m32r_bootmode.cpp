@@ -1,4 +1,4 @@
-#include "flash_ecu_subaru_unisia_jecs_m32r_boot_mode.h"
+#include "flash_ecu_subaru_unisia_jecs_m32r_bootmode.h"
 
 FlashEcuSubaruUnisiaJecsM32rBootMode::FlashEcuSubaruUnisiaJecsM32rBootMode(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
@@ -382,7 +382,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
             qDebug() << ".";
             if (received.length() > 6)
             {
-                if (received.at(0) == 0x80 && received.at(1) == 0xf0 && received.at(2) == 0x10 && received.at(3) == 0x02 && received.at(4) == 0xEF && received.at(5) == 0x42)
+                if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x42)
                 {
                     send_log_window_message("", false, true);
                     send_log_window_message("Flash erase in progress, please wait...", true, true);
@@ -422,7 +422,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         qDebug() << ".";
         if (received.length() > 6)
         {
-            if (received.at(0) == 0x80 && received.at(1) == 0xf0 && received.at(2) == 0x10 && received.at(3) == 0x02 && received.at(4) == 0xEF && received.at(5) == 0x52)
+            if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
             {
                 send_log_window_message("", false, true);
                 send_log_window_message("Flash erased!", true, true);
@@ -486,7 +486,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
                 received.append(serial->read_serial_data(10, 1));
                 if (received.length() > 6)
                 {
-                    if (received.at(0) == 0x80 && received.at(1) == 0xf0 && received.at(2) == 0x10 && received.at(3) == 0x02 && received.at(4) == 0xEF && received.at(5) == 0x52)
+                    if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
                     {
                         send_log_window_message("Received: " + parse_message_to_hex(received), true, true);
                         qDebug() << "Received: " + parse_message_to_hex(received);

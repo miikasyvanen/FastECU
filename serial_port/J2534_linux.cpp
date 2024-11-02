@@ -180,7 +180,8 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
         qDebug() << "Result check OK";
         result = STATUS_NOERROR;
     }
-    qDebug() << "Result check failed, not maybe an j2534 interface!";
+    else
+        qDebug() << "Result check failed, not maybe an j2534 interface!";
     //qDebug() << "Received:" << parseMessageToHex(received);
 
     return result;
@@ -645,18 +646,25 @@ long J2534::PassThruReadVersion(char *pApiVersion,char *pDllVersion,char *pFirmw
 {
     QByteArray output;
     QByteArray received;
-    const char *fw_version = "main code version : 1.17.4877";
+    const char *fw_version = "Main code version: 1.17.4877";
     long result = STATUS_NOERROR;
 
     strncpy(pApiVersion, API_VERSION, strlen(API_VERSION));
     strncpy(pDllVersion, DLL_VERSION, strlen(DLL_VERSION));
-    strncpy(pFirmwareVersion, fw_version, strlen(fw_version));
+    //strncpy(pFirmwareVersion, fw_version, strlen(fw_version));
 
     output = "\r\n\r\nati\r\n";
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
-    received = read_serial_data(100, 50);
-    //qDebug() << "Received:" << received;
+    delay(50);
+    received = read_serial_data(50, 100);
+    QString response = QString::fromUtf8(received);
+    QStringList fw_ver = response.split("ari ");
+    fw_ver = fw_ver.at(fw_ver.length()-1).split("\r\n");
+    std::string fw_ver_str = fw_ver.at(0).toUtf8().data();
+    char *str = fw_ver.at(0).toUtf8().data();
+    strncpy(pFirmwareVersion, str, strlen(str));
+    //qDebug() << "Read version received:" << fw_ver.at(0);
 
     return result;
 }
@@ -912,9 +920,9 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
     case READ_PROG_VOLTAGE:
         strcpy(IoctlName,"READ_PROG_VOLTAGE");
         break;
-//    case TX_IOCTL_APP_SERVICE:
-//        strcpy(IoctlName,"APP_SERVICE");
-//        break;
+    case TX_IOCTL_APP_SERVICE:
+        strcpy(IoctlName,"APP_SERVICE");
+        break;
     default:
         sprintf(IoctlName,"%lu(unknown)",IoctlID);
         break;

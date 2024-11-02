@@ -25,13 +25,13 @@ class EcuOperationsWindow;
 }
 QT_END_NAMESPACE
 
-class FlashEcuUnbrickSubaruDensoMC68HC16Y5_02 : public QDialog
+class FlashEcuSubaruDensoMC68HC16Y5_02_BDM : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuUnbrickSubaruDensoMC68HC16Y5_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashEcuUnbrickSubaruDensoMC68HC16Y5_02();
+    explicit FlashEcuSubaruDensoMC68HC16Y5_02_BDM(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoMC68HC16Y5_02_BDM();
 
     void run();
 

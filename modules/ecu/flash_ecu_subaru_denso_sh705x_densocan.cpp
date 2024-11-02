@@ -1,4 +1,4 @@
-#include <modules/flash_ecu_subaru_denso_sh705x_densocan.h>
+#include <modules/ecu/flash_ecu_subaru_denso_sh705x_densocan.h>
 
 FlashEcuSubaruDensoSH705xDensoCan::FlashEcuSubaruDensoSH705xDensoCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

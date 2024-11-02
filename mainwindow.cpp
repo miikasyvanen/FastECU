@@ -134,8 +134,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     setSplashScreenProgress("Setting up menus...", 10);
     QSignalMapper *mapper = fileActions->read_menu_file(ui->menubar, ui->toolBar);
+#if QT_VERSION >=0x060000
     connect(mapper, SIGNAL(mappedString(QString)), this, SLOT(menu_action_triggered(QString)));
-
+#elif QT_VERSION >=0x050000
+    connect(mapper, SIGNAL(mapped(QString)), this, SLOT(menu_action_triggered(QString)));
+#endif
 
 /*
     for (int i = 0; i < configValues->calibration_files.count(); i++)
@@ -240,9 +243,9 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //processing events
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [&]()
-            {
-                QApplication::processEvents();
-            });
+    {
+        QApplication::processEvents();
+    });
     timer->start();
 
     //WebSocket now initializes and connects in constructor
@@ -955,7 +958,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Denso ECU BDM
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_02_bdm"))
-            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuUnbrickSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
+            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02_BDM(serial, ecuCalDef[rom_number], cmd_type, this));
         /*
         * Denso ECU
         */
