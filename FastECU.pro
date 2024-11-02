@@ -7,11 +7,11 @@ CONFIG += c++11
 
 # Do static build for Windows to have only on portable .exe file that
 # includes everything. On Linux x86_64 and aarch64 use AppImage and/or Flatpack.
-win32 {
+CONFIG(static) {
+    message(win32 static build)
     # For static build
-    CONFIG += -static
+    #CONFIG += -static
     QMAKE_LFLAGS += -static -static-libgcc -static-libstdc++ -lstdc++
-    #QMAKE_LFLAGS += -Wl,-Bdynamic -lxkbcommon-x11 -lgbm -lEGL -lxkbcommon -ludev -lGL
     DEFINES += STATIC
 }
 # The following define makes your compiler emit warnings if you use

@@ -949,6 +949,8 @@ int SerialPortActionsDirect::init_j2534_connection()
         return STATUS_ERROR;
     }
 
+    strApiVersion[strlen(strApiVersion)-1] = '\0';
+    strDllVersion[strlen(strDllVersion)-1] = '\0';
     strFirmwareVersion[strlen(strFirmwareVersion)-1] = '\0';
     strSerial[strlen(strSerial)-1] = '\0';
     qDebug() << "J2534 API Version:" << strApiVersion;

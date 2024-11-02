@@ -1,3 +1,11 @@
+# Depending of build platform, build flatpak with one of following command
+#
+# x86_64:
+# flatpak-builder --arch=x86_64 --force-clean --user --disable-cache --install-deps-from=flathub --repo=repo --install ./fastecu ./fi.fastecu.FastECU.yml
+#
+# aarch64:
+# flatpak-builder --arch=aarch64 --force-clean --user --disable-cache --install-deps-from=flathub --repo=repo --install ./fastecu ./fi.fastecu.FastECU.yml
+#
 id: fi.fastecu.FastECU
 runtime: org.kde.Platform
 runtime-version: '5.15-22.08'
