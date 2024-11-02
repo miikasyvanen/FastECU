@@ -106,7 +106,7 @@ public:
         QString kernel_files;
 
         QString use_romraider_definitions = "disabled";
-        QString use_ecuflash_definitions = "disbled";
+        QString use_ecuflash_definitions = "disabled";
         QString primary_definition_base;
 
         QStringList ecuflash_def_cal_id;
