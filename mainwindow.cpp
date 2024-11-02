@@ -134,8 +134,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     setSplashScreenProgress("Setting up menus...", 10);
     QSignalMapper *mapper = fileActions->read_menu_file(ui->menubar, ui->toolBar);
+#if QT_VERSION >=0x060000
     connect(mapper, SIGNAL(mappedString(QString)), this, SLOT(menu_action_triggered(QString)));
-
+#elif QT_VERSION >=0x050000
+    connect(mapper, SIGNAL(mapped(QString)), this, SLOT(menu_action_triggered(QString)));
+#endif
 
 /*
     for (int i = 0; i < configValues->calibration_files.count(); i++)
@@ -240,9 +243,9 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //processing events
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [&]()
-            {
-                QApplication::processEvents();
-            });
+    {
+        QApplication::processEvents();
+    });
     timer->start();
 
     //WebSocket now initializes and connects in constructor

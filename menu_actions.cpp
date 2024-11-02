@@ -74,28 +74,33 @@ void MainWindow::menu_action_triggered(QString action)
 
     // HELP MENU
     if (action == "about")
-        QMessageBox::information(this, tr("FastECU"), "FastECU is open source tuning software for Subaru ECUs and\n"
-                                                            "later also modifying BIU and ECUs of other car makes.\n"
+        QMessageBox::information(this, tr("FastECU"),       "FastECU is open source tuning software for Subaru ECUs,\n"
+                                                            "TCUs and also modifying BIU and ECUs of other car makes.\n"
                                                             "\n"
-                                                            "This is the first test version for read and write ECU ROM\n"
-                                                            "via K-Line connection with Open Port 2.0 or generic OBD2\n"
-                                                            "cable. Software is tested with Win7 32/64bit and Linux.\n"
+                                                            "This is beta test version for read and write ROMs via\n"
+                                                            "K-Line and CAN connection with Open Port 2.0 or generic\n"
+                                                            "OBD2 cable. Software is tested in Win7/Win10 32/64bit\n"
+                                                            "and Linux amd64 and aarch64 platforms.\n"
                                                             "\n"
                                                             "There WILL be bugs and things that don't work. Be patient\n"
-                                                            "with new versions development.\n"
+                                                            "with new versions relesed.\n"
                                                             "\n"
-                                                            "All liability lies with the user. I am not responsible any\n"
+                                                            "All liability lies with the user. We are not responsible any\n"
                                                             "harm, laws broken or bricked ECUs that can follow for using\n"
                                                             "this software.\n"
+                                                            "\n"
                                                             "\n"
                                                             "Huge thanks to following:\n"
                                                             "\n"
                                                             "fenugrec - author of nisprog software\n"
                                                             "rimwall - modifier of nisprog kernels for Subaru use\n"
-                                                            "SergArb - testing and support of software development\n"
+                                                            "SergArb - testing and software development\n"
+                                                            "alesv - testing and software development\n"
+                                                            "jimihimisimi - testing and software development\n"
                                                             "\n"
                                                             "...and to all of you who had support software development by\n"
-                                                            "donating! All, even the smallest amount of donates are welcome!\n");
+                                                            "donating! All, even the smallest amount of donates are welcome!\n"
+                                 );
 }
 
 void MainWindow::inc_dec_value(QString action)
