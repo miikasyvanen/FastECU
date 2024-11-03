@@ -415,6 +415,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     }
 
     startUpSplash->close();
+    splash->close();
 
 }
 

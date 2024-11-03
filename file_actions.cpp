@@ -892,6 +892,8 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
 
     QString filename = configValues->logger_file;
 
+    qDebug() << "Looking for ECU ID:" << ecu_id << "in logger def file:" << configValues->logger_file;
+
     QFile file(filename);
     if(!file.open(QFile::ReadWrite | QFile::Text)) {
         QMessageBox::warning(this, tr("Logger file"), "Unable to open logger config file '" + file.fileName() + "' for reading");
@@ -953,7 +955,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                                                         if (!modify)
                                                             logValues->dashboard_log_value_id.append(gauges.attribute("id","No id"));
                                                         else
-                                                            gauges.attribute("id", logValues->dashboard_log_value_id.at(index));
+                                                            gauges.setAttribute("id", logValues->dashboard_log_value_id.at(index));
                                                     }
                                                     gauges = gauges.nextSibling().toElement();
                                                     index++;
@@ -996,7 +998,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                                                 if (!modify)
                                                     logValues->lower_panel_switch_id.append(switches.attribute("id","No id"));
                                                 else
-                                                    switches.attribute("id", logValues->lower_panel_switch_id.at(index));
+                                                    switches.setAttribute("id", logValues->lower_panel_switch_id.at(index));
                                             }
                                             switches = switches.nextSibling().toElement();
                                             index++;
@@ -1072,7 +1074,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
             }
             //qDebug() << "Saving log parameters";
             QTextStream output(&file);
-            output << xmlBOM.toString();
+            xmlBOM.save(output, 4);
             file.close();
         }
     }
@@ -1087,7 +1089,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
 
     return logValues;
 }
-
+/*
 void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -1107,6 +1109,7 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
     stream.writeStartElement("config");
     stream.writeAttribute("name", configValues->software_title);
     stream.writeAttribute("version", configValues->software_version);
+    qDebug() << "Software version:" << configValues->software_version;
     stream.writeStartElement("logger");
     stream.writeStartElement("ecu");
     stream.writeAttribute("id", ecu_id);
@@ -1148,7 +1151,7 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
 
     return 0;
 }
-
+*/
 FileActions::LogValuesStructure *FileActions::read_logger_definition_file()
 {
     LogValuesStructure *logValues = &LogValuesStruct;
