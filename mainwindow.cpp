@@ -45,13 +45,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->move(screenGeometry.center() - startUpSplash->rect().center());
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     //send_log_window_message("Running on Linux Desktop ", true, false);
     //serialPort = serialPortLinux;
     serial_port_prefix = "/dev/";
-#endif
-
-#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#elif defined Q_OS_WIN32
     //serialPort = serialPortWindows;
     serial_port_prefix = "";
 #endif
@@ -65,7 +63,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 #endif
 
     setSplashScreenProgress("Reading config files...", 10);
-    fileActions = new FileActions(this);
+    fileActions = new FileActions();
     configValues = &fileActions->ConfigValuesStruct;
 
     software_name = configValues->software_name;
@@ -415,6 +413,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     }
 
     startUpSplash->close();
+    splash->close();
 
 }
 
@@ -551,12 +550,12 @@ void MainWindow::select_vehicle_finished(int result)
 
 void MainWindow::update_protocol_info(int rom_number)
 {
-    qDebug() << "Update protocol info by selected ROM";
+    qDebug() << "Update protocol info by selected ROM with FlashMethod:" << ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod);
     for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
     {
         if (configValues->flash_protocol_protocol_name.at(i) == ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod))
         {
-            qDebug() << "Protocol name for selected ROM found:" << configValues->flash_protocol_protocol_name.at(i);
+            qDebug() << "Protocol name for selected ROM found:" << ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod) << "==" << configValues->flash_protocol_protocol_name.at(i);
             configValues->flash_protocol_selected_id = configValues->flash_protocol_id.at(i);
             configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(i);
             configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(i);
@@ -1105,12 +1104,16 @@ int MainWindow::start_ecu_operations(QString cmd_type)
 
 void MainWindow::custom_menu_requested(QPoint pos)
 {
+    if (ecuCalDefIndex == 0){
+        qDebug() << "No calibration to select!";
+        return;
+    }
     QModelIndex index = ui->calibrationFilesTreeWidget->indexAt(pos);
     emit ui->calibrationFilesTreeWidget->clicked(index);
 
     QMenu *menu = new QMenu(this);
-    menu->addAction("Sync with ECU", this, SLOT(syncCalWithEcu()));
-    menu->addAction("Close", this, SLOT(close_calibration()));
+    //menu->addAction("Sync with ECU", this, SLOT(syncCalWithEcu()));
+    menu->addAction("Close selected ROM", this, SLOT(close_calibration()));
     menu->popup(ui->calibrationFilesTreeWidget->viewport()->mapToGlobal(pos));
 
 }

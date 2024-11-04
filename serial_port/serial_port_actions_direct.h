@@ -22,9 +22,9 @@
 #include <thread>
 #include <chrono>
 
-#if defined(Q_OS_LINUX)
+#if defined Q_OS_UNIX
 #include "J2534_linux.h"
-#elif defined(Q_OS_WIN32)
+#elif defined Q_OS_WIN32
 #include "J2534_win.h"
 #endif
 
@@ -172,12 +172,10 @@ private:
     void dump_msg(PASSTHRU_MSG* msg);
     void reportJ2534Error();
 
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     unsigned int protocol = ISO9141;
-
-#elif defined(Q_OS_WIN32)
+#elif defined Q_OS_WIN32
     unsigned int protocol = ISO9141;
-
 #endif
 
     bool J2534_init_ok = false;
@@ -189,7 +187,7 @@ private:
 
     int line_end_check_1_toggled(int state);
     int line_end_check_2_toggled(int state);
-#if defined(Q_OS_WIN32)
+#ifdef Q_OS_WIN32
     QMap<QString, QString> installed_drivers;
 #endif
 
@@ -202,7 +200,7 @@ private:
     QStringList check_serial_ports();
     QString open_serial_port();*/
 
-#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#ifdef WIN32
     QMap<QString, QString> getAllJ2534DriversNames();
 #endif
     QStringList check_j2534_devices(QMap<QString, QString> installed_drivers);

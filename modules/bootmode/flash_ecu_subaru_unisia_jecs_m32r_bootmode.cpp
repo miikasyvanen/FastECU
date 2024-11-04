@@ -129,11 +129,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
     QByteArray mapdata;
 
     uint32_t pagesize = 0;
-    uint32_t end_addr = 0;
-    uint32_t datalen = 0;
     uint32_t cplen = 0;
-
-    uint8_t chk_sum = 0;
 
     if (!serial->is_serial_port_open())
     {
@@ -142,10 +138,6 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
     }
 
     serial->set_add_iso14230_header(false);
-
-    // Start countdown
-    //if (connect_bootloader_start_countdown(bootloader_start_countdown))
-    //    return STATUS_ERROR;
 
     serial->change_port_speed("4800");
     // SSM init
@@ -176,19 +168,16 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
     if (received == "" || (uint8_t)received.at(4) != 0xff)
         return STATUS_ERROR;
 
-    datalen = 6;
     pagesize = 0x80;
     if (start_addr == 0 && length == 0)
     {
         start_addr = 0;
         length = 0x040000;
     }
-    end_addr = start_addr + length;
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
 
     timer.start();
 
@@ -265,7 +254,6 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
         //qDebug() << msg;
         delay(1);
 
-        len_done += cplen;
         addr += (numblocks * pagesize);
         willget -= pagesize;
     }
@@ -575,7 +563,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
+    //Duint8_t loop_cnt = 0;
 
     //qDebug() << "Start B8";
     output.clear();
@@ -596,7 +584,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
+    //Duint8_t loop_cnt = 0;
 
     //qDebug() << "Start B8";
     output.clear();

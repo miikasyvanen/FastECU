@@ -1196,7 +1196,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_81_start_com
 {
     QByteArray output;
     QByteArray received;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x81);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
@@ -1214,7 +1213,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_83_request_t
 {
     QByteArray output;
     QByteArray received;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x83);
     output.append((uint8_t)0x00);
@@ -1234,7 +1232,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_27_request_s
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
@@ -1254,7 +1251,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_27_send_seed
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x02);
@@ -1275,7 +1271,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_10_start_dia
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x85);
@@ -1304,7 +1299,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_34_request_u
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x34);
     output.append((uint8_t)(dataaddr >> 16) & 0xFF);
@@ -1333,7 +1327,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_36_transferd
     uint32_t blockaddr = 0;
     uint16_t blockno = 0;
     uint16_t maxblocks = 0;
-    uint8_t loop_cnt = 0;
 
     len &= ~0x03;
     if (!buf.length() || !len) {
@@ -1391,7 +1384,6 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_31_start_rou
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x31);
     output.append((uint8_t)0x01);
