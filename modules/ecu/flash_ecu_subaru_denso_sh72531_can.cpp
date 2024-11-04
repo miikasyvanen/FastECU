@@ -1655,21 +1655,6 @@ int FlashEcuSubaruDensoSH72531Can::send_log_window_message(QString message, bool
     if (linefeed)
         message = message + "\n";
 
-    QString filename = "log.txt";
-    QFile file(filename);
-    //QFileInfo fileInfo(file.fileName());
-    //QString file_name_str = fileInfo.fileName();
-
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Append ))
-    {
-        //qDebug() << "Unable to open file for writing";
-        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
-        return NULL;
-    }
-
-    file.write(message.toUtf8());
-    file.close();
-
     QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
     if (textedit)
     {

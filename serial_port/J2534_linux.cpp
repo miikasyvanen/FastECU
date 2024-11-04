@@ -174,7 +174,7 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
     received = read_serial_data(7, 50);
-    qDebug() << "Result check against: " + check_result;
+    qDebug() << "Result check against " + check_result + ": " + parseMessageToHex(received) << received;
     if (received.startsWith(check_result))
     {
         qDebug() << "Result check OK";

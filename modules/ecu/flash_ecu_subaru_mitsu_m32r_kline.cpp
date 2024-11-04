@@ -286,25 +286,6 @@ int FlashEcuSubaruMitsuM32rKline::read_mem_subaru_ecu_mitsu_kline(uint32_t start
 
     ecuCalDef->FullRomData = mapdata;
 
-    send_log_window_message("Saving ECU ROM to default.bin...", true, true);
-    QString filename = "default.bin";
-    QFile file(filename);
-    QFileInfo fileInfo(file.fileName());
-    QString file_name_str = fileInfo.fileName();
-
-    if (!file.open(QIODevice::WriteOnly ))
-    {
-        //qDebug() << "Unable to open file for writing";
-        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
-        return NULL;
-    }
-
-    file.write(ecuCalDef->FullRomData);
-    file.close();
-
-    ecuCalDef->FullFileName = filename;
-    ecuCalDef->FileName = file_name_str;
-    send_log_window_message("ECU ROM saved successfully", true, true);
     return STATUS_SUCCESS;
 }
 
@@ -1001,21 +982,6 @@ int FlashEcuSubaruMitsuM32rKline::send_log_window_message(QString message, bool 
         message = dateTimeString + message;
     if (linefeed)
         message = message + "\n";
-
-    QString filename = "log.txt";
-    QFile file(filename);
-    //QFileInfo fileInfo(file.fileName());
-    //QString file_name_str = fileInfo.fileName();
-
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Append ))
-    {
-        //qDebug() << "Unable to open file for writing";
-        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
-        return NULL;
-    }
-
-    file.write(message.toUtf8());
-    file.close();
 
     QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
     if (textedit)

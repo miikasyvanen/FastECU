@@ -34,7 +34,7 @@ win32 {
     HEADERS += \
     serial_port/J2534_tactrix_win.h
 }
-linux {
+unix {
     SOURCES += \
     serial_port/J2534_linux.cpp
     HEADERS += \
