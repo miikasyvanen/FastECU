@@ -1015,26 +1015,33 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
         }
         if (!ecu_id_found)
         {
-            file.resize(0);
-
+            if (!logValues->log_value_protocol.length())
+            {
+                QMessageBox::warning(this, tr("Logger definition file"), "No logger definition file selected, returning without initializing log parameters!");
+                qDebug() << "No logger definition file selected, returning without initializing log parameters!";
+                return 0;
+            }
             qDebug() << "ECU ID not found, initializing log parameters";
             logValues->logging_values_protocol = logValues->log_value_protocol.at(0);
+            qDebug() << "Initializing gauge parameters";
             for (int i = 0; i < logValues->log_value_id.length(); i++)
             {
                 if (logValues->log_value_enabled.at(i) == "1" && logValues->dashboard_log_value_id.length() < 15)
                     logValues->dashboard_log_value_id.append(logValues->log_value_id.at(i));
             }
+            qDebug() << "Initializing lower panel parameters";
             for (int i = 0; i < logValues->log_value_id.length(); i++)
             {
                 if (logValues->log_value_enabled.at(i) == "1" && logValues->lower_panel_log_value_id.length() < 12)
                 logValues->lower_panel_log_value_id.append(logValues->log_value_id.at(i));
             }
+            qDebug() << "Initializing switch parameters";
             for (int i = 0; i < logValues->log_switch_id.length(); i++)
             {
                 if (logValues->log_switch_enabled.at(i) == "1" && logValues->lower_panel_switch_id.length() < 20)
                 logValues->lower_panel_switch_id.append(logValues->log_switch_id.at(i));
             }
-            //qDebug() << "Values initialized, creating xml data";
+            qDebug() << "Values initialized, creating xml data";
             //save_logger_conf(logValues, ecu_id);
             QDomElement ecu = xmlBOM.createElement("ecu");
             ecu.setAttribute("id", ecu_id);
@@ -1072,6 +1079,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                 parameter.setAttribute("name", "");
             }
             //qDebug() << "Saving log parameters";
+            file.resize(0);
             QTextStream output(&file);
             xmlBOM.save(output, 4);
             file.close();

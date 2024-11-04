@@ -33,20 +33,20 @@ QString J2534::open_serial_port(QString serial_port)
                 connect(serial, SIGNAL(errorOccurred(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
                 //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
-                //qDebug() << "Linux j2534 serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
+                qDebug() << "Linux j2534 serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
                 return opened_serial_port;
             }
             else
             {
                 //SendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
-                //qDebug() << "Couldn't open Linux j2534 serial port '" + serial_port + "'";
+                qDebug() << "Couldn't open Linux j2534 serial port '" + serial_port + "'";
                 return NULL;
             }
 
         }
         else{
             //SendLogWindowMessage("Serial port '" + serialPort + "' is already opened", true, true);
-            //qDebug() << "Serial port Linux j2534 '" + serial_port + "' is already opened";
+            qDebug() << "Linux j2534 serial port '" + serial_port + "' is already opened";
             return opened_serial_port;
         }
     }
@@ -76,7 +76,6 @@ QByteArray J2534::read_serial_data(uint32_t datalen, uint16_t timeout)
 
     ReceivedData.clear();
 
-    //timeout *= 1000;
     if (serial->isOpen())
     {
         QTime dieTime = QTime::currentTime().addMSecs(timeout);
@@ -89,7 +88,7 @@ QByteArray J2534::read_serial_data(uint32_t datalen, uint16_t timeout)
             }
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         }
-        //qDebug() << "j2534 read_serial_data:" << parseMessageToHex(ReceivedData);
+        //qDebug() << "Read J2534 msg:" << parseMessageToHex(ReceivedData);
     }
 
     return ReceivedData;
@@ -103,16 +102,13 @@ int J2534::write_serial_data(QByteArray output)
 
     if (serial->isOpen())
     {
-        //qDebug() << "Send J2534:" << output << "|" << parseMessageToHex(output);
-        //qDebug() << "Send J2534:" << parseMessageToHex(output);
+        //qDebug() << "Send J2534 msg:" << parseMessageToHex(output);
         for (int i = 0; i < output.length(); i++)
         {
             msg.clear();
             msg.append(output.at(i));
             serial->write(msg, 1);
         }
-        //serial->write(output);
-        //qDebug() << "J2534 message sent";
 
         return result;
     }
@@ -171,10 +167,10 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     qDebug() << "Open J2534 device" << pName << "with ID:" << pDeviceID;
 
     output = "ata\r\n";
-    //qDebug() << "Send data:" << output;
+    qDebug() << "Send data:" << parseMessageToHex(output);
     write_serial_data(output);
     received = read_serial_data(7, 50);
-    qDebug() << "Result check against " + check_result + ": " + parseMessageToHex(received) << received;
+    qDebug() << "Result check against " + check_result + ": " + parseMessageToHex(received);
     if (received.startsWith(check_result))
     {
         qDebug() << "Result check OK";
@@ -182,7 +178,6 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     }
     else
         qDebug() << "Result check failed, not maybe an j2534 interface!";
-    //qDebug() << "Received:" << parseMessageToHex(received);
 
     return result;
 }
