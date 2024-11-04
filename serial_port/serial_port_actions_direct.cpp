@@ -222,7 +222,7 @@ int SerialPortActionsDirect::line_end_check_1_toggled(int state)
         if (use_openport2_adapter)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 12000);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
             delay(17);
 #endif
         }
@@ -257,7 +257,7 @@ int SerialPortActionsDirect::line_end_check_2_toggled(int state)
         if (use_openport2_adapter)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
             delay(17);
 #endif
         }
@@ -378,7 +378,7 @@ QString SerialPortActionsDirect::open_serial_port()
 {
     //qDebug() << "Serial port =" << serial_port_list;
     //QString serial_port_text = serial_port_list.at(1);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     serial_port = serial_port_prefix_linux + serial_port_list.at(0);
     serial_port = serial_port.split(" - ").at(0);
 #endif
@@ -444,10 +444,9 @@ QString SerialPortActionsDirect::open_serial_port()
         //close_serial_port();
 
         serial_port = serial_port.split(" - ").at(0);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
             //serial_port = serial_port_prefix_linux + serial_port;
-#endif
-#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#elif defined Q_OS_WIN32
             //serial_port = serial_port_prefix_win + serial_port;
 #endif
 
@@ -901,7 +900,7 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
 int SerialPortActionsDirect::init_j2534_connection()
 {
 // If Linux, open serial port
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     if (j2534->open_serial_port(serial_port) != serial_port)
         return STATUS_ERROR;
 #endif
@@ -920,7 +919,7 @@ int SerialPortActionsDirect::init_j2534_connection()
     // Open J2534 connection
     if (j2534->PassThruOpen(NULL, &devID))
     {
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         j2534->close_serial_port();
 #endif
         reportJ2534Error();
@@ -1036,7 +1035,7 @@ int SerialPortActionsDirect::set_j2534_can()
     }
     else
     {
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         chanID = protocol;
 #endif
         //qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
@@ -1225,7 +1224,7 @@ int SerialPortActionsDirect::set_j2534_iso9141()
     {
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
 //qDebug() << "J2534 connected";
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         chanID = protocol;
 #endif
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;

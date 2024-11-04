@@ -75,9 +75,9 @@ public:
         QString window_height = "default";
         QString toolbar_iconsize = "32";
 
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         QString app_base_config_directory = QDir::homePath() + "/.config/FastECU/";
-#elif defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#elif defined Q_OS_WIN32
         QString app_base_config_directory = QDir::homePath() + "/AppData/Local/FastECU/";
 #endif
         QString base_config_directory = app_base_config_directory;
@@ -106,7 +106,7 @@ public:
         QString kernel_files;
 
         QString use_romraider_definitions = "disabled";
-        QString use_ecuflash_definitions = "disbled";
+        QString use_ecuflash_definitions = "disabled";
         QString primary_definition_base;
 
         QStringList ecuflash_def_cal_id;

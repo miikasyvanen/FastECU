@@ -15,12 +15,11 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     bool isDevFile = false;
 
     QString AppFilePath = QApplication::applicationFilePath();
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     QString AppRootPath = AppFilePath.split("usr").at(0);
     if (AppRootPath.contains("FastECU"))
         AppRootPath = "/config";
-#endif
-#ifdef Q_OS_WIN
+#elif defined Q_OS_WIN32
     QString AppRootPath = currentPath.absolutePath();
 #endif
     QString filename;
