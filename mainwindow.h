@@ -30,11 +30,8 @@
 #include <vehicle_select.h>
 #include <definition_file_convert.h>
 #include <modules/biu/biu_operations_subaru.h>
+#include <hexcommander.h>
 #include <get_key_operations_subaru.h>
-//#include <ecu_operations_nissan.h>
-//#include <ecu_operations_mercedes.h>
-//#include <ecu_operations_subaru.h>
-//#include <ecu_operations_manual.h>
 #include <file_actions.h>
 #include <logbox.h>
 #include <settings.h>
@@ -331,6 +328,7 @@ private:
     void toggle_can_listener();
     int simulate_obd();
     void show_subaru_biu_window();
+    void show_terminal_window();
     void show_subaru_get_key_window();
 
     //#include <modules/flash_sti04.h>

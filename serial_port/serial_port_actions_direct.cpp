@@ -34,26 +34,29 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
     serial_port_baudrate = portSpeed;
     baudrate = portSpeed.toInt();
 
+    qDebug() << "Changing baudrate, checking if port is open...";
     if (is_serial_port_open())
     {
+        qDebug() << "Port is open, checking adapter type...";
         if (!use_openport2_adapter)
         {
-            //send_log_window_message("Change serial port '" + serialPort + "' speed to " + portSpeed + " baud", true, true);
+            qDebug() << "Adapter type is generic OBD2...";
+
             if (serial->setBaudRate(serial_port_baudrate.toDouble()))
             {
                 delay(50);
-                qDebug() << "Set baudrate to" << serial_port_baudrate;
+                qDebug() << "Baudrate set to" << serial_port_baudrate;
                 return STATUS_SUCCESS;
             }
             else
             {
-                //qDebug() << "Set baudrate ERROR!";
+                qDebug() << "ERROR setting baudrate!";
                 return STATUS_ERROR;
             }
         }
         else
         {
-            //close_j2534_serial_port();
+            qDebug() << "Adapter type is J2534...";
 
             SCONFIG_LIST scl;
             SCONFIG scp[1] = {{DATA_RATE,0}};
@@ -62,7 +65,7 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
             scl.ConfigPtr = scp;
             if (!j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
             {
-                qDebug() << "Set baudrate to" << baudrate << "OK";
+                qDebug() << "Baudrate set to" << baudrate << "OK";
                 return STATUS_SUCCESS;
             }
             else
@@ -376,7 +379,7 @@ QMap<QString, QString> SerialPortActionsDirect::getAllJ2534DriversNames()
 
 QString SerialPortActionsDirect::open_serial_port()
 {
-    //qDebug() << "Serial port =" << serial_port_list;
+    qDebug() << "Serial port =" << serial_port_list;
     //QString serial_port_text = serial_port_list.at(1);
 #if defined Q_OS_UNIX
     serial_port = serial_port_prefix_linux + serial_port_list.at(0);

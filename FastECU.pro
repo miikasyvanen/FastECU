@@ -56,6 +56,7 @@ SOURCES += \
     file_defs_ecuflash.cpp \
     file_defs_romraider.cpp \
     get_key_operations_subaru.cpp \
+    hexcommander.cpp \
     log_operations_ssm.cpp \
     logbox.cpp \
     logvalues.cpp \
@@ -117,6 +118,7 @@ HEADERS += \
     ecu_operations.h \
     file_actions.h \
     get_key_operations_subaru.h \
+    hexcommander.h \
     kernelcomms.h \
     kernelmemorymodels.h \
     logbox.h \
@@ -172,6 +174,7 @@ HEADERS += \
 
 FORMS += \
     calibration_map_table.ui \
+    data_terminal.ui \
     definition_file_convert.ui \
 #    ecu_manual_operations.ui \
     ecu_operations.ui \

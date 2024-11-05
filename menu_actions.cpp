@@ -66,11 +66,12 @@ void MainWindow::menu_action_triggered(QString action)
         toggle_simulate_obd();
     if (action == "can_listener")
         toggle_can_listener();
-
     if (action == "biu_communication")
         show_subaru_biu_window();
     if (action == "get_key")
         show_subaru_get_key_window();
+    if (action == "terminal")
+        show_terminal_window();
 
     // HELP MENU
     if (action == "about")
@@ -1048,6 +1049,14 @@ void MainWindow::show_subaru_biu_window()
     serial->set_add_iso14230_header(false);
     //serial_poll_timer->start();
     //ssm_init_poll_timer->start();
+}
+
+void MainWindow::show_terminal_window()
+{
+    QStringList serial_port;
+    serial_port.append(serial_ports.at(serial_port_list->currentIndex()));
+    serial->set_serial_port_list(serial_port);
+    HexCommander *hexCommander = new HexCommander(serial, this);
 }
 
 void MainWindow::show_subaru_get_key_window()

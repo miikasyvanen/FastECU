@@ -923,6 +923,10 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         break;
     }
 
+    if (IoctlID == GET_CONFIG)
+    {
+
+    }
     if (IoctlID == SET_CONFIG)
     {
         pOutput = NULL; // make some DLLs happy
@@ -954,6 +958,17 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
             //r = usb_send_expect(data, strlen(data), MAX_LEN, 2000, NULL);
         }
 
+    }
+    if (IoctlID == READ_VBATT)
+    {
+        long* vBatt = (long*)pOutput;
+        long pin = 16;
+        output.clear();
+        QString str = "atr " + QString::number((int)pin) + "\r\n";
+        write_serial_data(output);
+        delay(50);
+        received = read_serial_data(100, 50);
+        qDebug() << "Pin 16 voltage =" << received << parseMessageToHex(received);
     }
 
     if (IoctlID == FAST_INIT)

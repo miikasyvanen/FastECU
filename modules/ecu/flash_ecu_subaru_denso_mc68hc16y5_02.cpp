@@ -68,7 +68,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
-    serial->set_serial_port_baudrate("4800");
+    serial->set_serial_port_baudrate("9600");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -154,7 +154,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     }
 
     // Change serial speed and set 'line end checks' to low level
-    serial->change_port_speed("9600");
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
@@ -201,6 +200,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     send_log_window_message("Checking if Kernel already uploaded, requesting kernel ID", true, true);
+    //serial->change_port_speed("57600");
     serial->change_port_speed("62500");
     //serial->change_port_speed("39473");
 
@@ -322,8 +322,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     qDebug() << "Requesting kernel ID";
 
     delay(1500);
+    qDebug() << "Changing baudrate";
+    //serial->change_port_speed("57600");
     serial->change_port_speed("62500");
     //serial->change_port_speed("39473");
+    qDebug() << "Baudrate changed";
     received.clear();
     for (int i = 0; i < 10; i++)
     {
