@@ -42,10 +42,12 @@ HexCommander::HexCommander(SerialPortActions *serial, QWidget *parent)
     ui->canTargetId->setText("7E8");
 
     connect(ui->klineProtocol, SIGNAL(currentIndexChanged(int)), this, SLOT(protocolTypeChanged(int)));
-    connect(ui->canProtocol, SIGNAL(currentIndexChanged(int)), this, SLOT(protocolTypeChanged(int)));
     connect(ui->klineListen, SIGNAL(clicked(bool)), this, SLOT(listenInterface()));
+    connect(ui->sendKlineMessage, SIGNAL(clicked(bool)), this, SLOT(sendToInterface()));
+
+    connect(ui->canProtocol, SIGNAL(currentIndexChanged(int)), this, SLOT(protocolTypeChanged(int)));
     connect(ui->canListen, SIGNAL(clicked(bool)), this, SLOT(listenInterface()));
-    connect(ui->sendMessage, SIGNAL(clicked(bool)), this, SLOT(sendToInterface()));
+    connect(ui->sendCanMessage, SIGNAL(clicked(bool)), this, SLOT(sendToInterface()));
 
     this->show();
 }
@@ -94,12 +96,13 @@ void HexCommander::listenInterface()
 void HexCommander::sendToInterface()
 {
     bool serialOk = true;
+    bool ok = false;
     QObject *obj = sender();
     QString interfaceTypeName = obj->objectName();
-    qDebug() << "Send data to interface:" << interfaceTypeName;
+    qDebug() << "Send data to interface";
 
-    //if (interfaceTypeName.startsWith("kline"))
-    //{
+    if (interfaceTypeName.startsWith("sendKlineMessage"))
+    {
         qDebug() << "Send message via K-Line";
 
         qDebug() << "Checking protocol:" << ui->klineProtocol->currentText();
@@ -117,10 +120,10 @@ void HexCommander::sendToInterface()
             serialOk = false;
 
         qDebug() << "Checking tester id:" << ui->klineTesterId->text();
-        serial->set_iso14230_tester_id(ui->klineTesterId->text().toUInt());
+        serial->set_iso14230_tester_id(ui->klineTesterId->text().toUInt(&ok, 16));
 
         qDebug() << "Checking target id:" << ui->klineTargetId->text();
-        serial->set_iso14230_target_id(ui->klineTargetId->text().toUInt());
+        serial->set_iso14230_target_id(ui->klineTargetId->text().toUInt(&ok, 16));
 
         if (serialOk)
         {
@@ -133,10 +136,9 @@ void HexCommander::sendToInterface()
             serial->open_serial_port();
         }
 
-        QStringList msg = ui->msgToSend->text().split(" ");
+        QStringList msg = ui->klineMsgToSend->text().split(" ");
         QByteArray output;
         QByteArray received;
-        bool ok = false;
         qDebug() << "Append message to serial output" << msg;
         for (int i = 0; i < msg.length(); i++)
         {
@@ -156,7 +158,75 @@ void HexCommander::sendToInterface()
         qDebug() << "Response:" << parse_message_to_hex(received);
 
         serial->reset_connection();
-    //}
+    }
+    else if (interfaceTypeName.startsWith("sendCanMessage"))
+    {
+        qDebug() << "Send message via CAN / iso15765";
+
+        qDebug() << "Checking protocol:" << ui->canProtocol->currentText();
+        serial->set_is_can_connection(false);
+        serial->set_is_iso15765_connection(false);
+        if (ui->canProtocol->currentText() == "CAN")
+            serial->set_is_can_connection(true);
+        else if (ui->canProtocol->currentText() == "iso15765")
+            serial->set_is_iso15765_connection(true);
+        else
+            serialOk = false;
+        qDebug() << "Checking baudrate:" << ui->canBaudRate->text();
+        if (ui->canBaudRate->text().toDouble() >=300 && ui->canBaudRate->text().toDouble() <=2000000)
+            serial->set_can_speed(ui->canBaudRate->text());
+        else
+            serialOk = false;
+
+        qDebug() << "Checking CAN ID length:" << ui->canIdLength->currentText();
+        serial->set_is_29_bit_id(ui->canIdLength->currentIndex());
+
+        qDebug() << "Checking tester id:" << ui->canTesterId->text();
+        serial->set_iso15765_source_address(ui->canTesterId->text().toUInt(&ok, 16));
+
+        qDebug() << "Checking target id:" << ui->canTargetId->text();
+        serial->set_iso15765_destination_address(ui->canTargetId->text().toUInt(&ok, 16));
+
+        if (serialOk)
+        {
+            qDebug() << "All good, setting interface...";
+            qDebug() << "Opening interface...";
+            serial->open_serial_port();
+        }
+
+        QStringList msg = ui->canMsgToSend->text().split(" ");
+        QByteArray output;
+        QByteArray received;
+        if (ui->canProtocol->currentText() == "CAN")
+        {
+            if (msg.length() > 8)
+            {
+                qDebug() << "ERROR: CAN message too long (8 message bytes)";
+                QMessageBox::warning(this, tr("CAN message"), "ERROR: CAN message too long (use 4 ID bytes + 8 message bytes)");
+            }
+            qDebug() << "Append message to CAN output" << msg;
+        }
+        for (int i = 3; i >= 0; i--)
+        {
+            output.append(((ui->canTesterId->text().toUInt(&ok, 16) >> (i * 8)) & 0xff));
+        }
+        for (int i = 0; i < msg.length(); i++)
+        {
+            output.append(msg.at(i).toUInt(&ok, 16));
+        }
+        qDebug() << "Message to send:" << parse_message_to_hex(output);
+
+        serial->write_serial_data_echo_check(output);
+
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        delay(200);
+        received = serial->read_serial_data(100, serial_read_short_timeout);
+        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Response:" << parse_message_to_hex(received);
+
+        serial->reset_connection();
+    }
 }
 
 
