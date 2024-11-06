@@ -56,7 +56,7 @@
 // J2534-2
 #define SW_CAN_NS								0x8000 // OP2.0: Not supported
 #define SW_CAN_HS								0x8001 // OP2.0: Not supported
-
+/*
 // Tactrix specific IOCTLs
 #define TX_IOCTL_BASE							0x70000
 // OP2.0: The IOCTL below supports application-specific functions
@@ -69,7 +69,7 @@
 #define TX_IOCTL_DEV_DEBUG_FLAG_USB_COMMS		0x00000001
 #define TX_IOCTL_SET_DLL_STATUS_CALLBACK		(TX_IOCTL_BASE+3)
 #define TX_IOCTL_GET_DEVICE_INSTANCES    		(TX_IOCTL_BASE+4)
-
+*/
 /////////////////
 // Pin numbering
 /////////////////

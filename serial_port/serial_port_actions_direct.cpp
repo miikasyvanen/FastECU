@@ -888,13 +888,13 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
     inbuf.infosvcid = 1; // serial
 
     outbuf.length = sizeof(outbuf.data);
-
+/*
     if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
     {
         serial[0] = 0;
         return false;
     }
-
+*/
     memcpy(serial,outbuf.data,outbuf.length);
     serial[outbuf.length] = 0;
     return true;

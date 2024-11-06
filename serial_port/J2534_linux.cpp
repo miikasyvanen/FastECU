@@ -915,9 +915,9 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
     case READ_PROG_VOLTAGE:
         strcpy(IoctlName,"READ_PROG_VOLTAGE");
         break;
-    case TX_IOCTL_APP_SERVICE:
-        strcpy(IoctlName,"APP_SERVICE");
-        break;
+//    case TX_IOCTL_APP_SERVICE:
+//        strcpy(IoctlName,"APP_SERVICE");
+//        break;
     default:
         sprintf(IoctlName,"%lu(unknown)",IoctlID);
         break;
