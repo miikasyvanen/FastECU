@@ -154,7 +154,7 @@ const struct flashblock fblocks_SH7058_1block[] = {
 const struct flashblock fblocks_SH72531[] = {
     {0x00000000,    0x00008000},
     {0x00008000,    0x00137F00},
-    };
+};
 
 const struct flashblock fblocks_SH72543R[] = {
     {0x00000000,    0x00006000},

@@ -2395,6 +2395,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     }
                     ecuCalDef->XScaleData.replace(i, mapData);
                 }
+                //qDebug() << "Map" << ecuCalDef->NameList.at(i) << "x scale ready";
             }
             else
                 ecuCalDef->XScaleData.replace(i, " ");
@@ -2443,6 +2444,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     mapData.append(QString::number(value, 'g', float_precision) + ",");
                 }
                 ecuCalDef->YScaleData.replace(i, mapData);
+                //qDebug() << "Map" << ecuCalDef->NameList.at(i) << "x scale ready";
             }
             else
                 ecuCalDef->YScaleData.replace(i, " ");
