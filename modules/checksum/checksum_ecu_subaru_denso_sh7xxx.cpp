@@ -10,7 +10,7 @@ ChecksumEcuSubaruDensoSH7xxx::~ChecksumEcuSubaruDensoSH7xxx()
 
 }
 
-QByteArray ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(QByteArray romData, uint32_t checksum_area_start, uint32_t checksum_area_length)
+QByteArray ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(QByteArray romData, uint32_t checksum_area_start, uint32_t checksum_area_length, int32_t offset)
 {
     QByteArray checksum_array;
 
@@ -40,20 +40,26 @@ QByteArray ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(QByteArray romData, 
             checksum_dword_addr_hi = (checksum_dword_addr_hi << 8) + (uint8_t)romData.at(i + 4 + j);
             checksum_diff = (checksum_diff << 8) + (uint8_t)romData.at(i + 8 + j);
         }
-        if (i == checksum_area_start && checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
+        if (checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0)
+        {
+            offset = 0;
+        }
+        uint32_t checksum_dword_addr_lo_with_offset = checksum_dword_addr_lo + offset;
+        uint32_t checksum_dword_addr_hi_with_offset = checksum_dword_addr_hi + offset;
+        if (i == checksum_area_start && checksum_dword_addr_lo_with_offset == 0 && checksum_dword_addr_hi_with_offset == 0 && checksum_diff == 0x5aa5a55a)
         {
             qDebug() << "ROM has all checksums disabled";
             QMessageBox::information(this, tr("32-bit checksum"), "ROM has all checksums disabled");
             return 0;
         }
 
-        if (checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
+        if (checksum_dword_addr_lo_with_offset == 0 && checksum_dword_addr_hi_with_offset == 0 && checksum_diff == 0x5aa5a55a)
         {
             //QMessageBox::information(this, tr("32-bit checksum"), "Checksums disabled");
         }
-        if (checksum_dword_addr_lo != 0 && checksum_dword_addr_hi != 0 && checksum_diff != 0x5aa5a55a)
+        if (checksum_dword_addr_lo_with_offset != 0 && checksum_dword_addr_hi_with_offset != 0 && checksum_diff != 0x5aa5a55a)
         {
-            for (uint32_t j = checksum_dword_addr_lo; j < checksum_dword_addr_hi; j+=4)
+            for (uint32_t j = checksum_dword_addr_lo_with_offset; j < checksum_dword_addr_hi_with_offset; j+=4)
             {
                 for (int k = 0; k < 4; k++)
                 {
