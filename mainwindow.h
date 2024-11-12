@@ -59,6 +59,7 @@
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh72531_can.h>
+#include <modules/ecu/flash_ecu_subaru_denso_1n83m_4m_can.h>
 
 #include <modules/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
 #include <modules/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>
@@ -145,6 +146,7 @@ private:
     FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
     FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
     FlashEcuSubaruDensoSH72531Can *flashEcuSubaruDensoSh72531Can;
+    FlashEcuSubaruDenso1N83M_4MCan *flashEcuSubaruDenso1N83M_4MCan;
     /* Denso ECU unbrick */
     FlashEcuSubaruDensoMC68HC16Y5_02_BDM *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
     /* Denso ECU EEPROM */
