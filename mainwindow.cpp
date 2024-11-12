@@ -550,11 +550,14 @@ void MainWindow::select_vehicle_finished(int result)
 
 void MainWindow::update_protocol_info(int rom_number)
 {
+    bool info_updated = false;
+
     qDebug() << "Update protocol info by selected ROM with FlashMethod:" << ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod);
     for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
     {
         if (configValues->flash_protocol_protocol_name.at(i) == ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod))
         {
+            info_updated = true;
             qDebug() << "Protocol name for selected ROM found:" << ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod) << "==" << configValues->flash_protocol_protocol_name.at(i);
             configValues->flash_protocol_selected_id = configValues->flash_protocol_id.at(i);
             configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(i);
@@ -567,7 +570,10 @@ void MainWindow::update_protocol_info(int rom_number)
             configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(i);
         }
     }
-    qDebug() << "Protocol info for selected ROM updated";
+    if (info_updated)
+        qDebug() << "Protocol info for selected ROM updated";
+    else
+        qDebug() << "Could not find protocol for selected ROM!";
     status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
 
 /*
@@ -1156,17 +1162,19 @@ void MainWindow::save_calibration_file()
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
 
     int rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
-    int rom_index = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
+    //int rom_index = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
     //update_protocol_info(rom_number);
+    if (!ecuCalDef[rom_number]->use_romraider_definition && !ecuCalDef[rom_number]->use_ecuflash_definition)
+        QMessageBox::warning(this, tr("Calibration file"), tr("No definition linked to selected ROM, checksums not calculated!\n"));
+    else
+        ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
 
-    ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
     if (ecuCalDef[rom_number] != NULL)
-    {
         fileActions->save_subaru_rom_file(ecuCalDef[rom_number], ecuCalDef[rom_number]->FullFileName);
-    }
+
     ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
 }
 
@@ -1181,13 +1189,16 @@ void MainWindow::save_calibration_file_as()
 
     qDebug() << "Save as: Check selected ROM number";
     int rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
-    int rom_index = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
+    //int rom_index = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
     //update_protocol_info(rom_number);
+    if (!ecuCalDef[rom_number]->use_romraider_definition && !ecuCalDef[rom_number]->use_ecuflash_definition)
+        QMessageBox::warning(this, tr("Calibration file"), tr("No definition linked to selected ROM, checksums not calculated!\n"));
+    else
+        ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
 
-    ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
     if (ecuCalDef[rom_number] != NULL)
     {
         QString filename = "";

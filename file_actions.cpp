@@ -2087,7 +2087,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
-        if (filename == "") filename = "default.bin";
+        save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "default.bin");
+
+        if (filename == "")
+            filename = "default.bin";
 
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());
@@ -2517,7 +2520,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 
             if (fullRomSize != flashdevices[mcu_type_index].romsize)
             {
-                QMessageBox::information(this, tr("Checksum module"), "Bad ROM size, make sure that you have selected correct flash method!");
+                QMessageBox::information(this, tr("Checksum module"), "Bad ROM size! Make sure that you have selected correct flash method!");
                 return ecuCalDef;
             }
             /*

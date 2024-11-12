@@ -1665,7 +1665,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::send_log_window_message(QString message, boo
     {
         //qDebug() << "Unable to open file for writing";
         QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
-        return NULL;
+        return 0;
     }
 
     file.write(message.toUtf8());
