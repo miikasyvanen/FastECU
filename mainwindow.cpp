@@ -979,6 +979,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             flashEcuSubaruDensoSH705xKline = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xKline(serial, ecuCalDef[rom_number], cmd_type, this));
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh72531_can"))
             flashEcuSubaruDensoSh72531Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH72531Can(serial, ecuCalDef[rom_number], cmd_type, this));
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_1n83m_4m_can"))
+            flashEcuSubaruDenso1N83M_4MCan = connect_signals_and_run_module(new FlashEcuSubaruDenso1N83M_4MCan(serial, ecuCalDef[rom_number], cmd_type, this));
         /*
         * Denso TCU
         */
