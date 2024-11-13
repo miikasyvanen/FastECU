@@ -228,7 +228,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
     qDebug() << "Sent:" << parse_message_to_hex(output);
-    delay(50);
+    delay(500);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response:" << parse_message_to_hex(received);
@@ -281,7 +281,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response:" << parse_message_to_hex(received);
 
-    if (received.length() > 12)
+    if (received.length() > 5)
     {
         if ((uint8_t)received.at(5) != 0xA0 && (uint8_t)received.at(5) != 0x20)
         {
@@ -915,9 +915,6 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         float pleft = 0;
         unsigned long chrono;
 
-        //uint32_t curblock = (addr / pagesize);
-
-
         pleft = (float)(addr - start_addr) / (float)length * 100.0f;
         set_progressbar_value(pleft);
 
@@ -928,23 +925,32 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         output[7] = (uint8_t)(addr & 0xFF);
         serial->write_serial_data_echo_check(output);
         //send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        //qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
-        received = serial->read_serial_data(20, receive_timeout);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(200);
+        received = serial->read_serial_data(20, serial_read_short_timeout);
+        //received = serial->read_serial_data(20, receive_timeout);
         //send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
         //qDebug() << "Response:" << parse_message_to_hex(received);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0xF7)
             {
-                send_log_window_message("Page data request failed!", true, true);
-                qDebug() << "Page data request failed!";
+                send_log_window_message("Page data request failed!" + parse_message_to_hex(received), true, true);
+                qDebug() << "Page data request failed!" + parse_message_to_hex(received);
                 return STATUS_ERROR;
             }
         }
+        else
+        {
+            send_log_window_message("Page data request failed!" + parse_message_to_hex(received), true, true);
+            qDebug() << "Page data request failed!" + parse_message_to_hex(received);
+            return STATUS_ERROR;
+        }
         pagedata.clear();
-        pagedata = received.remove(0, 5);
-        mapdata.append(pagedata);
+        received.remove(0, 5);
+        received = decrypt_payload(received, received.length());
+        qDebug() << "Response:" << parse_message_to_hex(received);
+        mapdata.append(received);
 
         // don't count skipped first bytes //
         cplen = (numblocks * pagesize) - skip_start; //this is the actual # of valid bytes in buf[]
@@ -986,6 +992,10 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     send_log_window_message("ROM read complete", true, true);
     qDebug() << "ROM read complete";
 
+    QString mapdata_size = QString("0x%1").arg(mapdata.length(),8,16,QLatin1Char('0')).toUpper();
+    send_log_window_message("Mapdata size: " + mapdata_size, true, true);
+    qDebug() << "Mapdata size: " + mapdata_size;
+
     send_log_window_message("Sending stop command...", true, true);
     qDebug() << "Sending stop command...";
 
@@ -1004,7 +1014,7 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     qDebug() << "Response:" << parse_message_to_hex(received);
     if (received.length() > 4)
     {
-        if ((uint8_t)received.at(4) != 0x37)
+        if ((uint8_t)received.at(4) != 0x77)
         {
             send_log_window_message("ROM read stop request failed!", true, true);
             qDebug() << "ROM read stop request failed!";
@@ -1012,7 +1022,7 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         }
     }
 
-    mapdata = decrypt_payload(mapdata, mapdata.length());
+    //mapdata = decrypt_payload(mapdata, mapdata.length());
 
     ecuCalDef->FullRomData = mapdata;
     set_progressbar_value(100);

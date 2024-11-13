@@ -52,17 +52,15 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
     }
 
     // Set serial port
-    //serial->set_is_iso14230_connection(true);
-    //serial->set_add_iso14230_header(true);
+    serial->set_is_iso14230_connection(false);
+    serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
-    //serial->set_serial_port_baudrate("10400");
     tester_id = 0xF0;
     target_id = 0x10;
-    // Open serial port
+    serial->change_port_speed("4800");
     serial->open_serial_port();
-    //serial->change_port_speed("10400");
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
@@ -146,16 +144,12 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem_subaru_unisia_jecs(uint32_t start_add
         return STATUS_ERROR;
     }
 
-    serial->set_add_iso14230_header(false);
-
-    // Start countdown
-    //if (connect_bootloader_start_countdown(bootloader_start_countdown))
-    //    return STATUS_ERROR;
-
-    serial->change_port_speed("4800");
     // SSM init
     received = send_subaru_sid_bf_ssm_init();
     if (received == "" || (uint8_t)received.at(4) != 0xff)
+        return STATUS_ERROR;
+
+    if (received.length() < 13)
         return STATUS_ERROR;
 
     received.remove(0, 8);
@@ -181,6 +175,7 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem_subaru_unisia_jecs(uint32_t start_add
     if (received == "" || (uint8_t)received.at(4) != 0xff)
         return STATUS_ERROR;
 
+    start_addr += 0x00100000;
     datalen = 6;
     pagesize = 0x80;
     if (start_addr == 0 && length == 0)
@@ -356,26 +351,23 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs(bool test_write)
         received.append(serial->read_serial_data(8, receive_timeout));
         send_log_window_message(".", false, false);
         qDebug() << ".";
-        if (received != "")
+        if (received.length() > 6)
         {
-            if (received.length() > 6)
+            if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x42)
             {
-                if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x42)
-                {
-                    send_log_window_message("", false, true);
-                    send_log_window_message("Flash erase in progress, please wait...", true, true);
-                    qDebug() << "Flash erase in progress, please wait...";
-                    break;
-                }
-                else
-                {
-                    send_log_window_message("", false, true);
-                    send_log_window_message("Flash erase cmd failed!", true, true);
-                    qDebug() << "Flash erase cmd failed!";
-                    send_log_window_message("Received: " + parse_message_to_hex(received), true, true);
-                    qDebug() << "Received: " + parse_message_to_hex(received);
-                    return STATUS_ERROR;
-                }
+                send_log_window_message("", false, true);
+                send_log_window_message("Flash erase in progress, please wait...", true, true);
+                qDebug() << "Flash erase in progress, please wait...";
+                break;
+            }
+            else
+            {
+                send_log_window_message("", false, true);
+                send_log_window_message("Flash erase cmd failed!", true, true);
+                qDebug() << "Flash erase cmd failed!";
+                send_log_window_message("Received: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Received: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
             }
         }
         delay(500);
@@ -397,26 +389,23 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs(bool test_write)
         received.append(serial->read_serial_data(8, receive_timeout));
         send_log_window_message(".", false, false);
         qDebug() << ".";
-        if (received != "")
+        if (received.length() > 6)
         {
-            if (received.length() > 6)
+            if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x52)
             {
-                if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x52)
-                {
-                    send_log_window_message("", false, true);
-                    send_log_window_message("Flash erased!", true, true);
-                    qDebug() << "Flash erased!";
-                    break;
-                }
-                else
-                {
-                    send_log_window_message("", false, true);
-                    send_log_window_message("Flash erase failed!", true, true);
-                    qDebug() << "Flash erase failed!";
-                    send_log_window_message("Received: " + parse_message_to_hex(received), true, true);
-                    qDebug() << "Received: " + parse_message_to_hex(received);
-                    return STATUS_ERROR;
-                }
+                send_log_window_message("", false, true);
+                send_log_window_message("Flash erased!", true, true);
+                qDebug() << "Flash erased!";
+                break;
+            }
+            else
+            {
+                send_log_window_message("", false, true);
+                send_log_window_message("Flash erase failed!", true, true);
+                qDebug() << "Flash erase failed!";
+                send_log_window_message("Received: " + parse_message_to_hex(received), true, true);
+                qDebug() << "Received: " + parse_message_to_hex(received);
+                return STATUS_ERROR;
             }
         }
         delay(500);
@@ -534,31 +523,32 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_sid_bf_ssm_init()
     QByteArray received;
     uint8_t loop_cnt = 0;
 
-    //qDebug() << "Start BF";
     send_log_window_message("SSM init", true, true);
-    //qDebug() << "SSM init";
+    qDebug() << "SSM init";
     output.append((uint8_t)0xBF);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    delay(250);
+    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    qDebug() << "Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false));
+    delay(comm_try_timeout);
     received = serial->read_serial_data(100, receive_timeout);
+    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response: " + parse_message_to_hex(received);
     while (received == "" && loop_cnt < comm_try_count)
     {
         if (kill_process)
             break;
 
-        //qDebug() << "Next BF loop";
         send_log_window_message("SSM init", true, true);
-        //qDebug() << "SSM init";
-        //qDebug() << "SSM init" << parse_message_to_hex(received);
+        qDebug() << "SSM init";
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
+        send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+        qDebug() << "Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false));
         delay(comm_try_timeout);
         received = serial->read_serial_data(100, receive_timeout);
+        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+        qDebug() << "Response: " + parse_message_to_hex(received);
         loop_cnt++;
     }
-    //if (loop_cnt > 0)
-    //    qDebug() << "0xBF loop_cnt:" << loop_cnt;
-
-    //qDebug() << "BF received:" << parse_message_to_hex(received);
 
     return received;
 }
@@ -599,8 +589,12 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_subaru_sid_b8_change_baudrate_3840
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x75);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    delay(200);
+    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    qDebug() << "Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false));
+    delay(comm_try_timeout);
     received = serial->read_serial_data(8, receive_timeout);
+    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+    qDebug() << "Response: " + parse_message_to_hex(received);
 
     return received;
 }
