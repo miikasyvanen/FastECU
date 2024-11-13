@@ -1070,7 +1070,7 @@ int FlashEcuSubaruDensoSH72531Can::write_memory(bool test_write)
 
     uint8_t data_array[filedata.length()];
 
-    int block_modified[16] = {0,1};   // assume blocks after 0x8000 are modified
+    int block_modified[16] = {0,1,0};   // assume blocks after 0x8000 are modified
 
     unsigned bcnt;
     unsigned blockno;
