@@ -90,6 +90,14 @@ public:
     void delay(int n);
 
 private:
+    enum {
+        LOG = 0,
+        LOGE,   // error
+        LOGW,   // warning
+        LOGI,   // info
+        LOGD,   // debug
+    };
+
     QString software_name;
     QString software_title;
     QString software_version;
@@ -342,9 +350,9 @@ protected:
     void resizeEvent( QResizeEvent * event);
 
 private slots:
-    //External logger slot for string messages
+    // External logger slot for string messages
     void external_logger(QString message);
-    //External progress bar slot
+    // External progress bar slot
     void external_logger_set_progressbar_value(int value);
 
     // calibrationtreewidget.c
@@ -390,6 +398,9 @@ private slots:
     void selectable_combobox_item_changed(QString item);
     void checkbox_state_changed(int state);
     void close_app();
+    // Logger
+    //void logger(int log_level, QString message, bool timestamp, bool linefeed);
+    void logger(QString message, bool timestamp, bool linefeed);
 
     // logvalues.c
     void change_log_gauge_value(int index);
@@ -399,6 +410,9 @@ private slots:
 signals:
     void check_serial_port();
     void send_serial_data(QByteArray output);
-
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
 };
 #endif // MAINWINDOW_H

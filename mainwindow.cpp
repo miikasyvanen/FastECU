@@ -19,6 +19,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qApp->installEventFilter(this);
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
+    connect(this, SIGNAL(LOG_E(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_W(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_I(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_D(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
+
     QPixmap startUpSplashImage(":/images/startup_splash.jpg");
     int startUpSplashProgressBarValue = 0;
 
@@ -415,6 +420,10 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->close();
     splash->close();
 
+    //emit LOG_E("Test error", true, true);
+    //emit LOG_W("Test warning", true, true);
+    //emit LOG_I("Test info", true, true);
+    //emit LOG_D("Test debug", true, true);
 }
 
 MainWindow::~MainWindow()
@@ -1913,4 +1922,53 @@ void MainWindow::external_logger_set_progressbar_value(int value)
     qDebug() << Q_FUNC_INFO << value;
     if (remote_utility->isValid())
         remote_utility->set_progressbar_value(value);
+}
+
+//void MainWindow::logger(int log_type, QString message, bool timestamp, bool linefeed)
+void MainWindow::logger(QString message, bool timestamp, bool linefeed)
+{
+    // LOGE,   // error (lowest)
+    // LOGW,   // warning
+    // LOGI,   // info
+    // LOGD,   // debug
+
+    QString msg;
+    int log_type = 0;
+
+    QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
+    //qDebug() << metaMethod.name();
+
+    QDateTime dateTime = dateTime.currentDateTime();
+    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz'] ");
+
+    // Check if timestamp added
+    if (timestamp)
+        msg = dateTimeString;
+
+    // Check log type
+    if (metaMethod.name() == "LOG_E")
+    {
+        msg += "(EE) ";
+    }
+    else if (metaMethod.name() == "LOG_W")
+    {
+        msg += "(WW) ";
+    }
+    else if (metaMethod.name() == "LOG_I")
+    {
+        msg += "(II) ";
+    }
+    else if (metaMethod.name() == "LOG_D")
+    {
+        msg += "(DD) ";
+    }
+
+    msg += message;
+
+    // Check if linefeed added
+    if (linefeed)
+        message = message + "\n";
+
+    qDebug() << msg;
+
 }
