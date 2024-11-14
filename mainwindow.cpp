@@ -420,7 +420,13 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->close();
     splash->close();
 
-    aes_ecb_test();
+    qDebug() << "Solving challenge...";
+    QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
+    QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4\x00" };
+    QByteArray response;
+    response.append(aes_ecb_test(challenge, key));
+    qDebug() << "Challenge reply:";
+    qDebug() << parse_message_to_hex(response);
 
     //emit LOG_E("Test error", true, true);
     //emit LOG_W("Test warning", true, true);
@@ -442,21 +448,18 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::aes_ecb_test()
+QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
 {
     // Clean: "5f758c1192dc56fb69e3402d83fb75e4"
     // Key  : "469a20ab308d5ca64bcd5bbe535bd85f"
     // Enc  : "b8f73be3b1dcc30e93d88f0af5a860ca"
 
     Cipher *cipher = new Cipher;
-    // A 128 bit key
-    unsigned char key[16] = { 0x46, 0x9a, 0x20, 0xab, 0x30, 0x8d, 0x5c, 0xa6, 0x4b, 0xcd, 0x5b, 0xbe, 0x53, 0x5b, 0xd8, 0x5f };
-
-    // Message to be encrypted
-    unsigned char data[17] = { 0x5f, 0x75, 0x8c, 0x11, 0x92, 0xdc, 0x56, 0xfb, 0x69, 0xe3, 0x40, 0x2d, 0x83, 0xfb, 0x75, 0xe4, '\0' };
-
     unsigned char encrypted[64];
     unsigned char decrypted[64];
+
+    char *data = challenge.data();
+    char *cKey = key.data();
 
     int decrypted_len, encrypted_len;
 
@@ -465,24 +468,36 @@ void MainWindow::aes_ecb_test()
     OpenSSL_add_all_algorithms();
 
     // Encrypt the original data
-    encrypted_len = cipher->encrypt(data, strlen ((char *)data), key, encrypted);
+    qDebug() << "Encrypt challenge";
+    encrypted_len = cipher->encrypt((unsigned char*)data, strlen(data), (unsigned char*)cKey, encrypted);
     // Decrypt the encrypted data
-    decrypted_len = cipher->decrypt(encrypted, encrypted_len, key, decrypted);
+    qDebug() << "Decrypt reply";
+    decrypted_len = cipher->decrypt(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
 
     qDebug() << "Received challenge:";
-    qDebug() << parse_message_to_hex((const char*)data);
+    qDebug() << parse_message_to_hex(challenge);
+    qDebug() << "Challenge length:" << challenge.length();
 
-    encrypted[16] = '\0';
-    qDebug() << "Reply to challenge:";
-    qDebug() << parse_message_to_hex((const char*)encrypted);
+    qDebug() << "Received challenge key:";
+    qDebug() << parse_message_to_hex(key);
+    qDebug() << "Challenge key length:" << (key.length() * 8) << "bits";
 
-    decrypted[16] = '\0';
+    QByteArray challengeReply(QByteArray::fromRawData((const char*)encrypted, 16));
+    //encrypted[16] = '\0';
+    qDebug() << "Challenge reply:";
+    qDebug() << parse_message_to_hex(challengeReply);
+    qDebug() << "Challenge reply length:" << encrypted_len;
+
+    QByteArray challengeDecrypt(QByteArray::fromRawData((const char*)decrypted, 16));
+    //decrypted[16] = '\0';
     qDebug() << "Decrypted data is:";
-    qDebug() << parse_message_to_hex((const char*)decrypted);
+    qDebug() << parse_message_to_hex(challengeDecrypt);
+    qDebug() << "Decrypted length:" << decrypted_len;
 
     EVP_cleanup();
     ERR_free_strings();
 
+    return challengeReply;
 }
 
 void MainWindow::SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled)

@@ -29,6 +29,9 @@ int Cipher::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *
     if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key, NULL))
         handleErrors();
 
+    //if(1 != EVP_CIPHER_CTX_set_padding(ctx, 0))
+    //    handleErrors();
+
     //EVP_CIPHER_CTX_set_padding
     //EVP_CIPH_NO_PADDING
 
