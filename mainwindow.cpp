@@ -471,7 +471,7 @@ void MainWindow::aes_ecb_test()
     printf("Encrypted data is:\n");
     BIO_dump_fp (stdout, (const char *)encrypted, 16);//cipher_len);
 
-    // Decrypt the cipher
+    // Decrypt the encrypted data
     decrypted_len = cipher->decrypt(encrypted, encrypted_len, key, decrypted);
     decrypted[decrypted_len] = '\0';
     printf("Decrypted data is:\n");
