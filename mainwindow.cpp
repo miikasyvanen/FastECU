@@ -453,29 +453,30 @@ void MainWindow::aes_ecb_test()
     unsigned char key[16] = { 0x46, 0x9a, 0x20, 0xab, 0x30, 0x8d, 0x5c, 0xa6, 0x4b, 0xcd, 0x5b, 0xbe, 0x53, 0x5b, 0xd8, 0x5f };
 
     // Message to be encrypted
-    unsigned char plaintext[16] = { 0x5f, 0x75, 0x8c, 0x11, 0x92, 0xdc, 0x56, 0xfb, 0x69, 0xe3, 0x40, 0x2d, 0x83, 0xfb, 0x75, 0xe4 };
+    unsigned char data[16] = { 0x5f, 0x75, 0x8c, 0x11, 0x92, 0xdc, 0x56, 0xfb, 0x69, 0xe3, 0x40, 0x2d, 0x83, 0xfb, 0x75, 0xe4 };
 
-    unsigned char ciphertext[64];
-    unsigned char decryptedtext[64];
+    unsigned char encrypted[64];
+    unsigned char decrypted[64];
 
-    int decryptedtext_len, ciphertext_len;
+    int decrypted_len, encrypted_len;
 
     // Initialise the library
     ERR_load_crypto_strings();
     OpenSSL_add_all_algorithms();
 
-    // Encrypt the plaintext
-    ciphertext_len = cipher->encrypt(plaintext, strlen ((char *)plaintext), key, ciphertext);
-    printf("Ciphertext text is:\n");
-    BIO_dump_fp (stdout, (const char *)ciphertext, 16);//ciphertext_len);
+    printf("Original data is:\n");
 
-    // Decrypt the ciphertext
-    decryptedtext_len = cipher->decrypt(ciphertext, ciphertext_len, key, decryptedtext);
-    qDebug() << "decryptedtext_len:" << decryptedtext_len;
+    // Encrypt the original data
+    encrypted_len = cipher->encrypt(data, strlen ((char *)data), key, encrypted);
+    printf("Encrypted data is:\n");
+    BIO_dump_fp (stdout, (const char *)encrypted, 16);//cipher_len);
 
-    decryptedtext[decryptedtext_len] = '\0';
-    printf("Decrypted text is:\n");
-    BIO_dump_fp (stdout, (const char *)decryptedtext, 16);//decryptedtext_len);
+    // Decrypt the cipher
+    decrypted_len = cipher->decrypt(encrypted, encrypted_len, key, decrypted);
+    decrypted[decrypted_len] = '\0';
+    printf("Decrypted data is:\n");
+    BIO_dump_fp (stdout, (const char *)decrypted, 16);//decrypted_len);
+    fflush(stdout);
 
     EVP_cleanup();
     ERR_free_strings();
