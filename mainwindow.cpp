@@ -428,10 +428,10 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << "Challenge reply:";
     qDebug() << parse_message_to_hex(response);
 
-    //emit LOG_E("Test error", true, true);
-    //emit LOG_W("Test warning", true, true);
-    //emit LOG_I("Test info", true, true);
-    //emit LOG_D("Test debug", true, true);
+    emit LOG_E("Test error", true, true);
+    emit LOG_W("Test warning", true, true);
+    emit LOG_I("Test info", true, true);
+    emit LOG_D("Test debug", true, true);
 }
 
 MainWindow::~MainWindow()
@@ -1984,13 +1984,14 @@ void MainWindow::external_logger_set_progressbar_value(int value)
         remote_utility->set_progressbar_value(value);
 }
 
-//void MainWindow::logger(int log_type, QString message, bool timestamp, bool linefeed)
 void MainWindow::logger(QString message, bool timestamp, bool linefeed)
 {
-    // LOGE,   // error (lowest)
+    // LOGE,   // error
     // LOGW,   // warning
     // LOGI,   // info
     // LOGD,   // debug
+
+    write_syslog_to_file = true;
 
     QString msg;
     int log_type = 0;
@@ -2003,7 +2004,7 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
 
     // Check if timestamp added
     if (timestamp)
-        msg = dateTimeString;
+        msg += dateTimeString;
 
     // Check log type
     if (metaMethod.name() == "LOG_E")
@@ -2027,8 +2028,45 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
 
     // Check if linefeed added
     if (linefeed)
-        message = message + "\n";
+        message += "\n";
 
     qDebug() << msg;
 
+    write_syslog(msg);
+}
+
+bool MainWindow::write_syslog(QString msg)
+{
+    if (write_syslog_to_file)
+    {
+        if (!syslog_file_open)
+        {
+            QDateTime dateTime = dateTime.currentDateTime();
+            QString dateTimeString = dateTime.toString("yyyy-MM-dd hh':'mm':'ss'.'zzz'");
+
+            QString syslog_file_name = configValues->syslog_files_directory;
+            if (configValues->syslog_files_directory.at(configValues->syslog_files_directory.length() - 1) != '/')
+                syslog_file_name.append("/");
+            syslog_file_name.append("log_fastecu_" + dateTimeString + ".txt");
+
+            syslog_file.setFileName(syslog_file_name);
+            if (!syslog_file.open(QIODevice::WriteOnly)) {
+                QMessageBox::information(this, tr("Unable to open file"), syslog_file.errorString() + ":\n" + syslog_file_name);
+                return false;
+            }
+            else
+                syslog_file_open = true;
+
+            syslog_file_outstream.setDevice(&syslog_file);
+            syslog_file_outstream << software_name + " v" + software_version + ", system log file, start time: " + dateTimeString;
+            syslog_file_outstream << "\n";
+
+        }
+        if (syslog_file_open)
+        {
+            syslog_file_outstream << msg;
+            syslog_file_outstream << "\n";
+        }
+    }
+    return true;
 }

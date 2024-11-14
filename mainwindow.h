@@ -262,10 +262,14 @@ private:
     QComboBox *flash_transport_list;
     QComboBox *log_transport_list;
 
-    QFile log_file;
-    QTextStream log_file_outstream;
-    bool write_log_to_file = false;
-    bool log_file_open = false;
+    QFile datalog_file;
+    QFile syslog_file;
+    QTextStream datalog_file_outstream;
+    QTextStream syslog_file_outstream;
+    bool write_datalog_to_file = false;
+    bool write_syslog_to_file = false;
+    bool datalog_file_open = false;
+    bool syslog_file_open = false;
     QElapsedTimer *log_file_timer;
 
     QDialog *settings_dialog;
@@ -312,6 +316,7 @@ private:
     QStringList create_log_transports_list();
     //QString check_kernel(QString flash_method);
     void setSplashScreenProgress(QString text, int incValue);
+    bool write_syslog(QString msg);
 
     // menuactions.c
     void inc_dec_value(QString action);

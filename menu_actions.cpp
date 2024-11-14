@@ -922,9 +922,9 @@ void MainWindow::toggle_realtime()
     else
     {
         qDebug() << "Stop datalog";
-        if (log_file_open){
-            log_file_open = false;
-            log_file.close();
+        if (datalog_file_open){
+            datalog_file_open = false;
+            datalog_file.close();
         }
 
         logging_state = false;
@@ -948,15 +948,15 @@ void MainWindow::toggle_log_to_file()
 
             } else {
                 if (action->text() == "Log to file")
-                    write_log_to_file = action->isChecked();
+                    write_datalog_to_file = action->isChecked();
             }
         }
     }
 
-    if (!write_log_to_file){
-        if (log_file_open){
-            log_file_open = false;
-            log_file.close();
+    if (!write_datalog_to_file){
+        if (datalog_file_open){
+            datalog_file_open = false;
+            datalog_file.close();
         }
     }
 }

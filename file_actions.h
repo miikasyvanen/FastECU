@@ -85,7 +85,8 @@ public:
         QString config_files_base_directory = base_config_directory + software_version + "/config/";
         QString definition_files_base_directory = base_config_directory + software_version + "/definitions/";
         QString kernel_files_base_directory = base_config_directory + software_version + "/kernels/";
-        QString datalog_files_base_directory = base_config_directory + software_version + "/logs/";
+        QString datalog_files_base_directory = base_config_directory + software_version + "/datalogs/";
+        QString syslog_files_base_directory = base_config_directory + software_version + "/syslogs/";
 
         QString version_config_directory;
         QString calibration_files_directory;
@@ -93,6 +94,7 @@ public:
         QString definition_files_directory;
         QString kernel_files_directory;
         QString datalog_files_directory;
+        QString syslog_files_directory;
 
         QString config_file = "fastecu.cfg";
         QString menu_file = "menu.cfg";

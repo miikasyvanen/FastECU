@@ -250,7 +250,7 @@ void BiuOperationsSubaru::send_biu_msg()
     else
         received = serial->write_serial_data_echo_check(output);
 
-    received = serial->read_serial_data(100, 100);
+    received = serial->read_serial_data(100, 250);
 
     /*
     received.clear();
@@ -481,6 +481,13 @@ void BiuOperationsSubaru::parse_biu_message(QByteArray message)
     uint8_t chk_sum;
 
     chk_sum = calculate_checksum(message, true);
+
+    if (!message.length())
+    {
+        send_log_window_message("Invalid message received: zero length", true, true);
+        return;
+    }
+
     if (((uint8_t)message.at(0) & 0x80) != 0x80 || (uint8_t)message.at(1) != 0xf0 || (uint8_t)message.at(2) != 0x40)
     {
         send_log_window_message("Invalid message received: invalid header", true, true);

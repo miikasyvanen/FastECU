@@ -634,54 +634,54 @@ uint8_t MainWindow::calculate_checksum(QByteArray output, bool dec_0x100)
 }
 
 void MainWindow::log_to_file(){
-    if (write_log_to_file){
-        if (!log_file_open){
+    if (write_datalog_to_file){
+        if (!datalog_file_open){
             QDateTime dateTime = dateTime.currentDateTime();
             QString dateTimeString = dateTime.toString("yyyy-MM-dd hh'h'mm'm'ss's'");
 
-            QString log_file_name = configValues->datalog_files_base_directory;
-            if (configValues->datalog_files_base_directory.at(configValues->datalog_files_base_directory.length() - 1) != '/')
+            QString log_file_name = configValues->datalog_files_directory;
+            if (configValues->datalog_files_directory.at(configValues->datalog_files_directory.length() - 1) != '/')
                 log_file_name.append("/");
             log_file_name.append("fastecu_" + dateTimeString + ".csv");
 
-            log_file.setFileName(log_file_name);
-            if (!log_file.open(QIODevice::WriteOnly)) {
+            datalog_file.setFileName(log_file_name);
+            if (!datalog_file.open(QIODevice::WriteOnly)) {
                 QMessageBox::information(this, tr("Unable to open file"),
-                log_file.errorString());
+                datalog_file.errorString());
                 return;
             }
             else
             {
-                log_file_open = true;
+                datalog_file_open = true;
                 log_file_timer->start();
             }
 
-            log_file_outstream.setDevice(&log_file);
-            log_file_outstream << "Time,";
+            datalog_file_outstream.setDevice(&datalog_file);
+            datalog_file_outstream << "Time,";
             for (int j = 0; j < logValues->dashboard_log_value_id.count() ; j++){
-                log_file_outstream << logValues->log_value_name.at(logValues->log_value_id.indexOf(logValues->dashboard_log_value_id.at(j), 0)) << ",";
+                datalog_file_outstream << logValues->log_value_name.at(logValues->log_value_id.indexOf(logValues->dashboard_log_value_id.at(j), 0)) << ",";
             }
             for (int j = 0; j < logValues->lower_panel_log_value_id.count() ; j++){
-                log_file_outstream << logValues->log_value_name.at(logValues->log_value_id.indexOf(logValues->lower_panel_log_value_id.at(j), 0)) << ",";
+                datalog_file_outstream << logValues->log_value_name.at(logValues->log_value_id.indexOf(logValues->lower_panel_log_value_id.at(j), 0)) << ",";
             }
             for (int j = 0; j < logValues->lower_panel_switch_id.count() ; j++){
-                log_file_outstream << logValues->log_switch_name.at(logValues->log_switch_id.indexOf(logValues->lower_panel_switch_id.at(j),0)) << ",";
+                datalog_file_outstream << logValues->log_switch_name.at(logValues->log_switch_id.indexOf(logValues->lower_panel_switch_id.at(j),0)) << ",";
             }
-            log_file_outstream << "\n";
+            datalog_file_outstream << "\n";
         }
         else{
 
-            log_file_outstream << QString::number(log_file_timer->elapsed() / 1000.0f) << ",";
+            datalog_file_outstream << QString::number(log_file_timer->elapsed() / 1000.0f) << ",";
             for (int j = 0; j < logValues->dashboard_log_value_id.count() ; j++){
-                log_file_outstream << logValues->log_value.at(logValues->log_value_id.indexOf(logValues->dashboard_log_value_id.at(j), 0)) << ",";
+                datalog_file_outstream << logValues->log_value.at(logValues->log_value_id.indexOf(logValues->dashboard_log_value_id.at(j), 0)) << ",";
             }
             for (int j = 0; j < logValues->lower_panel_log_value_id.count() ; j++){
-                log_file_outstream << logValues->log_value.at(logValues->log_value_id.indexOf(logValues->lower_panel_log_value_id.at(j), 0)) << ",";
+                datalog_file_outstream << logValues->log_value.at(logValues->log_value_id.indexOf(logValues->lower_panel_log_value_id.at(j), 0)) << ",";
             }
             for (int j = 0; j < logValues->lower_panel_switch_id.count() ; j++){
-                log_file_outstream << logValues->log_switch_state.at(logValues->log_switch_id.indexOf(logValues->lower_panel_switch_id.at(j), 0)) << ",";
+                datalog_file_outstream << logValues->log_switch_state.at(logValues->log_switch_id.indexOf(logValues->lower_panel_switch_id.at(j), 0)) << ",";
             }
-            log_file_outstream << "\n";
+            datalog_file_outstream << "\n";
         }
     }
 }

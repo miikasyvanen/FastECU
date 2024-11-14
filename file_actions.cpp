@@ -52,6 +52,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         configValues->definition_files_directory = configValues->base_config_directory + "/definitions/";
         configValues->kernel_files_directory = configValues->base_config_directory + "/kernels/";
         configValues->datalog_files_directory = configValues->base_config_directory + "/datalogs/";
+        configValues->syslog_files_directory = configValues->base_config_directory + "/syslogs/";
         configValues->config_file = configValues->config_files_directory + "fastecu.cfg";
         configValues->menu_file = configValues->config_files_directory + "menu.cfg";
         configValues->protocols_file = configValues->config_files_directory + "protocols.cfg";
@@ -67,6 +68,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         configValues->definition_files_directory = configValues->base_config_directory + configValues->software_version + "/definitions/";
         configValues->kernel_files_directory = configValues->base_config_directory + configValues->software_version + "/kernels/";
         configValues->datalog_files_directory = configValues->base_config_directory + configValues->software_version + "/datalogs/";
+        configValues->syslog_files_directory = configValues->base_config_directory + configValues->software_version + "/syslogs/";
         configValues->config_file = configValues->config_files_directory + "fastecu.cfg";
         configValues->menu_file = configValues->config_files_directory + "menu.cfg";
         configValues->protocols_file = configValues->config_files_directory + "protocols.cfg";
@@ -156,6 +158,10 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         QDir().mkdir(configValues->datalog_files_directory);
     }
 
+    // Check if fastecu syslog files directory exists
+    if (!QDir(configValues->syslog_files_directory).exists()){
+        QDir().mkdir(configValues->syslog_files_directory);
+    }
 
     return configValues;
 }
