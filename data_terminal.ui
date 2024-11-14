@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>947</width>
-    <height>853</height>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -216,6 +216,13 @@ QPushButton:checked{background-color:rgb(16, 160, 16);}</string>
              </layout>
             </item>
             <item>
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Message:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <layout class="QHBoxLayout" name="horizontalLayout_12">
               <item>
                <widget class="QLineEdit" name="klineMsgToSend"/>
@@ -404,7 +411,7 @@ QPushButton:checked{background-color:rgb(16, 160, 16);}</string>
             <item>
              <widget class="QLabel" name="label_14">
               <property name="text">
-               <string>Send message:</string>
+               <string>Message:</string>
               </property>
              </widget>
             </item>

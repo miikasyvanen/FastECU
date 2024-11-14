@@ -420,6 +420,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->close();
     splash->close();
 
+    aes_ecb_test();
+
     //emit LOG_E("Test error", true, true);
     //emit LOG_W("Test warning", true, true);
     //emit LOG_I("Test info", true, true);
@@ -438,6 +440,46 @@ MainWindow::~MainWindow()
     //ssm_init_poll_timer->stop();
     //serial_poll_timer->stop();
     delete ui;
+}
+
+void MainWindow::aes_ecb_test()
+{
+    // Clean: "5f758c1192dc56fb69e3402d83fb75e4"
+    // Key  : "469a20ab308d5ca64bcd5bbe535bd85f"
+    // Enc  : "b8f73be3b1dcc30e93d88f0af5a860ca"
+
+    Cipher *cipher = new Cipher;
+    // A 128 bit key
+    unsigned char key[16] = { 0x46, 0x9a, 0x20, 0xab, 0x30, 0x8d, 0x5c, 0xa6, 0x4b, 0xcd, 0x5b, 0xbe, 0x53, 0x5b, 0xd8, 0x5f };
+
+    // Message to be encrypted
+    unsigned char plaintext[16] = { 0x5f, 0x75, 0x8c, 0x11, 0x92, 0xdc, 0x56, 0xfb, 0x69, 0xe3, 0x40, 0x2d, 0x83, 0xfb, 0x75, 0xe4 };
+
+    unsigned char ciphertext[64];
+    unsigned char decryptedtext[64];
+
+    int decryptedtext_len, ciphertext_len;
+
+    // Initialise the library
+    ERR_load_crypto_strings();
+    OpenSSL_add_all_algorithms();
+
+    // Encrypt the plaintext
+    ciphertext_len = cipher->encrypt(plaintext, strlen ((char *)plaintext), key, ciphertext);
+    printf("Ciphertext text is:\n");
+    BIO_dump_fp (stdout, (const char *)ciphertext, 16);//ciphertext_len);
+
+    // Decrypt the ciphertext
+    decryptedtext_len = cipher->decrypt(ciphertext, ciphertext_len, key, decryptedtext);
+    qDebug() << "decryptedtext_len:" << decryptedtext_len;
+
+    decryptedtext[decryptedtext_len] = '\0';
+    printf("Decrypted text is:\n");
+    BIO_dump_fp (stdout, (const char *)decryptedtext, 16);//decryptedtext_len);
+
+    EVP_cleanup();
+    ERR_free_strings();
+
 }
 
 void MainWindow::SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled)

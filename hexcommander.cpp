@@ -101,6 +101,41 @@ void HexCommander::sendToInterface()
     QString interfaceTypeName = obj->objectName();
     qDebug() << "Send data to interface";
 
+    QFile file;
+    QString msg = ui->klineMsgToSend->text();
+    QStringList msgList;
+
+    if (msg.at(0).isNumber())
+    {
+        msgList.append(msg);
+    }
+    else
+    {
+        if (ui->klineMsgToSend->text() != "")
+        {
+            QFile file(ui->klineMsgToSend->text());
+            if (!file.open(QIODevice::ReadOnly ))
+            {
+                QMessageBox::warning(this, tr("Data terminal"), "Unable to open datastream file '" + file.fileName() + "' for reading");
+                send_log_window_message("Unable to open datastream file '" + file.fileName() + "' for reading", true, true);
+                qDebug() << "Unable to open datastream file '" + file.fileName() + "' for reading";
+                return;
+            }
+            QTextStream in(&file);
+            while (!in.atEnd())
+            {
+                QString line = in.readLine();
+                msgList.append(line);
+            }
+            file.close();
+
+
+        }
+        else
+            QMessageBox::warning(this, tr("Data terminal"), "Add message bytes or file to send");
+
+    }
+
     if (interfaceTypeName.startsWith("sendKlineMessage"))
     {
         qDebug() << "Send message via K-Line";
@@ -136,27 +171,41 @@ void HexCommander::sendToInterface()
             serial->open_serial_port();
         }
 
-        QStringList msg = ui->klineMsgToSend->text().split(" ");
+        QStringList msg;// = ui->klineMsgToSend->text().split(" ");
         QByteArray output;
         QByteArray received;
+        int rspDelay = 10;
         qDebug() << "Append message to serial output" << msg;
-        for (int i = 0; i < msg.length(); i++)
+        for (int j = 0; j < msgList.length(); j++)
         {
-            output.append(msg.at(i).toUInt(&ok, 16));
+            rspDelay = 10;
+            if (msgList.at(j).at(0).isNumber())
+            {
+                msg = msgList.at(j).split(" ");
+                for (int i = 0; i < msg.length(); i++)
+                {
+                    output.append(msg.at(i).toUInt(&ok, 16));
+                }
+                if (ui->klineProtocol->currentText() == "SSM")
+                    output = add_ssm_header(output, ui->klineTesterId->text().toUInt(&ok, 16), ui->klineTargetId->text().toUInt(&ok, 16), false);
+
+                qDebug() << "Message to send:" << parse_message_to_hex(output);
+            }
+            if (msgList.at(j+1).startsWith("delay"))
+            {
+                delay(msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt());
+                j++;
+            }
+
+            serial->write_serial_data_echo_check(output);
+
+            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+            qDebug() << "Sent:" << parse_message_to_hex(output);
+            delay(rspDelay);
+            received = serial->read_serial_data(100, serial_read_short_timeout);
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Response:" << parse_message_to_hex(received);
         }
-        qDebug() << "Message to send:" << parse_message_to_hex(output);
-        if (ui->klineProtocol->currentText() == "SSM")
-            output = add_ssm_header(output, ui->klineTesterId->text().toUInt(&ok, 16), ui->klineTargetId->text().toUInt(&ok, 16), false);
-
-        serial->write_serial_data_echo_check(output);
-
-        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
-        received = serial->read_serial_data(100, serial_read_short_timeout);
-        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-        qDebug() << "Response:" << parse_message_to_hex(received);
-
         serial->reset_connection();
     }
     else if (interfaceTypeName.startsWith("sendCanMessage"))
@@ -194,37 +243,50 @@ void HexCommander::sendToInterface()
             serial->open_serial_port();
         }
 
-        QStringList msg = ui->canMsgToSend->text().split(" ");
+        QStringList msg;// = ui->canMsgToSend->text().split(" ");
         QByteArray output;
         QByteArray received;
-        if (ui->canProtocol->currentText() == "CAN")
+        int rspDelay = 10;
+        for (int j = 0; j < msgList.length(); j++)
         {
-            if (msg.length() > 8)
+            rspDelay = 10;
+            if (msgList.at(j).at(0).isNumber())
             {
-                qDebug() << "ERROR: CAN message too long (8 message bytes)";
-                QMessageBox::warning(this, tr("CAN message"), "ERROR: CAN message too long (use 4 ID bytes + 8 message bytes)");
+                msg = msgList.at(j).split(" ");
+                if (ui->canProtocol->currentText() == "CAN")
+                {
+                    if (msg.length() > 8)
+                    {
+                        qDebug() << "ERROR: CAN message too long (8 message bytes)";
+                        QMessageBox::warning(this, tr("CAN message"), "ERROR: CAN message too long (use 4 ID bytes + 8 message bytes)");
+                    }
+                    qDebug() << "Append message to CAN output" << msg;
+                }
+                for (int i = 3; i >= 0; i--)
+                {
+                    output.append(((ui->canTesterId->text().toUInt(&ok, 16) >> (i * 8)) & 0xff));
+                }
+                for (int i = 0; i < msg.length(); i++)
+                {
+                    output.append(msg.at(i).toUInt(&ok, 16));
+                }
+                qDebug() << "Message to send:" << parse_message_to_hex(output);
             }
-            qDebug() << "Append message to CAN output" << msg;
-        }
-        for (int i = 3; i >= 0; i--)
-        {
-            output.append(((ui->canTesterId->text().toUInt(&ok, 16) >> (i * 8)) & 0xff));
-        }
-        for (int i = 0; i < msg.length(); i++)
-        {
-            output.append(msg.at(i).toUInt(&ok, 16));
-        }
-        qDebug() << "Message to send:" << parse_message_to_hex(output);
+            if (msgList.at(j+1).startsWith("delay"))
+            {
+                rspDelay = msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt();
+                j++;
+            }
 
-        serial->write_serial_data_echo_check(output);
+            serial->write_serial_data_echo_check(output);
 
-        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
-        received = serial->read_serial_data(100, serial_read_short_timeout);
-        send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-        qDebug() << "Response:" << parse_message_to_hex(received);
-
+            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+            qDebug() << "Sent:" << parse_message_to_hex(output);
+            delay(rspDelay);
+            received = serial->read_serial_data(100, serial_read_short_timeout);
+            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
+            qDebug() << "Response:" << parse_message_to_hex(received);
+        }
         serial->reset_connection();
     }
 }

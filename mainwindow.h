@@ -24,6 +24,7 @@
 #include <QStackedWidget>
 #include <QSplashScreen>
 
+#include <cipher.h>
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
 #include <protocol_select.h>
@@ -303,6 +304,7 @@ private:
     //Connect signals for any flash class and execute ::run() method
     template <typename FLASH_CLASS>
     FLASH_CLASS* connect_signals_and_run_module(FLASH_CLASS *object);
+    void aes_ecb_test();
     void SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
     void set_flash_arrow_state();
     void update_protocol_info(int rom_number);

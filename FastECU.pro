@@ -25,6 +25,8 @@ DEFINES += QT_DEPRECATED_WARNINGS #QT_SSL
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+LIBS += -lcrypto
+
 win32 {
     #LIBS += -LC:\Qt\5.9.9\mingw53_32\lib\libQt5OpenGL.a -lopengl32 -lsetupapi
     LIBS += -lopengl32 -lsetupapi
@@ -51,6 +53,7 @@ REPC_REPLICA = \
 SOURCES += \
     calibration_maps.cpp \
     calibration_treewidget.cpp \
+    cipher.cpp \
     definition_file_convert.cpp \
     ecu_operations.cpp \
     file_actions.cpp \
@@ -116,6 +119,7 @@ SOURCES += \
 HEADERS += \
     calibration_maps.h \
     calibration_treewidget.h \
+    cipher.h \
     definition_file_convert.h \
     ecu_operations.h \
     file_actions.h \
