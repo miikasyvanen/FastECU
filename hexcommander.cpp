@@ -97,42 +97,50 @@ void HexCommander::sendToInterface()
 {
     bool serialOk = true;
     bool ok = false;
+    bool readFile = false;
     QObject *obj = sender();
     QString interfaceTypeName = obj->objectName();
     qDebug() << "Send data to interface";
 
     QFile file;
-    QString msg = ui->klineMsgToSend->text();
+    QString msg;
     QStringList msgList;
 
-    if (msg.at(0).isNumber())
+    if (interfaceTypeName.startsWith("sendKlineMessage"))
+        msg = ui->klineMsgToSend->text();
+    else
+        msg = ui->canMsgToSend->text();
+
+    if (msg == "")
     {
+        QMessageBox::warning(this, tr("Data terminal"), "Add message bytes or file to send");
+        return;
+    }
+
+    if (msg.at(0) != '.' && msg.at(0) != '/')
+    {
+        qDebug() << "Read message from lineedit";
         msgList.append(msg);
     }
     else
     {
-        if (ui->klineMsgToSend->text() != "")
+        qDebug() << "Read message from file";
+        readFile = true;
+        QFile file(msg);
+        if (!file.open(QIODevice::ReadOnly ))
         {
-            QFile file(ui->klineMsgToSend->text());
-            if (!file.open(QIODevice::ReadOnly ))
-            {
-                QMessageBox::warning(this, tr("Data terminal"), "Unable to open datastream file '" + file.fileName() + "' for reading");
-                send_log_window_message("Unable to open datastream file '" + file.fileName() + "' for reading", true, true);
-                qDebug() << "Unable to open datastream file '" + file.fileName() + "' for reading";
-                return;
-            }
-            QTextStream in(&file);
-            while (!in.atEnd())
-            {
-                QString line = in.readLine();
-                msgList.append(line);
-            }
-            file.close();
-
-
+            QMessageBox::warning(this, tr("Data terminal"), "Unable to open datastream file '" + file.fileName() + "' for reading");
+            send_log_window_message("Unable to open datastream file '" + file.fileName() + "' for reading", true, true);
+            qDebug() << "Unable to open datastream file '" + file.fileName() + "' for reading";
+            return;
         }
-        else
-            QMessageBox::warning(this, tr("Data terminal"), "Add message bytes or file to send");
+        QTextStream in(&file);
+        while (!in.atEnd())
+        {
+            QString line = in.readLine();
+            msgList.append(line);
+        }
+        file.close();
 
     }
 
@@ -178,8 +186,10 @@ void HexCommander::sendToInterface()
         qDebug() << "Append message to serial output" << msg;
         for (int j = 0; j < msgList.length(); j++)
         {
+            output.clear();
+            received.clear();
             rspDelay = 10;
-            if (msgList.at(j).at(0).isNumber())
+            if (!msgList.at(j).startsWith("delay"))
             {
                 msg = msgList.at(j).split(" ");
                 for (int i = 0; i < msg.length(); i++)
@@ -191,12 +201,15 @@ void HexCommander::sendToInterface()
 
                 qDebug() << "Message to send:" << parse_message_to_hex(output);
             }
-            if (msgList.at(j+1).startsWith("delay"))
+            if (msgList.length() > (j+1))
             {
-                delay(msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt());
-                j++;
+                if (msgList.at(j+1).startsWith("delay"))
+                {
+                    qDebug() << "Set delay";
+                    delay(msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt());
+                    j++;
+                }
             }
-
             serial->write_serial_data_echo_check(output);
 
             send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
@@ -246,11 +259,13 @@ void HexCommander::sendToInterface()
         QStringList msg;// = ui->canMsgToSend->text().split(" ");
         QByteArray output;
         QByteArray received;
-        int rspDelay = 10;
+        int rspDelay = 100;
         for (int j = 0; j < msgList.length(); j++)
         {
+            output.clear();
+            received.clear();
             rspDelay = 10;
-            if (msgList.at(j).at(0).isNumber())
+            if (!msgList.at(j).startsWith("delay"))
             {
                 msg = msgList.at(j).split(" ");
                 if (ui->canProtocol->currentText() == "CAN")
@@ -272,12 +287,15 @@ void HexCommander::sendToInterface()
                 }
                 qDebug() << "Message to send:" << parse_message_to_hex(output);
             }
-            if (msgList.at(j+1).startsWith("delay"))
+            if (msgList.length() > (j+1))
             {
-                rspDelay = msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt();
-                j++;
+                if (msgList.at(j+1).startsWith("delay"))
+                {
+                    qDebug() << "Set delay";
+                    rspDelay = msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt();
+                    j++;
+                }
             }
-
             serial->write_serial_data_echo_check(output);
 
             send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
