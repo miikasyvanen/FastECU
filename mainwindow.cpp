@@ -464,19 +464,21 @@ void MainWindow::aes_ecb_test()
     ERR_load_crypto_strings();
     OpenSSL_add_all_algorithms();
 
-    printf("Original data is:\n");
-
     // Encrypt the original data
     encrypted_len = cipher->encrypt(data, strlen ((char *)data), key, encrypted);
-    printf("Encrypted data is:\n");
-    BIO_dump_fp (stdout, (const char *)encrypted, 16);//cipher_len);
-
     // Decrypt the encrypted data
     decrypted_len = cipher->decrypt(encrypted, encrypted_len, key, decrypted);
-    decrypted[decrypted_len] = '\0';
-    printf("Decrypted data is:\n");
-    BIO_dump_fp (stdout, (const char *)decrypted, 16);//decrypted_len);
-    fflush(stdout);
+
+    qDebug() << "Received challenge:";
+    qDebug() << parse_message_to_hex((const char*)data);
+
+    encrypted[16] = '\0';
+    qDebug() << "Reply to challenge:";
+    qDebug() << parse_message_to_hex((const char*)encrypted);
+
+    decrypted[16] = '\0';
+    qDebug() << "Decrypted data is:";
+    qDebug() << parse_message_to_hex((const char*)decrypted);
 
     EVP_cleanup();
     ERR_free_strings();
