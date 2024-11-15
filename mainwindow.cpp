@@ -420,6 +420,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->close();
     splash->close();
 
+    // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
     QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
     QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4\x00" };
@@ -427,6 +428,9 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     response.append(aes_ecb_test(challenge, key));
     qDebug() << "Challenge reply:";
     qDebug() << parse_message_to_hex(response);
+
+    aes_ecb_example();
+    // AES-128 ECB examples end
 
     //emit LOG_E("Test error", true, true);
     //emit LOG_W("Test warning", true, true);
@@ -454,7 +458,7 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     // Key  : "469a20ab308d5ca64bcd5bbe535bd85f"
     // Enc  : "b8f73be3b1dcc30e93d88f0af5a860ca"
 
-    Cipher *cipher = new Cipher;
+    Cipher cipher;
     unsigned char encrypted[64];
     unsigned char decrypted[64];
 
@@ -463,16 +467,12 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
 
     int decrypted_len, encrypted_len;
 
-    // Initialise the library
-    ERR_load_crypto_strings();
-    OpenSSL_add_all_algorithms();
-
     // Encrypt the original data
     qDebug() << "Encrypt challenge";
-    encrypted_len = cipher->encrypt((unsigned char*)data, strlen(data), (unsigned char*)cKey, encrypted);
+    encrypted_len = cipher.encrypt_aes128_ecb((unsigned char*)data, strlen(data), (unsigned char*)cKey, encrypted);
     // Decrypt the encrypted data
     qDebug() << "Decrypt reply";
-    decrypted_len = cipher->decrypt(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
+    decrypted_len = cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
 
     qDebug() << "Received challenge:";
     qDebug() << parse_message_to_hex(challenge);
@@ -494,11 +494,40 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     qDebug() << parse_message_to_hex(challengeDecrypt);
     qDebug() << "Decrypted length:" << decrypted_len;
 
-    EVP_cleanup();
-    ERR_free_strings();
-
     return challengeReply;
 }
+
+void MainWindow::aes_ecb_example()
+{
+    // Clean: "5f758c1192dc56fb69e3402d83fb75e4"
+    // Key  : "469a20ab308d5ca64bcd5bbe535bd85f"
+    // Enc  : "b8f73be3b1dcc30e93d88f0af5a860ca"
+
+    qDebug() << "aes_ecb_example:";
+
+    Cipher cipher;
+    // A 128 bit key
+    unsigned char key[] = { 0x46, 0x9a, 0x20, 0xab, 0x30, 0x8d, 0x5c, 0xa6, 0x4b, 0xcd, 0x5b, 0xbe, 0x53, 0x5b, 0xd8, 0x5f };
+    QByteArray engine_key_1((const char*)key, ARRAYSIZE(key));
+
+    // Message to be encrypted
+    unsigned char data[] = { 0x5f, 0x75, 0x8c, 0x11, 0x92, 0xdc, 0x56, 0xfb, 0x69, 0xe3, 0x40, 0x2d, 0x83, 0xfb, 0x75, 0xe4 };
+    QByteArray ch_data((const char*)data, ARRAYSIZE(data));
+
+    qDebug() << "Received challenge:";
+    qDebug() << parse_message_to_hex(ch_data);
+
+    QByteArray output;
+    qDebug() << "Reply to challenge:";
+    output = cipher.encrypt_aes128_ecb(ch_data, engine_key_1);
+    qDebug() << parse_message_to_hex(output);
+
+    qDebug() << "Decrypted data is:";
+    output = cipher.decrypt_aes128_ecb(output, engine_key_1);
+    qDebug() << parse_message_to_hex(output);
+
+}
+
 
 void MainWindow::SetComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled)
 {
