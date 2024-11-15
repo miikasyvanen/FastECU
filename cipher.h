@@ -18,10 +18,14 @@ class Cipher
 {
 public:
     Cipher();
+    ~Cipher();
 
-    int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *ciphertext);
-    int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char  *key, unsigned char *plaintext);
+    int encrypt_aes128_ecb(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *ciphertext);
+    int decrypt_aes128_ecb(unsigned char *ciphertext, int ciphertext_len, unsigned char  *key, unsigned char *plaintext);
+    QByteArray encrypt_aes128_ecb(const QByteArray &plaintext, const QByteArray &key);
+    QByteArray decrypt_aes128_ecb(const QByteArray &ciphertext, const QByteArray &key);
 private:
+    EVP_CIPHER_CTX *ctx;
     void handleErrors(void);
 
 };
