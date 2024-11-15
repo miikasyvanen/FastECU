@@ -34,7 +34,7 @@ win32 {
     serial_port/J2534_win.h
     HEADERS += \
     serial_port/J2534_tactrix_win.h
-    INCLUDEPATH += "C:\Program Files (x86)\OpenSSL-Win32\include"
+    INCLUDEPATH += "C:\Program Files (x86)\OpenSSL-Win32\include" "C:\Program Files\OpenSSL-Win32\include"
 }
 unix {
     LIBS += -lcrypto
