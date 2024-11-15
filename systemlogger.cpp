@@ -29,13 +29,13 @@ void SystemLogger::logMessages(int logType, QString message, bool timestamp, boo
 
     // Check log type
 
-    if (logType == 0)
+    if (logType == _LOG_E)
         msg += "(EE) ";
-    else if (logType == 1)
+    else if (logType == _LOG_W)
         msg += "(WW) ";
-    else if (logType == 2)
+    else if (logType == _LOG_I)
         msg += "(II) ";
-    else if (logType == 3)
+    else if (logType == _LOG_D)
         msg += "(DD) ";
     msg += message;
 

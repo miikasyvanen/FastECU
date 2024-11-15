@@ -102,11 +102,11 @@ public:
     void delay(int n);
 
 private:
-    enum LogType {
-        LOGE = 0,   // error
-        LOGW,   // warning
-        LOGI,   // info
-        LOGD,   // debug
+    enum {
+        _LOG_E = 0,   // error
+        _LOG_W,   // warning
+        _LOG_I,   // info
+        _LOG_D,   // debug
     };
 
     QString software_name;

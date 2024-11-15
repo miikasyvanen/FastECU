@@ -18,11 +18,11 @@ public:
 
 private:
     enum {
-        LOGE = 0,   // error
-        LOGW,   // warning
-        LOGI,   // info
-        LOGD,   // debug
-    };
+        _LOG_E = 0,   // error
+        _LOG_W,   // warning
+        _LOG_I,   // info
+        _LOG_D,   // debug
+    } ;
 
 signals:
     void logger();

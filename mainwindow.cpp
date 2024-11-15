@@ -2001,13 +2001,13 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
     QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
 
     if (metaMethod.name() == "LOG_E")
-        syslog(0, message, timestamp, linefeed);
+        syslog(_LOG_E, message, timestamp, linefeed);
     else if (metaMethod.name() == "LOG_W")
-        syslog(1, message, timestamp, linefeed);
+        syslog(_LOG_W, message, timestamp, linefeed);
     else if (metaMethod.name() == "LOG_I")
-        syslog(2, message, timestamp, linefeed);
+        syslog(_LOG_I, message, timestamp, linefeed);
     else if (metaMethod.name() == "LOG_D")
-        syslog(3, message, timestamp, linefeed);
+        syslog(_LOG_D, message, timestamp, linefeed);
     //return;
 
     write_syslog_to_file = true;
@@ -2072,7 +2072,6 @@ void MainWindow::iterateChildWidgets(QWidget* parent, QString msg)
         QTextEdit *textEdit = pChild->findChild<QTextEdit*>("text_edit");
         if (textEdit)
         {
-            qDebug() << "Text edit of child widget found!";
             textEdit->insertPlainText(msg);
             textEdit->ensureCursorVisible();
             QCoreApplication::processEvents(QEventLoop::AllEvents, 100);

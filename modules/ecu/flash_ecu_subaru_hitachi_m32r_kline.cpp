@@ -165,7 +165,16 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     delay(100);
 
     send_log_window_message("Initializing k-line communications", true, true);
+    serial->change_port_speed("38400");
+    received = send_subaru_sid_bf_ssm_init();
 
+    if (received != "" || received.length() > 12)
+    {
+        kernel_alive = true;
+        return STATUS_SUCCESS;
+    }
+
+    serial->change_port_speed("4800");
     received = send_subaru_sid_bf_ssm_init();
 
     if (received == "" || received.length() < 13)
@@ -181,8 +190,6 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
     send_log_window_message("Init Success: CAL ID = " + calid, true, true);
     qDebug() << "CAL ID = " << calid;
-
-    send_subaru_sid_b8_change_baudrate_38400();
 
     // Start communication
     send_log_window_message("Start communication ok", true, true);
@@ -236,6 +243,8 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     send_log_window_message("Start diagnostic session ok", true, true);
     qDebug() << "Start diagnostic session ok";
 
+    kernel_alive = true;
+
     return STATUS_SUCCESS;
 }
 
@@ -268,34 +277,38 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         return STATUS_ERROR;
     }
 
-    // SSM init
-    received = send_subaru_sid_bf_ssm_init();
-    if (received == "" || (uint8_t)received.at(4) != 0xff)
-        return STATUS_ERROR;
-
-    if (received.length() < 13)
-        return STATUS_ERROR;
-
-    received.remove(0, 8);
-    received.remove(5, received.length() - 5);
-
-    for (int i = 0; i < received.length(); i++)
-    {
-        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-    }
-    QString ecuid = msg;
-    LOG_I("ECU ID = " + ecuid, true, true);
-    //send_log_window_message("ECU ID = " + ecuid, true, true);
-
-    received = send_subaru_sid_b8_change_baudrate_38400();
-    LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
-    //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
-    //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
-    if (received == "" || (uint8_t)received.at(4) != 0xf8)
-        return STATUS_ERROR;
-
     serial->change_port_speed("38400");
 
+    if(!kernel_alive)
+    {
+        // SSM init
+        received = send_subaru_sid_bf_ssm_init();
+        if (received == "" || (uint8_t)received.at(4) != 0xff)
+            return STATUS_ERROR;
+
+        if (received.length() < 13)
+            return STATUS_ERROR;
+
+        received.remove(0, 8);
+        received.remove(5, received.length() - 5);
+
+        for (int i = 0; i < received.length(); i++)
+        {
+            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        }
+        QString ecuid = msg;
+        LOG_I("ECU ID = " + ecuid, true, true);
+        //send_log_window_message("ECU ID = " + ecuid, true, true);
+
+        received = send_subaru_sid_b8_change_baudrate_38400();
+        LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
+        //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
+        //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
+        if (received == "" || (uint8_t)received.at(4) != 0xf8)
+            return STATUS_ERROR;
+
+        serial->change_port_speed("38400");
+    }
     // Checking connection after baudrate change with SSM Init
     received = send_subaru_sid_bf_ssm_init();
     if (received == "" || (uint8_t)received.at(4) != 0xff)
@@ -408,6 +421,8 @@ int FlashEcuSubaruHitachiM32rKline::write_mem(bool test_write)
 {
     QByteArray received;
     QByteArray filedata;
+
+    serial->change_port_speed("38400");
 
     filedata = ecuCalDef->FullRomData;
 
