@@ -1,4 +1,4 @@
-QT       += core gui xml serialport remoteobjects websockets
+QT       += core concurrent gui xml serialport remoteobjects websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += charts
@@ -113,6 +113,7 @@ SOURCES += \
     serial_port/serial_port_actions_direct.cpp \
     serial_port/websocketiodevice.cpp \
     settings.cpp \
+    systemlogger.cpp \
     vehicle_select.cpp \
     verticallabel.cpp
 
@@ -176,6 +177,7 @@ HEADERS += \
     serial_port/serial_port_actions_direct.h \
     serial_port/websocketiodevice.h \
     settings.h \
+    systemlogger.h \
     vehicle_select.h \
     verticallabel.h
 

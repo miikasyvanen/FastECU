@@ -428,10 +428,17 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << "Challenge reply:";
     qDebug() << parse_message_to_hex(response);
 
-    emit LOG_E("Test error", true, true);
-    emit LOG_W("Test warning", true, true);
-    emit LOG_I("Test info", true, true);
-    emit LOG_D("Test debug", true, true);
+
+    QThread *thread = new QThread();
+    SystemLogger *syslogger = new SystemLogger();
+    syslogger->moveToThread(thread);
+
+    connect(this, SIGNAL(syslog(int,QString,bool,bool)), syslogger, SLOT(logMessages(int,QString,bool,bool)));
+
+    connect(thread, &QThread::started, syslogger, &SystemLogger::run);
+    thread->start();
+
+    LOG_I("FastECU initialized", true, true);
 }
 
 MainWindow::~MainWindow()
@@ -1991,12 +1998,24 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
     // LOGI,   // info
     // LOGD,   // debug
 
+    QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
+
+    if (metaMethod.name() == "LOG_E")
+        syslog(0, message, timestamp, linefeed);
+    else if (metaMethod.name() == "LOG_W")
+        syslog(1, message, timestamp, linefeed);
+    else if (metaMethod.name() == "LOG_I")
+        syslog(2, message, timestamp, linefeed);
+    else if (metaMethod.name() == "LOG_D")
+        syslog(3, message, timestamp, linefeed);
+    //return;
+
     write_syslog_to_file = true;
 
     QString msg;
     int log_type = 0;
 
-    QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
+    //QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
     //qDebug() << metaMethod.name();
 
     QDateTime dateTime = dateTime.currentDateTime();
@@ -2008,31 +2027,58 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
 
     // Check log type
     if (metaMethod.name() == "LOG_E")
-    {
         msg += "(EE) ";
-    }
     else if (metaMethod.name() == "LOG_W")
-    {
         msg += "(WW) ";
-    }
     else if (metaMethod.name() == "LOG_I")
-    {
         msg += "(II) ";
-    }
     else if (metaMethod.name() == "LOG_D")
-    {
         msg += "(DD) ";
-    }
 
     msg += message;
 
     // Check if linefeed added
     if (linefeed)
-        message += "\n";
+        msg += "\n";
 
-    qDebug() << msg;
-
+    //qDebug() << msg;
+/*
+    QWidget *pWin = QApplication::activeWindow();
+    if (pWin)
+    {
+        QList<QObject*> pList = pWin->children();
+        foreach (auto obj, pList) {
+            qDebug() << obj;
+        }
+    }
+*/
+    iterateChildWidgets(this, msg);
     write_syslog(msg);
+}
+
+void logger_thread(const QString &message, bool timestamp, bool linefeed)
+{
+
+}
+
+void MainWindow::iterateChildWidgets(QWidget* parent, QString msg)
+{
+    QObjectList children = parent->children();
+    QObjectList::const_iterator it = children.begin();
+    QObjectList::const_iterator eIt = children.end();
+    while ( it != eIt )
+    {
+        QWidget *pChild = (QWidget *)(*it++);
+        QTextEdit *textEdit = pChild->findChild<QTextEdit*>("text_edit");
+        if (textEdit)
+        {
+            qDebug() << "Text edit of child widget found!";
+            textEdit->insertPlainText(msg);
+            textEdit->ensureCursorVisible();
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        }
+        iterateChildWidgets(pChild, msg);
+    }
 }
 
 bool MainWindow::write_syslog(QString msg)
@@ -2065,7 +2111,7 @@ bool MainWindow::write_syslog(QString msg)
         if (syslog_file_open)
         {
             syslog_file_outstream << msg;
-            syslog_file_outstream << "\n";
+            syslog_file_outstream.flush();
         }
     }
     return true;

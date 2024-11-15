@@ -8,6 +8,11 @@ FlashEcuSubaruHitachiM32rKline::FlashEcuSubaruHitachiM32rKline(SerialPortActions
 {
     ui->setupUi(this);
 
+    connect(this, SIGNAL(LOG_E(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_W(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_I(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_D(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+
     if (cmd_type == "test_write")
         this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "write")
@@ -258,7 +263,8 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
 
     if (!serial->is_serial_port_open())
     {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        LOG_E("ERROR: Serial port is not open.", true, true);
+        //send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
@@ -278,11 +284,13 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
     }
     QString ecuid = msg;
-    send_log_window_message("ECU ID = " + ecuid, true, true);
+    LOG_I("ECU ID = " + ecuid, true, true);
+    //send_log_window_message("ECU ID = " + ecuid, true, true);
 
     received = send_subaru_sid_b8_change_baudrate_38400();
-    send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "0xB8 response:" << parse_message_to_hex(received);
+    LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
+    //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
+    //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
     if (received == "" || (uint8_t)received.at(4) != 0xf8)
         return STATUS_ERROR;
 
@@ -358,7 +366,8 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         }
         else
         {
-            qDebug() << "ERROR IN DATA RECEIVE!" << hex << addr << parse_message_to_hex(received);
+            LOG_E("ERROR IN DATA RECEIVE! " + parse_message_to_hex(received), true, true);
+            //qDebug() << "ERROR IN DATA RECEIVE!" << hex << addr << parse_message_to_hex(received);
         }
 
         cplen = (numblocks * pagesize);
@@ -379,9 +388,10 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("ROM read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        LOG_I(msg, true, true);
         send_log_window_message(msg, true, true);
         //qDebug() << msg;
-        delay(1);
+        //delay(1);
 
         len_done += cplen;
         addr += (numblocks * pagesize);

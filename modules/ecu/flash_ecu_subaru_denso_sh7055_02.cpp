@@ -8,6 +8,16 @@ FlashEcuSubaruDensoSH7055_02::FlashEcuSubaruDensoSH7055_02(SerialPortActions *se
 {
     ui->setupUi(this);
 
+    connect(this, SIGNAL(LOG_E(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_W(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_I(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_D(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+
+    emit LOG_E("Test error from module", true, true);
+    emit LOG_W("Test warning from module", true, true);
+    emit LOG_I("Test info from module", true, true);
+    emit LOG_D("Test debug from module", true, true);
+
     if (cmd_type == "test_write")
         this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "write")

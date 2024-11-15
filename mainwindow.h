@@ -24,6 +24,11 @@
 #include <QStackedWidget>
 #include <QSplashScreen>
 
+#include <QtConcurrent>
+#include <QFuture>
+#include <QDebug>
+#include <QThread>
+
 #include <cipher.h>
 #include <calibration_maps.h>
 #include <calibration_treewidget.h>
@@ -68,10 +73,16 @@
 #include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_can.h>
 
+#include <systemlogger.h>
 
 #include <modules/ecu/flash_ecu_subaru_denso_sh7xxx_densocan.h>
 //
 #include <remote_utility/remote_utility.h>
+
+extern void log_error(const QString &message, bool timestamp, bool linefeed);
+extern void log_warning(const QString &message, bool timestamp, bool linefeed);
+extern void log_info(const QString &message, bool timestamp, bool linefeed);
+extern void log_debug(const QString &message, bool timestamp, bool linefeed);
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -91,9 +102,8 @@ public:
     void delay(int n);
 
 private:
-    enum {
-        LOG = 0,
-        LOGE,   // error
+    enum LogType {
+        LOGE = 0,   // error
         LOGW,   // warning
         LOGI,   // info
         LOGD,   // debug
@@ -316,6 +326,7 @@ private:
     QStringList create_log_transports_list();
     //QString check_kernel(QString flash_method);
     void setSplashScreenProgress(QString text, int incValue);
+    void iterateChildWidgets(QWidget* parent, QString msg);
     bool write_syslog(QString msg);
 
     // menuactions.c
@@ -421,5 +432,6 @@ signals:
     void LOG_W(QString message, bool timestamp, bool linefeed);
     void LOG_I(QString message, bool timestamp, bool linefeed);
     void LOG_D(QString message, bool timestamp, bool linefeed);
+    void syslog(int logType, QString message, bool timestamp, bool linefeed);
 };
 #endif // MAINWINDOW_H

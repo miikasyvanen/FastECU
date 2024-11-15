@@ -13,6 +13,11 @@
     <height>652</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <family>Ubuntu Mono</family>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -26,6 +31,13 @@
          <width>800</width>
          <height>600</height>
         </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>DejaVu Sans Mono</family>
+         <pointsize>10</pointsize>
+         <kerning>false</kerning>
+        </font>
        </property>
       </widget>
      </item>

@@ -38,6 +38,10 @@ public:
 signals:
     void external_logger(QString message);
     void external_logger(int value);
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
 
 private:
     FileActions::EcuCalDefStructure *ecuCalDef;
