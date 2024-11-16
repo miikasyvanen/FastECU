@@ -114,6 +114,10 @@ public:
     QString open_serial_port();
 
 private:
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
+#endif
+
     long PassThruOpen(const void *pName, unsigned long *pDeviceID);
     long PassThruClose(unsigned long DeviceID);
     long PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, unsigned long Flags, unsigned long Baudrate, unsigned long *pChannelID);
