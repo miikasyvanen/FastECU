@@ -185,6 +185,8 @@ private:
     bool J2534_timing_ok = false;
     bool J2534_filters_ok = false;
 
+    bool J2534_is_denso_dsti = false;
+
     int line_end_check_1_toggled(int state);
     int line_end_check_2_toggled(int state);
 #ifdef Q_OS_WIN32
