@@ -24,7 +24,6 @@
 #include <QStackedWidget>
 #include <QSplashScreen>
 
-#include <QtConcurrent>
 #include <QFuture>
 #include <QDebug>
 #include <QThread>
@@ -108,6 +107,10 @@ private:
         _LOG_I,   // info
         _LOG_D,   // debug
     };
+
+#if defined Q_OS_UNIX
+#define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
+#endif
 
     QString software_name;
     QString software_title;

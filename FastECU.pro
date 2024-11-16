@@ -1,4 +1,4 @@
-QT       += core concurrent gui xml serialport remoteobjects websockets
+QT       += core gui xml serialport remoteobjects websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += charts
