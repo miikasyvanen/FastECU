@@ -25,19 +25,19 @@ DEFINES += QT_DEPRECATED_WARNINGS #QT_SSL
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-LIBS += -lcrypto
-
 win32 {
     #LIBS += -LC:\Qt\5.9.9\mingw53_32\lib\libQt5OpenGL.a -lopengl32 -lsetupapi
-    LIBS += -lopengl32 -lsetupapi
+    LIBS += -lopengl32 -lsetupapi -lcrypto-3
     SOURCES += \
     serial_port/J2534_win.cpp
     HEADERS += \
     serial_port/J2534_win.h
     HEADERS += \
     serial_port/J2534_tactrix_win.h
+    INCLUDEPATH += "C:\Program Files (x86)\OpenSSL-Win32\include" "C:\Program Files\OpenSSL-Win32\include"
 }
 unix {
+    LIBS += -lcrypto
     SOURCES += \
     serial_port/J2534_linux.cpp
     HEADERS += \

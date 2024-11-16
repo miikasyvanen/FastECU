@@ -1,39 +1,66 @@
 #include "cipher.h"
 
+//Size rounded up to closest 16 byte limit
+qsizetype size16(qsizetype size)
+{
+    return size + 16 - (size % 16);
+}
+
 Cipher::Cipher()
 {
+    /* Create and initialise the context */
+    if(!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors();
+    // Initialise the library
+}
 
+Cipher::~Cipher()
+{
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
 }
 
 void Cipher::handleErrors(void)
 {
-    ERR_print_errors_fp(stderr);
+    //ERR_print_errors_fp(stderr);
     //abort();
+    qDebug() << "Cipher error";
 }
 
-int Cipher::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *ciphertext)
+QByteArray Cipher::encrypt_aes128_ecb(const QByteArray &plaintext, const QByteArray &key)
 {
-    EVP_CIPHER_CTX *ctx;
+    unsigned char ciphertext[size16(plaintext.size())];
+    int ciphertext_len = encrypt_aes128_ecb((unsigned char *)plaintext.constData(),
+                                            plaintext.size(),
+                                            (unsigned char *)key.constData(),
+                                            ciphertext);
+    QByteArray encrypted((const char *)ciphertext, ciphertext_len);
+    return encrypted;
+}
 
+QByteArray Cipher::decrypt_aes128_ecb(const QByteArray &ciphertext, const QByteArray &key)
+{
+    unsigned char plaintext[size16(ciphertext.size())];
+    int plaintext_len = decrypt_aes128_ecb((unsigned char *)ciphertext.constData(),
+                                            ciphertext.size(),
+                                            (unsigned char *)key.constData(),
+                                            plaintext);
+    QByteArray encrypted((const char *)plaintext, plaintext_len);
+    return encrypted;
+}
+
+int Cipher::encrypt_aes128_ecb(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *ciphertext)
+{
     int len;
 
     int ciphertext_len;
 
-    /* Create and initialise the context */
-    if(!(ctx = EVP_CIPHER_CTX_new()))
-        handleErrors();
-
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
     /* Initialise the encryption operation. IMPORTANT - ensure you use a key
     * In this example we are using 128 bit AES (i.e. a 128 bit key).
     */
     if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key, NULL))
         handleErrors();
-
-    //if(1 != EVP_CIPHER_CTX_set_padding(ctx, 0))
-    //    handleErrors();
-
-    //EVP_CIPHER_CTX_set_padding
-    //EVP_CIPH_NO_PADDING
 
     /* Provide the message to be encrypted, and obtain the encrypted output.
     * EVP_EncryptUpdate can be called multiple times if necessary
@@ -50,24 +77,16 @@ int Cipher::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *
 
     ciphertext_len += len;
 
-    /* Clean up */
-    EVP_CIPHER_CTX_free(ctx);
-
     return ciphertext_len;
 }
 
-int Cipher::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char  *key, unsigned char *plaintext)
+int Cipher::decrypt_aes128_ecb(unsigned char *ciphertext, int ciphertext_len, unsigned char  *key, unsigned char *plaintext)
 {
-    EVP_CIPHER_CTX *ctx;
-
     int len;
 
     int plaintext_len;
 
-    /* Create and initialise the context */
-    if(!(ctx = EVP_CIPHER_CTX_new()))
-        handleErrors();
-
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
     /* Initialise the decryption operation. IMPORTANT - ensure you use a key
    * In this example we are using 128 bit AES (i.e. a 128 bit key). The
   */
@@ -84,11 +103,10 @@ int Cipher::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char
     /* Finalise the decryption. Further plaintext bytes may be written at
    * this stage.
    */
-    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) handleErrors();
+    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len))
+        handleErrors();
     plaintext_len += len;
-
-    /* Clean up */
-    EVP_CIPHER_CTX_free(ctx);
 
     return plaintext_len;
 }
+
