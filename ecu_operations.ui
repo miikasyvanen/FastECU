@@ -28,7 +28,7 @@
       <widget class="QTextEdit" name="text_edit">
        <property name="minimumSize">
         <size>
-         <width>800</width>
+         <width>900</width>
          <height>600</height>
         </size>
        </property>

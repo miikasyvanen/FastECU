@@ -8,10 +8,14 @@ FlashEcuSubaruHitachiM32rKline::FlashEcuSubaruHitachiM32rKline(SerialPortActions
 {
     ui->setupUi(this);
 
-    connect(this, SIGNAL(LOG_E(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_W(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_I(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_D(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_E(QString,bool,bool)), parent, SIGNAL(LOG_E(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_W(QString,bool,bool)), parent, SIGNAL(LOG_W(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_I(QString,bool,bool)), parent, SIGNAL(LOG_I(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_D(QString,bool,bool)), parent, SIGNAL(LOG_D(QString,bool,bool)));
+    //connect(this, SIGNAL(LOG_E(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    //connect(this, SIGNAL(LOG_W(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    //connect(this, SIGNAL(LOG_I(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
+    //connect(this, SIGNAL(LOG_D(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
 
     if (cmd_type == "test_write")
         this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
@@ -169,7 +173,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
     delay(100);
 
-    send_log_window_message("Initializing k-line communications", true, true);
+    send_log_window_message("Checking if OBK is running", true, true);
     serial->change_port_speed("38400");
     received = send_subaru_sid_bf_ssm_init();
 
@@ -179,6 +183,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         return STATUS_SUCCESS;
     }
 
+    send_log_window_message("Initializing K-Line communications", true, true);
     serial->change_port_speed("4800");
     received = send_subaru_sid_bf_ssm_init();
 
@@ -282,11 +287,19 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         return STATUS_ERROR;
     }
 
+    send_log_window_message("Checking if OBK is running", true, true);
     serial->change_port_speed("38400");
+    received = send_subaru_sid_bf_ssm_init();
+
+    if (received != "" || received.length() > 12)
+    {
+        kernel_alive = true;
+    }
 
     if(!kernel_alive)
     {
         // SSM init
+        serial->change_port_speed("4800");
         received = send_subaru_sid_bf_ssm_init();
         if (received == "" || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
@@ -313,11 +326,12 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
             return STATUS_ERROR;
 
         serial->change_port_speed("38400");
+
+        // Checking connection after baudrate change with SSM Init
+        received = send_subaru_sid_bf_ssm_init();
+        if (received == "" || (uint8_t)received.at(4) != 0xff)
+            return STATUS_ERROR;
     }
-    // Checking connection after baudrate change with SSM Init
-    received = send_subaru_sid_bf_ssm_init();
-    if (received == "" || (uint8_t)received.at(4) != 0xff)
-        return STATUS_ERROR;
 
     start_addr += 0x00100000;
     datalen = 6;
@@ -407,7 +421,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("ROM read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         LOG_I(msg, true, true);
-        send_log_window_message(msg, true, true);
+        //send_log_window_message(msg, true, true);
         //qDebug() << msg;
         //delay(1);
 
@@ -1172,7 +1186,7 @@ void FlashEcuSubaruHitachiM32rKline::set_progressbar_value(int value)
     }
     if (valueChanged)
         emit external_logger(value);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 void FlashEcuSubaruHitachiM32rKline::delay(int timeout)

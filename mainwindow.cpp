@@ -19,10 +19,10 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qApp->installEventFilter(this);
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
-    connect(this, SIGNAL(LOG_E(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_W(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_I(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_D(QString,bool,bool)), this, SLOT(logger(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_E(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_W(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_I(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_D(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
 
     QPixmap startUpSplashImage(":/images/startup_splash.jpg");
     int startUpSplashProgressBarValue = 0;
@@ -432,13 +432,18 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     QThread *thread = new QThread();
     SystemLogger *syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version);
     syslogger->moveToThread(thread);
-
-    connect(this, SIGNAL(syslog(int,bool,QString,bool,bool)), syslogger, SLOT(logMessages(int,bool,QString,bool,bool)));
-
-    connect(thread, &QThread::started, syslogger, &SystemLogger::run);
+    connect(this, SIGNAL(LOG_E(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_W(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_I(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
+    connect(this, SIGNAL(LOG_D(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
+    connect(this, SIGNAL(enable_log_write_to_file(bool)), syslogger, SLOT(enable_log_write_to_file(bool)));
+    connect(syslogger, SIGNAL(sendMsgToLogWindow(QString)), this, SLOT(sendMsgToLogWindow(QString)), Qt::QueuedConnection);
+    connect(syslogger, SIGNAL(finished()), thread, SLOT(quit()));
+    connect(syslogger, SIGNAL(finished()), syslogger, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    connect(thread, SIGNAL(started()), syslogger, SLOT(run()));
     thread->start();
 
-    LOG_I("FastECU initialized", true, true);
     aes_ecb_example();
     // AES-128 ECB examples end
 
@@ -446,6 +451,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //emit LOG_W("Test warning", true, true);
     //emit LOG_I("Test info", true, true);
     //emit LOG_D("Test debug", true, true);
+    emit enable_log_write_to_file(true);
+    LOG_I("FastECU initialized", true, true);
 }
 
 MainWindow::~MainWindow()
@@ -2022,123 +2029,28 @@ void MainWindow::external_logger_set_progressbar_value(int value)
     if (remote_utility->isValid())
         remote_utility->set_progressbar_value(value);
 }
-
+/*
 void MainWindow::logger(QString message, bool timestamp, bool linefeed)
 {
-    // LOGE,   // error
-    // LOGW,   // warning
-    // LOGI,   // info
-    // LOGD,   // debug
 
     QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
 
     write_syslog_to_file = true;
-
-    if (metaMethod.name() == "LOG_E")
-        syslog(_LOG_E, write_syslog_to_file, message, timestamp, linefeed);
-    else if (metaMethod.name() == "LOG_W")
-        syslog(_LOG_W, write_syslog_to_file, message, timestamp, linefeed);
-    else if (metaMethod.name() == "LOG_I")
-        syslog(_LOG_I, write_syslog_to_file, message, timestamp, linefeed);
-    else if (metaMethod.name() == "LOG_D")
-        syslog(_LOG_D, write_syslog_to_file, message, timestamp, linefeed);
-
-    QString msg;
-    int log_type = 0;
-
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz'] ");
-
-    // Check if timestamp added
-    if (timestamp)
-        msg += dateTimeString;
-
-    // Check log type
-    if (metaMethod.name() == "LOG_E")
-        msg += "(EE) ";
-    else if (metaMethod.name() == "LOG_W")
-        msg += "(WW) ";
-    else if (metaMethod.name() == "LOG_I")
-        msg += "(II) ";
-    else if (metaMethod.name() == "LOG_D")
-        msg += "(DD) ";
-
-    msg += message;
-
-    // Check if linefeed added
-    if (linefeed)
-        msg += "\n";
-
-    //sendMsgToLogWindow(this, msg);
-    //write_syslog(msg);
 }
-
+*/
 void MainWindow::sendMsgToLogWindow(QString msg)
 {
-    QObjectList children = this->children();
-    QTextEdit *textEdit = iterateWidgetChild(children);
-    if (textEdit)
+    // EcuOperationsWindow
+    QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
+    if (ecuOperationsWindow)
     {
-        textEdit->insertPlainText(msg);
-        textEdit->ensureCursorVisible();
-        //QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-    }
-}
-
-QTextEdit* MainWindow::iterateWidgetChild(QObjectList children)
-{
-    QObjectList::const_iterator it = children.begin();
-    QObjectList::const_iterator eIt = children.end();
-    while ( it != eIt )
-    {
-        QWidget *pChild = (QWidget *)(*it++);
-        QTextEdit *textEdit = pChild->findChild<QTextEdit*>("text_edit");
+        qDebug() << "Found ecuOperationsWindow";
+        QTextEdit *textEdit = ecuOperationsWindow->findChild<QTextEdit*>("text_edit");
         if (textEdit)
         {
-            qDebug() << "Found textedit";
-            return textEdit;
-            //textEdit->insertPlainText(msg);
-            //textEdit->ensureCursorVisible();
-            //QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        }
-        QObjectList child = pChild->children();
-        iterateWidgetChild(child);
-    }
-    return NULL;
-}
-
-bool MainWindow::write_syslog(QString msg)
-{
-    if (write_syslog_to_file)
-    {
-        if (!syslog_file_open)
-        {
-            QDateTime dateTime = dateTime.currentDateTime();
-            QString dateTimeString = dateTime.toString("yyyy-MM-dd hh':'mm':'ss'.'zzz'");
-
-            QString syslog_file_name = configValues->syslog_files_directory;
-            if (configValues->syslog_files_directory.at(configValues->syslog_files_directory.length() - 1) != '/')
-                syslog_file_name.append("/");
-            syslog_file_name.append("log_fastecu_" + dateTimeString + ".txt");
-
-            syslog_file.setFileName(syslog_file_name);
-            if (!syslog_file.open(QIODevice::WriteOnly)) {
-                QMessageBox::information(this, tr("Unable to open file"), syslog_file.errorString() + ":\n" + syslog_file_name);
-                return false;
-            }
-            else
-                syslog_file_open = true;
-
-            syslog_file_outstream.setDevice(&syslog_file);
-            syslog_file_outstream << software_name + " v" + software_version + ", system log file, start time: " + dateTimeString;
-            syslog_file_outstream << "\n";
-
-        }
-        if (syslog_file_open)
-        {
-            syslog_file_outstream << msg;
-            syslog_file_outstream.flush();
+            qDebug() << "Found ecuOperationsWindow->textEdit";
+            textEdit->insertPlainText(msg);
+            textEdit->ensureCursorVisible();
         }
     }
-    return true;
 }

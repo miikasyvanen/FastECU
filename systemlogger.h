@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
+#include <QMetaMethod>
 #include <QTime>
 
 class SystemLogger : public QObject
@@ -29,7 +30,9 @@ private:
     QString software_name;
     QString software_version;
 
+    bool write_syslog_to_file = false;
     bool syslog_file_open = false;
+    bool syslog_file_init_ready = false;
 
     QFile syslog_file;
     QTextStream syslog_file_outstream;
@@ -37,10 +40,13 @@ private:
     bool write_syslog(QString msg);
 
 signals:
-    void logToLogWindow();
+    void sendMsgToLogWindow(QString msg);
+    void finished();
+    void error(QString err);
 
 private slots:
-    void logMessages(int logType, bool write_syslog_to_file, QString message, bool timestamp, bool linefeed);
+    void enable_log_write_to_file(bool enable);
+    void logMessages(QString message, bool timestamp, bool linefeed);
 };
 
 #endif // SYSTEMLOGGER_H

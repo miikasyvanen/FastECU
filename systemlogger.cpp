@@ -1,17 +1,17 @@
 #include "systemlogger.h"
 
-SystemLogger::SystemLogger(QString file_path, QString sw_name, QString sw_ver)
+SystemLogger::SystemLogger(QString file_path, QString software_name, QString software_version)
 {
     this->file_path = file_path;
-    this->software_name = sw_name;
-    this->software_version = sw_ver;
-
+    this->software_name = software_name;
+    this->software_version = software_version;
 
 }
 
 SystemLogger::~SystemLogger()
 {
-
+    if (syslog_file_open)
+        syslog_file.close();
 }
 
 void SystemLogger::run()
@@ -20,28 +20,34 @@ void SystemLogger::run()
     delay(1000);
 }
 
-void SystemLogger::logMessages(int logType, bool write_syslog_to_file, QString message, bool timestamp, bool linefeed)
+void SystemLogger::enable_log_write_to_file(bool enable)
+{
+    write_syslog_to_file = enable;
+}
+
+void SystemLogger::logMessages(QString message, bool timestamp, bool linefeed)
 {
     QString msg;
 
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz'] ");
 
+    QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
+    qDebug() << "metaMethod.name:" << metaMethod.name();
+
     // Check if timestamp added
     if (timestamp)
         msg += dateTimeString;
 
     // Check log type
-    if (logType == _LOG_E)
+    if (metaMethod.name() == "LOG_E")
         msg += "(EE) ";
-    else if (logType == _LOG_W)
+    else if (metaMethod.name() == "LOG_W")
         msg += "(WW) ";
-    else if (logType == _LOG_I)
+    else if (metaMethod.name() == "LOG_I")
         msg += "(II) ";
-    else if (logType == _LOG_D)
+    else if (metaMethod.name() == "LOG_D")
         msg += "(DD) ";
-    else
-        qDebug() << "Wrong log type!";
 
     msg += message;
 
@@ -50,6 +56,8 @@ void SystemLogger::logMessages(int logType, bool write_syslog_to_file, QString m
     // Check if linefeed added
     if (linefeed)
         msg += "\n";
+
+    sendMsgToLogWindow(msg);
 
     if(write_syslog_to_file)
         write_syslog(msg);
@@ -68,17 +76,18 @@ bool SystemLogger::write_syslog(QString msg)
         syslog_file_name.append("log_fastecu_" + dateTimeString + ".txt");
 
         syslog_file.setFileName(syslog_file_name);
-        if (!syslog_file.open(QIODevice::WriteOnly)) {
-            //QMessageBox::information(this, tr("Unable to open file"), syslog_file.errorString() + ":\n" + syslog_file_name);
+
+        if (!syslog_file.open(QIODevice::WriteOnly))
+        {
+            qDebug() << syslog_file.errorString() + ": " + syslog_file.fileName();
             return false;
         }
-        else
-            syslog_file_open = true;
 
+        syslog_file_open = true;
+        syslog_file_init_ready = true;
         syslog_file_outstream.setDevice(&syslog_file);
         syslog_file_outstream << software_name + " v" + software_version + ", system log file, start time: " + dateTimeString;
         syslog_file_outstream << "\n";
-
     }
     if (syslog_file_open)
     {

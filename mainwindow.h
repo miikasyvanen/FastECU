@@ -422,7 +422,7 @@ private slots:
     void close_app();
     // Logger
     //void logger(int log_level, QString message, bool timestamp, bool linefeed);
-    void logger(QString message, bool timestamp, bool linefeed);
+    //void logger(QString message, bool timestamp, bool linefeed);
     //void sendMsgToLogWindow(QWidget* parent, QString msg);
     void sendMsgToLogWindow(QString msg);
 
@@ -438,6 +438,8 @@ signals:
     void LOG_W(QString message, bool timestamp, bool linefeed);
     void LOG_I(QString message, bool timestamp, bool linefeed);
     void LOG_D(QString message, bool timestamp, bool linefeed);
-    void syslog(int logType, bool write_syslog_to_file, QString message, bool timestamp, bool linefeed);
+    //void syslog(int logType, bool write_syslog_to_file, QString message, bool timestamp, bool linefeed);
+    void syslog(QString message, bool timestamp, bool linefeed);
+    void enable_log_write_to_file(bool enable);
 };
 #endif // MAINWINDOW_H
