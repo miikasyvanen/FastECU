@@ -79,6 +79,11 @@ void FlashEcuSubaruHitachiM32rKline::run()
     serial->change_port_speed("4800");
     serial->set_add_iso14230_header(false);
 
+    LOG_E("Module initialized", true, true);
+    LOG_W("Module initialized", true, true);
+    LOG_I("Module initialized", true, true);
+    LOG_D("Module initialized", true, true);
+
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
                                    QMessageBox::Ok | QMessageBox::Cancel,
@@ -1149,7 +1154,7 @@ int FlashEcuSubaruHitachiM32rKline::send_log_window_message(QString message, boo
         ui->text_edit->insertPlainText(message);
         ui->text_edit->ensureCursorVisible();
 
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
         return STATUS_SUCCESS;
     }
@@ -1167,7 +1172,7 @@ void FlashEcuSubaruHitachiM32rKline::set_progressbar_value(int value)
     }
     if (valueChanged)
         emit external_logger(value);
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 }
 
 void FlashEcuSubaruHitachiM32rKline::delay(int timeout)

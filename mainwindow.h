@@ -108,7 +108,7 @@ private:
         _LOG_D,   // debug
     };
 
-#if defined Q_OS_UNIX
+#ifndef ARRAYSIZE
 #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 #endif
 
@@ -330,7 +330,7 @@ private:
     QStringList create_log_transports_list();
     //QString check_kernel(QString flash_method);
     void setSplashScreenProgress(QString text, int incValue);
-    void iterateChildWidgets(QWidget* parent, QString msg);
+    QTextEdit* iterateWidgetChild(QObjectList children);
     bool write_syslog(QString msg);
 
     // menuactions.c
@@ -423,6 +423,8 @@ private slots:
     // Logger
     //void logger(int log_level, QString message, bool timestamp, bool linefeed);
     void logger(QString message, bool timestamp, bool linefeed);
+    //void sendMsgToLogWindow(QWidget* parent, QString msg);
+    void sendMsgToLogWindow(QString msg);
 
     // logvalues.c
     void change_log_gauge_value(int index);
@@ -436,6 +438,6 @@ signals:
     void LOG_W(QString message, bool timestamp, bool linefeed);
     void LOG_I(QString message, bool timestamp, bool linefeed);
     void LOG_D(QString message, bool timestamp, bool linefeed);
-    void syslog(int logType, QString message, bool timestamp, bool linefeed);
+    void syslog(int logType, bool write_syslog_to_file, QString message, bool timestamp, bool linefeed);
 };
 #endif // MAINWINDOW_H

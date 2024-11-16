@@ -430,10 +430,10 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << parse_message_to_hex(response);
 
     QThread *thread = new QThread();
-    SystemLogger *syslogger = new SystemLogger();
+    SystemLogger *syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version);
     syslogger->moveToThread(thread);
 
-    connect(this, SIGNAL(syslog(int,QString,bool,bool)), syslogger, SLOT(logMessages(int,QString,bool,bool)));
+    connect(this, SIGNAL(syslog(int,bool,QString,bool,bool)), syslogger, SLOT(logMessages(int,bool,QString,bool,bool)));
 
     connect(thread, &QThread::started, syslogger, &SystemLogger::run);
     thread->start();
@@ -2032,23 +2032,19 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
 
     QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
 
-    if (metaMethod.name() == "LOG_E")
-        syslog(_LOG_E, message, timestamp, linefeed);
-    else if (metaMethod.name() == "LOG_W")
-        syslog(_LOG_W, message, timestamp, linefeed);
-    else if (metaMethod.name() == "LOG_I")
-        syslog(_LOG_I, message, timestamp, linefeed);
-    else if (metaMethod.name() == "LOG_D")
-        syslog(_LOG_D, message, timestamp, linefeed);
-    //return;
-
     write_syslog_to_file = true;
+
+    if (metaMethod.name() == "LOG_E")
+        syslog(_LOG_E, write_syslog_to_file, message, timestamp, linefeed);
+    else if (metaMethod.name() == "LOG_W")
+        syslog(_LOG_W, write_syslog_to_file, message, timestamp, linefeed);
+    else if (metaMethod.name() == "LOG_I")
+        syslog(_LOG_I, write_syslog_to_file, message, timestamp, linefeed);
+    else if (metaMethod.name() == "LOG_D")
+        syslog(_LOG_D, write_syslog_to_file, message, timestamp, linefeed);
 
     QString msg;
     int log_type = 0;
-
-    //QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
-    //qDebug() << metaMethod.name();
 
     QDateTime dateTime = dateTime.currentDateTime();
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz'] ");
@@ -2073,29 +2069,24 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
     if (linefeed)
         msg += "\n";
 
-    //qDebug() << msg;
-/*
-    QWidget *pWin = QApplication::activeWindow();
-    if (pWin)
+    //sendMsgToLogWindow(this, msg);
+    //write_syslog(msg);
+}
+
+void MainWindow::sendMsgToLogWindow(QString msg)
+{
+    QObjectList children = this->children();
+    QTextEdit *textEdit = iterateWidgetChild(children);
+    if (textEdit)
     {
-        QList<QObject*> pList = pWin->children();
-        foreach (auto obj, pList) {
-            qDebug() << obj;
-        }
+        textEdit->insertPlainText(msg);
+        textEdit->ensureCursorVisible();
+        //QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
-*/
-    iterateChildWidgets(this, msg);
-    write_syslog(msg);
 }
 
-void logger_thread(const QString &message, bool timestamp, bool linefeed)
+QTextEdit* MainWindow::iterateWidgetChild(QObjectList children)
 {
-
-}
-
-void MainWindow::iterateChildWidgets(QWidget* parent, QString msg)
-{
-    QObjectList children = parent->children();
     QObjectList::const_iterator it = children.begin();
     QObjectList::const_iterator eIt = children.end();
     while ( it != eIt )
@@ -2104,12 +2095,16 @@ void MainWindow::iterateChildWidgets(QWidget* parent, QString msg)
         QTextEdit *textEdit = pChild->findChild<QTextEdit*>("text_edit");
         if (textEdit)
         {
-            textEdit->insertPlainText(msg);
-            textEdit->ensureCursorVisible();
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+            qDebug() << "Found textedit";
+            return textEdit;
+            //textEdit->insertPlainText(msg);
+            //textEdit->ensureCursorVisible();
+            //QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
         }
-        iterateChildWidgets(pChild, msg);
+        QObjectList child = pChild->children();
+        iterateWidgetChild(child);
     }
+    return NULL;
 }
 
 bool MainWindow::write_syslog(QString msg)
