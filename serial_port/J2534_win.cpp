@@ -682,12 +682,13 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         for (i = 0; i < scl->NumOfParams; i++)
             dump_sconfig_param((scl->ConfigPtr)[i]);
 
-        for (i = 0; i < scl->NumOfParams; i++)
+        //Enabling this could break some J2534 devices such as Denso DST-i
+        /*for (i = 0; i < scl->NumOfParams; i++)
             if (!is_valid_sconfig_param((scl->ConfigPtr)[i]))
             {
                 DBGPRINT(("param not allowed - not passing through and instead faking success\n",result));
                 return STATUS_NOERROR;
-            }
+            }*/
     }
 
     if (input_as_sa)
