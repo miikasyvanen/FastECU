@@ -81,6 +81,8 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 #define ISO14230_L						ISO14230_CH2	// OP2.0: Support for ISO14230 communications over the L line
 #define ISO15765_CH1					0x00009400
 
+// J2534 device specific protocols
+#define DSTI_ISO9141                    0x00020001
 
 /////////////
 // IOCTL IDs

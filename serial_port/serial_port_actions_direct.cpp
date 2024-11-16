@@ -396,6 +396,8 @@ QString SerialPortActionsDirect::open_serial_port()
         //close_serial_port();
         //use_openport2_adapter = true;
 
+        J2534_is_denso_dsti = serial_port.contains("DST-i");
+
         //QMap<QString, QString> user_j2534_drivers; // Local drivers in software folder
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
         QString localDllName;
@@ -791,7 +793,10 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
 
     rxmsg.DataSize = 0;
     numRxMsg = 1;
-    j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    //j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    //0 means no error, all other values mean error
+    if (j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout))
+        goto exit;
     //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
     if (numRxMsg)
     {
@@ -827,6 +832,7 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
         }
     }
     //qDebug() << "RECEIVED:" << parse_message_to_hex(received);
+    exit:
     return received;
 }
 
@@ -1028,8 +1034,12 @@ int SerialPortActionsDirect::set_j2534_can()
         else
             flags = 0;
     }
+    //Denso DST-i hack
+    if (J2534_is_denso_dsti && protocol == ISO15765)
+    {
+        flags = 0;
+    }
     baudrate = can_speed.toUInt();
-
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages
     if (j2534->PassThruConnect(devID, protocol, flags, baudrate, &chanID))
     {
@@ -1083,8 +1093,8 @@ int SerialPortActionsDirect::set_j2534_can_timings()
 {
     // Set timeouts etc.
     SCONFIG_LIST scl;
-    SCONFIG scp[1] = {{PARITY,0}};
-    scl.NumOfParams = 1;
+    SCONFIG scp[] = {{PARITY,0}, {LOOPBACK, 0}};
+    scl.NumOfParams = ARRAYSIZE(scp);
     scp[0].Value = NO_PARITY;
     scl.ConfigPtr = scp;
     if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
@@ -1107,6 +1117,8 @@ int SerialPortActionsDirect::set_j2534_can_filters()
     PASSTHRU_MSG msgMask, msgPattern, msgFlow;
     unsigned long msgId;
     unsigned long numRxMsg;
+
+    j2534->PassThruIoctl(chanID, CLEAR_MSG_FILTERS, NULL, NULL);
 
     // simply create a "pass all" filter so that we can see
     // everything unfiltered in the raw stream
@@ -1217,6 +1229,25 @@ int SerialPortActionsDirect::set_j2534_iso9141()
     qDebug() << "Protocol:" << protocol;
     //baudrate = 4800;
 
+    if (J2534_is_denso_dsti)
+    {
+        switch (protocol)
+        {
+        case ISO9141:
+            //DST-i does not work well with ISO9141
+            //sometimes it reads by 1 byte
+            //Denso DST-i specific protocol, in fact ISO9141
+            protocol = DSTI_ISO9141;
+            flags = ISO9141_NO_CHECKSUM;
+            baudrate = 10400;
+            break;
+        case ISO14230:
+            flags = ISO9141_K_LINE_ONLY;
+            //baudrate = 10400;
+            break;
+        }
+    }
+
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages
     if (j2534->PassThruConnect(devID, protocol, flags, baudrate, &chanID))
     {
@@ -1238,25 +1269,59 @@ int SerialPortActionsDirect::set_j2534_iso9141()
 
 int SerialPortActionsDirect::set_j2534_iso9141_timings()
 {
-    // Set timeouts etc.
-    SCONFIG_LIST scl;
-    SCONFIG scp[6] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0}};
-    scl.NumOfParams = 6;
-    scp[0].Value = 0;
-    scp[1].Value = 1;
-    scp[2].Value = 0;
-    scp[3].Value = 0;
-    scp[4].Value = NO_PARITY;
-    scp[5].Value = 25;
-    scl.ConfigPtr = scp;
-    if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
+    if (J2534_is_denso_dsti)
     {
-        reportJ2534Error();
-        return STATUS_ERROR;
+        SCONFIG_LIST scl;
+        SCONFIG scp_dsti_ISO14230[] = {{LOOPBACK,0},{P1_MAX,0xa},{P3_MIN,0x14},{P4_MIN,0},{DATA_RATE,4800}};
+        SCONFIG scp_dsti_DSTI_ISO9141[] = {{DATA_RATE, 4800},  {LOOPBACK, 0},  {P1_MIN, 0},
+                                           {P1_MAX, 4},        {P2_MIN, 4},    {P2_MAX, 0x14},
+                                           {P3_MIN, 0x14},     {P3_MAX, 10000},{P4_MIN, 0},
+                                           {P4_MAX, 0x14}};
+
+        clear_tx_buffer();
+        clear_rx_buffer();
+
+        switch (protocol)
+        {
+        case ISO14230:
+            scl.ConfigPtr = scp_dsti_ISO14230;
+            scl.NumOfParams = ARRAYSIZE(scp_dsti_ISO14230);
+            break;
+        case DSTI_ISO9141:
+            scl.ConfigPtr = scp_dsti_DSTI_ISO9141;
+            scl.NumOfParams = ARRAYSIZE(scp_dsti_DSTI_ISO9141);
+            break;
+        }
+
+        if (j2534->PassThruIoctl(chanID, SET_CONFIG, &scl, NULL))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+
     }
     else
     {
-        //qDebug() << "Set timings OK";
+        // Set timeouts etc.
+        SCONFIG_LIST scl;
+        SCONFIG scp[6] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0}};
+        scl.NumOfParams = 6;
+        scp[0].Value = 0;
+        scp[1].Value = 1;
+        scp[2].Value = 0;
+        scp[3].Value = 0;
+        scp[4].Value = NO_PARITY;
+        scp[5].Value = 25;
+        scl.ConfigPtr = scp;
+        if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+        else
+        {
+            //qDebug() << "Set timings OK";
+        }
     }
 
     return STATUS_SUCCESS;
@@ -1280,8 +1345,8 @@ int SerialPortActionsDirect::set_j2534_iso9141_filters()
     txmsg.DataSize = 4;
     txmsg.ExtraDataIndex = 0;
     msgMask = msgPattern = txmsg;
-    memset(msgMask.Data, 0, 4); // mask the first 4 byte to 0
-    memset(msgPattern.Data, 0, 4);// match it with 0 (i.e. pass everything)
+    memset(msgMask.Data, 0, txmsg.DataSize); // mask the first 4 byte to 0
+    memset(msgPattern.Data, 0, txmsg.DataSize);// match it with 0 (i.e. pass everything)
     if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
     {
         reportJ2534Error();

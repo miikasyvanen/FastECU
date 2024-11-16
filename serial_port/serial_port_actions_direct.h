@@ -114,6 +114,10 @@ public:
     QString open_serial_port();
 
 private:
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
+#endif
+
     long PassThruOpen(const void *pName, unsigned long *pDeviceID);
     long PassThruClose(unsigned long DeviceID);
     long PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, unsigned long Flags, unsigned long Baudrate, unsigned long *pChannelID);
@@ -184,6 +188,8 @@ private:
     bool J2534_get_version_ok = false;
     bool J2534_timing_ok = false;
     bool J2534_filters_ok = false;
+
+    bool J2534_is_denso_dsti = false;
 
     int line_end_check_1_toggled(int state);
     int line_end_check_2_toggled(int state);
