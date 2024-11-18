@@ -8,15 +8,6 @@ FlashEcuSubaruHitachiM32rKline::FlashEcuSubaruHitachiM32rKline(SerialPortActions
 {
     ui->setupUi(this);
 
-    connect(this, SIGNAL(LOG_E(QString,bool,bool)), parent, SIGNAL(LOG_E(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_W(QString,bool,bool)), parent, SIGNAL(LOG_W(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_I(QString,bool,bool)), parent, SIGNAL(LOG_I(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_D(QString,bool,bool)), parent, SIGNAL(LOG_D(QString,bool,bool)));
-    //connect(this, SIGNAL(LOG_E(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
-    //connect(this, SIGNAL(LOG_W(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
-    //connect(this, SIGNAL(LOG_I(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
-    //connect(this, SIGNAL(LOG_D(QString,bool,bool)), parent, SLOT(logger(QString,bool,bool)));
-
     if (cmd_type == "test_write")
         this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "write")
@@ -83,10 +74,7 @@ void FlashEcuSubaruHitachiM32rKline::run()
     serial->change_port_speed("4800");
     serial->set_add_iso14230_header(false);
 
-    LOG_E("Module initialized", true, true);
-    LOG_W("Module initialized", true, true);
-    LOG_I("Module initialized", true, true);
-    LOG_D("Module initialized", true, true);
+    LOG_D("Module Subaru initialized", true, true);
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),

@@ -2010,6 +2010,12 @@ FLASH_CLASS* MainWindow::connect_signals_and_run_module(FLASH_CLASS *object)
                                                      this, &MainWindow::external_logger);
     QObject::connect<void (FLASH_CLASS::*)(int)>(object, &FLASH_CLASS::external_logger,
                                                  this, &MainWindow::external_logger_set_progressbar_value);
+
+    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_E, this, &MainWindow::LOG_E);
+    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_W, this, &MainWindow::LOG_W);
+    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_I, this, &MainWindow::LOG_I);
+    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_D, this, &MainWindow::LOG_D);
+
     object->run();
     return object;
 }
@@ -2044,11 +2050,11 @@ void MainWindow::sendMsgToLogWindow(QString msg)
     QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
     if (ecuOperationsWindow)
     {
-        qDebug() << "Found ecuOperationsWindow";
+        //qDebug() << "Found ecuOperationsWindow";
         QTextEdit *textEdit = ecuOperationsWindow->findChild<QTextEdit*>("text_edit");
         if (textEdit)
         {
-            qDebug() << "Found ecuOperationsWindow->textEdit";
+            //qDebug() << "Found ecuOperationsWindow->textEdit";
             textEdit->insertPlainText(msg);
             textEdit->ensureCursorVisible();
         }
