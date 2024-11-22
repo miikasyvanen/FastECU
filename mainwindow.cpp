@@ -420,15 +420,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->close();
     splash->close();
 
-    // AES-128 ECB examples start
-    qDebug() << "Solving challenge...";
-    QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
-    QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4\x00" };
-    QByteArray response;
-    response.append(aes_ecb_test(challenge, key));
-    qDebug() << "Challenge reply:";
-    qDebug() << parse_message_to_hex(response);
-
     QThread *thread = new QThread();
     SystemLogger *syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version);
     syslogger->moveToThread(thread);
@@ -444,6 +435,14 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     connect(thread, SIGNAL(started()), syslogger, SLOT(run()));
     thread->start();
 
+    // AES-128 ECB examples start
+    qDebug() << "Solving challenge...";
+    QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
+    QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4\x00" };
+    QByteArray response;
+    response.append(aes_ecb_test(challenge, key));
+    qDebug() << "Challenge reply:";
+    qDebug() << parse_message_to_hex(response);
     aes_ecb_example();
     // AES-128 ECB examples end
 
