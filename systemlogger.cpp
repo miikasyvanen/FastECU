@@ -58,7 +58,7 @@ void SystemLogger::logMessages(QString message, bool timestamp, bool linefeed)
         msg += "\n";
 
     if (metaMethod.name() != "LOG_D")
-        send_message_to_log_window(msg);
+        sendMsgToLogWindow(msg);
 
     if(write_syslog_to_file)
         write_syslog(msg);
