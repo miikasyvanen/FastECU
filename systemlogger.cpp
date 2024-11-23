@@ -57,7 +57,8 @@ void SystemLogger::logMessages(QString message, bool timestamp, bool linefeed)
     if (linefeed)
         msg += "\n";
 
-    sendMsgToLogWindow(msg);
+    if (metaMethod.name() != "LOG_D")
+        send_message_to_log_window(msg);
 
     if(write_syslog_to_file)
         write_syslog(msg);
@@ -77,6 +78,7 @@ bool SystemLogger::write_syslog(QString msg)
 
         syslog_file.setFileName(syslog_file_name);
 
+        qDebug() << "Create logfile: " << syslog_file_name;
         if (!syslog_file.open(QIODevice::WriteOnly))
         {
             qDebug() << syslog_file.errorString() + ": " + syslog_file.fileName();
