@@ -69,7 +69,7 @@ bool SystemLogger::write_syslog(QString msg)
     if (!syslog_file_open)
     {
         QDateTime dateTime = dateTime.currentDateTime();
-        QString dateTimeString = dateTime.toString("yyyy-MM-dd hh':'mm':'ss'.'zzz'");
+        QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
 
         QString syslog_file_name = file_path;
         if (file_path.at(file_path.length() - 1) != '/')

@@ -637,7 +637,7 @@ void MainWindow::log_to_file(){
     if (write_datalog_to_file){
         if (!datalog_file_open){
             QDateTime dateTime = dateTime.currentDateTime();
-            QString dateTimeString = dateTime.toString("yyyy-MM-dd hh'h'mm'm'ss's'");
+            QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
 
             QString log_file_name = configValues->datalog_files_directory;
             if (configValues->datalog_files_directory.at(configValues->datalog_files_directory.length() - 1) != '/')
