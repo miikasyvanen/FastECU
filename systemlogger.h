@@ -12,7 +12,7 @@ class SystemLogger : public QObject
     Q_OBJECT
 
 public:
-    SystemLogger(QString file_path, QString sw_name, QString sw_ver);
+    SystemLogger(QString file_path, QString sw_name, QString sw_ver, QObject *parent = nullptr);
     ~SystemLogger();
 
     void run();
