@@ -80,7 +80,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     fileActions->check_config_dir(configValues);
 
     QThread *thread = new QThread();
-    syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version, this);
+    syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version);
     syslogger->moveToThread(thread);
     QObject::connect(this, &MainWindow::LOG_E, syslogger, &SystemLogger::log_messages);
     QObject::connect(this, &MainWindow::LOG_W, syslogger, &SystemLogger::log_messages);
