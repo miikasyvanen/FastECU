@@ -2010,10 +2010,11 @@ FLASH_CLASS* MainWindow::connect_signals_and_run_module(FLASH_CLASS *object)
     QObject::connect<void (FLASH_CLASS::*)(int)>(object, &FLASH_CLASS::external_logger,
                                                  this, &MainWindow::external_logger_set_progressbar_value);
 
-    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_E, this, &MainWindow::LOG_E);
-    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_W, this, &MainWindow::LOG_W);
-    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_I, this, &MainWindow::LOG_I);
-    QObject::connect<void (FLASH_CLASS::*)(QString,bool,bool)>(object, &FLASH_CLASS::LOG_D, this, &MainWindow::LOG_D);
+    //If signal is not overloaded, QObject::connect<> template will deduce type automatically
+    QObject::connect(object, &FLASH_CLASS::LOG_E, this, &MainWindow::LOG_E);
+    QObject::connect(object, &FLASH_CLASS::LOG_W, this, &MainWindow::LOG_W);
+    QObject::connect(object, &FLASH_CLASS::LOG_I, this, &MainWindow::LOG_I);
+    QObject::connect(object, &FLASH_CLASS::LOG_D, this, &MainWindow::LOG_D);
 
     object->run();
     return object;
