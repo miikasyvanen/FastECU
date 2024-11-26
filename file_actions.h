@@ -554,6 +554,13 @@ public:
      *************************************************/
     double calculate_value_from_expression(QStringList expression);
 
+signals:
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
+
+
 };
 
 #endif // FILE_ACTIONS_H

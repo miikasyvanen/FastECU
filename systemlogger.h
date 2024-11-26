@@ -40,13 +40,13 @@ private:
     bool write_syslog(QString msg);
 
 signals:
-    void sendMsgToLogWindow(QString msg);
+    void send_message_to_log_window(QString msg);
     void finished();
     void error(QString err);
 
-private slots:
+public slots:
     void enable_log_write_to_file(bool enable);
-    void logMessages(QString message, bool timestamp, bool linefeed);
+    void log_messages(QString message, bool timestamp, bool linefeed);
 };
 
 #endif // SYSTEMLOGGER_H

@@ -291,6 +291,7 @@ private:
 
     QSize toolbar_item_size = QSize(24, 24);
 
+    SystemLogger *syslogger;
     Ui::MainWindow *ui;
 
     bool eventFilter(QObject *target, QEvent *event);
@@ -424,7 +425,7 @@ private slots:
     //void logger(int log_level, QString message, bool timestamp, bool linefeed);
     //void logger(QString message, bool timestamp, bool linefeed);
     //void sendMsgToLogWindow(QWidget* parent, QString msg);
-    void sendMsgToLogWindow(QString msg);
+    void send_message_to_log_window(QString msg);
 
     // logvalues.c
     void change_log_gauge_value(int index);
