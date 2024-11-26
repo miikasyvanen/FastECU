@@ -79,6 +79,28 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //configValues->base_directory.append("/" + configValues->software_version);
     fileActions->check_config_dir(configValues);
 
+    QThread *thread = new QThread();
+    syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version);
+    syslogger->moveToThread(thread);
+    QObject::connect(this, &MainWindow::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(this, &MainWindow::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(this, &MainWindow::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(this, &MainWindow::LOG_D, syslogger, &SystemLogger::log_messages);
+    QObject::connect(this, &MainWindow::enable_log_write_to_file, syslogger, &SystemLogger::enable_log_write_to_file);
+    QObject::connect(syslogger, &SystemLogger::send_message_to_log_window, this, &MainWindow::send_message_to_log_window);
+    QObject::connect(syslogger, &SystemLogger::finished, thread, &QThread::quit);
+    QObject::connect(syslogger, &SystemLogger::finished, syslogger, &SystemLogger::deleteLater);
+    QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    QObject::connect(thread, &QThread::started, syslogger, &SystemLogger::run);
+    thread->start();
+
+    QObject::connect(fileActions, &FileActions::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(fileActions, &FileActions::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(fileActions, &FileActions::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(fileActions, &FileActions::LOG_D, syslogger, &SystemLogger::log_messages);
+
+    emit enable_log_write_to_file(true);
+
     //fileActions->check_config_dir(configValues);
     configValues = fileActions->read_config_file(configValues);
 
@@ -420,21 +442,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     startUpSplash->close();
     splash->close();
 
-    QThread *thread = new QThread();
-    SystemLogger *syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version);
-    syslogger->moveToThread(thread);
-    connect(this, SIGNAL(LOG_E(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_W(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_I(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_D(QString,bool,bool)), syslogger, SLOT(logMessages(QString,bool,bool)));
-    connect(this, SIGNAL(enable_log_write_to_file(bool)), syslogger, SLOT(enable_log_write_to_file(bool)));
-    connect(syslogger, SIGNAL(sendMsgToLogWindow(QString)), this, SLOT(sendMsgToLogWindow(QString)), Qt::QueuedConnection);
-    connect(syslogger, SIGNAL(finished()), thread, SLOT(quit()));
-    connect(syslogger, SIGNAL(finished()), syslogger, SLOT(deleteLater()));
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    connect(thread, SIGNAL(started()), syslogger, SLOT(run()));
-    thread->start();
-
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
     QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
@@ -446,11 +453,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     aes_ecb_example();
     // AES-128 ECB examples end
 
-    //emit LOG_E("Test error", true, true);
-    //emit LOG_W("Test warning", true, true);
-    //emit LOG_I("Test info", true, true);
-    //emit LOG_D("Test debug", true, true);
-    emit enable_log_write_to_file(true);
     LOG_I("FastECU initialized", true, true);
 }
 
@@ -2011,10 +2013,10 @@ FLASH_CLASS* MainWindow::connect_signals_and_run_module(FLASH_CLASS *object)
                                                  this, &MainWindow::external_logger_set_progressbar_value);
 
     //If signal is not overloaded, QObject::connect<> template will deduce type automatically
-    QObject::connect(object, &FLASH_CLASS::LOG_E, this, &MainWindow::LOG_E);
-    QObject::connect(object, &FLASH_CLASS::LOG_W, this, &MainWindow::LOG_W);
-    QObject::connect(object, &FLASH_CLASS::LOG_I, this, &MainWindow::LOG_I);
-    QObject::connect(object, &FLASH_CLASS::LOG_D, this, &MainWindow::LOG_D);
+    QObject::connect(object, &FLASH_CLASS::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(object, &FLASH_CLASS::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(object, &FLASH_CLASS::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(object, &FLASH_CLASS::LOG_D, syslogger, &SystemLogger::log_messages);
 
     object->run();
     return object;
@@ -2044,7 +2046,7 @@ void MainWindow::logger(QString message, bool timestamp, bool linefeed)
     write_syslog_to_file = true;
 }
 */
-void MainWindow::sendMsgToLogWindow(QString msg)
+void MainWindow::send_message_to_log_window(QString msg)
 {
     // EcuOperationsWindow
     QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");

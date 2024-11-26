@@ -25,7 +25,7 @@ void SystemLogger::enable_log_write_to_file(bool enable)
     write_syslog_to_file = enable;
 }
 
-void SystemLogger::logMessages(QString message, bool timestamp, bool linefeed)
+void SystemLogger::log_messages(QString message, bool timestamp, bool linefeed)
 {
     QString msg;
 
@@ -58,7 +58,7 @@ void SystemLogger::logMessages(QString message, bool timestamp, bool linefeed)
         msg += "\n";
 
     if (metaMethod.name() != "LOG_D")
-        sendMsgToLogWindow(msg);
+        send_message_to_log_window(msg);
 
     if(write_syslog_to_file)
         write_syslog(msg);
