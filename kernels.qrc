@@ -11,5 +11,7 @@
         <file>kernels/ssmk_mc68hc916y5.bin</file>
         <file>kernels/ssmk_tcu_can_sh7055_35.bin</file>
         <file>kernels/ssmk_tcu_can_sh7058.bin</file>
+        <file>kernels/ssmk_m32r_uj20_bootmode.bin</file>
+        <file>kernels/ssmk_m32r_uj30_bootmode.bin</file>
     </qresource>
 </RCC>
