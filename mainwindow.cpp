@@ -19,11 +19,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qApp->installEventFilter(this);
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
-    connect(this, SIGNAL(LOG_E(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_W(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_I(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_D(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-
     QPixmap startUpSplashImage(":/images/startup_splash.jpg");
     int startUpSplashProgressBarValue = 0;
 
