@@ -79,20 +79,20 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //configValues->base_directory.append("/" + configValues->software_version);
     fileActions->check_config_dir(configValues);
 
-    QThread *thread = new QThread();
+    QThread *syslog_thread = new QThread();
     syslogger = new SystemLogger(configValues->syslog_files_directory, software_name, software_version);
-    syslogger->moveToThread(thread);
+    syslogger->moveToThread(syslog_thread);
     QObject::connect(this, &MainWindow::LOG_E, syslogger, &SystemLogger::log_messages);
     QObject::connect(this, &MainWindow::LOG_W, syslogger, &SystemLogger::log_messages);
     QObject::connect(this, &MainWindow::LOG_I, syslogger, &SystemLogger::log_messages);
     QObject::connect(this, &MainWindow::LOG_D, syslogger, &SystemLogger::log_messages);
     QObject::connect(this, &MainWindow::enable_log_write_to_file, syslogger, &SystemLogger::enable_log_write_to_file);
     QObject::connect(syslogger, &SystemLogger::send_message_to_log_window, this, &MainWindow::send_message_to_log_window);
-    QObject::connect(syslogger, &SystemLogger::finished, thread, &QThread::quit);
+    QObject::connect(syslogger, &SystemLogger::finished, syslog_thread, &QThread::quit);
     QObject::connect(syslogger, &SystemLogger::finished, syslogger, &SystemLogger::deleteLater);
-    QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-    QObject::connect(thread, &QThread::started, syslogger, &SystemLogger::run);
-    thread->start();
+    QObject::connect(syslog_thread, &QThread::finished, syslog_thread, &QThread::deleteLater);
+    QObject::connect(syslog_thread, &QThread::started, syslogger, &SystemLogger::run);
+    syslog_thread->start();
 
     QObject::connect(fileActions, &FileActions::LOG_E, syslogger, &SystemLogger::log_messages);
     QObject::connect(fileActions, &FileActions::LOG_W, syslogger, &SystemLogger::log_messages);
