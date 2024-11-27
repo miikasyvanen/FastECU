@@ -924,13 +924,9 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         output[6] = (uint8_t)((addr >> 8) & 0xFF);
         output[7] = (uint8_t)(addr & 0xFF);
         serial->write_serial_data_echo_check(output);
-        //send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
-        //delay(200);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        //received = serial->read_serial_data(20, receive_timeout);
-        //send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-        //qDebug() << "Response:" << parse_message_to_hex(received);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0xF7)
@@ -949,7 +945,7 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         pagedata.clear();
         received.remove(0, 5);
         received = decrypt_payload(received, received.length());
-        qDebug() << "Response:" << parse_message_to_hex(received);
+        //emit LOG_D("Decrypted response: " + parse_message_to_hex(received), true, true);
         mapdata.append(received);
 
         // don't count skipped first bytes //
@@ -972,8 +968,7 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        send_log_window_message(msg, true, true);
-        qDebug() << msg;
+        emit LOG_I(msg, true, true);
         //delay(1);
 
         // and drop extra bytes at the end //
@@ -1006,12 +1001,10 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0x37);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(20, 200);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x77)
@@ -1140,7 +1133,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     set_progressbar_value(0);
 
     if (blockno >= fdt->numblocks) {
-        send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
+        emit LOG_D("block " + QString::number(blockno) + " out of range !", true, true);
         return -1;
     }
 
@@ -1153,10 +1146,9 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
     msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
-    send_log_window_message(msg, true, true);
+    emit LOG_I(msg, true, true);
 
-    send_log_window_message("Settting flash start & length...", true, true);
-    qDebug() << "Settting flash start & length...";
+    emit LOG_I("Setting flash start & length...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
