@@ -1041,8 +1041,8 @@ void MainWindow::show_subaru_biu_window()
     serial->change_port_speed("10400");
     //serial->change_port_speed("4800");
 
-    BiuOperationsSubaru *biuOperationsSubaru = new BiuOperationsSubaru(serial);
-    biuOperationsSubaru->show();
+    BiuOperationsSubaru biuOperationsSubaru(serial);
+    biuOperationsSubaru.exec();
 
     qDebug() << "BIU stopped";
 
@@ -1056,22 +1056,21 @@ void MainWindow::show_terminal_window()
     QStringList serial_port;
     serial_port.append(serial_ports.at(serial_port_list->currentIndex()));
     serial->set_serial_port_list(serial_port);
-    HexCommander *hexCommander = new HexCommander(serial, this);
+    HexCommander hexCommander(serial, this);
+    hexCommander.exec();
 }
 
 void MainWindow::show_subaru_get_key_window()
 {
 
-    GetKeyOperationsSubaru *getKeyOperationsSubaru = new GetKeyOperationsSubaru(this);
-    getKeyOperationsSubaru->show();
-
-
+    GetKeyOperationsSubaru getKeyOperationsSubaru (this);
+    getKeyOperationsSubaru.exec();
 }
 
 void MainWindow::winols_csv_to_romraider_xml()
 {
-    DefinitionFileConvert *definitionFileMaker = new DefinitionFileConvert();
-    definitionFileMaker->show();
+    DefinitionFileConvert definitionFileMaker;
+    definitionFileMaker.exec();
 }
 
 void MainWindow::set_maptablewidget_items()
@@ -1112,15 +1111,15 @@ void MainWindow::set_maptablewidget_items()
                 QStringList xScaleCellText = ecuCalDef[mapRomNumber]->XScaleData.at(mapNumber).split(",");
                 for (int i = 0; i < xSize; i++)
                 {
-                    QTableWidgetItem *cellItem = new QTableWidgetItem;
-                    cellItem->setTextAlignment(Qt::AlignCenter);
-                    cellItem->setFont(cellFont);
+                    QTableWidgetItem cellItem;
+                    cellItem.setTextAlignment(Qt::AlignCenter);
+                    cellItem.setFont(cellFont);
                     if (i < xScaleCellText.count())
-                        cellItem->setText(QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber))));
+                        cellItem.setText(QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber))));
                     if (ySize > 1)
-                        mapTableWidget->setItem(0, i + 1, cellItem);
+                        mapTableWidget->setItem(0, i + 1, &cellItem);
                     else
-                        mapTableWidget->setItem(0, i, cellItem);
+                        mapTableWidget->setItem(0, i, &cellItem);
                 }
             }
             if (ySize > 1)
@@ -1128,32 +1127,32 @@ void MainWindow::set_maptablewidget_items()
                 QStringList yScaleCellText = ecuCalDef[mapRomNumber]->YScaleData.at(mapNumber).split(",");
                 for (int i = 0; i < ySize; i++)
                 {
-                    QTableWidgetItem *cellItem = new QTableWidgetItem;
-                    cellItem->setTextAlignment(Qt::AlignCenter);
-                    cellItem->setFont(cellFont);
+                    QTableWidgetItem cellItem;
+                    cellItem.setTextAlignment(Qt::AlignCenter);
+                    cellItem.setFont(cellFont);
                     if (i < yScaleCellText.count())
-                        cellItem->setText(QString::number(yScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->YScaleFormatList.at(mapNumber))));
-                    mapTableWidget->setItem(i + 1, 0, cellItem);
+                        cellItem.setText(QString::number(yScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->YScaleFormatList.at(mapNumber))));
+                    mapTableWidget->setItem(i + 1, 0, &cellItem);
                 }
             }
             QStringList mapDataCellText = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
             for (int i = 0; i < mapSize; i++)
             {
-                QTableWidgetItem *cellItem = new QTableWidgetItem;
-                cellItem->setTextAlignment(Qt::AlignCenter);
-                cellItem->setFont(cellFont);
+                QTableWidgetItem cellItem;
+                cellItem.setTextAlignment(Qt::AlignCenter);
+                cellItem.setFont(cellFont);
                 int mapItemColor = get_map_cell_colors(ecuCalDef[mapRomNumber], mapDataCellText.at(i).toFloat(), mapNumber);
                 int mapItemColorRed = (mapItemColor >> 16) & 0xff;
                 int mapItemColorGreen = (mapItemColor >> 8) & 0xff;
                 int mapItemColorBlue = mapItemColor & 0xff;
-                cellItem->setBackground(QBrush(QColor(mapItemColorRed , mapItemColorGreen, mapItemColorBlue, 255)));
+                cellItem.setBackground(QBrush(QColor(mapItemColorRed , mapItemColorGreen, mapItemColorBlue, 255)));
                 if (ecuCalDef[mapRomNumber]->TypeList.at(mapNumber) == "1D")
-                    cellItem->setForeground(Qt::black);
+                    cellItem.setForeground(Qt::black);
                 else
-                    cellItem->setForeground(Qt::white);
+                    cellItem.setForeground(Qt::white);
 
                 if (i < mapDataCellText.count())
-                    cellItem->setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
+                    cellItem.setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
                 int yPos = 0;
                 int xPos = 0;
                 if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toUInt() > 1)
@@ -1165,7 +1164,7 @@ void MainWindow::set_maptablewidget_items()
                 else
                     xPos = i - (yPos - ySizeOffset) * xSize;
 
-                mapTableWidget->setItem(yPos, xPos, cellItem);
+                mapTableWidget->setItem(yPos, xPos, &cellItem);
             }
         }
 

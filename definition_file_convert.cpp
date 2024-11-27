@@ -2,7 +2,7 @@
 #include <ui_definition_file_convert.h>
 
 DefinitionFileConvert::DefinitionFileConvert(QWidget *parent)
-    : QWidget(parent),
+    : QDialog(parent),
       ui(new Ui::DefinitionFileConvertWindow)
 {
     ui->setupUi(this);
