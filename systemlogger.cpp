@@ -33,7 +33,7 @@ void SystemLogger::log_messages(QString message, bool timestamp, bool linefeed)
     QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz'] ");
 
     QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
-    qDebug() << "metaMethod.name:" << metaMethod.name();
+    //qDebug() << "metaMethod.name:" << metaMethod.name();
 
     // Check if timestamp added
     if (timestamp)
