@@ -1068,7 +1068,7 @@ int FlashEcuSubaruDensoSH72531Can::write_memory(bool test_write)
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     int block_modified[16] = {0,1,0};   // assume blocks after 0x8000 are modified
 

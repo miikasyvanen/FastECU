@@ -975,7 +975,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::write_mem_subaru_denso_subarucan(bool te
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     int block_modified[16] = {0};
 
@@ -992,7 +992,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::write_mem_subaru_denso_subarucan(bool te
     send_log_window_message("--- Comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlength\tecu crc\timg crc\tsame?", true, true);
 
-    if (get_changed_blocks_denso_subarucan(data_array, block_modified))
+    if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -1043,7 +1043,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::write_mem_subaru_denso_subarucan(bool te
         send_log_window_message("--- Comparing ECU flash memory pages to image file ---", true, true);
         send_log_window_message("seg\tstart\tlength\tecu crc\timg crc\tsame?", true, true);
 
-        if (get_changed_blocks_denso_subarucan(data_array, block_modified))
+        if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;

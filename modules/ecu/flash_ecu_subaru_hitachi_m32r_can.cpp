@@ -1035,7 +1035,7 @@ int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
     //uint8_t* data_array = new uint8_t[filedata.length()];
 
     int block_modified[16] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};   // assume blocks after 0x8000 are modified

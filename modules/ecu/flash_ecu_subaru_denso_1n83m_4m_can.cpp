@@ -1067,7 +1067,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::write_memory(bool test_write)
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t *data_array = new uint8_t[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     int block_modified[16] = {0,1,0};   // assume blocks after 0x10000 are modified
 
@@ -1369,7 +1369,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::erase_memory()
     output.append((uint8_t)0x34);
     output.append((uint8_t)0x04);
     output.append((uint8_t)0x44);
-      output.append((uint8_t)0x08);
+    output.append((uint8_t)0x08);
     output.append((uint8_t)0xFA);
     output.append((uint8_t)0xC0);
     output.append((uint8_t)0x00);

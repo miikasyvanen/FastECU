@@ -559,7 +559,7 @@ int EcuOperations::write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCal
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     //qDebug() << filename << origfilename;
 
@@ -576,7 +576,7 @@ int EcuOperations::write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCal
     send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-    if (get_changed_blocks_16bit_kline(data_array, block_modified))
+    if (get_changed_blocks_16bit_kline(&data_array[0], block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -626,7 +626,7 @@ int EcuOperations::write_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCal
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-        if (get_changed_blocks_16bit_kline(data_array, block_modified))
+        if (get_changed_blocks_16bit_kline(&data_array[0], block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -670,7 +670,7 @@ int EcuOperations::write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCal
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     //qDebug() << filename << origfilename;
 
@@ -687,7 +687,7 @@ int EcuOperations::write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCal
     send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-    if (get_changed_blocks_32bit_kline(data_array, block_modified))
+    if (get_changed_blocks_32bit_kline(&data_array[0], block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -737,7 +737,7 @@ int EcuOperations::write_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCal
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-        if (get_changed_blocks_32bit_kline(data_array, block_modified))
+        if (get_changed_blocks_32bit_kline(&data_array[0], block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -781,7 +781,7 @@ int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDe
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     //qDebug() << filename << origfilename;
 
@@ -798,7 +798,7 @@ int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDe
     send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-    if (get_changed_blocks_32bit_can(data_array, block_modified))
+    if (get_changed_blocks_32bit_can(&data_array[0], block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -848,7 +848,7 @@ int EcuOperations::write_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDe
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tsame?", true, true);
 
-        if (get_changed_blocks_32bit_can(data_array, block_modified))
+        if (get_changed_blocks_32bit_can(&data_array[0], block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -889,7 +889,7 @@ int EcuOperations::write_mem_32bit_iso15765(FileActions::EcuCalDefStructure *ecu
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     //qDebug() << filename << origfilename;
 

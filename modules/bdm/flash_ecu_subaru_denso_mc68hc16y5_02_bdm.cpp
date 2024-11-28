@@ -277,7 +277,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     uint32_t len = pl_len;
     ecuCalDef->FullRomData.clear();
     ecuCalDef->FullRomData.append(pl_encr);
-    uint8_t data_array[pl_encr.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[pl_encr.length()]);
 
     while (ecuCalDef->FullRomData.length() % 0x20)
         ecuCalDef->FullRomData.append((uint8_t)0x00);

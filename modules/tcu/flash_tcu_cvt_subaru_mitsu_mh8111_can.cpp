@@ -576,7 +576,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::write_mem_subaru_tcu_mitsu_can(bool test_wr
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     int block_modified[16] = {0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0};   // assume blocks after 0x8000 are modified
 

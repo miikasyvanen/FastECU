@@ -491,7 +491,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
 
     filedata = ecuCalDef->FullRomData;
 
-    uint8_t data_array[filedata.length()];
+    QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     //qDebug() << filename << origfilename;
 
@@ -510,7 +510,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
     send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
     send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
-    if (get_changed_blocks(data_array, block_modified))
+    if (get_changed_blocks(&data_array[0], block_modified))
     {
         send_log_window_message("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -561,7 +561,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
         send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
         send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
-        if (get_changed_blocks(data_array, block_modified))
+        if (get_changed_blocks(&data_array[0], block_modified))
         {
             send_log_window_message("Error in ROM compare", true, true);
             return STATUS_ERROR;
