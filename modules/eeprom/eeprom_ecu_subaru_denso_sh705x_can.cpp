@@ -182,7 +182,7 @@ void EepromEcuSubaruDensoSH705xCan::run()
 
 EepromEcuSubaruDensoSH705xCan::~EepromEcuSubaruDensoSH705xCan()
 {
-
+    delete ui;
 }
 
 void EepromEcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)

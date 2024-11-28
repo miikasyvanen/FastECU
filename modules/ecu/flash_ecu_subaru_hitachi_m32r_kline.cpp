@@ -131,7 +131,7 @@ void FlashEcuSubaruHitachiM32rKline::run()
 
 FlashEcuSubaruHitachiM32rKline::~FlashEcuSubaruHitachiM32rKline()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruHitachiM32rKline::closeEvent(QCloseEvent *event)

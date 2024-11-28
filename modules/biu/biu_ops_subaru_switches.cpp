@@ -50,8 +50,7 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
 
 BiuOpsSubaruSwitches::~BiuOpsSubaruSwitches()
 {
-    //delete ui;
-
+    delete ui;
 }
 
 void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)

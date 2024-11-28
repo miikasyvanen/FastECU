@@ -139,7 +139,7 @@ void FlashEcuSubaruDensoSH7055_02::run()
 
 FlashEcuSubaruDensoSH7055_02::~FlashEcuSubaruDensoSH7055_02()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruDensoSH7055_02::closeEvent(QCloseEvent *bar)

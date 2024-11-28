@@ -138,7 +138,7 @@ void FlashEcuSubaruDensoSH7058CanDiesel::run()
 
 FlashEcuSubaruDensoSH7058CanDiesel::~FlashEcuSubaruDensoSH7058CanDiesel()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruDensoSH7058CanDiesel::closeEvent(QCloseEvent *event)

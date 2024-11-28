@@ -118,7 +118,7 @@ void FlashEcuSubaruHitachiM32rCan::run()
 
 FlashEcuSubaruHitachiM32rCan::~FlashEcuSubaruHitachiM32rCan()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruHitachiM32rCan::closeEvent(QCloseEvent *event)

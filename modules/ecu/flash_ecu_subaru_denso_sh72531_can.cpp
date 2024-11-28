@@ -20,7 +20,7 @@ FlashEcuSubaruDensoSH72531Can::FlashEcuSubaruDensoSH72531Can(SerialPortActions *
 
 FlashEcuSubaruDensoSH72531Can::~FlashEcuSubaruDensoSH72531Can()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruDensoSH72531Can::run()

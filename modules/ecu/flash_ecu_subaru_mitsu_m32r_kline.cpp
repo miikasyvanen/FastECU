@@ -121,7 +121,7 @@ void FlashEcuSubaruMitsuM32rKline::run()
 
 FlashEcuSubaruMitsuM32rKline::~FlashEcuSubaruMitsuM32rKline()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruMitsuM32rKline::closeEvent(QCloseEvent *event)

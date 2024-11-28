@@ -54,8 +54,7 @@ HexCommander::HexCommander(SerialPortActions *serial, QWidget *parent)
 
 HexCommander::~HexCommander()
 {
-
-
+    delete ui;
 }
 
 void HexCommander::protocolTypeChanged(int)

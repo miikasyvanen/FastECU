@@ -115,7 +115,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::run()
 
 FlashEcuSubaruDensoMC68HC16Y5_02_BDM::~FlashEcuSubaruDensoMC68HC16Y5_02_BDM()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::closeEvent(QCloseEvent *bar)

@@ -16,7 +16,7 @@ DefinitionFileConvert::DefinitionFileConvert(QWidget *parent)
 
 DefinitionFileConvert::~DefinitionFileConvert()
 {
-
+    delete ui;
 }
 
 int DefinitionFileConvert::convert_mappack_csv_file()

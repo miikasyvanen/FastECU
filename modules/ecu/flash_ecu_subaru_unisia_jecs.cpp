@@ -137,7 +137,7 @@ void FlashEcuSubaruUnisiaJecs::run()
 
 FlashEcuSubaruUnisiaJecs::~FlashEcuSubaruUnisiaJecs()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruUnisiaJecs::closeEvent(QCloseEvent *bar)

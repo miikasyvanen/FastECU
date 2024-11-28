@@ -127,7 +127,7 @@ void FlashTcuCvtSubaruMitsuMH8104Can::run()
 
 FlashTcuCvtSubaruMitsuMH8104Can::~FlashTcuCvtSubaruMitsuMH8104Can()
 {
-
+    delete ui;
 }
 
 void FlashTcuCvtSubaruMitsuMH8104Can::closeEvent(QCloseEvent *event)

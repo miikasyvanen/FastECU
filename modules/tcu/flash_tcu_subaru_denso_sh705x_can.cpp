@@ -199,7 +199,7 @@ void FlashTcuSubaruDensoSH705xCan::run()
 
 FlashTcuSubaruDensoSH705xCan::~FlashTcuSubaruDensoSH705xCan()
 {
-
+    delete ui;
 }
 
 void FlashTcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
