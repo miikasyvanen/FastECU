@@ -1070,7 +1070,10 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Denso CAN
         */
         if (configValues->flash_protocol_selected_protocol_name.endsWith("_densocan"))
-            flashEcuSubaruDensoSH705xDensoCan = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xDensoCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH705xDensoCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Denso ECU Boot Mode
         */
@@ -1079,75 +1082,156 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Denso ECU BDM
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_02_bdm"))
-            flashEcuUnbrickSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02_BDM(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoMC68HC16Y5_02_BDM flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Denso ECU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_02"))
-            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoMC68HC16Y5_02 flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_mc68hc16y5_04"))
-            flashEcuSubaruDensoMC68HC16Y5_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoMC68HC16Y5_02(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoMC68HC16Y5_02 flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7055_02"))
-            flashEcuSubaruDensoSH7055_02 = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7055_02(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH7055_02 flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7055_04"))
-            flashEcuSubaruDensoSH705xKline = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xKline(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH705xKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7058_can_diesel"))
-            flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH7058CanDiesel flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7059_can_diesel"))
-            flashEcuSubaruDensoSH7058CanDiesel = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058CanDiesel(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH7058CanDiesel flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name == "sub_ecu_denso_sh7058_can")
-            flashEcuSubaruDensoSH7058Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH7058Can flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name == "sub_ecu_denso_sh7058")
-            flashEcuSubaruDensoSH705xKline = connect_signals_and_run_module(new FlashEcuSubaruDensoSH705xKline(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH705xKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh72531_can"))
-            flashEcuSubaruDensoSh72531Can = connect_signals_and_run_module(new FlashEcuSubaruDensoSH72531Can(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDensoSH72531Can flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_1n83m_4m_can"))
-            flashEcuSubaruDenso1N83M_4MCan = connect_signals_and_run_module(new FlashEcuSubaruDenso1N83M_4MCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruDenso1N83M_4MCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Denso TCU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_denso_sh7055_can"))
-            flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashTcuSubaruDensoSH705xCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_denso_sh7058_can"))
-            flashTcuSubaruDensoSH705xCan = connect_signals_and_run_module(new FlashTcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashTcuSubaruDensoSH705xCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Denso EEPROM
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7055_kline"))
-            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xKline(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            EepromEcuSubaruDensoSH705xKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_kline"))
-            eepromEcuSubaruDensoKline = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xKline(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            EepromEcuSubaruDensoSH705xKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7055_densocan"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            EepromEcuSubaruDensoSH705xCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_densocan"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            EepromEcuSubaruDensoSH705xCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_can"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            EepromEcuSubaruDensoSH705xCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_eeprom_denso_sh7058_can_diesel"))
-            eepromEcuSubaruDensoCan = connect_signals_and_run_module(new EepromEcuSubaruDensoSH705xCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            EepromEcuSubaruDensoSH705xCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Unisia Jecs ECU Boot Mode
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_20_bootmode"))
-            flashEcuSubaruUnisiaJecsM32rBootMode = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32rBootMode(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecsM32rBootMode flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_30_bootmode"))
-            flashEcuSubaruUnisiaJecsM32rBootMode = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32rBootMode(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecsM32rBootMode flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
 
         /*
         * Unisia Jecs ECU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_m3779x"))
-            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecs flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_m3775x"))
-            flashEcuSubaruUnisiaJecs = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecs(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecs flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_20"))
-            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecsM32r flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_30"))
-            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecsM32r flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_40"))
-            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecsM32r flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_70"))
-            flashEcuSubaruUnisiaJecsM32r = connect_signals_and_run_module(new FlashEcuSubaruUnisiaJecsM32r(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruUnisiaJecsM32r flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Hitachi ECU Boot Mode
         */
@@ -1156,31 +1240,61 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Hitachi ECU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_m32r_kline"))
-            flashEcuSubaruHitachiM32rKline = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rKline(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruHitachiM32rKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_m32r_can"))
-            flashEcuSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiM32rCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruHitachiM32rCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_mitsu_m32r_kline"))
-            flashEcuSubaruMitsuM32rKline = connect_signals_and_run_module(new FlashEcuSubaruMitsuM32rKline(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruMitsuM32rKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh7058_can"))
-            flashEcuSubaruHitachiSh7058Can = connect_signals_and_run_module(new FlashEcuSubaruHitachiSH7058Can(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruHitachiSH7058Can flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_sh72543r_can"))
-            flashEcuSubaruHitachiSh72543rCan = connect_signals_and_run_module(new FlashEcuSubaruHitachiSH72543rCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashEcuSubaruHitachiSH72543rCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Hitachi TCU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_hitachi_m32r_kline"))
-            flashTcuSubaruHitachiM32rKline = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32rKline(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashTcuSubaruHitachiM32rKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_hitachi_m32r_can"))
-            flashTcuSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashTcuSubaruHitachiM32rCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashTcuSubaruHitachiM32rCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_hitachi_m32r_can"))
-            flashTcuCvtSubaruHitachiM32rCan = connect_signals_and_run_module(new FlashTcuCvtSubaruHitachiM32rCan(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashTcuCvtSubaruHitachiM32rCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Mitsu TCU
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
-            flashTcuCvtSubaruMitsuMH8104Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8104Can(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashTcuCvtSubaruMitsuMH8104Can flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_cvt_mitsu_mh8111_can"))
-            flashTcuCvtSubaruMitsuMH8111Can = connect_signals_and_run_module(new FlashTcuCvtSubaruMitsuMH8111Can(serial, ecuCalDef[rom_number], cmd_type, this));
+        {
+            FlashTcuCvtSubaruMitsuMH8111Can flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
 
         /*
         * Unknown flashmethod

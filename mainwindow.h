@@ -159,46 +159,6 @@ private:
     FileActions::EcuCalDefStructure *ecuCalDef[100];
     //FileActions::EcuCalDefStructure *ecuCalDefTemp;
 
-    /* Flash modules */
-    /* Denso ECU */
-    FlashEcuSubaruDensoSH705xDensoCan *flashEcuSubaruDensoSH705xDensoCan;
-    FlashEcuSubaruDensoMC68HC16Y5_02 *flashEcuSubaruDensoMC68HC16Y5_02;
-    FlashEcuSubaruDensoSH7055_02 *flashEcuSubaruDensoSH7055_02;
-    FlashEcuSubaruDensoSH705xKline *flashEcuSubaruDensoSH705xKline;
-    FlashEcuSubaruDensoSH7058Can *flashEcuSubaruDensoSH7058Can;
-    FlashEcuSubaruDensoSH7058CanDiesel *flashEcuSubaruDensoSH7058CanDiesel;
-    FlashEcuSubaruDensoSH72531Can *flashEcuSubaruDensoSh72531Can;
-    FlashEcuSubaruDenso1N83M_4MCan *flashEcuSubaruDenso1N83M_4MCan;
-    /* Denso ECU unbrick */
-    FlashEcuSubaruDensoMC68HC16Y5_02_BDM *flashEcuUnbrickSubaruDensoMC68HC16Y5_02 ;
-    /* Denso ECU EEPROM */
-    EepromEcuSubaruDensoSH705xKline *eepromEcuSubaruDensoKline;
-    EepromEcuSubaruDensoSH705xCan *eepromEcuSubaruDensoCan;
-    /* Denso TCU */
-    FlashTcuSubaruDensoSH705xCan *flashTcuSubaruDensoSH705xCan;
-
-    /* Hitachi ECU */
-    FlashEcuSubaruUnisiaJecs *flashEcuSubaruUnisiaJecs;
-    FlashEcuSubaruUnisiaJecsM32r *flashEcuSubaruUnisiaJecsM32r;
-    FlashEcuSubaruUnisiaJecsM32rBootMode *flashEcuSubaruUnisiaJecsM32rBootMode;
-    FlashEcuSubaruHitachiM32rKline *flashEcuSubaruHitachiM32rKline;
-    FlashEcuSubaruHitachiM32rCan *flashEcuSubaruHitachiM32rCan;
-    FlashEcuSubaruMitsuM32rKline *flashEcuSubaruMitsuM32rKline;
-    FlashEcuSubaruHitachiSH7058Can *flashEcuSubaruHitachiSh7058Can;
-    FlashEcuSubaruHitachiSH72543rCan *flashEcuSubaruHitachiSh72543rCan;
-
-    /* Hitachi TCU */
-    FlashTcuSubaruHitachiM32rKline *flashTcuSubaruHitachiM32rKline;
-    FlashTcuSubaruHitachiM32rCan *flashTcuSubaruHitachiM32rCan;
-    FlashTcuCvtSubaruHitachiM32rCan *flashTcuCvtSubaruHitachiM32rCan;
-
-    /* Mitsu TCU */
-    FlashTcuCvtSubaruMitsuMH8104Can *flashTcuCvtSubaruMitsuMH8104Can;
-    FlashTcuCvtSubaruMitsuMH8111Can *flashTcuCvtSubaruMitsuMH8111Can;
-
-    FlashEcuSubaruDensoSH7xxxDensoCan *flashEcuSubaruDensoSH7xxxCan;
-    /* Flash modules */
-
     SerialPortActions *serial;
     //QTimer *serial_poll_timer;
     uint16_t serial_poll_timer_timeout = 500;
