@@ -19,11 +19,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qApp->installEventFilter(this);
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
-    connect(this, SIGNAL(LOG_E(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_W(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_I(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-    connect(this, SIGNAL(LOG_D(QString,bool,bool)), this, SIGNAL(syslog(QString,bool,bool)));
-
     QPixmap startUpSplashImage(":/images/startup_splash.jpg");
     int startUpSplashProgressBarValue = 0;
 
@@ -668,7 +663,7 @@ void MainWindow::update_protocol_info(int rom_number)
 {
     bool info_updated = false;
 
-    qDebug() << "Update protocol info by selected ROM with FlashMethod:" << ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod);
+    emit LOG_D("Update protocol info by selected ROM with FlashMethod: " + ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod), true, true);
     for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
     {
         if (configValues->flash_protocol_protocol_name.at(i) == ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod))
@@ -687,19 +682,10 @@ void MainWindow::update_protocol_info(int rom_number)
         }
     }
     if (info_updated)
-        qDebug() << "Protocol info for selected ROM updated";
+        emit LOG_D("Protocol info for selected ROM updated", true, true);
     else
-        qDebug() << "Could not find protocol for selected ROM!";
+        emit LOG_D("Could not find protocol for selected ROM!", true, true);
     status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
-
-/*
-    ecuCalDef[rom_number]->RomInfo.replace(fileActions->FlashMethod, configValues->flash_protocol_selected_protocol_name);
-    ecuCalDef[rom_number]->RomInfo.replace(fileActions->ChecksumModule, configValues->flash_protocol_selected_checksum);
-    ecuCalDef[rom_number]->FlashMethod = configValues->flash_protocol_selected_protocol_name;
-    ecuCalDef[rom_number]->Kernel = configValues->kernel_files_directory + configValues->flash_protocol_kernel.at(configValues->flash_protocol_selected_id.toInt()); //check_kernel(ecuCalDef[rom_number]->RomInfo.at(fileActions->FlashMethod));
-    ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
-    ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
-*/
 }
 
 void MainWindow::set_flash_arrow_state()
@@ -1392,7 +1378,6 @@ void MainWindow::save_calibration_file()
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
 
     int rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
-    //int rom_index = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
@@ -1419,7 +1404,6 @@ void MainWindow::save_calibration_file_as()
 
     qDebug() << "Save as: Check selected ROM number";
     int rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
-    //int rom_index = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(2).toInt();
 
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 

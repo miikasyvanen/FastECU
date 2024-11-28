@@ -336,7 +336,9 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             {
                                 if (reader.name().toUtf8() == "value")
                                 {
-                                    configValues->primary_definition_base = reader.attributes().value("data").toString();
+                                    QString primary_definition_base = reader.attributes().value("data").toString();
+                                    if (primary_definition_base == "romraider" || primary_definition_base == "ecuflash")
+                                        configValues->primary_definition_base = primary_definition_base;
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -2245,6 +2247,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     if (!file_name_str.length())
         file_name_str = ecuCalDef->RomId;
 
+    ecuCalDef->McuType = configValues->flash_protocol_selected_mcu;
     ecuCalDef->OemEcuFile = true;
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
@@ -2604,11 +2607,17 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             /*
             * Hitachi ECU
             */
-            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_"))
+            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_kline"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
+                ChecksumEcuSubaruHitachiM32rKline *checksumEcuSubaruHitachiM32rKline = new ChecksumEcuSubaruHitachiM32rKline();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32rKline->calculate_checksum(ecuCalDef->FullRomData);
+            }
+            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_can"))
+            {
+                chksumModuleAvailable = true;
+                ChecksumEcuSubaruHitachiM32rCan *checksumEcuSubaruHitachiM32rCan = new ChecksumEcuSubaruHitachiM32rCan();
+                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_sh7058_can"))
             {

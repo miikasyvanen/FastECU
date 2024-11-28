@@ -33,7 +33,8 @@
 
 #include "modules/checksum/checksum_ecu_subaru_denso_sh705x_diesel.h"
 #include "modules/checksum/checksum_ecu_subaru_denso_sh7xxx.h"
-#include "modules/checksum/checksum_ecu_subaru_hitachi_m32r.h"
+#include "modules/checksum/checksum_ecu_subaru_hitachi_m32r_kline.h"
+#include "modules/checksum/checksum_ecu_subaru_hitachi_m32r_can.h"
 #include "modules/checksum/checksum_ecu_subaru_hitachi_sh7058.h"
 #include "modules/checksum/checksum_ecu_subaru_hitachi_sh72543r.h"
 
@@ -109,7 +110,7 @@ public:
 
         QString use_romraider_definitions = "disabled";
         QString use_ecuflash_definitions = "disabled";
-        QString primary_definition_base;
+        QString primary_definition_base = "ecuflash";
 
         QStringList ecuflash_def_cal_id;
         QStringList ecuflash_def_cal_id_addr;
