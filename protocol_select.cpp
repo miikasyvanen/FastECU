@@ -4,11 +4,10 @@
 ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::ProtocolSelect)
+    , configValues(configValues)
 {
     ui->setupUi(this);
-    this->setParent(parent);
 
-    this->configValues = configValues;
     //ui->select_button->setEnabled(false);
 
     QStringList tree_widget_headers = {"Model","Protocol"};
@@ -88,15 +87,16 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
         ui->treeWidget->setCurrentItem(item);
     }
 
-    connect(ui->treeWidget, SIGNAL(itemSelectionChanged()), this, SLOT(protocol_treewidget_item_selected()));
-    connect(ui->cancel_button, SIGNAL(clicked(bool)), this, SLOT(close()));
-    connect(ui->select_button, SIGNAL(clicked(bool)), this, SLOT(car_model_selected()));
+    connect(ui->treeWidget, &QTreeWidget::itemSelectionChanged, this, &ProtocolSelect::protocol_treewidget_item_selected);
+    connect(ui->treeWidget, &QTreeWidget::doubleClicked, this, &ProtocolSelect::car_model_selected);
+    connect(ui->cancel_button, &QPushButton::clicked, this, &QDialog::close);
+    connect(ui->select_button, &QPushButton::clicked, this, &ProtocolSelect::car_model_selected);
 
 }
 
 ProtocolSelect::~ProtocolSelect()
 {
-    reject();
+    delete(ui);
 }
 
 void ProtocolSelect::car_model_selected()
