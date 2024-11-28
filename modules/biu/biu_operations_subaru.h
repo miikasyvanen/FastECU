@@ -375,7 +375,7 @@ private:
 
     QTimer *keep_alive_timer;
 
-    uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
+    uint8_t calculate_checksum(QByteArray out, bool dec_0x100);
     void parse_biu_message(QByteArray message);
     QString parse_message_to_hex(QByteArray received);
     int send_log_window_message(QString message, bool timestamp, bool linefeed);

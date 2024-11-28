@@ -6,7 +6,6 @@ BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *par
       ui(new Ui::BiuOperationsSubaruWindow)
 {
     ui->setupUi(this);
-    this->setParent(parent);
 
     ui->progressbar->hide();
 
@@ -47,6 +46,23 @@ BiuOperationsSubaru::~BiuOperationsSubaru()
 {
     keep_alive_timer->stop();
     delete ui;
+    delete keep_alive_timer;
+    delete biu_tt_result;
+    delete biu_option_result;
+    delete switch_result;
+    delete data_result;
+    delete biuOpsSubaruSwitchesIo;
+    delete biuOpsSubaruSwitchesLighting;
+    delete biuOpsSubaruSwitchesOptions;
+    delete biuOpsSubaruDataDtcs;
+    delete biuOpsSubaruDataBiu;
+    delete biuOpsSubaruDataCan;
+    delete biuOpsSubaruDataTt;
+    delete biuOpsSubaruDataVdcabs;
+    delete biuOpsSubaruDataDest;
+    delete biuOpsSubaruDataFactory;
+    delete biuOpsSubaruInput1;
+    delete biuOpsSubaruInput2;
 }
 
 BiuOpsSubaruSwitches* BiuOperationsSubaru::update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches)
@@ -148,7 +164,7 @@ void BiuOperationsSubaru::parse_biu_cmd()
     }
     else
     {
-        if (ui->msg_line_edit->text() != "")
+        if (!ui->msg_line_edit->text().isEmpty())
             selected_item_msg = ui->msg_line_edit->text().split(",");
     }
 
@@ -465,13 +481,13 @@ void BiuOperationsSubaru::send_biu_msg()
     if (connection_state == CONNECTED) keep_alive_timer->start();
 }
 
-uint8_t BiuOperationsSubaru::calculate_checksum(QByteArray output, bool exclude_last_byte)
+uint8_t BiuOperationsSubaru::calculate_checksum(QByteArray out, bool exclude_last_byte)
 {
     uint8_t checksum = 0;
-    int len = output.length();
+    int len = out.length();
     if (exclude_last_byte) len--;
 
-    for (uint16_t i = 0; i < len; i++) checksum += (uint8_t)output.at(i);
+    for (uint16_t i = 0; i < len; i++) checksum += (uint8_t)out.at(i);
 
     return checksum;
 }
@@ -572,7 +588,7 @@ void BiuOperationsSubaru::parse_biu_message(QByteArray message)
                     dtc_code.append(" (stored)");
                 index++;
 
-                if (dtc_code != "")
+                if (!dtc_code.isEmpty())
                 {
                     //send_log_window_message(dtc_code, true, true);
                     data_result->append(dtc_code);
