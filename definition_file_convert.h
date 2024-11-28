@@ -14,7 +14,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class DefinitionFileConvert : public QWidget
+class DefinitionFileConvert : public QDialog
 {
     Q_OBJECT
 public:
