@@ -594,12 +594,12 @@ QStringList MainWindow::create_log_transports_list()
 void MainWindow::select_protocol()
 {
     //qDebug() << "Select protocol";
-    ProtocolSelect *protocolSelect = new ProtocolSelect(configValues);
-    connect(protocolSelect, SIGNAL(finished (int)), this, SLOT(select_protocol_finished(int)));
-    protocolSelect->exec();
+    ProtocolSelect protocolSelect(configValues);
+    connect(&protocolSelect, SIGNAL(finished (int)), this, SLOT(select_protocol_finished(int)));
+    protocolSelect.exec();
 
     QRect  screenGeometry = this->geometry();
-    protocolSelect->move(screenGeometry.center() - protocolSelect->rect().center());
+    protocolSelect.move(screenGeometry.center() - protocolSelect.rect().center());
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;
@@ -628,12 +628,12 @@ void MainWindow::select_protocol_finished(int result)
 void MainWindow::select_vehicle()
 {
     //qDebug() << "Select protocol";
-    VehicleSelect *vehicleSelect = new VehicleSelect(configValues);
-    connect(vehicleSelect, SIGNAL(finished (int)), this, SLOT(select_vehicle_finished(int)));
-    vehicleSelect->exec();
+    VehicleSelect vehicleSelect(configValues);
+    connect(&vehicleSelect, SIGNAL(finished (int)), this, SLOT(select_vehicle_finished(int)));
+    vehicleSelect.exec();
 
     QRect  screenGeometry = this->geometry();
-    vehicleSelect->move(screenGeometry.center() - vehicleSelect->rect().center());
+    vehicleSelect.move(screenGeometry.center() - vehicleSelect.rect().center());
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;

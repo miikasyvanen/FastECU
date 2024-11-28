@@ -45,8 +45,8 @@ BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *par
 
 BiuOperationsSubaru::~BiuOperationsSubaru()
 {
-    //delete ui;
     keep_alive_timer->stop();
+    delete ui;
 }
 
 BiuOpsSubaruSwitches* BiuOperationsSubaru::update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches)

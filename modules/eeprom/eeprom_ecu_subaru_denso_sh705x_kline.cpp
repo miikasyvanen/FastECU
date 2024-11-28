@@ -177,7 +177,7 @@ void EepromEcuSubaruDensoSH705xKline::run()
 
 EepromEcuSubaruDensoSH705xKline::~EepromEcuSubaruDensoSH705xKline()
 {
-
+    delete ui;
 }
 
 void EepromEcuSubaruDensoSH705xKline::closeEvent(QCloseEvent *bar)

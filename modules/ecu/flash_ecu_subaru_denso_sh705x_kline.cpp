@@ -134,7 +134,7 @@ void FlashEcuSubaruDensoSH705xKline::run()
 
 FlashEcuSubaruDensoSH705xKline::~FlashEcuSubaruDensoSH705xKline()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruDensoSH705xKline::closeEvent(QCloseEvent *bar)

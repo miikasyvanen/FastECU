@@ -109,7 +109,7 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
 
 FlashEcuSubaruUnisiaJecsM32r::~FlashEcuSubaruUnisiaJecsM32r()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruUnisiaJecsM32r::closeEvent(QCloseEvent *event)

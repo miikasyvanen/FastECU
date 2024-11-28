@@ -123,7 +123,7 @@ void FlashEcuSubaruHitachiSH72543rCan::run()
 
 FlashEcuSubaruHitachiSH72543rCan::~FlashEcuSubaruHitachiSH72543rCan()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruHitachiSH72543rCan::closeEvent(QCloseEvent *event)

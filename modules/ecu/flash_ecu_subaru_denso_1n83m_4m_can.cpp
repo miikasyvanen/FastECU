@@ -20,7 +20,7 @@ FlashEcuSubaruDenso1N83M_4MCan::FlashEcuSubaruDenso1N83M_4MCan(SerialPortActions
 
 FlashEcuSubaruDenso1N83M_4MCan::~FlashEcuSubaruDenso1N83M_4MCan()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruDenso1N83M_4MCan::run()

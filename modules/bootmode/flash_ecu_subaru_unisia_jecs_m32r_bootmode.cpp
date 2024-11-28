@@ -106,7 +106,7 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
 
 FlashEcuSubaruUnisiaJecsM32rBootMode::~FlashEcuSubaruUnisiaJecsM32rBootMode()
 {
-
+    delete ui;
 }
 
 void FlashEcuSubaruUnisiaJecsM32rBootMode::closeEvent(QCloseEvent *event)
