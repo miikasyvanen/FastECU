@@ -43,13 +43,13 @@ QByteArray ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(QByteArray rom
         if (i == checksum_area_start && checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
         {
             qDebug() << "ROM has all checksums disabled";
-            QMessageBox::information(this, tr("32-bit checksum"), "ROM has all checksums disabled");
+            QMessageBox::information(nullptr, QObject::tr("32-bit checksum"), "ROM has all checksums disabled");
             return 0;
         }
 
         if (checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)
         {
-            //QMessageBox::information(this, tr("32-bit checksum"), "Checksums disabled");
+            //QMessageBox::information(nullptr, QObject::tr("32-bit checksum"), "Checksums disabled");
         }
         if (checksum_dword_addr_lo != 0 && checksum_dword_addr_hi != 0 && checksum_diff != 0x5aa5a55a)
         {
@@ -99,10 +99,10 @@ QByteArray ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(QByteArray rom
     {
         romData.replace(checksum_area_start, checksum_area_length, checksum_array);
         qDebug() << "Checksums corrected";
-        QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums corrected");
+        QMessageBox::information(nullptr, QObject::tr("Subaru Denso SH705x Checksum"), "Checksums corrected");
     }
     //else
-    //    QMessageBox::information(this, tr("Subaru Denso SH705x Checksum"), "Checksums OK");
+    //    QMessageBox::information(nullptr, QObject::tr("Subaru Denso SH705x Checksum"), "Checksums OK");
 
     return romData;
 }

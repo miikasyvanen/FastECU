@@ -3,17 +3,14 @@
 
 #include <QDebug>
 #include <QMessageBox>
-#include <QWidget>
 
-class ChecksumTcuMitsuMH8104Can : public QWidget
+class ChecksumTcuMitsuMH8104Can
 {
-    Q_OBJECT
-
 public:
     ChecksumTcuMitsuMH8104Can();
     ~ChecksumTcuMitsuMH8104Can();
 
-    QByteArray calculate_checksum(QByteArray romData);
+    static QByteArray calculate_checksum(QByteArray romData);
 
 private:
 

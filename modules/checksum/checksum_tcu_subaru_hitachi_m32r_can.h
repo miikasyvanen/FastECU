@@ -3,17 +3,14 @@
 
 #include <QDebug>
 #include <QMessageBox>
-#include <QWidget>
 
-class ChecksumTcuSubaruHitachiM32rCan : public QWidget
+class ChecksumTcuSubaruHitachiM32rCan
 {
-    Q_OBJECT
-
 public:
     ChecksumTcuSubaruHitachiM32rCan();
     ~ChecksumTcuSubaruHitachiM32rCan();
 
-    QByteArray calculate_checksum(QByteArray romData);
+    static QByteArray calculate_checksum(QByteArray romData);
 
 private:
 

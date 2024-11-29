@@ -85,7 +85,7 @@ QByteArray ChecksumTcuMitsuMH8104Can::calculate_checksum(QByteArray romData)
     }
     if (!checksum_ok)
     {
-        QMessageBox::information(this, tr("Subaru Hitachi M32R K-Line/CAN ECU Checksum"), "Checksums corrected");
+        QMessageBox::information(nullptr, QObject::tr("Subaru Hitachi M32R K-Line/CAN ECU Checksum"), "Checksums corrected");
     }
 
     return romData;

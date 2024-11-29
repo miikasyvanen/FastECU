@@ -3,18 +3,15 @@
 
 #include <QDebug>
 #include <QMessageBox>
-#include <QWidget>
 
-class ChecksumEcuSubaruDensoSH7xxx : public QWidget
+class ChecksumEcuSubaruDensoSH7xxx
 {
-    Q_OBJECT
-
 public:
     ChecksumEcuSubaruDensoSH7xxx();
     ~ChecksumEcuSubaruDensoSH7xxx();
 
     //Note that offset is added to all addresses
-    QByteArray calculate_checksum(QByteArray romData, uint32_t checksum_area_start, uint32_t checksum_area_length, int32_t offset = 0);
+    static QByteArray calculate_checksum(QByteArray romData, uint32_t checksum_area_start, uint32_t checksum_area_length, int32_t offset = 0);
 
 private:
 

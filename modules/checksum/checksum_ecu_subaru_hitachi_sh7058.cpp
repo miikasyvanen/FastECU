@@ -243,7 +243,7 @@ QByteArray ChecksumEcuSubaruHitachiSH7058::calculate_checksum(QByteArray romData
 
     if (!checksum_ok)
     {
-        QMessageBox::information(this, tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksums corrected");
+        QMessageBox::information(nullptr, QObject::tr("Subaru Hitachi SH7058 CAN ECU Checksum"), "Checksums corrected");
     }
 
 

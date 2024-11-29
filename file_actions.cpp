@@ -2538,56 +2538,48 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             if (flashMethod.startsWith("sub_ecu_denso_sh7055"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x07FB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x07FB80, 17 * 12);
+
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7058_can_diesel"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7058s_diesel_densocan"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7058"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh72531_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x13F500, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x13F500, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_1n83m_4m_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x3E3E00, 17 * 12, -0x8F9C000);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x3E3E00, 17 * 12, -0x8F9C000);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7059_can_diesel"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7059_diesel_densocan"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh72543_can_diesel"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x1FF800, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x1FF800, 17 * 12);
             }
             /*
             * Denso TCU
@@ -2595,14 +2587,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_tcu_denso_sh7055_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuSubaruDensoSH7055 *checksumTcuSubaruDensoSH7055 = new ChecksumTcuSubaruDensoSH7055();
-                ecuCalDef->FullRomData = checksumTcuSubaruDensoSH7055->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuSubaruDensoSH7055::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_tcu_denso_sh7058_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             /*
             * Hitachi ECU
@@ -2610,26 +2600,22 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_kline"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiM32rKline *checksumEcuSubaruHitachiM32rKline = new ChecksumEcuSubaruHitachiM32rKline();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32rKline->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiM32rCan *checksumEcuSubaruHitachiM32rCan = new ChecksumEcuSubaruHitachiM32rCan();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_sh7058_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiSH7058 *checksumEcuSubaruHitachiSH7058 = new ChecksumEcuSubaruHitachiSH7058();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiSH7058->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiSH7058::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_sh72543r"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiSh72543r *checksumEcuSubaruHitachiSh72543r = new ChecksumEcuSubaruHitachiSh72543r();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiSh72543r->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
             * Hitachi TCU
@@ -2637,14 +2623,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuSubaruHitachiM32rCan *checksumTcuSubaruHitachiM32rCan = new ChecksumTcuSubaruHitachiM32rCan();
-                ecuCalDef->FullRomData = checksumTcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_kline"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuSubaruHitachiM32rCan *checksumTcuSubaruHitachiM32rCan = new ChecksumTcuSubaruHitachiM32rCan();
-                ecuCalDef->FullRomData = checksumTcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
             * Mitsu TCU
@@ -2652,8 +2636,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuMitsuMH8104Can *checksumTcuMitsuMH8104Can = new ChecksumTcuMitsuMH8104Can();
-                ecuCalDef->FullRomData = checksumTcuMitsuMH8104Can->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuMitsuMH8104Can::calculate_checksum(ecuCalDef->FullRomData);
             }
             else
                 chksumModuleAvailable = false;
