@@ -362,14 +362,14 @@ QStringList SerialPortActionsDirect::check_j2534_devices(QMap<QString, QString> 
 
 QMap<QString, QString> SerialPortActionsDirect::getAllJ2534DriversNames()
 {
-    QSettings *registry = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\PassThruSupport.04.04", REGISTRY_FORMAT);
+    QSettings registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\PassThruSupport.04.04", REGISTRY_FORMAT);
     QMap<QString, QString> drivers_map;
-    for (const QString &i : registry->childGroups())
+    for (const QString &i : registry.childGroups())
     {
         QString vendor = i;
         //qDebug() << "J2534 Drivers:" << vendor;
         vendor.replace("\\", "/");
-        QString dllName = registry->value(i+"/FunctionLibrary").toString();
+        QString dllName = registry.value(i+"/FunctionLibrary").toString();
         drivers_map[vendor] = dllName;
     }
     qDebug() << "Found installed drivers:" << drivers_map;
