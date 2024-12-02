@@ -162,7 +162,7 @@ const struct flashblock fblocks_SH72531[] = {
 const struct flashblock fblocks_N83M_4MB[] = {
     {0x08F9C000,    0x00010000},
     {0x08FAC000,    0x003D3F00},
-    {0x003D3F00,    0x00000100},
+    {0x0937FF00,    0x00000100},
     };
 
 const struct flashblock fblocks_N83M_1_5MB[] = {
