@@ -65,6 +65,7 @@
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh72531_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_1n83m_4m_can.h>
+#include <modules/ecu/flash_ecu_subaru_denso_1n83m_1_5m_can.h>
 
 #include <modules/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
 #include <modules/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>

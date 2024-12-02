@@ -2566,6 +2566,11 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 chksumModuleAvailable = true;
                 ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x3E3E00, 17 * 12, -0x8F9C000);
             }
+            else if (flashMethod.startsWith("sub_ecu_denso_1n83m_1_5m_can"))
+            {
+                chksumModuleAvailable = true;
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x183E00, 17 * 12, -0x8F9C000);
+            }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7059_can_diesel"))
             {
                 chksumModuleAvailable = true;
