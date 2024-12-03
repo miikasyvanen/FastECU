@@ -1298,8 +1298,14 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         {
             if (ecuCalDef[ecuCalDefIndex]->FullRomData.length())
             {
+                QDateTime dateTime = dateTime.currentDateTime();
+                QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
+
+                if (ecuCalDef[ecuCalDefIndex]->RomId.length())
+                    ecuCalDef[ecuCalDefIndex]->FileName = ecuCalDef[ecuCalDefIndex]->RomId + "-" + dateTimeString + ".bin";
+
                 //qDebug() << "Checking definitions, please wait...";
-                fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FullFileName);
+                fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FileName);
                 update_protocol_info(ecuCalDefIndex);
 
                 //qDebug() << "Building treewidget, please wait...";
@@ -1395,6 +1401,9 @@ void MainWindow::save_calibration_file()
     if (ecuCalDef[rom_number] != NULL)
         fileActions->save_subaru_rom_file(ecuCalDef[rom_number], ecuCalDef[rom_number]->FullFileName);
 
+    qDebug() << "ecuCalDef->FileName:" << ecuCalDef[rom_number]->FileName;
+    qDebug() << "ecuCalDef->FullFileName:" << ecuCalDef[rom_number]->FullFileName;
+
     ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
 }
 
@@ -1420,13 +1429,14 @@ void MainWindow::save_calibration_file_as()
 
     if (ecuCalDef[rom_number] != NULL)
     {
-        QString filename = "";
+        QString filename = ui->calibrationFilesTreeWidget->selectedItems().at(0)->text(0);
+        //QString filename = "";
 
         QFileDialog saveDialog;
         saveDialog.setDefaultSuffix("bin");
         qDebug() << "Save as: Check if OEM ECU file";
 
-        filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_base_directory, tr("Calibration file (*.bin)"));
+        filename = QFileDialog::getSaveFileName(this, tr("Save calibration file"), configValues->calibration_files_directory + filename, tr("Calibration file (*.bin)"));
 
         if (filename.isEmpty()){
             //ecuCalDef[rom_number]->FileName = "No name.bin";
@@ -1443,6 +1453,8 @@ void MainWindow::save_calibration_file_as()
 
         fileActions->save_subaru_rom_file(ecuCalDef[rom_number], filename);
         ui->calibrationFilesTreeWidget->selectedItems().at(0)->setText(0, ecuCalDef[rom_number]->FileName);
+        qDebug() << "ecuCalDef->FileName:" << ecuCalDef[rom_number]->FileName;
+        qDebug() << "ecuCalDef->FullFileName:" << ecuCalDef[rom_number]->FullFileName;
     }
     ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
 }

@@ -260,6 +260,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     QByteArray received;
     QString msg;
     QByteArray mapdata;
+    QString ecuid;
 
     uint32_t pagesize = 0;
     uint32_t end_addr = 0;
@@ -282,6 +283,14 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     if (received != "" || received.length() > 12)
     {
         kernel_alive = true;
+        received.remove(0, 8);
+        received.remove(5, received.length() - 5);
+
+        for (int i = 0; i < received.length(); i++)
+        {
+            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        }
+        ecuid = msg;
     }
 
     if(!kernel_alive)
@@ -302,7 +311,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         {
             msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
         }
-        QString ecuid = msg;
+        ecuid = msg;
         LOG_I("ECU ID = " + ecuid, true, true);
         //send_log_window_message("ECU ID = " + ecuid, true, true);
 
@@ -320,6 +329,8 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         if (received == "" || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
     }
+
+    ecuCalDef->RomId = ecuid;
 
     start_addr += 0x00100000;
     datalen = 6;

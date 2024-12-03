@@ -30,7 +30,7 @@ void SystemLogger::log_messages(QString message, bool timestamp, bool linefeed)
     QString msg;
 
     QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz'] ");
+    QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
 
     QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
     //qDebug() << "metaMethod.name:" << metaMethod.name();

@@ -2245,7 +2245,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
 */
     if (!file_name_str.length())
-        file_name_str = ecuCalDef->RomId;
+        file_name_str = "default.bin";
 
     ecuCalDef->McuType = configValues->flash_protocol_selected_mcu;
     ecuCalDef->OemEcuFile = true;
