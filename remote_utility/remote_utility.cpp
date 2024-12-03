@@ -7,7 +7,6 @@ RemoteUtility::RemoteUtility(QString peerAddress,
     , peerAddress(peerAddress)
     , webSocket(web_socket)
     , socket(new WebSocketIoDevice(webSocket, webSocket))
-    , keepalive_timer(new QTimer(this))
 {
     if (peerAddress.startsWith("local:"))
     {
@@ -67,35 +66,6 @@ QRemoteObjectReplica::State RemoteUtility::state(void) const
     return remote_utility->state();
 }
 
-void RemoteUtility::ping(QString message)
-{
-    //Using pointer because of async response
-    QRemoteObjectPendingCallWatcher *watcher =
-        new QRemoteObjectPendingCallWatcher(remote_utility->ping(message));
-    QObject::connect(watcher, &QRemoteObjectPendingCallWatcher::finished,
-        this, [](QRemoteObjectPendingCallWatcher* watch)
-        {
-            qDebug() << Q_FUNC_INFO << watch->returnValue().toString();
-            //Clean to avoid memory leak
-            delete watch;
-        }, Qt::QueuedConnection);
-}
-
-void RemoteUtility::start_keepalive(void)
-{
-    connect(keepalive_timer, &QTimer::timeout, this, [this]()
-        {
-            qDebug() << Q_FUNC_INFO << "Sending keepalive";
-            this->ping("ping");
-        });
-    keepalive_timer->start(keepalive_interval);
-}
-
-void RemoteUtility::stop_keepalive(void)
-{
-    keepalive_timer->stop();
-}
-
 bool RemoteUtility::isValid(void)
 {
     return remote_utility->state() == QRemoteObjectReplica::Valid;
@@ -104,21 +74,7 @@ bool RemoteUtility::isValid(void)
 void RemoteUtility::utilityRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState)
 {
     if (state == QRemoteObjectReplica::Valid)
-    {
         qDebug() << "RemoteUtility remote connection established";
-        if (!peerAddress.startsWith("local:"))
-        {
-            start_keepalive();
-            qDebug() << "RemoteUtility keepalive started";
-        }
-    }
     else if (oldState == QRemoteObjectReplica::Valid)
-    {
         qDebug() << "RemoteUtility remote connection lost";
-        if (keepalive_timer->isActive())
-        {
-            stop_keepalive();
-            qDebug() << "RemoteUtility keepalive stopped";
-        }
-    }
 }
