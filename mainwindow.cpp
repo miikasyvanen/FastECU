@@ -254,7 +254,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     QObject::connect(button1, &QPushButton::released, this, [&]()
                      {
                          label1->setText("Closing app, please wait...");
-                         exit(1);
+                         qApp->exit(1);
                      });
 
     //Init may take a long time due to network
@@ -286,6 +286,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     timer->stop();
     splash->close();
     timer->deleteLater();
+    connect(serial, &SerialPortActions::stateChanged,
+            this, &MainWindow::network_state_changed, Qt::DirectConnection);
 
     setSplashScreenProgress("Setting up toolbar...", 10);
     toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
@@ -435,7 +437,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     }
 
     startUpSplash->close();
-    splash->close();
+    splash->deleteLater();
 
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
@@ -508,6 +510,36 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     qDebug() << "Decrypted length:" << decrypted_len;
 
     return challengeReply;
+}
+
+void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState)
+{
+    if (state == QRemoteObjectReplica::Valid)
+    {
+        qDebug() << "Network connection established";
+    }
+    else if (oldState == QRemoteObjectReplica::Valid)
+    {
+        qDebug() << "Network connection lost, reconnecting...";
+        QMessageBox msgBox;
+        msgBox.setText("Network connection lost.");
+        msgBox.setInformativeText("Do you want to restart application and try to connect again?");
+        QPushButton *restartButton = msgBox.addButton(tr("Restart"), QMessageBox::YesRole);
+        QPushButton *quitButton = msgBox.addButton(tr("Quit"), QMessageBox::NoRole);
+        msgBox.addButton(tr("Continue work"), QMessageBox::NoRole);
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setDetailedText("Press Restart to restart application. All your unsaved progress will be lost.\n\n"
+                               "Press Quit to quit application. All your unsaved progress will be lost.\n\n"
+                               "Press Continue work to return to application and save your progress. "
+                               "In this case all ECU operations will be unavailable until you restart application.");
+
+        msgBox.exec();
+
+        if (msgBox.clickedButton() == restartButton)
+            qApp->exit(RESTART_CODE);
+        else if (msgBox.clickedButton() == quitButton)
+            qApp->exit(1);
+    }
 }
 
 void MainWindow::aes_ecb_example()

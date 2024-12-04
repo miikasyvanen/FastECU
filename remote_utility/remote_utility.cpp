@@ -73,6 +73,7 @@ bool RemoteUtility::isValid(void)
 
 void RemoteUtility::utilityRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState)
 {
+    emit stateChanged(state, oldState);
     if (state == QRemoteObjectReplica::Valid)
         qDebug() << "RemoteUtility remote connection established";
     else if (oldState == QRemoteObjectReplica::Valid)

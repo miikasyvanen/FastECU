@@ -25,12 +25,13 @@ public slots:
     void waitForSource(void);
 
 signals:
+    stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
 
 private:
     QString peerAddress;
     RemoteUtilityReplica *remote_utility;
     const QString remoteObjectNameUtility = "FastECU_Utility";
-    const int heartbeatInterval = 5000;
+    const int heartbeatInterval = 1000;
     QWebSocket *webSocket;
     WebSocketIoDevice *socket;
     QRemoteObjectNode node;

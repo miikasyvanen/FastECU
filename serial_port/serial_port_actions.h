@@ -9,6 +9,10 @@
 class SerialPortActions : public QObject
 {
     Q_OBJECT
+
+signals:
+    stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+
 public:
     explicit SerialPortActions(QString peerAddress="", QWebSocket *web_socket=nullptr, QObject *parent=nullptr);
     ~SerialPortActions();

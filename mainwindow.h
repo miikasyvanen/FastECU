@@ -1,6 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+//Exit application with this code to restart it instead of quitting:
+//qApp->exit(RESTART_CODE)
+#define RESTART_CODE 1000
+
 #include <QMainWindow>
 #include <QDebug>
 #include <QTreeWidget>
@@ -387,6 +391,7 @@ private slots:
     //void logger(QString message, bool timestamp, bool linefeed);
     //void sendMsgToLogWindow(QWidget* parent, QString msg);
     void send_message_to_log_window(QString msg);
+    void network_state_changed(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
 
     // logvalues.c
     void change_log_gauge_value(int index);

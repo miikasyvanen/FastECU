@@ -4,7 +4,6 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
     QString addr = "";
     bool debug_console = false;
 
@@ -36,13 +35,22 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    MainWindow w(addr, nullptr);
+    int return_code;
 
-    QScreen *screen = QGuiApplication::primaryScreen();
-    QRect  screenGeometry = screen->geometry();
-    w.move(screenGeometry.center() - w.rect().center());
+    do
+    {
+        QApplication a(argc, argv);
 
-    w.show();
-    //w.showMaximized();
-    return a.exec();
+        MainWindow w(addr, nullptr);
+
+        QScreen *screen = QGuiApplication::primaryScreen();
+        QRect  screenGeometry = screen->geometry();
+        w.move(screenGeometry.center() - w.rect().center());
+
+        w.show();
+
+        return_code = a.exec();
+    } while (return_code == RESTART_CODE);
+
+    return return_code;
 }
