@@ -38,11 +38,14 @@ private:
     QRemoteObjectNode node;
     int keepalive_interval = 10000;
     QTimer *keepalive_timer;
+    int pings_sequently_missed = 0;
+    int pings_sequently_missed_limit = 3;
     void start_keepalive(void);
     void stop_keepalive(void);
     void startRemote(void);
     void startOverNetwok(void);
     void startLocal(void);
+    void send_keepalive(void);
 
 private slots:
     void utilityRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);

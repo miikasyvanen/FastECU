@@ -254,7 +254,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     QObject::connect(button1, &QPushButton::released, this, [&]()
                      {
                          label1->setText("Closing app, please wait...");
-                         qApp->exit(1);
+                         exit(1);
                      });
 
     //Init may take a long time due to network
@@ -287,6 +287,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     splash->close();
     timer->deleteLater();
     connect(serial, &SerialPortActions::stateChanged,
+            this, &MainWindow::network_state_changed, Qt::DirectConnection);
+    connect(remote_utility, &RemoteUtility::stateChanged,
             this, &MainWindow::network_state_changed, Qt::DirectConnection);
 
     setSplashScreenProgress("Setting up toolbar...", 10);

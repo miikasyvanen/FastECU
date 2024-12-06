@@ -73,22 +73,31 @@ void RemoteUtility::ping(QString message)
     QRemoteObjectPendingCallWatcher *watcher =
         new QRemoteObjectPendingCallWatcher(remote_utility->ping(message));
     QObject::connect(watcher, &QRemoteObjectPendingCallWatcher::finished,
-        this, [](QRemoteObjectPendingCallWatcher* watch)
+        this, [this](QRemoteObjectPendingCallWatcher* watch)
         {
-            qDebug() << Q_FUNC_INFO << watch->returnValue().toString();
+            //qDebug() << Q_FUNC_INFO << watch->returnValue().toString();
             //Clean to avoid memory leak
             delete watch;
+            this->pings_sequently_missed = 0;
         }, Qt::QueuedConnection);
 }
 
 void RemoteUtility::start_keepalive(void)
 {
-    connect(keepalive_timer, &QTimer::timeout, this, [this]()
-        {
-            qDebug() << Q_FUNC_INFO << "Sending keepalive";
-            this->ping("ping");
-        });
+    connect(keepalive_timer, &QTimer::timeout, this, &RemoteUtility::send_keepalive);
     keepalive_timer->start(keepalive_interval);
+}
+
+void RemoteUtility::send_keepalive(void)
+{
+    if (pings_sequently_missed == pings_sequently_missed_limit)
+    {
+        qDebug() << "Missed keepalives limit exceeded. Assume the client is disconnected.";
+        emit stateChanged(QRemoteObjectReplica::Suspect, remote_utility->state());
+    }
+
+    ping("ping");
+    pings_sequently_missed++;
 }
 
 void RemoteUtility::stop_keepalive(void)
