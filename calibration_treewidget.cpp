@@ -69,7 +69,7 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationDataTree(QTreeWidget *dataTr
         if (ecuCalDef->RomInfoExpanded == "1")
             topLevelDataTreeItem->setExpanded(true);
 
-        for (int i = 2; i < ecuCalDef->RomInfo.length(); i++)
+        for (int i = 0; i < ecuCalDef->RomInfo.length(); i++)
         {
             QTreeWidgetItem * item = new QTreeWidgetItem();
             item->setText(0, ecuCalDef->RomInfoStrings.at(i) + ": " + ecuCalDef->RomInfo.at(i));

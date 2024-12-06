@@ -34,26 +34,29 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
     serial_port_baudrate = portSpeed;
     baudrate = portSpeed.toInt();
 
+    qDebug() << "Changing baudrate, checking if port is open...";
     if (is_serial_port_open())
     {
+        qDebug() << "Port is open, checking adapter type...";
         if (!use_openport2_adapter)
         {
-            //send_log_window_message("Change serial port '" + serialPort + "' speed to " + portSpeed + " baud", true, true);
+            qDebug() << "Adapter type is generic OBD2...";
+
             if (serial->setBaudRate(serial_port_baudrate.toDouble()))
             {
                 delay(50);
-                qDebug() << "Set baudrate to" << serial_port_baudrate;
+                qDebug() << "Baudrate set to" << serial_port_baudrate;
                 return STATUS_SUCCESS;
             }
             else
             {
-                //qDebug() << "Set baudrate ERROR!";
+                qDebug() << "ERROR setting baudrate!";
                 return STATUS_ERROR;
             }
         }
         else
         {
-            //close_j2534_serial_port();
+            qDebug() << "Adapter type is J2534...";
 
             SCONFIG_LIST scl;
             SCONFIG scp[1] = {{DATA_RATE,0}};
@@ -62,7 +65,7 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
             scl.ConfigPtr = scp;
             if (!j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
             {
-                qDebug() << "Set baudrate to" << baudrate << "OK";
+                qDebug() << "Baudrate set to" << baudrate << "OK";
                 return STATUS_SUCCESS;
             }
             else
@@ -222,7 +225,7 @@ int SerialPortActionsDirect::line_end_check_1_toggled(int state)
         if (use_openport2_adapter)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 12000);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
             delay(17);
 #endif
         }
@@ -257,7 +260,7 @@ int SerialPortActionsDirect::line_end_check_2_toggled(int state)
         if (use_openport2_adapter)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
             delay(17);
 #endif
         }
@@ -359,14 +362,14 @@ QStringList SerialPortActionsDirect::check_j2534_devices(QMap<QString, QString> 
 
 QMap<QString, QString> SerialPortActionsDirect::getAllJ2534DriversNames()
 {
-    QSettings *registry = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\PassThruSupport.04.04", REGISTRY_FORMAT);
+    QSettings registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\PassThruSupport.04.04", REGISTRY_FORMAT);
     QMap<QString, QString> drivers_map;
-    for (const QString &i : registry->childGroups())
+    for (const QString &i : registry.childGroups())
     {
         QString vendor = i;
         //qDebug() << "J2534 Drivers:" << vendor;
         vendor.replace("\\", "/");
-        QString dllName = registry->value(i+"/FunctionLibrary").toString();
+        QString dllName = registry.value(i+"/FunctionLibrary").toString();
         drivers_map[vendor] = dllName;
     }
     qDebug() << "Found installed drivers:" << drivers_map;
@@ -376,9 +379,9 @@ QMap<QString, QString> SerialPortActionsDirect::getAllJ2534DriversNames()
 
 QString SerialPortActionsDirect::open_serial_port()
 {
-    //qDebug() << "Serial port =" << serial_port_list;
+    qDebug() << "Serial port =" << serial_port_list;
     //QString serial_port_text = serial_port_list.at(1);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     serial_port = serial_port_prefix_linux + serial_port_list.at(0);
     serial_port = serial_port.split(" - ").at(0);
 #endif
@@ -392,6 +395,8 @@ QString SerialPortActionsDirect::open_serial_port()
         reset_connection();
         //close_serial_port();
         //use_openport2_adapter = true;
+
+        J2534_is_denso_dsti = serial_port.contains("DST-i");
 
         //QMap<QString, QString> user_j2534_drivers; // Local drivers in software folder
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
@@ -444,10 +449,9 @@ QString SerialPortActionsDirect::open_serial_port()
         //close_serial_port();
 
         serial_port = serial_port.split(" - ").at(0);
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
             //serial_port = serial_port_prefix_linux + serial_port;
-#endif
-#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#elif defined Q_OS_WIN32
             //serial_port = serial_port_prefix_win + serial_port;
 #endif
 
@@ -620,14 +624,14 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
             if (serial->bytesAvailable())
                 received.append(serial->read(1));
         }
-        QTime dieTime = QTime::currentTime().addMSecs(200);
+        QTime dieTime = QTime::currentTime().addMSecs(echo_check_timout);
         //qDebug() << "Data sent:" << parse_message_to_hex(output);
 
         while (received.length() < output.length() && (QTime::currentTime() < dieTime))
         {
             if (serial->bytesAvailable())
             {
-                dieTime = QTime::currentTime().addMSecs(200);
+                dieTime = QTime::currentTime().addMSecs(echo_check_timout);
                 received.append(serial->read(1));
             }
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
@@ -789,7 +793,10 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
 
     rxmsg.DataSize = 0;
     numRxMsg = 1;
-    j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    //j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    //0 means no error, all other values mean error
+    if (j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout))
+        goto exit;
     //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
     if (numRxMsg)
     {
@@ -825,6 +832,7 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
         }
     }
     //qDebug() << "RECEIVED:" << parse_message_to_hex(received);
+    exit:
     return received;
 }
 
@@ -886,13 +894,13 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
     inbuf.infosvcid = 1; // serial
 
     outbuf.length = sizeof(outbuf.data);
-
-    //    if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
-    //    {
-    //        serial[0] = 0;
-    //        return false;
-    //    }
-
+/*
+    if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
+    {
+        serial[0] = 0;
+        return false;
+    }
+*/
     memcpy(serial,outbuf.data,outbuf.length);
     serial[outbuf.length] = 0;
     return true;
@@ -901,7 +909,7 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
 int SerialPortActionsDirect::init_j2534_connection()
 {
 // If Linux, open serial port
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     if (j2534->open_serial_port(serial_port) != serial_port)
         return STATUS_ERROR;
 #endif
@@ -920,7 +928,7 @@ int SerialPortActionsDirect::init_j2534_connection()
     // Open J2534 connection
     if (j2534->PassThruOpen(NULL, &devID))
     {
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         j2534->close_serial_port();
 #endif
         reportJ2534Error();
@@ -949,10 +957,14 @@ int SerialPortActionsDirect::init_j2534_connection()
         return STATUS_ERROR;
     }
 
-    //qDebug() << "J2534 API Version:" << strApiVersion;
-    //qDebug() << "J2534 DLL Version:" << strDllVersion;
-    //qDebug() << "Device Firmware Version:" << strFirmwareVersion;
-    //qDebug() << "Device Serial Number:" << strSerial;
+    strApiVersion[strlen(strApiVersion)-1] = '\0';
+    strDllVersion[strlen(strDllVersion)-1] = '\0';
+    strFirmwareVersion[strlen(strFirmwareVersion)-1] = '\0';
+    strSerial[strlen(strSerial)-1] = '\0';
+    qDebug() << "J2534 API Version:" << strApiVersion;
+    qDebug() << "J2534 DLL Version:" << strDllVersion;
+    qDebug() << "Device Firmware Version:" << strFirmwareVersion;
+    qDebug() << "Device Serial Number:" << strSerial;
 
     // Create J2534 to device connections
     if (is_iso15765_connection)
@@ -1022,8 +1034,12 @@ int SerialPortActionsDirect::set_j2534_can()
         else
             flags = 0;
     }
+    //Denso DST-i hack
+    if (J2534_is_denso_dsti && protocol == ISO15765)
+    {
+        flags = 0;
+    }
     baudrate = can_speed.toUInt();
-
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages
     if (j2534->PassThruConnect(devID, protocol, flags, baudrate, &chanID))
     {
@@ -1032,7 +1048,7 @@ int SerialPortActionsDirect::set_j2534_can()
     }
     else
     {
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         chanID = protocol;
 #endif
         //qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
@@ -1077,8 +1093,8 @@ int SerialPortActionsDirect::set_j2534_can_timings()
 {
     // Set timeouts etc.
     SCONFIG_LIST scl;
-    SCONFIG scp[1] = {{PARITY,0}};
-    scl.NumOfParams = 1;
+    SCONFIG scp[] = {{PARITY,0}, {LOOPBACK, 0}};
+    scl.NumOfParams = ARRAYSIZE(scp);
     scp[0].Value = NO_PARITY;
     scl.ConfigPtr = scp;
     if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
@@ -1101,6 +1117,8 @@ int SerialPortActionsDirect::set_j2534_can_filters()
     PASSTHRU_MSG msgMask, msgPattern, msgFlow;
     unsigned long msgId;
     unsigned long numRxMsg;
+
+    j2534->PassThruIoctl(chanID, CLEAR_MSG_FILTERS, NULL, NULL);
 
     // simply create a "pass all" filter so that we can see
     // everything unfiltered in the raw stream
@@ -1211,6 +1229,25 @@ int SerialPortActionsDirect::set_j2534_iso9141()
     qDebug() << "Protocol:" << protocol;
     //baudrate = 4800;
 
+    if (J2534_is_denso_dsti)
+    {
+        switch (protocol)
+        {
+        case ISO9141:
+            //DST-i does not work well with ISO9141
+            //sometimes it reads by 1 byte
+            //Denso DST-i specific protocol, in fact ISO9141
+            protocol = DSTI_ISO9141;
+            flags = ISO9141_NO_CHECKSUM;
+            baudrate = 10400;
+            break;
+        case ISO14230:
+            flags = ISO9141_K_LINE_ONLY;
+            //baudrate = 10400;
+            break;
+        }
+    }
+
     // use ISO9141_NO_CHECKSUM to disable checksumming on both tx and rx messages
     if (j2534->PassThruConnect(devID, protocol, flags, baudrate, &chanID))
     {
@@ -1221,7 +1258,7 @@ int SerialPortActionsDirect::set_j2534_iso9141()
     {
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
 //qDebug() << "J2534 connected";
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         chanID = protocol;
 #endif
         qDebug() << "Connected:" << devID << protocol << baudrate << chanID;
@@ -1232,25 +1269,59 @@ int SerialPortActionsDirect::set_j2534_iso9141()
 
 int SerialPortActionsDirect::set_j2534_iso9141_timings()
 {
-    // Set timeouts etc.
-    SCONFIG_LIST scl;
-    SCONFIG scp[6] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0}};
-    scl.NumOfParams = 6;
-    scp[0].Value = 0;
-    scp[1].Value = 1;
-    scp[2].Value = 0;
-    scp[3].Value = 0;
-    scp[4].Value = NO_PARITY;
-    scp[5].Value = 25;
-    scl.ConfigPtr = scp;
-    if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
+    if (J2534_is_denso_dsti)
     {
-        reportJ2534Error();
-        return STATUS_ERROR;
+        SCONFIG_LIST scl;
+        SCONFIG scp_dsti_ISO14230[] = {{LOOPBACK,0},{P1_MAX,0xa},{P3_MIN,0x14},{P4_MIN,0},{DATA_RATE,4800}};
+        SCONFIG scp_dsti_DSTI_ISO9141[] = {{DATA_RATE, 4800},  {LOOPBACK, 0},  {P1_MIN, 0},
+                                           {P1_MAX, 4},        {P2_MIN, 4},    {P2_MAX, 0x14},
+                                           {P3_MIN, 0x14},     {P3_MAX, 10000},{P4_MIN, 0},
+                                           {P4_MAX, 0x14}};
+
+        clear_tx_buffer();
+        clear_rx_buffer();
+
+        switch (protocol)
+        {
+        case ISO14230:
+            scl.ConfigPtr = scp_dsti_ISO14230;
+            scl.NumOfParams = ARRAYSIZE(scp_dsti_ISO14230);
+            break;
+        case DSTI_ISO9141:
+            scl.ConfigPtr = scp_dsti_DSTI_ISO9141;
+            scl.NumOfParams = ARRAYSIZE(scp_dsti_DSTI_ISO9141);
+            break;
+        }
+
+        if (j2534->PassThruIoctl(chanID, SET_CONFIG, &scl, NULL))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+
     }
     else
     {
-        //qDebug() << "Set timings OK";
+        // Set timeouts etc.
+        SCONFIG_LIST scl;
+        SCONFIG scp[6] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0}};
+        scl.NumOfParams = 6;
+        scp[0].Value = 0;
+        scp[1].Value = 1;
+        scp[2].Value = 0;
+        scp[3].Value = 0;
+        scp[4].Value = NO_PARITY;
+        scp[5].Value = 25;
+        scl.ConfigPtr = scp;
+        if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+        else
+        {
+            //qDebug() << "Set timings OK";
+        }
     }
 
     return STATUS_SUCCESS;
@@ -1274,8 +1345,8 @@ int SerialPortActionsDirect::set_j2534_iso9141_filters()
     txmsg.DataSize = 4;
     txmsg.ExtraDataIndex = 0;
     msgMask = msgPattern = txmsg;
-    memset(msgMask.Data, 0, 4); // mask the first 4 byte to 0
-    memset(msgPattern.Data, 0, 4);// match it with 0 (i.e. pass everything)
+    memset(msgMask.Data, 0, txmsg.DataSize); // mask the first 4 byte to 0
+    memset(msgPattern.Data, 0, txmsg.DataSize);// match it with 0 (i.e. pass everything)
     if (j2534->PassThruStartMsgFilter(chanID, PASS_FILTER, &msgMask, &msgPattern, NULL, &msgId))
     {
         reportJ2534Error();

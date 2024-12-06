@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include "j2534_win.h"
+#include "J2534_win.h"
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
 #else
 #include <dlfcn.h>
@@ -663,9 +663,9 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
     case READ_PROG_VOLTAGE:
         strcpy(IoctlName,"READ_PROG_VOLTAGE");
         break;
-//	case TX_IOCTL_APP_SERVICE:
-//		strcpy(IoctlName,"APP_SERVICE");
-//		break;
+//    case TX_IOCTL_APP_SERVICE:
+//        strcpy(IoctlName,"APP_SERVICE");
+//        break;
     default:
         sprintf(IoctlName,"%lu(unknown)",IoctlID);
         break;
@@ -682,12 +682,13 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         for (i = 0; i < scl->NumOfParams; i++)
             dump_sconfig_param((scl->ConfigPtr)[i]);
 
-        for (i = 0; i < scl->NumOfParams; i++)
+        //Enabling this could break some J2534 devices such as Denso DST-i
+        /*for (i = 0; i < scl->NumOfParams; i++)
             if (!is_valid_sconfig_param((scl->ConfigPtr)[i]))
             {
                 DBGPRINT(("param not allowed - not passing through and instead faking success\n",result));
                 return STATUS_NOERROR;
-            }
+            }*/
     }
 
     if (input_as_sa)

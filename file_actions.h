@@ -3,6 +3,9 @@
 
 #include <QApplication>
 #include <QWidget>
+#include <QScreen>
+//#include <QDesktopWidget>
+#include <QWidget>
 #include <QFileDialog>
 #include <QDomDocument>
 #include <QXmlStreamReader>
@@ -16,20 +19,28 @@
 #include <QDateTime>
 #include <QDirIterator>
 #include <QPushButton>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QRadioButton>
+#include <QComboBox>
+#include <QDialogButtonBox>
+#include <QLineEdit>
+#include <QTextEdit>
 
 #include <string.h>
 #include <iostream>
 #include <math.h>
 
-#include "modules/checksum_ecu_subaru_denso_sh705x_diesel.h"
-#include "modules/checksum_ecu_subaru_denso_sh7xxx.h"
-#include "modules/checksum_ecu_subaru_hitachi_m32r.h"
-#include "modules/checksum_ecu_subaru_hitachi_sh7058.h"
-#include "modules/checksum_ecu_subaru_hitachi_sh72543r.h"
+#include "modules/checksum/checksum_ecu_subaru_denso_sh705x_diesel.h"
+#include "modules/checksum/checksum_ecu_subaru_denso_sh7xxx.h"
+#include "modules/checksum/checksum_ecu_subaru_hitachi_m32r_kline.h"
+#include "modules/checksum/checksum_ecu_subaru_hitachi_m32r_can.h"
+#include "modules/checksum/checksum_ecu_subaru_hitachi_sh7058.h"
+#include "modules/checksum/checksum_ecu_subaru_hitachi_sh72543r.h"
 
-#include "modules/checksum_tcu_subaru_denso_sh7055.h"
-#include "modules/checksum_tcu_subaru_hitachi_m32r_can.h"
-#include "modules/checksum_tcu_mitsu_mh8104_can.h"
+#include "modules/checksum/checksum_tcu_subaru_denso_sh7055.h"
+#include "modules/checksum/checksum_tcu_subaru_hitachi_m32r_can.h"
+#include "modules/checksum/checksum_tcu_mitsu_mh8104_can.h"
 
 #include <kernelmemorymodels.h>
 
@@ -47,7 +58,7 @@ class FileActions : public QWidget
     Q_OBJECT
 
 public:
-    FileActions();
+    FileActions(QWidget *parent = nullptr);
 
     uint8_t float_precision = 15;
     int def_map_index = 0;
@@ -56,7 +67,7 @@ public:
     struct ConfigValuesStructure {
         QString software_name = "FastECU";
         QString software_title = "FastECU";
-        QString software_version = "0.0-dev0";
+        QString software_version = "0.1.0-beta.2";
 
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
@@ -65,9 +76,9 @@ public:
         QString window_height = "default";
         QString toolbar_iconsize = "32";
 
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
         QString app_base_config_directory = QDir::homePath() + "/.config/FastECU/";
-#elif defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#elif defined Q_OS_WIN32
         QString app_base_config_directory = QDir::homePath() + "/AppData/Local/FastECU/";
 #endif
         QString base_config_directory = app_base_config_directory;
@@ -75,7 +86,8 @@ public:
         QString config_files_base_directory = base_config_directory + software_version + "/config/";
         QString definition_files_base_directory = base_config_directory + software_version + "/definitions/";
         QString kernel_files_base_directory = base_config_directory + software_version + "/kernels/";
-        QString datalog_files_base_directory = base_config_directory + software_version + "/logs/";
+        QString datalog_files_base_directory = base_config_directory + software_version + "/datalogs/";
+        QString syslog_files_base_directory = base_config_directory + software_version + "/syslogs/";
 
         QString version_config_directory;
         QString calibration_files_directory;
@@ -83,6 +95,7 @@ public:
         QString definition_files_directory;
         QString kernel_files_directory;
         QString datalog_files_directory;
+        QString syslog_files_directory;
 
         QString config_file = "fastecu.cfg";
         QString menu_file = "menu.cfg";
@@ -96,8 +109,8 @@ public:
         QString kernel_files;
 
         QString use_romraider_definitions = "disabled";
-        QString use_ecuflash_definitions = "disbled";
-        QString primary_definition_base;
+        QString use_ecuflash_definitions = "disabled";
+        QString primary_definition_base = "ecuflash";
 
         QStringList ecuflash_def_cal_id;
         QStringList ecuflash_def_cal_id_addr;
@@ -109,6 +122,7 @@ public:
         QStringList romraider_def_filename;
 
         QStringList flash_protocol_id;
+        QStringList flash_protocol_alias;
         QStringList flash_protocol_make;
         QStringList flash_protocol_model;
         QStringList flash_protocol_version;
@@ -346,41 +360,79 @@ public:
         bool use_ecuflash_definition;
 
         QStringList RomInfoStrings = {
-            "XmlId",
-            "InternalIdAddress",
+            "XML ID",
+            "Internal ID Address",
+            "Internal ID String",
+            "ECU ID",
             "Make",
+            "Market",
             "Model",
             "Submodel",
-            "Market",
             "Transmission",
             "Year",
-            "ECU ID",
-            "Internal ID",
+            "Flash Method",
             "Memory Model",
             "Checksum Module",
             "Rom Base",
-            "Flash Method",
             "File Size",
             "Def File",
-    /*
-            "XmlId",
-            "InternalIdAddress",
+        };
+
+        QStringList RomInfoNames = {
+            "xmlid",
+            "internalidaddress",
+            "internalidstring",
+            "ecuid",
+            "make",
+            "market",
+            "model",
+            "submodel",
+            "transmission",
+            "year",
+            "flashmethod",
+            "memmodel",
+            "checksummodule",
+            "rombase",
+            "filesize",
+            "deffile",
+        };
+
+        QStringList DefHeaderStrings = {
+            "XML ID",
+            "Internal ID Address",
+            "Internal ID String",
+            "ECU ID",
             "Make",
-            "Model",
-            "SubModel",
             "Market",
+            "Model",
+            "Submodel",
             "Transmission",
             "Year",
-            "EcuId",
-            "InternalIdString",
-            "MemModel",
-            "ChecksumModule",
-            "RomBase",
-            "FlashMethod",
-            "FileSize",
-            "DefFile",
-    */
+            "Flash Method",
+            "Memory Model",
+            "Checksum Module",
+            "Include",
+            "Notes",
         };
+
+        QStringList DefHeaderNames = {
+            "xmlid",
+            "internalidaddress",
+            "internalidstring",
+            "ecuid",
+            "make",
+            "market",
+            "model",
+            "submodel",
+            "transmission",
+            "year",
+            "flashmethod",
+            "memmodel",
+            "checksummodule",
+            "include",
+            "notes",
+        };
+
     } EcuCalDefStruct;
 
     //EcuCalDefStructure *ecuCalDefTemp;
@@ -388,18 +440,18 @@ public:
     enum RomInfoEnum {
         XmlId,
         InternalIdAddress,
+        InternalIdString,
+        EcuId,
         Make,
+        Market,
         Model,
         SubModel,
-        Market,
         Transmission,
         Year,
-        EcuId,
-        InternalIdString,
+        FlashMethod,
         MemModel,
         ChecksumModule,
         RomBase,
-        FlashMethod,
         FileSize,
         DefFile,
     };
@@ -465,6 +517,9 @@ public:
     EcuCalDefStructure *parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii);
     EcuCalDefStructure *parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii);
 
+    EcuCalDefStructure *create_new_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef);
+    EcuCalDefStructure *use_existing_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef);
+
     /***********************************************
      * Open ECU ROM file, including possible
      * checksum calculations and value conversions
@@ -499,6 +554,13 @@ public:
      * Calculate ROM map data with parsed expressions
      *************************************************/
     double calculate_value_from_expression(QStringList expression);
+
+signals:
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
+
 
 };
 

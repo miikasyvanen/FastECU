@@ -33,20 +33,20 @@ QString J2534::open_serial_port(QString serial_port)
                 connect(serial, SIGNAL(errorOccurred(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
                 //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
-                //qDebug() << "Linux j2534 serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
+                qDebug() << "Linux j2534 serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate;
                 return opened_serial_port;
             }
             else
             {
                 //SendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
-                //qDebug() << "Couldn't open Linux j2534 serial port '" + serial_port + "'";
+                qDebug() << "Couldn't open Linux j2534 serial port '" + serial_port + "'";
                 return NULL;
             }
 
         }
         else{
             //SendLogWindowMessage("Serial port '" + serialPort + "' is already opened", true, true);
-            //qDebug() << "Serial port Linux j2534 '" + serial_port + "' is already opened";
+            qDebug() << "Linux j2534 serial port '" + serial_port + "' is already opened";
             return opened_serial_port;
         }
     }
@@ -76,7 +76,6 @@ QByteArray J2534::read_serial_data(uint32_t datalen, uint16_t timeout)
 
     ReceivedData.clear();
 
-    //timeout *= 1000;
     if (serial->isOpen())
     {
         QTime dieTime = QTime::currentTime().addMSecs(timeout);
@@ -89,7 +88,7 @@ QByteArray J2534::read_serial_data(uint32_t datalen, uint16_t timeout)
             }
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         }
-        //qDebug() << "j2534 read_serial_data:" << parseMessageToHex(ReceivedData);
+        //qDebug() << "Read J2534 msg:" << parseMessageToHex(ReceivedData);
     }
 
     return ReceivedData;
@@ -103,16 +102,13 @@ int J2534::write_serial_data(QByteArray output)
 
     if (serial->isOpen())
     {
-        //qDebug() << "Send J2534:" << output << "|" << parseMessageToHex(output);
-        //qDebug() << "Send J2534:" << parseMessageToHex(output);
+        //qDebug() << "Send J2534 msg:" << parseMessageToHex(output);
         for (int i = 0; i < output.length(); i++)
         {
             msg.clear();
             msg.append(output.at(i));
             serial->write(msg, 1);
         }
-        //serial->write(output);
-        //qDebug() << "J2534 message sent";
 
         return result;
     }
@@ -171,17 +167,17 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     qDebug() << "Open J2534 device" << pName << "with ID:" << pDeviceID;
 
     output = "ata\r\n";
-    //qDebug() << "Send data:" << output;
+    qDebug() << "Send data:" << parseMessageToHex(output);
     write_serial_data(output);
     received = read_serial_data(7, 50);
-    qDebug() << "Result check against: " + check_result;
+    qDebug() << "Result check against " + check_result + ": " + parseMessageToHex(received);
     if (received.startsWith(check_result))
     {
         qDebug() << "Result check OK";
         result = STATUS_NOERROR;
     }
-    qDebug() << "Result check failed, not maybe an j2534 interface!";
-    //qDebug() << "Received:" << parseMessageToHex(received);
+    else
+        qDebug() << "Result check failed, not maybe an j2534 interface!";
 
     return result;
 }
@@ -266,6 +262,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
     QByteArray msg;
     long result = STATUS_NOERROR;
     unsigned long msg_cnt = 0;
+    unsigned long chunk_cnt = 0;
     uint8_t msg_type = 0;
     uint32_t msg_index = 0;
     QString msg_type_string = 0;
@@ -435,8 +432,9 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
 
                     msg_index = 0;
                     msg_cnt++;
+                    chunk_cnt = 0;
 
-                    //qDebug() << "NORM_MSG_START_IND" << parseMessageToHex(received);
+                    //qDebug() << "NORM_MSG_START_IND:" << parseMessageToHex(received);
                     received.clear();
                 }
                 if (msg_type == NORM_MSG || msg_type == START_OF_MESSAGE)
@@ -444,19 +442,29 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->RxStatus = NORM_MSG;
 
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
-                    //qDebug() << "NORM_MSG" << parseMessageToHex(received) << received;
-                    ////qDebug() << msg_byte_cnt << "MSG:" << parseMessageToHex(received);
-                    //qDebug() << parseMessageToHex(received);
-                    if (received.at(2) == '5' || received.at(2) == '6')
-                        msg_byte_cnt -= 4;
+                    //qDebug() << "NORM_MSG:" << parseMessageToHex(received);
 
+                    //qDebug() << "msg_byte_cnt:" << msg_byte_cnt;
+                    if (received.at(2) == '5' || received.at(2) == '6')
+                    {
+                        msg_byte_cnt -= 4;
+                        if (chunk_cnt)
+                            msg_byte_cnt -= 4;
+                    }
+                    //qDebug() << "msg_byte_cnt:" << msg_byte_cnt;
                     for (unsigned long i = 0; i < msg_byte_cnt; i++)
                     {
                         if (received.at(2) == '3' || received.at(2) == '4')
                             pMsg->Data[msg_index++] = (uint8_t)received.at(i + 5);
                         if (received.at(2) == '5' || received.at(2) == '6')
-                            pMsg->Data[msg_index++] = (uint8_t)received.at(i + 9);
+                        {
+                            if (chunk_cnt)
+                                pMsg->Data[msg_index++] = (uint8_t)received.at(i + 13);
+                            else
+                                pMsg->Data[msg_index++] = (uint8_t)received.at(i + 9);
+                        }
                     }
+                    chunk_cnt++;
 
                     if (received.at(2) == '5')
                     {
@@ -477,12 +485,20 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->RxStatus = RX_MSG_END_IND;
 
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
+                    //qDebug() << "RX_MSG_END_IND:" << parseMessageToHex(received);
 
                     if (received.at(2) == '6')
                     {
                         msg_byte_cnt -= 4;
+                        if (chunk_cnt)
+                            msg_byte_cnt -= 4;
                         for (unsigned long i = 0; i < msg_byte_cnt; i++)
-                            pMsg->Data[msg_index++] = (uint8_t)received.at(i + 9);
+                        {
+                            if (chunk_cnt)
+                                pMsg->Data[msg_index++] = (uint8_t)received.at(i + 13);
+                            else
+                                pMsg->Data[msg_index++] = (uint8_t)received.at(i + 9);
+                        }
                     }
                     char data[4];
                     data[0] = (uint8_t)received.at(8);
@@ -493,7 +509,6 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->DataSize = msg_index;
                     msg_cnt++;
 
-                    //qDebug() << "RX_MSG_END_IND" << parseMessageToHex(received);
                     received.clear();
                     stop_reading = true;
                 }
@@ -501,7 +516,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
         }
         if (!stop_reading)
         {
-            QByteArray response = read_serial_data(3, 50);
+            QByteArray response = read_serial_data(3, Timeout);
 
             if (response.length() > 0)
                 received.append(response);
@@ -645,18 +660,25 @@ long J2534::PassThruReadVersion(char *pApiVersion,char *pDllVersion,char *pFirmw
 {
     QByteArray output;
     QByteArray received;
-    const char *fw_version = "main code version : 1.17.4877";
+    const char *fw_version = "Main code version: 1.17.4877";
     long result = STATUS_NOERROR;
 
     strncpy(pApiVersion, API_VERSION, strlen(API_VERSION));
     strncpy(pDllVersion, DLL_VERSION, strlen(DLL_VERSION));
-    strncpy(pFirmwareVersion, fw_version, strlen(fw_version));
+    //strncpy(pFirmwareVersion, fw_version, strlen(fw_version));
 
     output = "\r\n\r\nati\r\n";
     //qDebug() << "Send data:" << output;
     write_serial_data(output);
-    received = read_serial_data(100, 50);
-    //qDebug() << "Received:" << received;
+    delay(50);
+    received = read_serial_data(50, 100);
+    QString response = QString::fromUtf8(received);
+    QStringList fw_ver = response.split("ari ");
+    fw_ver = fw_ver.at(fw_ver.length()-1).split("\r\n");
+    std::string fw_ver_str = fw_ver.at(0).toUtf8().data();
+    char *str = fw_ver.at(0).toUtf8().data();
+    strncpy(pFirmwareVersion, str, strlen(str));
+    //qDebug() << "Read version received:" << fw_ver.at(0);
 
     return result;
 }
@@ -920,6 +942,10 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         break;
     }
 
+    if (IoctlID == GET_CONFIG)
+    {
+
+    }
     if (IoctlID == SET_CONFIG)
     {
         pOutput = NULL; // make some DLLs happy
@@ -929,12 +955,13 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         for (i = 0; i < scl->NumOfParams; i++)
             dump_sconfig_param((scl->ConfigPtr)[i]);
 
-        for (i = 0; i < scl->NumOfParams; i++)
+        //Enabling this could break some J2534 devices such as Denso DST-i
+        /*for (i = 0; i < scl->NumOfParams; i++)
             if (!is_valid_sconfig_param((scl->ConfigPtr)[i]))
             {
                 //qDebug() << "param not allowed - not passing through and instead faking success" << result;
                 return STATUS_NOERROR;
-            }
+            }*/
 
         SCONFIG *cfgitem;
         par_cnt = scl->NumOfParams;
@@ -951,6 +978,17 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
             //r = usb_send_expect(data, strlen(data), MAX_LEN, 2000, NULL);
         }
 
+    }
+    if (IoctlID == READ_VBATT)
+    {
+        long* vBatt = (long*)pOutput;
+        long pin = 16;
+        output.clear();
+        QString str = "atr " + QString::number((int)pin) + "\r\n";
+        write_serial_data(output);
+        delay(50);
+        received = read_serial_data(100, 50);
+        qDebug() << "Pin 16 voltage =" << received << parseMessageToHex(received);
     }
 
     if (IoctlID == FAST_INIT)

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>config/fastecu.cfg</file>
+        <file>config/logger.cfg</file>
+        <file>config/menu.cfg</file>
+        <file>config/protocols.cfg</file>
+    </qresource>
+</RCC>

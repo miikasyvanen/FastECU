@@ -1,6 +1,7 @@
 #include "file_actions.h"
 
-FileActions::FileActions()
+FileActions::FileActions(QWidget *parent)
+    : QWidget(parent)
 {
 
 }
@@ -13,9 +14,14 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     QStringList isDevPath = currentPath.absolutePath().split("build");
     bool isDevFile = false;
 
-#ifdef Q_OS_LINUX
     QString AppFilePath = QApplication::applicationFilePath();
+#if defined Q_OS_UNIX
     QString AppRootPath = AppFilePath.split("usr").at(0);
+    if (AppRootPath.contains("FastECU"))
+        AppRootPath = "/config";
+#elif defined Q_OS_WIN32
+    QString AppRootPath = currentPath.absolutePath();
+#endif
     QString filename;
     QDirIterator it(AppRootPath, QStringList() << "*.*", QDir::Files, QDirIterator::Subdirectories);
 
@@ -28,7 +34,6 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         qDebug() << "Files in AppImage:" << filename;
     }
 */
-#endif
 
     qDebug() << "APP DIRECTORY:" << currentPath.absolutePath();
     if(QFileInfo::exists("./build.txt"))
@@ -47,6 +52,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         configValues->definition_files_directory = configValues->base_config_directory + "/definitions/";
         configValues->kernel_files_directory = configValues->base_config_directory + "/kernels/";
         configValues->datalog_files_directory = configValues->base_config_directory + "/datalogs/";
+        configValues->syslog_files_directory = configValues->base_config_directory + "/syslogs/";
         configValues->config_file = configValues->config_files_directory + "fastecu.cfg";
         configValues->menu_file = configValues->config_files_directory + "menu.cfg";
         configValues->protocols_file = configValues->config_files_directory + "protocols.cfg";
@@ -62,12 +68,13 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         configValues->definition_files_directory = configValues->base_config_directory + configValues->software_version + "/definitions/";
         configValues->kernel_files_directory = configValues->base_config_directory + configValues->software_version + "/kernels/";
         configValues->datalog_files_directory = configValues->base_config_directory + configValues->software_version + "/datalogs/";
+        configValues->syslog_files_directory = configValues->base_config_directory + configValues->software_version + "/syslogs/";
         configValues->config_file = configValues->config_files_directory + "fastecu.cfg";
         configValues->menu_file = configValues->config_files_directory + "menu.cfg";
         configValues->protocols_file = configValues->config_files_directory + "protocols.cfg";
         configValues->logger_file = configValues->config_files_directory + "logger.cfg";
-        copyConfigFromDirectory.setPath("./config");
-        copyKernelsFromDirectory.setPath("./kernels");
+        copyConfigFromDirectory.setPath(AppRootPath + "./config");
+        copyKernelsFromDirectory.setPath(AppRootPath + "./kernels");
     }
 
     qDebug() << copyConfigFromDirectory.absolutePath();
@@ -114,17 +121,17 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         QFile configFile(latest_config_dir + "/config/fastecu.cfg");
         configFile.copy(configValues->config_files_directory + "fastecu.cfg");
     }
-
-    // If rest of config files doesn't exist, copy them
-    foreach (const QFileInfo& entry, copyConfigFromDirectory.entryInfoList((QStringList() << "*.*", QDir::Files))){
-        qDebug() << "Check file" << entry.fileName();
-        if(!QFileInfo::exists(configValues->config_files_directory + entry.fileName()))
+    QDirIterator configs(":/config/", QDirIterator::Subdirectories);
+    while (configs.hasNext()) {
+        qDebug() << "Check file" << configs.next();
+        if(!QFileInfo::exists(configValues->config_files_directory + configs.fileName()))
         {
-            qDebug() << "File" << entry.fileName() << "doesn't exists, copy file...";
-            QFile().copy(copyConfigFromDirectory.absolutePath() + "/" + entry.fileName(), configValues->config_files_directory + entry.fileName());
+            qDebug() << "File" << configs.fileName() << "doesn't exists, copy file...";
+            QFile::copy(":/config/" + configs.fileName(), configValues->config_files_directory + configs.fileName());
+            QFile file(configValues->config_files_directory + configs.fileName());
+            file.setPermissions(QFile::ReadUser | QFile::WriteUser);
         }
     }
-
     // Check if fastecu definition files directory exists
     if (!QDir(configValues->definition_files_directory).exists()){
         QDir().mkdir(configValues->definition_files_directory);
@@ -134,14 +141,15 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     if (!QDir(configValues->kernel_files_directory).exists()){
         QDir().mkdir(configValues->kernel_files_directory);
     }
-
-    // If kernel files doesn't exist, copy them
-    foreach (const QFileInfo& entry, copyKernelsFromDirectory.entryInfoList((QStringList() << "*.*", QDir::Files))){
-        qDebug() << "Check file" << entry.fileName();
-        if(!QFileInfo::exists(configValues->kernel_files_directory + entry.fileName()))
+    QDirIterator kernels(":/kernels/", QDirIterator::Subdirectories);
+    while (kernels.hasNext()) {
+        qDebug() << "Check file" << kernels.next();
+        if(!QFileInfo::exists(configValues->kernel_files_directory + kernels.fileName()))
         {
-            qDebug() << "File" << entry.fileName() << "doesn't exists, copy file...";
-            QFile().copy(copyKernelsFromDirectory.absolutePath() + "/" + entry.fileName(), configValues->kernel_files_directory + entry.fileName());
+            qDebug() << "File" << kernels.fileName() << "doesn't exists, copy file...";
+            QFile::copy(":/kernels/" + kernels.fileName(), configValues->kernel_files_directory + kernels.fileName());
+            QFile file(configValues->kernel_files_directory + kernels.fileName());
+            file.setPermissions(QFile::ReadUser | QFile::WriteUser);
         }
     }
 
@@ -150,6 +158,10 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         QDir().mkdir(configValues->datalog_files_directory);
     }
 
+    // Check if fastecu syslog files directory exists
+    if (!QDir(configValues->syslog_files_directory).exists()){
+        QDir().mkdir(configValues->syslog_files_directory);
+    }
 
     return configValues;
 }
@@ -194,12 +206,11 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
     //ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QDomDocument xmlBOM;
-    //QFile file(configValues->config_base_directory + "/fastecu.cfg");
     QFile file(configValues->config_file);
     qDebug() << "Looking config file from:" << configValues->config_file;
     if (!file.open(QIODevice::ReadOnly ))
     {
-        QMessageBox::warning(this, tr("Config file"), "Unable to open application config file for reading");
+        QMessageBox::warning(this, tr("Config file"), "Unable to open application config file '" + file.fileName() + "' for reading");
         return configValues;
     }
 
@@ -325,7 +336,9 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             {
                                 if (reader.name().toUtf8() == "value")
                                 {
-                                    configValues->primary_definition_base = reader.attributes().value("data").toString();
+                                    QString primary_definition_base = reader.attributes().value("data").toString();
+                                    if (primary_definition_base == "romraider" || primary_definition_base == "ecuflash")
+                                        configValues->primary_definition_base = primary_definition_base;
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -481,7 +494,7 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
 
     QFile file(configValues->config_file);
     if (!file.open(QIODevice::ReadWrite)) {
-        QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
+        QMessageBox::warning(this, tr("Config file"), "Unable to open config file '" + file.fileName() + "' for writing");
         return 0;
     }
 
@@ -640,6 +653,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
     QString filename = configValues->protocols_file;
 
     QStringList flash_protocol_name;
+    QStringList flash_protocol_alias;
     QStringList flash_protocol_ecu;
     QStringList flash_protocol_mcu;
     QStringList flash_protocol_mode;
@@ -663,7 +677,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
 
     QFile file(filename);
     if(!file.open(QFile::ReadWrite | QFile::Text)) {
-        QMessageBox::warning(this, tr("Protocols file"), "Unable to open protocols file for reading");
+        QMessageBox::warning(this, tr("Protocols file"), "Unable to open protocols file '" + file.fileName() + "' for reading");
         return NULL;
     }
     xmlBOM.setContent(&file);
@@ -689,6 +703,8 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                         //qDebug() << "Protocol";
                         flash_protocol_name.append(" ");
                         flash_protocol_name.replace(index, protocol.attribute("name","No name"));
+                        flash_protocol_alias.append(" ");
+                        flash_protocol_alias.replace(index, protocol.attribute("alias","No alias"));
 
                         flash_protocol_ecu.append(" ");
                         flash_protocol_mcu.append(" ");
@@ -776,6 +792,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                     {
                         //qDebug() << "Add new vehicle";
                         configValues->flash_protocol_id.append(QString::number(id));//car_model.attribute("id","No id"));
+                        configValues->flash_protocol_alias.append(" ");
                         configValues->flash_protocol_make.append(" ");
                         configValues->flash_protocol_model.append(" ");
                         configValues->flash_protocol_version.append(" ");
@@ -833,6 +850,7 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
                                 {
                                     if (flash_protocol_protocol_name.at(i) == configValues->flash_protocol_protocol_name.at(index))
                                     {
+                                        configValues->flash_protocol_alias.replace(index, flash_protocol_alias.at(i));
                                         configValues->flash_protocol_ecu.replace(index, flash_protocol_ecu.at(i));
                                         configValues->flash_protocol_mcu.replace(index, flash_protocol_mcu.at(i));
                                         configValues->flash_protocol_mode.replace(index, flash_protocol_mode.at(i));
@@ -870,11 +888,6 @@ FileActions::ConfigValuesStructure *FileActions::read_protocols_file(FileActions
         }
     }
 
-
-
-
-
-
     return configValues;
 }
 
@@ -886,9 +899,11 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
 
     QString filename = configValues->logger_file;
 
+    qDebug() << "Looking for ECU ID:" << ecu_id << "in logger def file:" << configValues->logger_file;
+
     QFile file(filename);
     if(!file.open(QFile::ReadWrite | QFile::Text)) {
-        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger config file for reading");
+        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger config file '" + file.fileName() + "' for reading");
         return NULL;
     }
     xmlBOM.setContent(&file);
@@ -947,7 +962,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                                                         if (!modify)
                                                             logValues->dashboard_log_value_id.append(gauges.attribute("id","No id"));
                                                         else
-                                                            gauges.attribute("id", logValues->dashboard_log_value_id.at(index));
+                                                            gauges.setAttribute("id", logValues->dashboard_log_value_id.at(index));
                                                     }
                                                     gauges = gauges.nextSibling().toElement();
                                                     index++;
@@ -990,7 +1005,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                                                 if (!modify)
                                                     logValues->lower_panel_switch_id.append(switches.attribute("id","No id"));
                                                 else
-                                                    switches.attribute("id", logValues->lower_panel_switch_id.at(index));
+                                                    switches.setAttribute("id", logValues->lower_panel_switch_id.at(index));
                                             }
                                             switches = switches.nextSibling().toElement();
                                             index++;
@@ -1008,26 +1023,33 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
         }
         if (!ecu_id_found)
         {
-            file.resize(0);
-
+            if (!logValues->log_value_protocol.length())
+            {
+                QMessageBox::warning(this, tr("Logger definition file"), "No logger definition file selected, returning without initializing log parameters!");
+                qDebug() << "No logger definition file selected, returning without initializing log parameters!";
+                return 0;
+            }
             qDebug() << "ECU ID not found, initializing log parameters";
             logValues->logging_values_protocol = logValues->log_value_protocol.at(0);
+            qDebug() << "Initializing gauge parameters";
             for (int i = 0; i < logValues->log_value_id.length(); i++)
             {
                 if (logValues->log_value_enabled.at(i) == "1" && logValues->dashboard_log_value_id.length() < 15)
                     logValues->dashboard_log_value_id.append(logValues->log_value_id.at(i));
             }
+            qDebug() << "Initializing lower panel parameters";
             for (int i = 0; i < logValues->log_value_id.length(); i++)
             {
                 if (logValues->log_value_enabled.at(i) == "1" && logValues->lower_panel_log_value_id.length() < 12)
                 logValues->lower_panel_log_value_id.append(logValues->log_value_id.at(i));
             }
+            qDebug() << "Initializing switch parameters";
             for (int i = 0; i < logValues->log_switch_id.length(); i++)
             {
                 if (logValues->log_switch_enabled.at(i) == "1" && logValues->lower_panel_switch_id.length() < 20)
                 logValues->lower_panel_switch_id.append(logValues->log_switch_id.at(i));
             }
-            //qDebug() << "Values initialized, creating xml data";
+            qDebug() << "Values initialized, creating xml data";
             //save_logger_conf(logValues, ecu_id);
             QDomElement ecu = xmlBOM.createElement("ecu");
             ecu.setAttribute("id", ecu_id);
@@ -1065,8 +1087,9 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
                 parameter.setAttribute("name", "");
             }
             //qDebug() << "Saving log parameters";
+            file.resize(0);
             QTextStream output(&file);
-            output << xmlBOM.toString();
+            xmlBOM.save(output, 4);
             file.close();
         }
     }
@@ -1081,14 +1104,14 @@ FileActions::LogValuesStructure *FileActions::read_logger_conf(FileActions::LogV
 
     return logValues;
 }
-
+/*
 void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, QString ecu_id)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QFile file(configValues->logger_file);
     if (!file.open(QIODevice::ReadWrite)) {
-        QMessageBox::warning(this, tr("Config file"), "Unable to open config file for writing");
+        QMessageBox::warning(this, tr("Config file"), "Unable to open logger config file '" + file.fileName() + "' for writing");
         return 0;
     }
     QXmlStreamReader reader;
@@ -1101,6 +1124,7 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
     stream.writeStartElement("config");
     stream.writeAttribute("name", configValues->software_title);
     stream.writeAttribute("version", configValues->software_version);
+    qDebug() << "Software version:" << configValues->software_version;
     stream.writeStartElement("logger");
     stream.writeStartElement("ecu");
     stream.writeAttribute("id", ecu_id);
@@ -1142,7 +1166,7 @@ void *FileActions::save_logger_conf(FileActions::LogValuesStructure *logValues, 
 
     return 0;
 }
-
+*/
 FileActions::LogValuesStructure *FileActions::read_logger_definition_file()
 {
     LogValuesStructure *logValues = &LogValuesStruct;
@@ -1155,7 +1179,7 @@ FileActions::LogValuesStructure *FileActions::read_logger_definition_file()
     //qDebug() << "Logger filename =" << filename;
     QFile file(filename);
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger definition file for reading");
+        QMessageBox::warning(this, tr("Logger file"), "Unable to open logger definition file '" + file.fileName() + "' for reading");
         return logValues;
     }
     xmlBOM.setContent(&file);
@@ -1359,7 +1383,7 @@ QSignalMapper *FileActions::read_menu_file(QMenuBar *menubar, QToolBar *toolBar)
     if (!file.open(QIODevice::ReadOnly ))
     {
         // Error while loading file
-        QMessageBox::warning(this, tr("Ecu menu file"), "Unable to open ecu menu file");
+        QMessageBox::warning(this, tr("Ecu menu file"), "Unable to open menu config file '" + file.fileName() + "' for reading");
         return mapper;
     }
     // Set data into the QDomDocument before processing
@@ -1646,6 +1670,360 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(Fi
     return ecuCalDef;
 }
 
+FileActions::EcuCalDefStructure *FileActions::create_new_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString filename;
+    QFileDialog saveDialog;
+    bool isFileSelected = false;
+
+    QDialog *definitionDialog = new QDialog(this);
+    QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+    QLabel *label = new QLabel("Please provide ROM Information:");
+    vBoxLayout->addWidget(label);
+
+    QGridLayout *defHeaderGridLayout = new QGridLayout();
+    QList<QLineEdit*> lineEditList;
+    QList<QTextEdit*> textEditList;
+    int index = 0;
+    qDebug() << "Create header";
+    for (int i = 0; i < ecuCalDef->DefHeaderNames.length(); i++)
+    {
+        QLabel *label = new QLabel(ecuCalDef->DefHeaderStrings.at(index));
+        defHeaderGridLayout->addWidget(label, index, 0);
+
+        if (ecuCalDef->DefHeaderNames.at(i) == "notes")
+        {
+            textEditList.append(new QTextEdit());
+            textEditList.at(textEditList.length()-1)->setObjectName(ecuCalDef->DefHeaderNames.at(i));
+            //textEditList.at(textEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(textEditList.at(textEditList.length()-1), index+1, 0, 1, 2);
+        }
+        else
+        {
+            lineEditList.append(new QLineEdit());
+            lineEditList.at(lineEditList.length()-1)->setObjectName(ecuCalDef->DefHeaderNames.at(i));
+            //lineEditList.at(lineEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(lineEditList.at(lineEditList.length()-1), index, 1);
+        }
+        index++;
+    }
+    vBoxLayout->addLayout(defHeaderGridLayout);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    vBoxLayout->addWidget(buttonBox);
+    connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+    definitionDialog->setMinimumWidth(500);
+    int result = definitionDialog->exec();
+    if(result == QDialog::Accepted)
+    {
+        // 0x0C6D57
+        while (filename.isEmpty() && !isFileSelected)
+        {
+            saveDialog.setDefaultSuffix("xml");
+            filename = QFileDialog::getSaveFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+            if (filename.isEmpty()){
+                QDialog *definitionDialog = new QDialog(this);
+                QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+                QLabel *label = new QLabel("No file selected!\n\nIf you still want to create file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+                QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+                connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+                connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+                vBoxLayout->addWidget(label);
+                vBoxLayout->addWidget(buttonBox);
+
+                int result = definitionDialog->exec();
+                if(result == QDialog::Rejected)
+                    isFileSelected = true;
+            }
+        }
+        if(filename.endsWith(QString(".")))
+            filename.remove(filename.length() - 1, 1);
+        if(!filename.endsWith(QString(".xml")))
+            filename.append(QString(".xml"));
+
+        QFile file(filename);
+        QFileInfo fileInfo(file.fileName());
+        //file_name_str = fileInfo.fileName();
+
+        if (!file.open(QIODevice::ReadWrite ))
+        {
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for writing");
+            return NULL;
+        }
+
+        QString rombase;
+        QString checksum_module = configValues->flash_protocol_selected_protocol_name;
+        checksum_module.remove(0, 3);
+        checksum_module.insert(0, "checksum");
+
+        configValues->ecuflash_def_filename.append(filename);
+
+        QXmlStreamWriter stream(&file);
+        file.resize(0);
+        stream.setAutoFormatting(true);
+        stream.setAutoFormattingIndent(2);
+        stream.writeStartDocument();
+        stream.writeStartElement("rom");
+        stream.writeStartElement("romid");
+
+        int index = 0;
+        for (int i = 0; i < ecuCalDef->DefHeaderNames.length(); i++)
+        {
+            if (ecuCalDef->DefHeaderNames.at(i) != "include" && ecuCalDef->DefHeaderNames.at(i) != "notes")
+            {
+                if(ecuCalDef->DefHeaderNames.at(i) == "internalidstring")
+                    configValues->ecuflash_def_cal_id.append(lineEditList.at(i)->text());
+                if(ecuCalDef->DefHeaderNames.at(i) == "internalidaddress")
+                    configValues->ecuflash_def_cal_id_addr.append(lineEditList.at(i)->text());
+                if(ecuCalDef->DefHeaderNames.at(i) == "ecuid")
+                    configValues->ecuflash_def_ecu_id.append(lineEditList.at(i)->text());
+
+                qDebug() << lineEditList.at(i)->text();
+                stream.writeTextElement(ecuCalDef->RomInfoNames.at(i), lineEditList.at(i)->text());
+                index++;
+            }
+        }
+        stream.writeEndElement();
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("include", lineEditList.at(index)->text());
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("notes", textEditList.at(0)->toPlainText());
+        stream.writeEndElement();
+
+        file.close();
+    }
+
+    return ecuCalDef;
+}
+
+FileActions::EcuCalDefStructure *FileActions::use_existing_definition_for_rom(FileActions::EcuCalDefStructure *ecuCalDef)
+{
+    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+
+    QString filename;
+    QFileDialog openDialog;
+    QFileDialog saveDialog;
+    bool isFileSelected = false;
+
+    while (filename.isEmpty() && !isFileSelected)
+    {
+        openDialog.setDefaultSuffix("xml");
+        filename = QFileDialog::getOpenFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+        if (filename.isEmpty()){
+            QDialog *definitionDialog = new QDialog(this);
+            QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+            QLabel *label = new QLabel("No file selected!\n\nIf you still want to select file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+            QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+            connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+            connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+            vBoxLayout->addWidget(label);
+            vBoxLayout->addWidget(buttonBox);
+
+            int result = definitionDialog->exec();
+            if(result == QDialog::Rejected)
+                isFileSelected = true;
+        }
+    }
+
+    QFile file(filename);
+    QFileInfo fileInfo(file.fileName());
+    //file_name_str = fileInfo.fileName();
+
+    if (!file.open(QIODevice::ReadOnly ))
+    {
+        QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for reading");
+        return NULL;
+    }
+    QStringList defData;
+    while(!file.atEnd())
+    {
+        defData.append(file.readLine());
+    }
+    file.close();
+
+    QString xml_id;
+    QString xml_id_addr;
+    QStringList headerData;
+    int endIndex = 0;
+
+    for (int i = 0; i < defData.length(); i++)
+    {
+        if (!defData.at(i).contains("<") && !defData.at(i).contains(">"))
+            continue;
+        for (int j = 0; j < ecuCalDef->DefHeaderNames.length(); j++)
+        {
+            QString parsedHeaderName = defData.at(i).split("<").at(1).split(">").at(0);
+            if (parsedHeaderName == ecuCalDef->DefHeaderNames.at(j))
+            {
+                qDebug() << parsedHeaderName;
+                headerData.append(ecuCalDef->DefHeaderNames.at(j));
+                if (parsedHeaderName != "notes")
+                    headerData.append(defData.at(i).split(">").at(1).split("<").at(0));
+                if (parsedHeaderName == "notes")
+                {
+                    QString lineData;
+                    parsedHeaderName.clear();
+
+                    lineData.append(defData.at(i).split(">").at(1).split("<").at(0));
+                    if (defData.at(i).contains("</") && defData.at(i).contains(">"))
+                        parsedHeaderName = defData.at(i).split("</").at(1).split(">").at(0);
+                    while (parsedHeaderName != "notes")
+                    {
+                        i++;
+                        if (defData.at(i).contains("</") && defData.at(i).contains(">"))
+                        {
+                            parsedHeaderName = defData.at(i).split("</").at(1).split(">").at(0);
+                            lineData.append(defData.at(i).split("</").at(0));
+                        }
+                        else
+                            lineData.append(defData.at(i));
+
+                        qDebug() << "Test:" << parsedHeaderName;
+                    }
+                    headerData.append(lineData);
+                }
+                endIndex = i;
+            }
+        }
+    }
+    endIndex++;
+
+    QDialog *definitionDialog = new QDialog(this);
+    QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+    QLabel *label = new QLabel("Please provide ROM Information:");
+    vBoxLayout->addWidget(label);
+
+    QGridLayout *defHeaderGridLayout = new QGridLayout();
+    QList<QLineEdit*> lineEditList;
+    QList<QTextEdit*> textEditList;
+    int index = 0;
+    qDebug() << "Create header";
+    for (int i = 0; i < headerData.length(); i+=2)
+    {
+        QLabel *label = new QLabel(ecuCalDef->DefHeaderStrings.at(index));
+        defHeaderGridLayout->addWidget(label, index, 0);
+
+        if (headerData.at(i) == "notes")
+        {
+            textEditList.append(new QTextEdit());
+            textEditList.at(textEditList.length()-1)->setObjectName(headerData.at(i));
+            textEditList.at(textEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(textEditList.at(textEditList.length()-1), index+1, 0, 1, 2);
+        }
+        else
+        {
+            lineEditList.append(new QLineEdit());
+            lineEditList.at(lineEditList.length()-1)->setObjectName(headerData.at(i));
+            lineEditList.at(lineEditList.length()-1)->setText(headerData.at(i+1));
+            defHeaderGridLayout->addWidget(lineEditList.at(lineEditList.length()-1), index, 1);
+        }
+        index++;
+    }
+    vBoxLayout->addLayout(defHeaderGridLayout);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    vBoxLayout->addWidget(buttonBox);
+    connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+    definitionDialog->setMinimumWidth(500);
+    int result = definitionDialog->exec();
+    if(result == QDialog::Accepted)
+    {
+        filename.clear();
+        while (filename.isEmpty() && !isFileSelected)
+        {
+            saveDialog.setDefaultSuffix("xml");
+            filename = QFileDialog::getSaveFileName(this, tr("Select definition file"), configValues->ecuflash_definition_files_directory, tr("Definition file (*.xml)"));
+            if (filename.isEmpty()){
+                QDialog *definitionDialog = new QDialog(this);
+                QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+                QLabel *label = new QLabel("No file selected!\n\nIf you still want to create file click 'Ok'\nIf you want to continue to use ROM without definition, click 'Cancel'");
+                QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+                connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+                connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+                vBoxLayout->addWidget(label);
+                vBoxLayout->addWidget(buttonBox);
+
+                int result = definitionDialog->exec();
+                if(result == QDialog::Rejected)
+                    isFileSelected = true;
+            }
+        }
+        if(filename.endsWith(QString(".")))
+            filename.remove(filename.length() - 1, 1);
+        if(!filename.endsWith(QString(".xml")))
+            filename.append(QString(".xml"));
+
+        QFile file(filename);
+        QFileInfo fileInfo(file.fileName());
+        //file_name_str = fileInfo.fileName();
+
+        if (!file.open(QIODevice::ReadWrite ))
+        {
+            QMessageBox::warning(this, tr("Definition file"), "Unable to open definition file for writing");
+            return NULL;
+        }
+
+        QString rombase;
+        QString checksum_module = ecuCalDef->RomInfo.at(FlashMethod);
+        checksum_module.remove(0, 3);
+        checksum_module.insert(0, "checksum");
+
+        configValues->ecuflash_def_filename.append(filename);
+
+        QXmlStreamWriter stream(&file);
+        file.resize(0);
+
+        qDebug() << "Write to file";
+        stream.setAutoFormatting(true);
+        stream.setAutoFormattingIndent(2);
+        stream.writeStartDocument();
+        stream.writeStartElement("rom");
+        stream.writeStartElement("romid");
+        int index = 0;
+        for (int i = 0; i < headerData.length(); i+=2)
+        {
+            if(headerData.at(i) == "internalidstring")
+                configValues->ecuflash_def_cal_id.append(lineEditList.at(index)->text());
+            if(headerData.at(i) == "internalidaddress")
+                configValues->ecuflash_def_cal_id_addr.append(lineEditList.at(index)->text());
+            if(headerData.at(i) == "ecuid")
+                configValues->ecuflash_def_ecu_id.append(lineEditList.at(index)->text());
+
+            if (headerData.at(i) != "include" && headerData.at(i) != "notes")
+            {
+                qDebug() << lineEditList.at(index)->text();
+                stream.writeTextElement(headerData.at(i), lineEditList.at(index)->text());
+                index++;
+            }
+        }
+        stream.writeEndElement();
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("include", lineEditList.at(index)->text());
+        stream.writeCharacters("\n\n\t");
+        stream.writeTextElement("notes", textEditList.at(0)->toPlainText());
+        stream.writeCharacters("\n");
+
+        QTextStream out(&file);
+        for (int i = endIndex; i < defData.length(); i++)
+            out << defData.at(i);
+
+        stream.writeEndElement();
+
+        file.close();
+    }
+
+    return ecuCalDef;
+}
+
 FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -1717,7 +2095,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
-        if (filename == "") filename = "default.bin";
+        save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "default.bin");
+
+        if (filename == "")
+            filename = "default.bin";
 
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());
@@ -1776,24 +2157,82 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
-        QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
-        ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
-        ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
-        ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
-        ecuCalDef->RomInfo.replace(EcuId, selected_id);
-        ecuCalDef->RomInfo.replace(Make, configValues->flash_protocol_selected_make);
-        //ecuCalDef->RomInfo.replace(Model, configValues->flash_protocol_selected_model);
-        //ecuCalDef->RomInfo.replace(SubModel, submodel);
-        //ecuCalDef->RomInfo.replace(Transmission, transmission);
-        //ecuCalDef->RomInfo.replace(MemModel, memmodel);
-        //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-        ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
-        ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
-        ecuCalDef->RomInfo.replace(DefFile, " ");
+        QDialog *definitionDialog = new QDialog(this);
+        QVBoxLayout *vBoxLayout = new QVBoxLayout(definitionDialog);
+        QLabel *label = new QLabel("Unable to find definition for selected ROM file!\n\nSelect option:");
+        QRadioButton *createNewRadioButton = new QRadioButton("Create new definition file template");
+        QRadioButton *useExistingRadioButton = new QRadioButton("Use existing definition file as base");
+        QRadioButton *continueWithoutRadioButton = new QRadioButton("Continue without definition file");
+
+        QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        connect(buttonBox, &QDialogButtonBox::accepted, definitionDialog, &QDialog::accept);
+        connect(buttonBox, &QDialogButtonBox::rejected, definitionDialog, &QDialog::reject);
+
+        vBoxLayout->addWidget(label);
+        vBoxLayout->addWidget(createNewRadioButton);
+        vBoxLayout->addWidget(useExistingRadioButton);
+        vBoxLayout->addWidget(continueWithoutRadioButton);
+        vBoxLayout->addWidget(buttonBox);
+        //createNewRadioButton->setChecked(true);
+        //useExistingRadioButton->setChecked(true);
+        continueWithoutRadioButton->setChecked(true);
+
+        int result = definitionDialog->exec();
+        if(result == QDialog::Accepted)
+        {
+            if(createNewRadioButton->isChecked()){
+                qDebug() << createNewRadioButton->text();
+                create_new_definition_for_rom(ecuCalDef);
+            }
+            else if(useExistingRadioButton->isChecked()){
+                qDebug() << useExistingRadioButton->text();
+                use_existing_definition_for_rom(ecuCalDef);
+            }
+        }
+        if(continueWithoutRadioButton->isChecked() || result == QDialog::Rejected)
+        {
+            qDebug() << continueWithoutRadioButton->text();
+
+
+            //QMessageBox::warning(this, tr("Calibration file"), "Unable to find definition for selected ROM file!");
+            ecuCalDef->RomInfo.replace(XmlId, "UnknownID");
+            ecuCalDef->RomInfo.replace(InternalIdAddress, selected_id_addr);
+            ecuCalDef->RomInfo.replace(InternalIdString, selected_id);
+            ecuCalDef->RomInfo.replace(EcuId, selected_id);
+            ecuCalDef->RomInfo.replace(Make, configValues->flash_protocol_selected_make);
+            //ecuCalDef->RomInfo.replace(Model, configValues->flash_protocol_selected_model);
+            //ecuCalDef->RomInfo.replace(SubModel, submodel);
+            //ecuCalDef->RomInfo.replace(Transmission, transmission);
+            //ecuCalDef->RomInfo.replace(MemModel, memmodel);
+            //ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
+            //ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_selected_protocol_name);
+            ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
+            ecuCalDef->RomInfo.replace(DefFile, " ");
+        }
     }
 
+    QString checksum_module = ecuCalDef->RomInfo.at(FlashMethod);
+    checksum_module.remove(0, 3);
+    checksum_module.insert(0, "checksum");
+    for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
+    {
+        if (configValues->flash_protocol_protocol_name.at(i) == ecuCalDef->RomInfo.at(FlashMethod))
+        {
+            configValues->flash_protocol_selected_id = configValues->flash_protocol_id.at(i);
+            configValues->flash_protocol_selected_make = configValues->flash_protocol_make.at(i);
+            configValues->flash_protocol_selected_model = configValues->flash_protocol_model.at(i);
+            configValues->flash_protocol_selected_version = configValues->flash_protocol_version.at(i);
+            configValues->flash_protocol_selected_protocol_name = configValues->flash_protocol_protocol_name.at(i);
+            configValues->flash_protocol_selected_description = configValues->flash_protocol_description.at(i);
+            configValues->flash_protocol_selected_log_protocol = configValues->flash_protocol_log_protocol.at(i);
+            configValues->flash_protocol_selected_mcu = configValues->flash_protocol_mcu.at(i);
+            configValues->flash_protocol_selected_checksum = configValues->flash_protocol_checksum.at(i);
+        }
+    }
     if (configValues->flash_protocol_selected_checksum == "yes")
-        ecuCalDef->RomInfo.replace(ChecksumModule, configValues->flash_protocol_selected_protocol_name);
+        ecuCalDef->RomInfo.replace(ChecksumModule, checksum_module);
+    if (configValues->flash_protocol_selected_checksum == "n/a")
+        ecuCalDef->RomInfo.replace(ChecksumModule, "Not implemented yet");
     if (configValues->flash_protocol_selected_checksum == "no")
         ecuCalDef->RomInfo.replace(ChecksumModule, "No checksums");
 
@@ -1806,12 +2245,14 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
 */
     if (!file_name_str.length())
-        file_name_str = ecuCalDef->RomId;
+        file_name_str = "default.bin";
 
+    ecuCalDef->McuType = configValues->flash_protocol_selected_mcu;
     ecuCalDef->OemEcuFile = true;
     ecuCalDef->FileName = file_name_str;
     ecuCalDef->FullFileName = filename;
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
+    ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
@@ -1966,6 +2407,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     }
                     ecuCalDef->XScaleData.replace(i, mapData);
                 }
+                //qDebug() << "Map" << ecuCalDef->NameList.at(i) << "x scale ready";
             }
             else
                 ecuCalDef->XScaleData.replace(i, " ");
@@ -2014,6 +2456,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     mapData.append(QString::number(value, 'g', float_precision) + ",");
                 }
                 ecuCalDef->YScaleData.replace(i, mapData);
+                //qDebug() << "Map" << ecuCalDef->NameList.at(i) << "x scale ready";
             }
             else
                 ecuCalDef->YScaleData.replace(i, " ");
@@ -2086,7 +2529,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
 
             if (fullRomSize != flashdevices[mcu_type_index].romsize)
             {
-                QMessageBox::information(this, tr("Checksum module"), "Bad ROM size, make sure that you have selected correct flash method!");
+                QMessageBox::information(this, tr("Checksum module"), "Bad ROM size! Make sure that you have selected correct flash method!");
                 return ecuCalDef;
             }
             /*
@@ -2095,50 +2538,53 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             if (flashMethod.startsWith("sub_ecu_denso_sh7055"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x07FB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x07FB80, 17 * 12);
+
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7058_can_diesel"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7058s_diesel_densocan"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7058"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh72531_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x13F500, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x13F500, 17 * 12);
+            }
+            else if (flashMethod.startsWith("sub_ecu_denso_1n83m_4m_can"))
+            {
+                chksumModuleAvailable = true;
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x3E3E00, 17 * 12, -0x8F9C000);
+            }
+            else if (flashMethod.startsWith("sub_ecu_denso_1n83m_1_5m_can"))
+            {
+                chksumModuleAvailable = true;
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x183E00, 17 * 12, -0x8F9C000);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7059_can_diesel"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh7059_diesel_densocan"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH705xDiesel *checksumEcuSubaruDensoSH705xDiesel = new ChecksumEcuSubaruDensoSH705xDiesel();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705xDiesel->calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x17FB80, 17 * 12);
             }
             else if (flashMethod.startsWith("sub_ecu_denso_sh72543_can_diesel"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH7xxx = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH7xxx->calculate_checksum(ecuCalDef->FullRomData, 0x1FF800, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x1FF800, 17 * 12);
             }
             /*
             * Denso TCU
@@ -2146,35 +2592,38 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_tcu_denso_sh7055_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuSubaruDensoSH7055 *checksumTcuSubaruDensoSH7055 = new ChecksumTcuSubaruDensoSH7055();
-                ecuCalDef->FullRomData = checksumTcuSubaruDensoSH7055->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuSubaruDensoSH7055::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_tcu_denso_sh7058_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruDensoSH7xxx *checksumEcuSubaruDensoSH705x = new ChecksumEcuSubaruDensoSH7xxx();
-                ecuCalDef->FullRomData = checksumEcuSubaruDensoSH705x->calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x0FFB80, 17 * 12);
             }
             /*
             * Hitachi ECU
             */
-            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_"))
+            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_kline"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiM32r *checksumEcuSubaruHitachiM32r = new ChecksumEcuSubaruHitachiM32r();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiM32r->calculate_checksum(ecuCalDef->FullRomData);
+                if (ecuCalDef->RomId.startsWith("3"))
+                    ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
+                if (ecuCalDef->RomId.startsWith("4"))
+                    ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
+            }
+            else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_can"))
+            {
+                chksumModuleAvailable = true;
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_sh7058_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiSH7058 *checksumEcuSubaruHitachiSH7058 = new ChecksumEcuSubaruHitachiSH7058();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiSH7058->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiSH7058::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_sh72543r"))
             {
                 chksumModuleAvailable = true;
-                ChecksumEcuSubaruHitachiSh72543r *checksumEcuSubaruHitachiSh72543r = new ChecksumEcuSubaruHitachiSh72543r();
-                ecuCalDef->FullRomData = checksumEcuSubaruHitachiSh72543r->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
             * Hitachi TCU
@@ -2182,14 +2631,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuSubaruHitachiM32rCan *checksumTcuSubaruHitachiM32rCan = new ChecksumTcuSubaruHitachiM32rCan();
-                ecuCalDef->FullRomData = checksumTcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_kline"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuSubaruHitachiM32rCan *checksumTcuSubaruHitachiM32rCan = new ChecksumTcuSubaruHitachiM32rCan();
-                ecuCalDef->FullRomData = checksumTcuSubaruHitachiM32rCan->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
             * Mitsu TCU
@@ -2197,8 +2644,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_tcu_cvt_mitsu_mh8104_can"))
             {
                 chksumModuleAvailable = true;
-                ChecksumTcuMitsuMH8104Can *checksumTcuMitsuMH8104Can = new ChecksumTcuMitsuMH8104Can();
-                ecuCalDef->FullRomData = checksumTcuMitsuMH8104Can->calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuMitsuMH8104Can::calculate_checksum(ecuCalDef->FullRomData);
             }
             else
                 chksumModuleAvailable = false;

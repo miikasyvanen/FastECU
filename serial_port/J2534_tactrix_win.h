@@ -81,6 +81,8 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 #define ISO14230_L						ISO14230_CH2	// OP2.0: Support for ISO14230 communications over the L line
 #define ISO15765_CH1					0x00009400
 
+// J2534 device specific protocols
+#define DSTI_ISO9141                    0x00020001
 
 /////////////
 // IOCTL IDs
@@ -104,20 +106,20 @@ typedef void (*PF_StatusCallback)(const char *,int,int);
 // J2534-2
 #define SW_CAN_NS								0x8000 // OP2.0: Not supported
 #define SW_CAN_HS								0x8001 // OP2.0: Not supported
-
+/*
 // Tactrix specific IOCTLs
-//#define TX_IOCTL_BASE							0x70000
+#define TX_IOCTL_BASE							0x70000
 // OP2.0: The IOCTL below supports application-specific functions
 // that can be built into the hardware
-//#define TX_IOCTL_APP_SERVICE					(TX_IOCTL_BASE+0)
-//#define TX_IOCTL_SET_DLL_DEBUG_FLAGS			(TX_IOCTL_BASE+1)
-//#define TX_IOCTL_DLL_DEBUG_FLAG_J2534_CALLS		0x00000001
-//#define TX_IOCTL_DLL_DEBUG_FLAG_ALL_DEV_COMMS	0x00000002
-//#define TX_IOCTL_SET_DEV_DEBUG_FLAGS			(TX_IOCTL_BASE+2)
-//#define TX_IOCTL_DEV_DEBUG_FLAG_USB_COMMS		0x00000001
-//#define TX_IOCTL_SET_DLL_STATUS_CALLBACK		(TX_IOCTL_BASE+3)
-//#define TX_IOCTL_GET_DEVICE_INSTANCES    		(TX_IOCTL_BASE+4)
-
+#define TX_IOCTL_APP_SERVICE					(TX_IOCTL_BASE+0)
+#define TX_IOCTL_SET_DLL_DEBUG_FLAGS			(TX_IOCTL_BASE+1)
+#define TX_IOCTL_DLL_DEBUG_FLAG_J2534_CALLS		0x00000001
+#define TX_IOCTL_DLL_DEBUG_FLAG_ALL_DEV_COMMS	0x00000002
+#define TX_IOCTL_SET_DEV_DEBUG_FLAGS			(TX_IOCTL_BASE+2)
+#define TX_IOCTL_DEV_DEBUG_FLAG_USB_COMMS		0x00000001
+#define TX_IOCTL_SET_DLL_STATUS_CALLBACK		(TX_IOCTL_BASE+3)
+#define TX_IOCTL_GET_DEVICE_INSTANCES    		(TX_IOCTL_BASE+4)
+*/
 /////////////////
 // Pin numbering
 /////////////////

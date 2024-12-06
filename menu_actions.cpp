@@ -66,36 +66,42 @@ void MainWindow::menu_action_triggered(QString action)
         toggle_simulate_obd();
     if (action == "can_listener")
         toggle_can_listener();
-
     if (action == "biu_communication")
         show_subaru_biu_window();
     if (action == "get_key")
         show_subaru_get_key_window();
+    if (action == "terminal")
+        show_terminal_window();
 
     // HELP MENU
     if (action == "about")
-        QMessageBox::information(this, tr("FastECU"), "FastECU is open source tuning software for Subaru ECUs and\n"
-                                                            "later also modifying BIU and ECUs of other car makes.\n"
+        QMessageBox::information(this, tr("FastECU"),       "FastECU is open source tuning software for Subaru ECUs,\n"
+                                                            "TCUs and also modifying BIU and ECUs of other car makes.\n"
                                                             "\n"
-                                                            "This is the first test version for read and write ECU ROM\n"
-                                                            "via K-Line connection with Open Port 2.0 or generic OBD2\n"
-                                                            "cable. Software is tested with Win7 32/64bit and Linux.\n"
+                                                            "This is beta test version for read and write ROMs via\n"
+                                                            "K-Line and CAN connection with Open Port 2.0 or generic\n"
+                                                            "OBD2 cable. Software is tested in Win7/Win10 32/64bit\n"
+                                                            "and Linux amd64 and aarch64 platforms.\n"
                                                             "\n"
                                                             "There WILL be bugs and things that don't work. Be patient\n"
-                                                            "with new versions development.\n"
+                                                            "with new versions relesed.\n"
                                                             "\n"
-                                                            "All liability lies with the user. I am not responsible any\n"
+                                                            "All liability lies with the user. We are not responsible any\n"
                                                             "harm, laws broken or bricked ECUs that can follow for using\n"
                                                             "this software.\n"
+                                                            "\n"
                                                             "\n"
                                                             "Huge thanks to following:\n"
                                                             "\n"
                                                             "fenugrec - author of nisprog software\n"
                                                             "rimwall - modifier of nisprog kernels for Subaru use\n"
-                                                            "SergArb - testing and support of software development\n"
+                                                            "SergArb - testing and software development\n"
+                                                            "alesv - testing and software development\n"
+                                                            "jimihimisimi - testing and software development\n"
                                                             "\n"
                                                             "...and to all of you who had support software development by\n"
-                                                            "donating! All, even the smallest amount of donates are welcome!\n");
+                                                            "donating! All, even the smallest amount of donates are welcome!\n"
+                                 );
 }
 
 void MainWindow::inc_dec_value(QString action)
@@ -916,9 +922,9 @@ void MainWindow::toggle_realtime()
     else
     {
         qDebug() << "Stop datalog";
-        if (log_file_open){
-            log_file_open = false;
-            log_file.close();
+        if (datalog_file_open){
+            datalog_file_open = false;
+            datalog_file.close();
         }
 
         logging_state = false;
@@ -942,15 +948,15 @@ void MainWindow::toggle_log_to_file()
 
             } else {
                 if (action->text() == "Log to file")
-                    write_log_to_file = action->isChecked();
+                    write_datalog_to_file = action->isChecked();
             }
         }
     }
 
-    if (!write_log_to_file){
-        if (log_file_open){
-            log_file_open = false;
-            log_file.close();
+    if (!write_datalog_to_file){
+        if (datalog_file_open){
+            datalog_file_open = false;
+            datalog_file.close();
         }
     }
 }
@@ -1035,8 +1041,8 @@ void MainWindow::show_subaru_biu_window()
     serial->change_port_speed("10400");
     //serial->change_port_speed("4800");
 
-    BiuOperationsSubaru *biuOperationsSubaru = new BiuOperationsSubaru(serial);
-    biuOperationsSubaru->show();
+    BiuOperationsSubaru biuOperationsSubaru(serial);
+    biuOperationsSubaru.exec();
 
     qDebug() << "BIU stopped";
 
@@ -1045,19 +1051,26 @@ void MainWindow::show_subaru_biu_window()
     //ssm_init_poll_timer->start();
 }
 
+void MainWindow::show_terminal_window()
+{
+    QStringList serial_port;
+    serial_port.append(serial_ports.at(serial_port_list->currentIndex()));
+    serial->set_serial_port_list(serial_port);
+    HexCommander hexCommander(serial, this);
+    hexCommander.exec();
+}
+
 void MainWindow::show_subaru_get_key_window()
 {
 
-    GetKeyOperationsSubaru *getKeyOperationsSubaru = new GetKeyOperationsSubaru(this);
-    getKeyOperationsSubaru->show();
-
-
+    GetKeyOperationsSubaru getKeyOperationsSubaru (this);
+    getKeyOperationsSubaru.exec();
 }
 
 void MainWindow::winols_csv_to_romraider_xml()
 {
-    DefinitionFileConvert *definitionFileMaker = new DefinitionFileConvert();
-    definitionFileMaker->show();
+    DefinitionFileConvert definitionFileMaker;
+    definitionFileMaker.exec();
 }
 
 void MainWindow::set_maptablewidget_items()
@@ -1098,15 +1111,15 @@ void MainWindow::set_maptablewidget_items()
                 QStringList xScaleCellText = ecuCalDef[mapRomNumber]->XScaleData.at(mapNumber).split(",");
                 for (int i = 0; i < xSize; i++)
                 {
-                    QTableWidgetItem *cellItem = new QTableWidgetItem;
-                    cellItem->setTextAlignment(Qt::AlignCenter);
-                    cellItem->setFont(cellFont);
+                    QTableWidgetItem cellItem;
+                    cellItem.setTextAlignment(Qt::AlignCenter);
+                    cellItem.setFont(cellFont);
                     if (i < xScaleCellText.count())
-                        cellItem->setText(QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber))));
+                        cellItem.setText(QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber))));
                     if (ySize > 1)
-                        mapTableWidget->setItem(0, i + 1, cellItem);
+                        mapTableWidget->setItem(0, i + 1, &cellItem);
                     else
-                        mapTableWidget->setItem(0, i, cellItem);
+                        mapTableWidget->setItem(0, i, &cellItem);
                 }
             }
             if (ySize > 1)
@@ -1114,32 +1127,32 @@ void MainWindow::set_maptablewidget_items()
                 QStringList yScaleCellText = ecuCalDef[mapRomNumber]->YScaleData.at(mapNumber).split(",");
                 for (int i = 0; i < ySize; i++)
                 {
-                    QTableWidgetItem *cellItem = new QTableWidgetItem;
-                    cellItem->setTextAlignment(Qt::AlignCenter);
-                    cellItem->setFont(cellFont);
+                    QTableWidgetItem cellItem;
+                    cellItem.setTextAlignment(Qt::AlignCenter);
+                    cellItem.setFont(cellFont);
                     if (i < yScaleCellText.count())
-                        cellItem->setText(QString::number(yScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->YScaleFormatList.at(mapNumber))));
-                    mapTableWidget->setItem(i + 1, 0, cellItem);
+                        cellItem.setText(QString::number(yScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->YScaleFormatList.at(mapNumber))));
+                    mapTableWidget->setItem(i + 1, 0, &cellItem);
                 }
             }
             QStringList mapDataCellText = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
             for (int i = 0; i < mapSize; i++)
             {
-                QTableWidgetItem *cellItem = new QTableWidgetItem;
-                cellItem->setTextAlignment(Qt::AlignCenter);
-                cellItem->setFont(cellFont);
+                QTableWidgetItem cellItem;
+                cellItem.setTextAlignment(Qt::AlignCenter);
+                cellItem.setFont(cellFont);
                 int mapItemColor = get_map_cell_colors(ecuCalDef[mapRomNumber], mapDataCellText.at(i).toFloat(), mapNumber);
                 int mapItemColorRed = (mapItemColor >> 16) & 0xff;
                 int mapItemColorGreen = (mapItemColor >> 8) & 0xff;
                 int mapItemColorBlue = mapItemColor & 0xff;
-                cellItem->setBackground(QBrush(QColor(mapItemColorRed , mapItemColorGreen, mapItemColorBlue, 255)));
+                cellItem.setBackground(QBrush(QColor(mapItemColorRed , mapItemColorGreen, mapItemColorBlue, 255)));
                 if (ecuCalDef[mapRomNumber]->TypeList.at(mapNumber) == "1D")
-                    cellItem->setForeground(Qt::black);
+                    cellItem.setForeground(Qt::black);
                 else
-                    cellItem->setForeground(Qt::white);
+                    cellItem.setForeground(Qt::white);
 
                 if (i < mapDataCellText.count())
-                    cellItem->setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
+                    cellItem.setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
                 int yPos = 0;
                 int xPos = 0;
                 if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toUInt() > 1)
@@ -1151,7 +1164,7 @@ void MainWindow::set_maptablewidget_items()
                 else
                     xPos = i - (yPos - ySizeOffset) * xSize;
 
-                mapTableWidget->setItem(yPos, xPos, cellItem);
+                mapTableWidget->setItem(yPos, xPos, &cellItem);
             }
         }
 

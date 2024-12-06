@@ -22,9 +22,9 @@
 #include <thread>
 #include <chrono>
 
-#if defined(Q_OS_LINUX)
+#if defined Q_OS_UNIX
 #include "J2534_linux.h"
-#elif defined(Q_OS_WIN32)
+#elif defined Q_OS_WIN32
 #include "J2534_win.h"
 #endif
 
@@ -52,6 +52,8 @@ public:
     int requestToSendDisabled = 1;
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
+
+    int echo_check_timout = 5000;
 
     uint8_t iso14230_startbyte = 0;
     uint8_t iso14230_tester_id = 0;
@@ -112,6 +114,10 @@ public:
     QString open_serial_port();
 
 private:
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
+#endif
+
     long PassThruOpen(const void *pName, unsigned long *pDeviceID);
     long PassThruClose(unsigned long DeviceID);
     long PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, unsigned long Flags, unsigned long Baudrate, unsigned long *pChannelID);
@@ -170,12 +176,10 @@ private:
     void dump_msg(PASSTHRU_MSG* msg);
     void reportJ2534Error();
 
-#ifdef Q_OS_LINUX
+#if defined Q_OS_UNIX
     unsigned int protocol = ISO9141;
-
-#elif defined(Q_OS_WIN32)
+#elif defined Q_OS_WIN32
     unsigned int protocol = ISO9141;
-
 #endif
 
     bool J2534_init_ok = false;
@@ -185,9 +189,11 @@ private:
     bool J2534_timing_ok = false;
     bool J2534_filters_ok = false;
 
+    bool J2534_is_denso_dsti = false;
+
     int line_end_check_1_toggled(int state);
     int line_end_check_2_toggled(int state);
-#if defined(Q_OS_WIN32)
+#ifdef Q_OS_WIN32
     QMap<QString, QString> installed_drivers;
 #endif
 
@@ -200,7 +206,7 @@ private:
     QStringList check_serial_ports();
     QString open_serial_port();*/
 
-#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
+#ifdef WIN32
     QMap<QString, QString> getAllJ2534DriversNames();
 #endif
     QStringList check_j2534_devices(QMap<QString, QString> installed_drivers);

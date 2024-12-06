@@ -1,0 +1,44 @@
+# Depending of build platform, build flatpak with one of following command
+#
+# x86_64:
+# flatpak-builder --arch=x86_64 --force-clean --user --disable-cache --install-deps-from=flathub --repo=repo --install ./fastecu ./fi.fastecu.FastECU.yml
+#
+# aarch64:
+# flatpak-builder --arch=aarch64 --force-clean --user --disable-cache --install-deps-from=flathub --repo=repo --install ./fastecu ./fi.fastecu.FastECU.yml
+#
+id: fi.fastecu.FastECU
+runtime: org.kde.Platform
+runtime-version: '5.15-22.08'
+sdk: org.kde.Sdk
+command: FastECU
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=all
+  - --filesystem=home
+modules:
+  - name: FastECU
+    buildsystem: qmake
+    config-opts:
+      - FastECU.pro
+      - CONFIG += release
+      - CONFIG += flatpak
+    make_args:
+      - -j4
+      - qmake_all
+    make_install_args:
+      - -j4
+    post-install:
+      - install -Dm644 flatpak/${FLATPAK_ID}.desktop -t /app/share/applications
+      - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo
+      - install -Dm644 flatpak/${FLATPAK_ID}_16x16.png /app/share/icons/hicolor/16x16/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/${FLATPAK_ID}_32x32.png /app/share/icons/hicolor/32x32/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/${FLATPAK_ID}_64x64.png /app/share/icons/hicolor/64x64/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/${FLATPAK_ID}_128x128.png /app/share/icons/hicolor/128x128/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/${FLATPAK_ID}_256x256.png /app/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png
+    sources:
+      - type: git
+        url: https://github.com/miikasyvanen/FastECU.git
+        branch: development
+

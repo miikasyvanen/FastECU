@@ -31,7 +31,7 @@ GetKeyOperationsSubaru::GetKeyOperationsSubaru(QWidget *parent)
 
 GetKeyOperationsSubaru::~GetKeyOperationsSubaru()
 {
-
+    delete ui;
 }
 
 void GetKeyOperationsSubaru::closeEvent(QCloseEvent *bar)

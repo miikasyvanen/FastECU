@@ -168,7 +168,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     {
         if (configValues->ecuflash_def_cal_id.at(index) == cal_id)
         {
-            //qDebug() << "EcuFlash ID found:" << configValues->ecuflash_def_cal_id.at(index) << cal_id;
+            qDebug() << "EcuFlash ID found:" << configValues->ecuflash_def_cal_id.at(index) << cal_id;
             //qDebug() << "EcuFlash def file name:" << configValues->ecuflash_def_filename.at(index);
             cal_id_file_found = true;
             file_index = index;
@@ -215,6 +215,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     QDomElement rom_child = rom_childs.at(0).toElement().firstChild().toElement();
     while (!rom_child.isNull())
     {
+        //qDebug() << "Checking TAGS";
         if (rom_child.tagName() == "romid")
         {
             QDomElement rom_id_child = rom_child.firstChild().toElement();
@@ -254,20 +255,37 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             }
             if (ecuCalDef->RomInfo.at(XmlId) == " ")
             {
+                bool flashmethod_alias_found = false;
                 ecuCalDef->RomInfo.replace(XmlId, xmlid);
                 ecuCalDef->RomInfo.replace(InternalIdAddress, internalidaddress);
                 ecuCalDef->RomInfo.replace(InternalIdString, internalidstring);
                 ecuCalDef->RomInfo.replace(EcuId, ecuid);
-                ecuCalDef->RomInfo.replace(Year, year);
-                ecuCalDef->RomInfo.replace(Market, market);
                 ecuCalDef->RomInfo.replace(Make, make);
+                ecuCalDef->RomInfo.replace(Market, market);
                 ecuCalDef->RomInfo.replace(Model, model);
                 ecuCalDef->RomInfo.replace(SubModel, submodel);
                 ecuCalDef->RomInfo.replace(Transmission, transmission);
+                ecuCalDef->RomInfo.replace(Year, year);
+                ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
                 ecuCalDef->RomInfo.replace(MemModel, memmodel);
                 ecuCalDef->RomInfo.replace(ChecksumModule, checksummodule);
-                ecuCalDef->RomInfo.replace(FlashMethod, flashmethod);
                 ecuCalDef->RomInfo.replace(FileSize, filesize);
+                for (int i = 0; i < configValues->flash_protocol_id.length(); i++)
+                {
+                    QStringList aliases =  configValues->flash_protocol_alias.at(i).split(",");
+                    for (int j = 0; j < aliases.length(); j++)
+                    {
+                        if (aliases.at(j) == flashmethod)
+                        {
+                            flashmethod_alias_found = true;
+                            //qDebug() << "Alias: " << flashmethod;
+                            //qDebug() << "Protocol:" << configValues->flash_protocol_protocol_name.at(i);
+                            ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_protocol_name.at(i));
+                        }
+                    }
+                    if (flashmethod_alias_found)
+                        break;
+                }
             }
         }
         else if (rom_child.tagName() == "include")
@@ -279,6 +297,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         }
         else if (rom_child.tagName() == "scaling")
         {
+            //qDebug() << "Parse scaling for ID" << cal_id;
             ecuCalDef->ScalingNameList.append(rom_child.attribute("name"," "));
             ecuCalDef->ScalingUnitsList.append(rom_child.attribute("units"," "));
             ecuCalDef->ScalingFromByteList.append(rom_child.attribute("toexpr"," "));
@@ -290,6 +309,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             ecuCalDef->ScalingFineIncList.append(QString::number(ecuCalDef->ScalingCoarseIncList.at(scaling_index).toFloat() / 10.0f));
             ecuCalDef->ScalingStorageTypeList.append(rom_child.attribute("storagetype"," "));
             ecuCalDef->ScalingEndianList.append(rom_child.attribute("endian"," "));
+            //qDebug() << "Scaling name:" << rom_child.attribute("name","no name");
             QString selection_name;
             QString selection_value;
             if (rom_child.attribute("storagetype"," ") == "bloblist")
@@ -325,15 +345,22 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     if (base_defined)
                         def_map_index = i;
                     map_defined = true;
+                    //qDebug() << "Map defined";
                 }
             }
-
+            /*
+            if (!base_defined)
+                qDebug() << "Base NOT yet defined";
+            if (!map_defined)
+                qDebug() << "Map NOT yet defined";
+            */
             if (!map_defined && !base_defined)
             {
                 add_ecuflash_def_list_item(ecuCalDef);
             }
             if ((!map_defined && !base_defined) || (map_defined && base_defined))
             {
+                //qDebug() << "Define map values";
                 QString type = rom_child.attribute("type"," ");
                 if (type == "1D" || type == "X Axis" || type == "Y Axis")
                     type = "2D";
@@ -421,6 +448,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         QString ScaleType = rom_scale_child.attribute("type"," ");
                         if (ScaleType == "X Axis")
                         {
+                            //qDebug() << "X Axis";
                             if (ecuCalDef->XSizeList.at(def_map_index) == "" || ecuCalDef->XSizeList.at(def_map_index) == " ")
                                 ecuCalDef->XSizeList.replace(def_map_index, rom_scale_child.attribute("elements", " "));
                             if (ecuCalDef->XScaleNameList.at(def_map_index) == " ")
@@ -439,7 +467,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
                             {
-                                //qDebug() << "Table scaling";
+                                //qDebug() << "X Axis scaling";
                                 if (ecuCalDef->XScaleStorageTypeList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleStorageTypeList.replace(def_map_index, rom_scale_sub_child.attribute("storagetype", " "));
                                 if (ecuCalDef->XScaleUnitsList.at(def_map_index) == " ")
@@ -464,6 +492,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         }
                         else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "3D")
                         {
+                            //qDebug() << "Y Axis";
                             if (ecuCalDef->YSizeList.at(def_map_index) == " " || ecuCalDef->YSizeList.at(def_map_index) == "")
                                 ecuCalDef->YSizeList.replace(def_map_index, rom_scale_child.attribute("elements", " "));
                             if (ecuCalDef->YScaleNameList.at(def_map_index) == " ")
@@ -482,7 +511,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
                             {
-                                //qDebug() << "Table scaling";
+                                //qDebug() << "Y Axis scaling";
                                 if (ecuCalDef->YScaleStorageTypeList.at(def_map_index) == " ")
                                     ecuCalDef->YScaleStorageTypeList.replace(def_map_index, rom_scale_sub_child.attribute("storagetype", " "));
                                 if (ecuCalDef->YScaleUnitsList.at(def_map_index) == " ")
@@ -507,6 +536,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         }
                         else if (ScaleType == "Static Y Axis" || ScaleType == "Static X Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "2D"))
                         {
+                            //qDebug() << "Static X Axis";
                             if (ScaleType == "Static Y Axis")
                                 ScaleType = "Static X Axis";
                             if (ecuCalDef->XSizeList.at(def_map_index) == " " || ecuCalDef->XSizeList.at(def_map_index) == "")
@@ -527,7 +557,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
                             {
-                                //qDebug() << "Table scaling";
+                                //qDebug() << "Static X Axis scaling";
                                 if (ecuCalDef->XScaleStorageTypeList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleStorageTypeList.replace(def_map_index, rom_scale_sub_child.attribute("storagetype", " "));
                                 if (ecuCalDef->XScaleUnitsList.at(def_map_index) == " ")
@@ -619,10 +649,10 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                     ecuCalDef->YScaleTypeList.replace(def_map_index, "Y Axis");
                 }
 */
+                //qDebug() << "Go to next index";
                 def_map_index++;
             }
         }
-
         rom_child = rom_child.nextSibling().toElement();
     }
 
@@ -649,7 +679,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         }
     }
 
-    //qDebug() << "Definition for CAL ID" << cal_id << "succesfully read, start parsing definition scalings...";
+    qDebug() << "Definition for CAL ID" << cal_id << "succesfully read, start parsing definition scalings...";
     return ecuCalDef;
 }
 
