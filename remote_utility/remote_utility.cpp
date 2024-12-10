@@ -8,6 +8,9 @@ RemoteUtility::RemoteUtility(QString peerAddress,
     , webSocket(web_socket)
     , socket(new WebSocketIoDevice(webSocket, webSocket))
     , keepalive_timer(new QTimer(this))
+    , heartbeatInterval(0)
+    , keepalive_interval(7000)
+    , pings_sequently_missed_limit(5)
 {
     if (peerAddress.startsWith("local:"))
     {

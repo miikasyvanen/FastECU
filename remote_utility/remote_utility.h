@@ -32,14 +32,14 @@ private:
     QString peerAddress;
     RemoteUtilityReplica *remote_utility;
     const QString remoteObjectNameUtility = "FastECU_Utility";
-    const int heartbeatInterval = 1000;
+    const int heartbeatInterval;//Inited in constructor initializer list
     QWebSocket *webSocket;
     WebSocketIoDevice *socket;
     QRemoteObjectNode node;
-    int keepalive_interval = 10000;
+    int keepalive_interval;//Inited in constructor initializer list
     QTimer *keepalive_timer;
     int pings_sequently_missed = 0;
-    int pings_sequently_missed_limit = 3;
+    int pings_sequently_missed_limit;//Inited in constructor initializer list
     void start_keepalive(void);
     void stop_keepalive(void);
     void startRemote(void);

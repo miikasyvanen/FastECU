@@ -11,6 +11,7 @@ SerialPortActions::SerialPortActions(QString peerAddress, QWebSocket *web_socket
     , socket(new WebSocketIoDevice(webSocket, webSocket))
     , serial_direct(nullptr)
     , serial_remote(nullptr)
+    , heartbeatInterval(0)
 {
     if (isDirectConnection())
         serial_direct = new SerialPortActionsDirect(this);
