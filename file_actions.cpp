@@ -2245,7 +2245,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
 */
     if (!file_name_str.length())
-        file_name_str = ecuCalDef->RomId;
+        file_name_str = "default.bin";
 
     ecuCalDef->McuType = configValues->flash_protocol_selected_mcu;
     ecuCalDef->OemEcuFile = true;
@@ -2605,7 +2605,10 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_kline"))
             {
                 chksumModuleAvailable = true;
-                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
+                if (ecuCalDef->RomId.startsWith("3"))
+                    ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
+                if (ecuCalDef->RomId.startsWith("4"))
+                    ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_can"))
             {

@@ -1197,10 +1197,11 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
 
+
         //        qDebug() << "Data header:" << parse_message_to_hex(output);
         for (int i = 0; i < 256; i++)
         {
-            output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
+            output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
             data_bytes_sent++;
         }
         data_len -= 256;
@@ -1328,7 +1329,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         qDebug() << "Checksum verified";
     }
 
-    return STATUS_ERROR;
+    return STATUS_SUCCESS;
 }
 
 /*
