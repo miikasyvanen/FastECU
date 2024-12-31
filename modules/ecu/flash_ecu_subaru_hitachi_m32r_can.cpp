@@ -1052,7 +1052,7 @@ int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
     }
 
     bcnt = 0;
-    send_log_window_message("Blocks to flash : ", true, false);
+    send_log_window_message("Blocks to flash: ", true, false);
     for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
         if (block_modified[blockno]) {
             send_log_window_message(QString::number(blockno) + ", ", false, false);

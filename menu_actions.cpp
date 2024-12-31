@@ -1111,15 +1111,20 @@ void MainWindow::set_maptablewidget_items()
                 QStringList xScaleCellText = ecuCalDef[mapRomNumber]->XScaleData.at(mapNumber).split(",");
                 for (int i = 0; i < xSize; i++)
                 {
-                    QTableWidgetItem cellItem;
-                    cellItem.setTextAlignment(Qt::AlignCenter);
-                    cellItem.setFont(cellFont);
-                    if (i < xScaleCellText.count())
-                        cellItem.setText(QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber))));
+                    QTableWidgetItem *cellItem;// = new QTableWidgetItem;
                     if (ySize > 1)
-                        mapTableWidget->setItem(0, i + 1, &cellItem);
+                        cellItem = mapTableWidget->item(0, i + 1);
                     else
-                        mapTableWidget->setItem(0, i, &cellItem);
+                        cellItem = mapTableWidget->item(0, i);
+
+                    cellItem->setTextAlignment(Qt::AlignCenter);
+                    cellItem->setFont(cellFont);
+                    if (i < xScaleCellText.count())
+                        cellItem->setText(QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber))));
+                    //if (ySize > 1)
+                    //    mapTableWidget->setItem(0, i + 1, cellItem);
+                    //else
+                    //    mapTableWidget->setItem(0, i, cellItem);
                 }
             }
             if (ySize > 1)
@@ -1127,32 +1132,19 @@ void MainWindow::set_maptablewidget_items()
                 QStringList yScaleCellText = ecuCalDef[mapRomNumber]->YScaleData.at(mapNumber).split(",");
                 for (int i = 0; i < ySize; i++)
                 {
-                    QTableWidgetItem cellItem;
-                    cellItem.setTextAlignment(Qt::AlignCenter);
-                    cellItem.setFont(cellFont);
+                    QTableWidgetItem *cellItem;// = new QTableWidgetItem;
+                    cellItem = mapTableWidget->item(i + 1, 0);
+
+                    cellItem->setTextAlignment(Qt::AlignCenter);
+                    cellItem->setFont(cellFont);
                     if (i < yScaleCellText.count())
-                        cellItem.setText(QString::number(yScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->YScaleFormatList.at(mapNumber))));
-                    mapTableWidget->setItem(i + 1, 0, &cellItem);
+                        cellItem->setText(QString::number(yScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->YScaleFormatList.at(mapNumber))));
+                    //mapTableWidget->setItem(i + 1, 0, cellItem);
                 }
             }
             QStringList mapDataCellText = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
             for (int i = 0; i < mapSize; i++)
             {
-                QTableWidgetItem cellItem;
-                cellItem.setTextAlignment(Qt::AlignCenter);
-                cellItem.setFont(cellFont);
-                int mapItemColor = get_map_cell_colors(ecuCalDef[mapRomNumber], mapDataCellText.at(i).toFloat(), mapNumber);
-                int mapItemColorRed = (mapItemColor >> 16) & 0xff;
-                int mapItemColorGreen = (mapItemColor >> 8) & 0xff;
-                int mapItemColorBlue = mapItemColor & 0xff;
-                cellItem.setBackground(QBrush(QColor(mapItemColorRed , mapItemColorGreen, mapItemColorBlue, 255)));
-                if (ecuCalDef[mapRomNumber]->TypeList.at(mapNumber) == "1D")
-                    cellItem.setForeground(Qt::black);
-                else
-                    cellItem.setForeground(Qt::white);
-
-                if (i < mapDataCellText.count())
-                    cellItem.setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
                 int yPos = 0;
                 int xPos = 0;
                 if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toUInt() > 1)
@@ -1164,7 +1156,37 @@ void MainWindow::set_maptablewidget_items()
                 else
                     xPos = i - (yPos - ySizeOffset) * xSize;
 
-                mapTableWidget->setItem(yPos, xPos, &cellItem);
+                QTableWidgetItem *cellItem;// = new QTableWidgetItem;
+                cellItem = mapTableWidget->item(yPos, xPos);
+
+                cellItem->setTextAlignment(Qt::AlignCenter);
+                cellItem->setFont(cellFont);
+                int mapItemColor = get_map_cell_colors(ecuCalDef[mapRomNumber], mapDataCellText.at(i).toFloat(), mapNumber);
+                int mapItemColorRed = (mapItemColor >> 16) & 0xff;
+                int mapItemColorGreen = (mapItemColor >> 8) & 0xff;
+                int mapItemColorBlue = mapItemColor & 0xff;
+                cellItem->setBackground(QBrush(QColor(mapItemColorRed , mapItemColorGreen, mapItemColorBlue, 255)));
+                if (ecuCalDef[mapRomNumber]->TypeList.at(mapNumber) == "1D")
+                    cellItem->setForeground(Qt::black);
+                else
+                    cellItem->setForeground(Qt::white);
+
+                if (i < mapDataCellText.count())
+                    cellItem->setText(QString::number(mapDataCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->FormatList.at(mapNumber))));
+/*
+                int yPos = 0;
+                int xPos = 0;
+                if (ecuCalDef[mapRomNumber]->XSizeList.at(mapNumber).toUInt() > 1)
+                    yPos = i / xSize + ySizeOffset;
+                else
+                    yPos = i / xSize;
+                if (ecuCalDef[mapRomNumber]->YSizeList.at(mapNumber).toUInt() > 1)
+                    xPos = i - (yPos - ySizeOffset) * xSize + xSizeOffset;
+                else
+                    xPos = i - (yPos - ySizeOffset) * xSize;
+
+                mapTableWidget->setItem(yPos, xPos, cellItem);
+*/
             }
         }
 

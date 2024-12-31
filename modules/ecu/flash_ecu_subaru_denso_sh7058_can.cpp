@@ -1311,14 +1311,11 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
     delay(500);
 
     QTime dieTime = QTime::currentTime().addMSecs(serial_read_extra_long_timeout);
-    if (received.length())
+    while ((uint32_t)received.length() < 3 && (QTime::currentTime() < dieTime))
     {
-        while ((uint32_t)received.length() < 3 && (QTime::currentTime() < dieTime))
-        {
-            received = serial->read_serial_data(3, serial_read_short_timeout);
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-            delay(100);
-        }
+        received = serial->read_serial_data(3, serial_read_short_timeout);
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        delay(100);
     }
 
     qDebug() << parse_message_to_hex(received);
