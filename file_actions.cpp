@@ -446,6 +446,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Logger def file:" << configValues->romraider_logger_definition_file;
                         }
+                        /*
                         else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "kernel_files_directory")
                         {
                             while(reader.readNextStartElement())
@@ -460,6 +461,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Kernel files directory:" << configValues->kernel_files_directory;
                         }
+*/
                         else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "datalog_files_directory")
                         {
                             while(reader.readNextStartElement())
@@ -622,14 +624,14 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeAttribute("data", configValues->romraider_logger_definition_file);
     stream.writeEndElement();
     stream.writeEndElement();
-
+/*
     stream.writeStartElement("setting");
     stream.writeAttribute("name", "kernel_files_directory");
     stream.writeStartElement("value");
     stream.writeAttribute("data", configValues->kernel_files_directory);
     stream.writeEndElement();
     stream.writeEndElement();
-
+*/
     stream.writeStartElement("setting");
     stream.writeAttribute("name", "logfiles_directory");
     stream.writeStartElement("value");

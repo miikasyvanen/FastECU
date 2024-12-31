@@ -436,7 +436,7 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     startUpSplash->close();
     splash->close();
-
+/*
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
     QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
@@ -447,8 +447,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << parse_message_to_hex(response);
     aes_ecb_example();
     // AES-128 ECB examples end
-
-    LOG_I("FastECU initialized", true, true);
+*/
+    emit LOG_I("FastECU initialized", true, true);
 }
 
 MainWindow::~MainWindow()
