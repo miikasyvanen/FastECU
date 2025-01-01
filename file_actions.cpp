@@ -2522,6 +2522,21 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
     qDebug() << "ecuCalDef->McuType:" << ecuCalDef->McuType << configValues->flash_protocol_selected_mcu;
     qDebug() << "Size:" << fullRomSize << flashdevices[mcu_type_index].romsize;
 
+    if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
+    {
+        QMessageBox *msgBox = new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setWindowTitle("Calibration file");
+        msgBox->setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
+                        "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
+        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+        QPushButton *doItButton = msgBox->addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox->exec();
+
+        if (msgBox->clickedButton() == okButton)
+            return ecuCalDef;
+    }
+
     if (configValues->flash_protocol_selected_checksum == "yes")
     {
         if (configValues->flash_protocol_selected_make == "Subaru")

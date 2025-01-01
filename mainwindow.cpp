@@ -1393,10 +1393,25 @@ void MainWindow::save_calibration_file()
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
     //update_protocol_info(rom_number);
+/*
     if (!ecuCalDef[rom_number]->use_romraider_definition && !ecuCalDef[rom_number]->use_ecuflash_definition)
-        QMessageBox::warning(this, tr("Calibration file"), tr("No definition linked to selected ROM, checksums not calculated!\n"));
+    {
+        QMessageBox *msgBox = new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setWindowTitle("Calibration file");
+        msgBox->setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
+                        "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
+        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+        QPushButton *doItButton = msgBox->addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox->exec();
+
+        if (msgBox->clickedButton() == doItButton)
+            ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+    }
     else
         ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+*/
+    ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
 
     if (ecuCalDef[rom_number] != NULL)
         fileActions->save_subaru_rom_file(ecuCalDef[rom_number], ecuCalDef[rom_number]->FullFileName);
@@ -1422,10 +1437,25 @@ void MainWindow::save_calibration_file_as()
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
     //update_protocol_info(rom_number);
+/*
     if (!ecuCalDef[rom_number]->use_romraider_definition && !ecuCalDef[rom_number]->use_ecuflash_definition)
-        QMessageBox::warning(this, tr("Calibration file"), tr("No definition linked to selected ROM, checksums not calculated!\n"));
+    {
+        QMessageBox *msgBox = new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setWindowTitle("Calibration file");
+        msgBox->setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
+                            "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
+        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+        QPushButton *doItButton = msgBox->addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox->exec();
+
+        if (msgBox->clickedButton() == doItButton)
+            ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+    }
     else
         ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+*/
+    ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
 
     if (ecuCalDef[rom_number] != NULL)
     {
