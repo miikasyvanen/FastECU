@@ -7,6 +7,10 @@ RemoteUtility::RemoteUtility(QString peerAddress,
     , peerAddress(peerAddress)
     , webSocket(web_socket)
     , socket(new WebSocketIoDevice(webSocket, webSocket))
+    , keepalive_timer(new QTimer(this))
+    , heartbeatInterval(0)
+    , keepalive_interval(7000)
+    , pings_sequently_missed_limit(5)
 {
     if (peerAddress.startsWith("local:"))
     {
@@ -66,6 +70,44 @@ QRemoteObjectReplica::State RemoteUtility::state(void) const
     return remote_utility->state();
 }
 
+void RemoteUtility::ping(QString message)
+{
+    //Using pointer because of async response
+    QRemoteObjectPendingCallWatcher *watcher =
+        new QRemoteObjectPendingCallWatcher(remote_utility->ping(message));
+    QObject::connect(watcher, &QRemoteObjectPendingCallWatcher::finished,
+        this, [this](QRemoteObjectPendingCallWatcher* watch)
+        {
+            //qDebug() << Q_FUNC_INFO << watch->returnValue().toString();
+            //Clean to avoid memory leak
+            delete watch;
+            this->pings_sequently_missed = 0;
+        }, Qt::QueuedConnection);
+}
+
+void RemoteUtility::start_keepalive(void)
+{
+    connect(keepalive_timer, &QTimer::timeout, this, &RemoteUtility::send_keepalive);
+    keepalive_timer->start(keepalive_interval);
+}
+
+void RemoteUtility::send_keepalive(void)
+{
+    if (pings_sequently_missed == pings_sequently_missed_limit)
+    {
+        qDebug() << "Missed keepalives limit exceeded. Assume the client is disconnected.";
+        emit stateChanged(QRemoteObjectReplica::Suspect, remote_utility->state());
+    }
+
+    ping("ping");
+    pings_sequently_missed++;
+}
+
+void RemoteUtility::stop_keepalive(void)
+{
+    keepalive_timer->stop();
+}
+
 bool RemoteUtility::isValid(void)
 {
     return remote_utility->state() == QRemoteObjectReplica::Valid;
@@ -73,8 +115,23 @@ bool RemoteUtility::isValid(void)
 
 void RemoteUtility::utilityRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState)
 {
+    emit stateChanged(state, oldState);
     if (state == QRemoteObjectReplica::Valid)
+    {
         qDebug() << "RemoteUtility remote connection established";
+        if (!peerAddress.startsWith("local:"))
+        {
+            start_keepalive();
+            qDebug() << "RemoteUtility keepalive started";
+        }
+    }
     else if (oldState == QRemoteObjectReplica::Valid)
+    {
         qDebug() << "RemoteUtility remote connection lost";
+        if (keepalive_timer->isActive())
+        {
+            stop_keepalive();
+            qDebug() << "RemoteUtility keepalive stopped";
+        }
+    }
 }

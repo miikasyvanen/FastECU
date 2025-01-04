@@ -11,6 +11,7 @@ SerialPortActions::SerialPortActions(QString peerAddress, QWebSocket *web_socket
     , socket(new WebSocketIoDevice(webSocket, webSocket))
     , serial_direct(nullptr)
     , serial_remote(nullptr)
+    , heartbeatInterval(0)
 {
     if (isDirectConnection())
         serial_direct = new SerialPortActionsDirect(this);
@@ -102,6 +103,7 @@ void SerialPortActions::waitForSource(void)
 
 void SerialPortActions::serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState)
 {
+    emit stateChanged(state, oldState);
     if (state == QRemoteObjectReplica::Valid)
         qDebug() << "SerialPortActions remote connection established";
     else if (oldState == QRemoteObjectReplica::Valid)

@@ -1143,8 +1143,14 @@ int FlashTcuCvtSubaruMitsuMH8104Can::send_log_window_message(QString message, bo
 
 void FlashTcuCvtSubaruMitsuMH8104Can::set_progressbar_value(int value)
 {
+    bool valueChanged = true;
     if (ui->progressbar)
+    {
+        valueChanged = ui->progressbar->value() != value;
         ui->progressbar->setValue(value);
+    }
+    if (valueChanged)
+        emit external_logger(value);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
