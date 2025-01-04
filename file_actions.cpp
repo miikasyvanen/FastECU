@@ -446,6 +446,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Logger def file:" << configValues->romraider_logger_definition_file;
                         }
+                        /*
                         else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "kernel_files_directory")
                         {
                             while(reader.readNextStartElement())
@@ -460,6 +461,7 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             }
                             qDebug() << "Kernel files directory:" << configValues->kernel_files_directory;
                         }
+*/
                         else if (reader.name().toUtf8() == "setting" && reader.attributes().value("name").toUtf8() == "datalog_files_directory")
                         {
                             while(reader.readNextStartElement())
@@ -622,14 +624,14 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
     stream.writeAttribute("data", configValues->romraider_logger_definition_file);
     stream.writeEndElement();
     stream.writeEndElement();
-
+/*
     stream.writeStartElement("setting");
     stream.writeAttribute("name", "kernel_files_directory");
     stream.writeStartElement("value");
     stream.writeAttribute("data", configValues->kernel_files_directory);
     stream.writeEndElement();
     stream.writeEndElement();
-
+*/
     stream.writeStartElement("setting");
     stream.writeAttribute("name", "logfiles_directory");
     stream.writeStartElement("value");
@@ -2519,6 +2521,21 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
     }
     qDebug() << "ecuCalDef->McuType:" << ecuCalDef->McuType << configValues->flash_protocol_selected_mcu;
     qDebug() << "Size:" << fullRomSize << flashdevices[mcu_type_index].romsize;
+
+    if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
+    {
+        QMessageBox *msgBox = new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setWindowTitle("Calibration file");
+        msgBox->setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
+                        "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
+        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+        QPushButton *doItButton = msgBox->addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox->exec();
+
+        if (msgBox->clickedButton() == okButton)
+            return ecuCalDef;
+    }
 
     if (configValues->flash_protocol_selected_checksum == "yes")
     {

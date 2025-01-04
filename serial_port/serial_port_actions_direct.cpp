@@ -259,7 +259,7 @@ int SerialPortActionsDirect::line_end_check_2_toggled(int state)
     {
         if (use_openport2_adapter)
         {
-            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 5000);
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 12000);
 #if defined Q_OS_UNIX
             delay(17);
 #endif
