@@ -26,7 +26,7 @@ public slots:
     void waitForSource(void);
 
 signals:
-    stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+    void stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
 
 private:
     QString peerAddress;
