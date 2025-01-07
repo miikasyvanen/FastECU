@@ -277,513 +277,21 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     QString tcuid = QString::fromUtf8(response);
     send_log_window_message("Init Success: ECU ID = " + tcuid, true, true);
 
-    QMessageBox::information(this, tr("Init was OK?"), "Press OK to continue");
-
-
-    send_log_window_message("Test script complete", true, true);
-    return STATUS_SUCCESS;
- }
-
-/*
- * Read memory from Subaru TCU Hitachi CAN bootloader
- *
- * @return success
- */
-int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t start_addr, uint32_t length)
-{
-    QElapsedTimer timer;
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    QByteArray pagedata;
-    QByteArray mapdata;
-    uint32_t cplen = 0;
-    uint32_t timeout = 0;
-
-    serial->set_is_iso14230_connection(false);
-    serial->set_is_can_connection(false);
-    serial->set_is_iso15765_connection(false);
-    serial->set_is_29_bit_id(false);
-    tester_id = 0xF0;
-    target_id = 0x10;
-    // Open serial port
-    serial->open_serial_port();
-    serial->change_port_speed("4800");
-    serial->set_add_iso14230_header(false);
-
-    uint32_t pagesize = 0x80;
-
-    start_addr = 0x100000;
-
-    length = 0x100000;    // hack for testing
-
-    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
-    uint32_t addr = start_addr - skip_start;
-    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
-
-    send_log_window_message("Checking if OBK is running", true, true);
-    serial->change_port_speed("38400");
-    received = send_subaru_sid_bf_ssm_init();
-
-    if (received != "" || received.length() > 12)
-    {
-        kernel_alive = true;
-    }
-
-    if(!kernel_alive)
-    {
-        // SSM init
-        serial->change_port_speed("4800");
-        received = send_subaru_sid_bf_ssm_init();
-        if (received == "" || (uint8_t)received.at(4) != 0xff)
-            return STATUS_ERROR;
-
-        if (received.length() < 13)
-            return STATUS_ERROR;
-
-        received.remove(0, 8);
-        received.remove(5, received.length() - 5);
-
-        for (int i = 0; i < received.length(); i++)
-        {
-            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-        }
-        QString ecuid = msg;
-        //LOG_I("ECU ID = " + ecuid, true, true);
-        send_log_window_message("ECU ID = " + ecuid, true, true);
-
-        received = send_subaru_sid_b8_change_baudrate_38400();
-        //LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
-        //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
-        //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
-        if (received == "" || (uint8_t)received.at(4) != 0xf8)
-            return STATUS_ERROR;
-
-        serial->change_port_speed("38400");
-
-        // Checking connection after baudrate change with SSM Init
-        received = send_subaru_sid_bf_ssm_init();
-        if (received == "" || (uint8_t)received.at(4) != 0xff)
-            return STATUS_ERROR;
-    }
-
-    send_log_window_message("Start reading ROM, please wait...", true, true);
-    qDebug() << "Start reading ROM, please wait...";
-
-    // send 0xA0 command to kernel to dump from ROM
-    output.clear();
-    output.append((uint8_t)0x80);
-    output.append((uint8_t)0x10);
-    output.append((uint8_t)0xF0);
-    output.append((uint8_t)0x06);
-    output.append((uint8_t)0xA0);
-    output.append((uint8_t)0x00);
-
-    set_progressbar_value(0);
-
-    mapdata.clear();
-
-    while (willget)
-    {
-        if (kill_process)
-            return STATUS_ERROR;
-
-        uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
-        float pleft = 0;
-        unsigned long chrono;
-
-        //uint32_t curblock = (addr / pagesize);
-
-
-        pleft = (float)(addr - start_addr) / (float)length * 100.0f;
-        set_progressbar_value(pleft);
-
-        //length = 7FFF0;
-
-        output[6] = (uint8_t)((addr >> 16) & 0xFF);
-        output[7] = (uint8_t)((addr >> 8) & 0xFF);
-        output[8] = (uint8_t)(addr & 0xFF);
-        output[9] = (uint8_t)(pagesize - 1) & 0xFF;
-        output.remove(10, 1);
-        output[10] = (calculate_checksum(output, false));
-
-        emit LOG_D("Send msg: " + parse_message_to_hex(output), true, true);
-        serial->write_serial_data_echo_check(output);
-        //qDebug() << "0xB7 message sent to kernel to dump 256 bytes";
-//        delay(50);
-//        received = serial->read_serial_data(270, 200);
-        received = serial->read_serial_data(20, 5000);
-        //qDebug() << "Response to 0xB7 (dump mem) message:" << parse_message_to_hex(received);
-        emit LOG_D("Received msg: " + parse_message_to_hex(received), true, true);
-        if ((uint8_t)received.at(4) != 0xE0)
-        {
-            send_log_window_message("Page data request failed!", true, true);
-//            return STATUS_ERROR;
-        }
-
-        pagedata.clear();
-        pagedata = received.remove(0, 5);
-        pagedata.remove(received.length() - 1, 1);
-
-//        send_log_window_message("Received pagedata: " + parse_message_to_hex(pagedata), true, true);
-        mapdata.append(pagedata);
-
-        // don't count skipped first bytes //
-        cplen = (numblocks * pagesize) - skip_start; //this is the actual # of valid bytes in buf[]
-        skip_start = 0;
-
-        chrono = timer.elapsed();
-        timer.start();
-
-        if (cplen > 0 && chrono > 0)
-            curspeed = cplen * (1000.0f / chrono);
-
-        if (!curspeed) {
-            curspeed += 1;
-        }
-
-        tleft = (willget / curspeed) % 9999;
-        tleft++;
-
-        // and drop extra bytes at the end //
-        uint32_t extrabytes = (cplen + len_done);   //hypothetical new length
-        if (extrabytes > length) {
-            cplen -= (extrabytes - length);
-            //thus, (len_done + cplen) will not exceed len
-        }
-
-        // increment addr, len, etc //
-        len_done += cplen;
-        addr += (numblocks * pagesize);
-        willget -= (numblocks * pagesize);
-    }
-
-    send_log_window_message("ROM read complete", true, true);
-    qDebug() << "ROM read complete";
-
-//    mapdata = subaru_ecu_hitachi_decrypt_32bit_payload(mapdata, mapdata.length());
-
-    ecuCalDef->FullRomData = mapdata;
-    set_progressbar_value(100);
-
-    return STATUS_SUCCESS;
-}
-
-/*
- * Write memory to Subaru Hitachi CAN 32bit TCUs, on board kernel
- *
- * @return success
- */
-
-int FlashEcuSubaruHitachiSH7058Can::write_mem_subaru_ecu_hitachi_can(bool test_write)
-{
-    QByteArray filedata;
-
-    filedata = ecuCalDef->FullRomData;
-
-    uint8_t data_array[filedata.length()];
-
-    int block_modified[16] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};   // assume blocks after 0x8000 are modified
-
-    unsigned bcnt;  // 13 blocks in M32R_512kB, but kernelmemorymodels.h has 11. Of these 11, the first 3 are not flashed by OBK
-    unsigned blockno;
-
-    //encrypt the data
-    filedata = subaru_ecu_hitachi_encrypt_32bit_payload(filedata, filedata.length());
-
-    for (int i = 0; i < filedata.length(); i++)
-    {
-        data_array[i] = filedata.at(i);
-    }
-
-    bcnt = 0;
-    send_log_window_message("Blocks to flash : ", true, false);
-    for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
-        if (block_modified[blockno]) {
-            send_log_window_message(QString::number(blockno) + ", ", false, false);
-            bcnt += 1;
-        }
-    }
-    send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
-
-    if (bcnt)
-    {
-        send_log_window_message("--- erasing ECU flash memory ---", true, true);
-        if (erase_subaru_ecu_hitachi_can())
-        {
-            send_log_window_message("--- erasing did not complete successfully ---", true, true);
-            return STATUS_ERROR;
-        }
-
-        flashbytescount = 0;
-        flashbytesindex = 0;
-
-        for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)
-        {
-            if (block_modified[blockno])
-            {
-                flashbytescount += flashdevices[mcu_type_index].fblocks[blockno].len;
-            }
-        }
-
-        send_log_window_message("--- start writing ROM file to ECU flash memory ---", true, true);
-        for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)  // hack so that only 1 flash loop done for the entire ROM above 0x8000
-        {
-            if (block_modified[blockno])
-            {
-                if (reflash_block_subaru_ecu_hitachi_can(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
-                {
-                    send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
-                    return STATUS_ERROR;
-                }
-                else
-                {
-                    flashbytesindex += flashdevices[mcu_type_index].fblocks[blockno].len;
-                    send_log_window_message("Block " + QString::number(blockno) + " reflash complete.", true, true);
-                }
-            }
-        }
-
-    }
-    else
-    {
-        send_log_window_message("*** No blocks require flash! ***", true, true);
-    }
-
-    return STATUS_SUCCESS;
-}
-
-/*
- * Upload kernel to Subaru Denso CAN (iso15765) 32bit ECUs
- *
- * @return success
- */
-int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
-{
-
-    int errval;
-
-    uint32_t start_address, end_addr;
-    uint32_t pl_len;
-    uint16_t maxblocks;
-    uint16_t blockctr;
-    uint32_t blockaddr;
-
-    uint32_t pagesize = 0x100;
-
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-
-    set_progressbar_value(0);
-
-    if (blockno >= fdt->numblocks) {
-        send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
-    }
-
-    start_address = fdt->fblocks[blockno].start;
-    pl_len = fdt->fblocks[blockno].len;
-    maxblocks = pl_len / 256;
-    end_addr = (start_address + (maxblocks * 256)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - start_address;
-
-    QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
-    QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
-    msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
-    send_log_window_message(msg, true, true);
-
-    send_log_window_message("Settting flash start & length...", true, true);
-    qDebug() << "Settting flash start & length...";
-
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0x34);
-    output.append((uint8_t)0x04);
-    output.append((uint8_t)0x33);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x10);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-
-    bool connected = false;
-    int try_count = 0;
-    while (try_count < 6 && connected == false)
-    {
-        serial->write_serial_data_echo_check(output);
-        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
-        delay(200);
-        received = serial->read_serial_data(20, 200);
-        if (received != "")
-        {
-            connected = true;
-            send_log_window_message(QString::number(try_count) + ": 0x34 0x04 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << try_count << ": 0x34 0x04 response:" << parse_message_to_hex(received);
-        }
-        try_count++;
-        //delay(try_timeout);
-    }
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
-        send_log_window_message("No or bad response received", true, true);
-        //return STATUS_ERROR;
-
-    int data_bytes_sent = 0;
-    for (blockctr = 0; blockctr < maxblocks; blockctr++)
-    {
-        if (kill_process)
-            return 0;
-
-        blockaddr = start_address + blockctr * 256;
-        output.clear();
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x07);
-        output.append((uint8_t)0xE0);
-        output.append((uint8_t)0xB6);
-        output.append((uint8_t)(blockaddr >> 16) & 0xFF);
-        output.append((uint8_t)(blockaddr >> 8) & 0xFF);
-        output.append((uint8_t)blockaddr & 0xFF);
-
-//        qDebug() << "Data header:" << parse_message_to_hex(output);
-        for (int i = 0; i < 256; i++)
-        {
-            output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
-            data_bytes_sent++;
-        }
-        data_len -= 256;
-//        delay(10);
-        serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(20, 5000);
-//    received = serial->read_serial_data(20, 200);
-        emit LOG_D("Received msg: " + parse_message_to_hex(received), true, true);
-//        delay(50);
-        if ((uint8_t)received.at(4) != 0xF6)
-        {
-            send_log_window_message("Write data failed!", true, true);
-            return STATUS_ERROR;
-        }
-
-        float pleft = (float)blockctr / (float)maxblocks * 100;
-        set_progressbar_value(pleft);
-
-    }
-
-//    qDebug() << "Data bytes sent:" << Qt::hex << data_bytes_sent;
-
-    set_progressbar_value(100);
-
-//    return STATUS_SUCCESS;
-
-    send_log_window_message("Closing out Flashing of this block...", true, true);
-    qDebug() << "Closing out Flashing of this block...";
-    connected = false;
-    try_count = 0;
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0x37);
-
-    while (try_count < 20 && connected == false)
-    {
-        serial->write_serial_data_echo_check(output);
-        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
-        //delay(50);
-        delay(200);
-        received = serial->read_serial_data(20, 200);
-        if (received != "")
-        {
-            connected = true;
-            send_log_window_message(QString::number(try_count) + ": 0x37 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << try_count << ": 0x37 response:" << parse_message_to_hex(received);
-        }
-        try_count++;
-        //delay(try_timeout);
-    }
-    if (received == "" || (uint8_t)received.at(4) != 0x77)
-        send_log_window_message("No or bad response received", true, true);
-        //return STATUS_ERROR;
-
-    delay(100);
-
-    send_log_window_message("Verifying checksum...", true, true);
-    qDebug() << "Verifying checksum...";
-
-    connected = false;
-    try_count = 0;
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0x31);
-    output.append((uint8_t)0x01);
-    output.append((uint8_t)0x02);
-    output.append((uint8_t)0x02);
-    output.append((uint8_t)0x01);
-
-    serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-    delay(200);
-
-        if ((uint8_t)received.at(4) != 0x71)
-        {
-         received = serial->read_serial_data(20, 200);        
-         send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-         delay(200);
-         received = serial->read_serial_data(20, 200);
-         send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
-         delay(200);
-
-        }
-
-//    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-//        send_log_window_message("No or bad response received", true, true);
-        //return STATUS_ERROR;
-
-    send_log_window_message("Checksum verified...", true, true);
-    qDebug() << "Checksum verified...";
-
-    return STATUS_SUCCESS;
-
-}
-
-/*
- * Erase Subaru Hitachi TCU CAN (iso15765)
- *
- * @return success
- */
-int FlashEcuSubaruHitachiSH7058Can::erase_subaru_ecu_hitachi_can()
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray seed;
-    QByteArray seed_key;
-
-    bool connected = false;
-    int try_count = 0;
-
-    if (!serial->is_serial_port_open())
-    {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        QMessageBox *msgBox = new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setWindowTitle("Are we ready to go?");
+        msgBox->setText("Init was OK?, Press OK to continue");
+        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+        QPushButton *doItCancel = msgBox->addButton(tr("Cancel"), QMessageBox::NoRole);
+        msgBox->exec();
+        if (msgBox->clickedButton() == doItCancel)
         return STATUS_ERROR;
-    }
+        else
+        send_log_window_message("Let's roll...", true, true);
 
     send_log_window_message("Initializing bootloader...", true, true);
     qDebug() << "Initializing bootloader...";
+
 //On car session hack
     output.clear();
     output.append((uint8_t)0x00);
@@ -1235,6 +743,522 @@ else
         //return STATUS_SUCCESS;
     }
 }
+
+
+    send_log_window_message("Test script complete", true, true);
+    return STATUS_SUCCESS;
+ }
+
+/*
+ * Read memory from Subaru ECU Hitachi K-line bootloader
+ *
+ * @return success
+ */
+int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t start_addr, uint32_t length)
+{
+    QElapsedTimer timer;
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+    QByteArray pagedata;
+    QByteArray mapdata;
+    uint32_t cplen = 0;
+    uint32_t timeout = 0;
+
+    serial->set_is_iso14230_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    tester_id = 0xF0;
+    target_id = 0x10;
+    // Open serial port
+    serial->open_serial_port();
+    serial->change_port_speed("4800");
+    serial->set_add_iso14230_header(false);
+
+    uint32_t pagesize = 0x80;
+
+    start_addr = 0x100000;
+
+    length = 0x100000;    // hack for testing
+
+    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
+    uint32_t addr = start_addr - skip_start;
+    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
+    uint32_t len_done = 0;  //total data written to file
+
+    send_log_window_message("Checking if OBK is running", true, true);
+    serial->change_port_speed("38400");
+    received = send_subaru_sid_bf_ssm_init();
+
+    if (received != "" || received.length() > 12)
+    {
+        kernel_alive = true;
+    }
+
+    if(!kernel_alive)
+    {
+        // SSM init
+        serial->change_port_speed("4800");
+        received = send_subaru_sid_bf_ssm_init();
+        if (received == "" || (uint8_t)received.at(4) != 0xff)
+            return STATUS_ERROR;
+
+        if (received.length() < 13)
+            return STATUS_ERROR;
+
+        received.remove(0, 8);
+        received.remove(5, received.length() - 5);
+
+        for (int i = 0; i < received.length(); i++)
+        {
+            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        }
+        QString ecuid = msg;
+        //LOG_I("ECU ID = " + ecuid, true, true);
+        send_log_window_message("ECU ID = " + ecuid, true, true);
+
+        QMessageBox *msgBox = new QMessageBox();
+        msgBox->setIcon(QMessageBox::Warning);
+        msgBox->setWindowTitle("Are we ready to go?");
+        msgBox->setText("Init was OK?, Press OK to continue");
+        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+        QPushButton *doItCancel = msgBox->addButton(tr("Cancel"), QMessageBox::NoRole);
+        msgBox->exec();
+        if (msgBox->clickedButton() == doItCancel)
+        return STATUS_ERROR;
+        else
+        send_log_window_message("Let's roll...", true, true);
+
+        received = send_subaru_sid_b8_change_baudrate_38400();
+        //LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
+        //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
+        //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
+        if (received == "" || (uint8_t)received.at(4) != 0xf8)
+            return STATUS_ERROR;
+
+        serial->change_port_speed("38400");
+
+        // Checking connection after baudrate change with SSM Init
+        received = send_subaru_sid_bf_ssm_init();
+        if (received == "" || (uint8_t)received.at(4) != 0xff)
+            return STATUS_ERROR;
+    }
+
+    send_log_window_message("Start reading ROM, please wait...", true, true);
+    qDebug() << "Start reading ROM, please wait...";
+
+    // send 0xA0 command to kernel to dump from ROM
+    output.clear();
+    output.append((uint8_t)0x80);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0xF0);
+    output.append((uint8_t)0x06);
+    output.append((uint8_t)0xA0);
+    output.append((uint8_t)0x00);
+
+    set_progressbar_value(0);
+
+    mapdata.clear();
+
+    while (willget)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        uint32_t numblocks = 1;
+        unsigned curspeed = 0, tleft;
+        float pleft = 0;
+        unsigned long chrono;
+
+        //uint32_t curblock = (addr / pagesize);
+
+
+        pleft = (float)(addr - start_addr) / (float)length * 100.0f;
+        set_progressbar_value(pleft);
+
+        //length = 7FFF0;
+
+        output[6] = (uint8_t)((addr >> 16) & 0xFF);
+        output[7] = (uint8_t)((addr >> 8) & 0xFF);
+        output[8] = (uint8_t)(addr & 0xFF);
+        output[9] = (uint8_t)(pagesize - 1) & 0xFF;
+        output.remove(10, 1);
+        output[10] = (calculate_checksum(output, false));
+
+        emit LOG_D("Send msg: " + parse_message_to_hex(output), true, true);
+        serial->write_serial_data_echo_check(output);
+        //qDebug() << "0xB7 message sent to kernel to dump 256 bytes";
+//        delay(50);
+//        received = serial->read_serial_data(270, 200);
+        received = serial->read_serial_data(20, 5000);
+        //qDebug() << "Response to 0xB7 (dump mem) message:" << parse_message_to_hex(received);
+        emit LOG_D("Received msg: " + parse_message_to_hex(received), true, true);
+        if ((uint8_t)received.at(4) != 0xE0)
+        {
+            send_log_window_message("Page data request failed!", true, true);
+//            return STATUS_ERROR;
+        }
+
+        pagedata.clear();
+        pagedata = received.remove(0, 5);
+        pagedata.remove(received.length() - 1, 1);
+
+//        send_log_window_message("Received pagedata: " + parse_message_to_hex(pagedata), true, true);
+        mapdata.append(pagedata);
+
+        // don't count skipped first bytes //
+        cplen = (numblocks * pagesize) - skip_start; //this is the actual # of valid bytes in buf[]
+        skip_start = 0;
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (cplen > 0 && chrono > 0)
+            curspeed = cplen * (1000.0f / chrono);
+
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = (willget / curspeed) % 9999;
+        tleft++;
+
+        // and drop extra bytes at the end //
+        uint32_t extrabytes = (cplen + len_done);   //hypothetical new length
+        if (extrabytes > length) {
+            cplen -= (extrabytes - length);
+            //thus, (len_done + cplen) will not exceed len
+        }
+
+        // increment addr, len, etc //
+        len_done += cplen;
+        addr += (numblocks * pagesize);
+        willget -= (numblocks * pagesize);
+    }
+
+    send_log_window_message("ROM read complete", true, true);
+    qDebug() << "ROM read complete";
+
+//    mapdata = subaru_ecu_hitachi_decrypt_32bit_payload(mapdata, mapdata.length());
+
+    ecuCalDef->FullRomData = mapdata;
+    set_progressbar_value(100);
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ * Write memory to Subaru Hitachi CAN 32bit TCUs, on board kernel
+ *
+ * @return success
+ */
+
+int FlashEcuSubaruHitachiSH7058Can::write_mem_subaru_ecu_hitachi_can(bool test_write)
+{
+    QByteArray filedata;
+
+    filedata = ecuCalDef->FullRomData;
+
+    uint8_t data_array[filedata.length()];
+
+    int block_modified[16] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};   // assume blocks after 0x8000 are modified
+
+    unsigned bcnt;  // 13 blocks in M32R_512kB, but kernelmemorymodels.h has 11. Of these 11, the first 3 are not flashed by OBK
+    unsigned blockno;
+
+    //encrypt the data
+    filedata = subaru_ecu_hitachi_encrypt_32bit_payload(filedata, filedata.length());
+
+    for (int i = 0; i < filedata.length(); i++)
+    {
+        data_array[i] = filedata.at(i);
+    }
+
+    bcnt = 0;
+    send_log_window_message("Blocks to flash : ", true, false);
+    for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
+        if (block_modified[blockno]) {
+            send_log_window_message(QString::number(blockno) + ", ", false, false);
+            bcnt += 1;
+        }
+    }
+    send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
+
+    if (bcnt)
+    {
+        send_log_window_message("--- erasing ECU flash memory ---", true, true);
+        if (erase_subaru_ecu_hitachi_can())
+        {
+            send_log_window_message("--- erasing did not complete successfully ---", true, true);
+            return STATUS_ERROR;
+        }
+
+        flashbytescount = 0;
+        flashbytesindex = 0;
+
+        for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)
+        {
+            if (block_modified[blockno])
+            {
+                flashbytescount += flashdevices[mcu_type_index].fblocks[blockno].len;
+            }
+        }
+
+        send_log_window_message("--- start writing ROM file to ECU flash memory ---", true, true);
+        for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)  // hack so that only 1 flash loop done for the entire ROM above 0x8000
+        {
+            if (block_modified[blockno])
+            {
+                if (reflash_block_subaru_ecu_hitachi_can(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                {
+                    send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
+                    return STATUS_ERROR;
+                }
+                else
+                {
+                    flashbytesindex += flashdevices[mcu_type_index].fblocks[blockno].len;
+                    send_log_window_message("Block " + QString::number(blockno) + " reflash complete.", true, true);
+                }
+            }
+        }
+
+    }
+    else
+    {
+        send_log_window_message("*** No blocks require flash! ***", true, true);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ * Upload kernel to Subaru Denso CAN (iso15765) 32bit ECUs
+ *
+ * @return success
+ */
+int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+{
+
+    int errval;
+
+    uint32_t start_address, end_addr;
+    uint32_t pl_len;
+    uint16_t maxblocks;
+    uint16_t blockctr;
+    uint32_t blockaddr;
+
+    uint32_t pagesize = 0x100;
+
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    set_progressbar_value(0);
+
+    if (blockno >= fdt->numblocks) {
+        send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
+        return -1;
+    }
+
+    start_address = fdt->fblocks[blockno].start;
+    pl_len = fdt->fblocks[blockno].len;
+    maxblocks = pl_len / 256;
+    end_addr = (start_address + (maxblocks * 256)) & 0xFFFFFFFF;
+    uint32_t data_len = end_addr - start_address;
+
+    QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
+    QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
+    msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
+    send_log_window_message(msg, true, true);
+
+    send_log_window_message("Settting flash start & length...", true, true);
+    qDebug() << "Settting flash start & length...";
+
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x34);
+    output.append((uint8_t)0x04);
+    output.append((uint8_t)0x33);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+
+    bool connected = false;
+    int try_count = 0;
+    while (try_count < 6 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        delay(200);
+        received = serial->read_serial_data(20, 200);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x34 0x04 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x34 0x04 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x74)
+        send_log_window_message("No or bad response received", true, true);
+        //return STATUS_ERROR;
+
+    int data_bytes_sent = 0;
+    for (blockctr = 0; blockctr < maxblocks; blockctr++)
+    {
+        if (kill_process)
+            return 0;
+
+        blockaddr = start_address + blockctr * 256;
+        output.clear();
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x07);
+        output.append((uint8_t)0xE0);
+        output.append((uint8_t)0xB6);
+        output.append((uint8_t)(blockaddr >> 16) & 0xFF);
+        output.append((uint8_t)(blockaddr >> 8) & 0xFF);
+        output.append((uint8_t)blockaddr & 0xFF);
+
+//        qDebug() << "Data header:" << parse_message_to_hex(output);
+        for (int i = 0; i < 256; i++)
+        {
+            output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
+            data_bytes_sent++;
+        }
+        data_len -= 256;
+//        delay(10);
+        serial->write_serial_data_echo_check(output);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        received = serial->read_serial_data(20, 5000);
+//    received = serial->read_serial_data(20, 200);
+        emit LOG_D("Received msg: " + parse_message_to_hex(received), true, true);
+//        delay(50);
+        if ((uint8_t)received.at(4) != 0xF6)
+        {
+            send_log_window_message("Write data failed!", true, true);
+            return STATUS_ERROR;
+        }
+
+        float pleft = (float)blockctr / (float)maxblocks * 100;
+        set_progressbar_value(pleft);
+
+    }
+
+//    qDebug() << "Data bytes sent:" << Qt::hex << data_bytes_sent;
+
+    set_progressbar_value(100);
+
+//    return STATUS_SUCCESS;
+
+    send_log_window_message("Closing out Flashing of this block...", true, true);
+    qDebug() << "Closing out Flashing of this block...";
+    connected = false;
+    try_count = 0;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x37);
+
+    while (try_count < 20 && connected == false)
+    {
+        serial->write_serial_data_echo_check(output);
+        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+        qDebug() << "Sent:" << parse_message_to_hex(output);
+        //delay(50);
+        delay(200);
+        received = serial->read_serial_data(20, 200);
+        if (received != "")
+        {
+            connected = true;
+            send_log_window_message(QString::number(try_count) + ": 0x37 response: " + parse_message_to_hex(received), true, true);
+            qDebug() << try_count << ": 0x37 response:" << parse_message_to_hex(received);
+        }
+        try_count++;
+        //delay(try_timeout);
+    }
+    if (received == "" || (uint8_t)received.at(4) != 0x77)
+        send_log_window_message("No or bad response received", true, true);
+        //return STATUS_ERROR;
+
+    delay(100);
+
+    send_log_window_message("Verifying checksum...", true, true);
+    qDebug() << "Verifying checksum...";
+
+    connected = false;
+    try_count = 0;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x31);
+    output.append((uint8_t)0x01);
+    output.append((uint8_t)0x02);
+    output.append((uint8_t)0x02);
+    output.append((uint8_t)0x01);
+
+    serial->write_serial_data_echo_check(output);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+    delay(200);
+    received = serial->read_serial_data(20, 200);
+    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    delay(200);
+
+        if ((uint8_t)received.at(4) != 0x71)
+        {
+         received = serial->read_serial_data(20, 200);        
+         send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+         delay(200);
+         received = serial->read_serial_data(20, 200);
+         send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+         delay(200);
+
+        }
+
+//    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+//        send_log_window_message("No or bad response received", true, true);
+        //return STATUS_ERROR;
+
+    send_log_window_message("Checksum verified...", true, true);
+    qDebug() << "Checksum verified...";
+
+    return STATUS_SUCCESS;
+
+}
+
+/*
+ * Erase Subaru Hitachi TCU CAN (iso15765)
+ *
+ * @return success
+ */
+int FlashEcuSubaruHitachiSH7058Can::erase_subaru_ecu_hitachi_can()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray seed;
+    QByteArray seed_key;
+
+    bool connected = false;
+    int try_count = 0;
+
+    if (!serial->is_serial_port_open())
+    {
+        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
     send_log_window_message("Erasing ECU ROM...", true, true);
 //    qDebug() << "Erasing ECU ROM...";
 
