@@ -90,6 +90,15 @@ private:
     int reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
     int erase_subaru_ecu_hitachi_can();
 
+    QByteArray send_subaru_sid_10_start_diagnostic();
+    QByteArray send_subaru_sid_bf_ssm_init();
+    QByteArray send_subaru_sid_b8_change_baudrate_38400();
+    QByteArray send_subaru_sid_81_start_communication();
+    QByteArray send_subaru_sid_83_request_timings();
+    QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
+//    uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
+
+
     //uint8_t cks_add8(QByteArray chksum_data, unsigned len);
     //void init_crc16_tab(void);
     //uint16_t crc16(const uint8_t *data, uint32_t siz);
