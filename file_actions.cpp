@@ -2669,17 +2669,17 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
     }
     if (!chksumModuleAvailable && configValues->flash_protocol_selected_checksum != "no")
     {
-        QMessageBox *msgBox = new QMessageBox();
-        msgBox->setIcon(QMessageBox::Warning);
-        msgBox->setWindowTitle("File - Checksum Warning");
-        //msgBox->setDetailedText("File - Checksum Warning");
-        msgBox->setText("WARNING! There is no checksum module for this ROM!\
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("File - Checksum Warning");
+        //msgBox.setDetailedText("File - Checksum Warning");
+        msgBox.setText("WARNING! There is no checksum module for this ROM!\
                             Be aware that if this ROM need checksum correction it must be done with another software!");
-        QPushButton *cancelButton = msgBox->addButton(QMessageBox::Cancel);
-        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
-        msgBox->exec();
+        QPushButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
+        QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+        msgBox.exec();
 
-        if (msgBox->clickedButton() == cancelButton)
+        if (msgBox.clickedButton() == cancelButton)
         {
             qDebug() << "Checksum calculation canceled!";
             return ecuCalDef;
