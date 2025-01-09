@@ -810,10 +810,14 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
         received.remove(0, 8);
         received.remove(5, received.length() - 5);
 
+        msg.clear();
+        QString str;
+
         for (int i = 0; i < received.length(); i++)
         {
-            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            str.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
         }
+        msg.append(str.toUtf8());
         QString ecuid = msg;
         //LOG_I("ECU ID = " + ecuid, true, true);
         send_log_window_message("ECU ID = " + ecuid, true, true);
