@@ -23,6 +23,7 @@ enum mcu_type {
     N83M_1_5MB,
     SH72543R,
     MH8104,
+    MH5006,
     MH8111,
     M3779x,
     M3775x,
@@ -220,18 +221,7 @@ const struct eepromblock eblocks_SH7055[] = {
 };
 
 const struct flashblock fblocks_SH7051[] = {
-    {0x00000000,    0x00008000},
-    {0x00008000,    0x00008000},
-    {0x00010000,    0x00008000},
-    {0x00018000,    0x00008000},
-    {0x00020000,    0x00008000},
-    {0x00028000,    0x00008000},
-    {0x00030000,    0x00008000},
-    {0x00038000,    0x00007000},
-    {0x0003F000,    0x00000400},
-    {0x0003F400,    0x00000400},
-    {0x0003F800,    0x00000400},
-    {0x0003FC00,    0x00000400},
+    {0x00000000,    0x00040000},
 };
 
 const struct ramblock rblocks_SH7051[] = {
@@ -429,6 +419,25 @@ const struct eepromblock eblocks_MH8104[] = {
     {0x00000000,    0x00000100},
 };
 
+const struct flashblock fblocks_MH5006[] = {
+    {0x00000000,    0x00004000},
+    {0x00004000,    0x00002000},
+    {0x00006000,    0x00002000},
+    {0x00008000,    0x000F8000},
+};
+
+const struct ramblock rblocks_MH5006[] = {
+    {0x00804000,    0x0000A000},
+};
+
+const struct kernelblock kblocks_MH5006[] = {
+    {0x00804000,    0x0000A000},
+};
+
+const struct eepromblock eblocks_MH5006[] = {
+    {0x00000000,    0x00000100},
+};
+
 const struct flashblock fblocks_MH8111[] = {
     {0x00000000,    0x00040000},
     {0x00040000,    0x00020000},
@@ -457,7 +466,7 @@ const struct flashdev_t flashdevices[] = {
     { "M32R_512KB_4blocks", M32R_512KB_4blocks, 512 * 1024, 4, fblocks_M32R_512KB_4blocks, rblocks_M32R_512KB, kblocks_M32R_512KB, eblocks_M32R_512KB },
     { "MC68HC16Y5", MC68HC16Y5, 160 * 1024, 10, fblocks_MC68HC16Y5, rblocks_MC68HC16Y5, kblocks_MC68HC16Y5, eblocks_MC68HC16Y5 },
     { "MC68HC16Y5_TPU", MC68HC16Y5_TPU, 4 * 1024, 4, fblocks_MC68HC16Y5_TPU, rblocks_MC68HC16Y5, kblocks_MC68HC16Y5, eblocks_MC68HC16Y5 },
-    { "SH7051", SH7051, 256 * 1024, 12, fblocks_SH7051, rblocks_SH7051, kblocks_SH7051, eblocks_SH7051 },
+    { "SH7051", SH7051, 256 * 1024, 1, fblocks_SH7051, rblocks_SH7051, kblocks_SH7051, eblocks_SH7051 },
     { "SH7055", SH7055, 512 * 1024, 16, fblocks_SH7055, rblocks_SH7055, kblocks_SH7055, eblocks_SH7055 },
     { "SH7058", SH7058, 1024 * 1024, 16, fblocks_SH7058, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
     { "SH7058_1block", SH7058, 1024 * 1024, 1, fblocks_SH7058_1block, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
@@ -468,6 +477,7 @@ const struct flashdev_t flashdevices[] = {
     { "N83M_1_5MB", N83M_1_5MB, 1488 * 1024, 3, fblocks_N83M_1_5MB, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "SH72543R", SH72543R, 2 * 1024 * 1024, 2, fblocks_SH72543R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "MH8104", MH8104, 512 * 1024, 4, fblocks_MH8104, rblocks_MH8104, kblocks_MH8104, eblocks_MH8104 },
+    { "MH5006", MH5006, 1024 * 1024, 4, fblocks_MH5006, rblocks_MH5006, kblocks_MH5006, eblocks_MH5006 },
     { "MH8111", MH8111, 3 * 512 * 1024, 4, fblocks_MH8111, rblocks_MH8111, kblocks_MH8111, eblocks_MH8111 },
     { "M3779x", M3779x, 64 * 1024, 1, fblocks_M3779x, rblocks_M3779x, kblocks_M3779x, eblocks_M3779x },
     { "M3775x", M3775x, 64 * 1024, 1, fblocks_M3775x, rblocks_M3775x, kblocks_M3775x, eblocks_M3775x },
