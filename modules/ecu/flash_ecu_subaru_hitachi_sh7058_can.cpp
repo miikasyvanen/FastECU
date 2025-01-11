@@ -277,16 +277,16 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     QString tcuid = QString::fromUtf8(response);
     send_log_window_message("Init Success: ECU ID = " + tcuid, true, true);
 
-        QMessageBox *msgBox = new QMessageBox();
-        msgBox->setIcon(QMessageBox::Warning);
-        msgBox->setWindowTitle("Are we ready to go?");
-        msgBox->setText("Init was OK?, Press OK to continue");
-        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
-        QPushButton *doItCancel = msgBox->addButton(tr("Cancel"), QMessageBox::NoRole);
-        msgBox->exec();
-        if (msgBox->clickedButton() == doItCancel)
+    QMessageBox msgBox;
+    msgBox.setIcon(QMessageBox::Warning);
+    msgBox.setWindowTitle("Are we ready to go?");
+    msgBox.setText("Init was OK?, Press OK to continue");
+    QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+    QPushButton *doItCancel = msgBox.addButton(tr("Cancel"), QMessageBox::NoRole);
+    msgBox.exec();
+    if (msgBox.clickedButton() == doItCancel)
         return STATUS_ERROR;
-        else
+    else
         send_log_window_message("Let's roll...", true, true);
 
     send_log_window_message("Initializing bootloader...", true, true);
@@ -810,25 +810,29 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
         received.remove(0, 8);
         received.remove(5, received.length() - 5);
 
+        msg.clear();
+        QString str;
+
         for (int i = 0; i < received.length(); i++)
         {
-            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            str.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
         }
+        msg.append(str.toUtf8());
         QString ecuid = msg;
         //LOG_I("ECU ID = " + ecuid, true, true);
         send_log_window_message("ECU ID = " + ecuid, true, true);
 
-        QMessageBox *msgBox = new QMessageBox();
-        msgBox->setIcon(QMessageBox::Warning);
-        msgBox->setWindowTitle("Are we ready to go?");
-        msgBox->setText("Init was OK?, Press OK to continue");
-        QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
-        QPushButton *doItCancel = msgBox->addButton(tr("Cancel"), QMessageBox::NoRole);
-        msgBox->exec();
-        if (msgBox->clickedButton() == doItCancel)
-        return STATUS_ERROR;
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("Are we ready to go?");
+        msgBox.setText("Init was OK?, Press OK to continue");
+        QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+        QPushButton *doItCancel = msgBox.addButton(tr("Cancel"), QMessageBox::NoRole);
+        msgBox.exec();
+        if (msgBox.clickedButton() == doItCancel)
+            return STATUS_ERROR;
         else
-        send_log_window_message("Let's roll...", true, true);
+            send_log_window_message("Let's roll...", true, true);
 
         received = send_subaru_sid_b8_change_baudrate_38400();
         //LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
