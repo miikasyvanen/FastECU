@@ -186,7 +186,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     else
         denso_bootloader_init_response_wrx02_ok = denso_bootloader_init_response_stock_wrx02_ok;
 
-    if (received.length() != 3 || !check_received_message(denso_bootloader_init_response_wrx02_ok, received))
+    if (received.length() < 2 || !check_received_message(denso_bootloader_init_response_wrx02_ok, received))
     {
         send_log_window_message("Bad response from bootloader: " + parse_message_to_hex(received), true, true);
     }

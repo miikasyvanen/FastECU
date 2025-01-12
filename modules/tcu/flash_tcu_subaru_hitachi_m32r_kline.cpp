@@ -626,65 +626,6 @@ QByteArray FlashTcuSubaruHitachiM32rKline::subaru_tcu_generate_kline_seed_key(QB
     return key;
 }
 
-
-/*
- * SSM Block Write (K-Line)
- *
- * @return received response
- */
-//QByteArray FlashTcuSubaruHitachiM32RKline::subaru_tcu_hitachi_encrypt_32bit_payload()
-//{
-int FlashTcuSubaruHitachiM32rKline::generateKey7051(int seed)
-{
-    int loword = seed & 0xFFFF;
-    int hiword = (seed >> 16) & 0xFFFF;
-    int r7 = loword;
-    int r4 = (r7 + 302) & 0xFFFF;
-    int r0 = r4;
-    for (int i = 0; i < 3; i++) {
-        r4 <<= 1;
-        if ((r4 & 0x10000) != 0)
-            r4++;
-    }
-    loword = ((hiword ^ r4 + r0 - 1) & 0xFFFF);
-    int r6 = 16010;
-    int r13 = (loword + r6) & 0xFFFF;
-    r4 = (r13 << 1);
-    if ((r4 & 0x10000) != 0)
-        r4++;
-    r4 = (r13 + r4 - 1);
-    r6 = r4;
-    for (int j = 0; j < 5; j++) {
-        r4 <<= 1;
-        if ((r4 & 0x10000) != 0)
-            r4++;
-    }
-    r4 ^= r6;
-    hiword = (r7 ^ r4);
-    return (hiword << 16) | loword;
-}
-
-QByteArray FlashTcuSubaruHitachiM32rKline::encryptData7051(QByteArray filedata)
-{
-
-    qDebug() << "filedata.size(): " << filedata.size();
-    qDebug() << "filedata: " << parse_message_to_hex(filedata);
-    //cout << filedata.size();
-    QByteArray encrypted;
-    //encrypted.fill(0,filedata.size());
-    //    for (size_t i = 0; i < filedata.size(); i += 4) {
-    for (int i = 0; i < filedata.size(); i += 4) {
-        int dword = ((uint8_t)filedata[i] << 24) | ((uint8_t)filedata[i + 1] << 16) | ((uint8_t)filedata[i + 2] << 8) | ((uint8_t)filedata[i + 3] << 0);
-        int cryptedDword = generateKey7051(dword);
-        encrypted.append((uint8_t)(cryptedDword >> 24) & 0xFF);
-        encrypted.append((uint8_t)(cryptedDword >> 16) & 0xFF);
-        encrypted.append((uint8_t)(cryptedDword >> 8) & 0xFF);
-        encrypted.append((uint8_t)(cryptedDword >> 0) & 0xFF);
-    }
-    return encrypted;
-}
-//}
-
 QByteArray FlashTcuSubaruHitachiM32rKline::send_subaru_tcu_sid_b0_block_write(uint32_t dataaddr, uint32_t datalen)
 {
     QByteArray output;
