@@ -25,46 +25,6 @@ void FlashTcuSubaruHitachiM32rKline::run()
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    QByteArray filedata;
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x48);
-    filedata.append((uint8_t)0xCE);
-    filedata.append((uint8_t)0xFF);
-    filedata.append((uint8_t)0xFF);
-    filedata.append((uint8_t)0xF8);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x48);
-    filedata.append((uint8_t)0xCE);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x48);
-    filedata.append((uint8_t)0xCE);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x48);
-    filedata.append((uint8_t)0xCE);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x48);
-    filedata.append((uint8_t)0xCE);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x00);
-    filedata.append((uint8_t)0x48);
-    filedata.append((uint8_t)0xCE);
-    QByteArray encrypted = encryptData7051(filedata);
-    qDebug() << parse_message_to_hex(encrypted);
-    qDebug() << "4A 99 DD FE 60 3D 5B E7 4A 99 DD E7 4A 99 DD E7 4A 99 DD E7 4A 99 DD E7 4A 99 DD E7 4A 99 DD 10";
-    //result = init_flash_hitachi_can();
-
-    //result = init_flash_hitachi_can();
-
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 

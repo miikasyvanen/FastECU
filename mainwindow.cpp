@@ -286,6 +286,10 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     timer->stop();
     splash->close();
     timer->deleteLater();
+    connect(serial, &SerialPortActions::stateChanged,
+            this, &MainWindow::network_state_changed, Qt::DirectConnection);
+    connect(remote_utility, &RemoteUtility::stateChanged,
+            this, &MainWindow::network_state_changed, Qt::DirectConnection);
 
     setSplashScreenProgress("Setting up toolbar...", 10);
     toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
@@ -435,8 +439,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     }
 
     startUpSplash->close();
-    splash->close();
-
+    splash->deleteLater();
+/*
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
     QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
@@ -447,8 +451,8 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     qDebug() << parse_message_to_hex(response);
     aes_ecb_example();
     // AES-128 ECB examples end
-
-    LOG_I("FastECU initialized", true, true);
+*/
+    emit LOG_I("FastECU initialized", true, true);
 }
 
 MainWindow::~MainWindow()
@@ -508,6 +512,36 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     qDebug() << "Decrypted length:" << decrypted_len;
 
     return challengeReply;
+}
+
+void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState)
+{
+    if (state == QRemoteObjectReplica::Valid)
+    {
+        qDebug() << "Network connection established";
+    }
+    else if (oldState == QRemoteObjectReplica::Valid)
+    {
+        qDebug() << "Network connection lost, reconnecting...";
+        QMessageBox msgBox;
+        msgBox.setText("Network connection lost.");
+        msgBox.setInformativeText("Do you want to restart application and try to connect again?");
+        QPushButton *restartButton = msgBox.addButton(tr("Restart"), QMessageBox::YesRole);
+        QPushButton *quitButton = msgBox.addButton(tr("Quit"), QMessageBox::NoRole);
+        msgBox.addButton(tr("Continue work"), QMessageBox::NoRole);
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setDetailedText("Press Restart to restart application. All your unsaved progress will be lost.\n\n"
+                               "Press Quit to quit application. All your unsaved progress will be lost.\n\n"
+                               "Press Continue work to return to application and save your progress. "
+                               "In this case all ECU operations will be unavailable until you restart application.");
+
+        msgBox.exec();
+
+        if (msgBox.clickedButton() == restartButton)
+            qApp->exit(RESTART_CODE);
+        else if (msgBox.clickedButton() == quitButton)
+            qApp->exit(1);
+    }
 }
 
 void MainWindow::aes_ecb_example()
@@ -998,17 +1032,17 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
             if (configValues->flash_protocol_selected_checksum == "n/a")
             {
-                QMessageBox *msgBox = new QMessageBox();
-                msgBox->setIcon(QMessageBox::Warning);
-                msgBox->setWindowTitle("Checksum warning");
-                //msgBox->setDetailedText("Write Flash - Checksum Warning");
-                msgBox->setText("WARNING! There is no checksum module for this ROM!\
+                QMessageBox msgBox;
+                msgBox.setIcon(QMessageBox::Warning);
+                msgBox.setWindowTitle("Checksum warning");
+                //msgBox.setDetailedText("Write Flash - Checksum Warning");
+                msgBox.setText("WARNING! There is no checksum module for this ROM!\
                                     Be aware that if this ROM need checksum correction it must be done with another software!");
-                QPushButton *cancelButton = msgBox->addButton(QMessageBox::Cancel);
-                QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
-                msgBox->exec();
+                QPushButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
+                QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+                msgBox.exec();
 
-                if (msgBox->clickedButton() == cancelButton)
+                if (msgBox.clickedButton() == cancelButton)
                 {
                     qDebug() << "Write canceled!";
                     ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
@@ -1393,10 +1427,25 @@ void MainWindow::save_calibration_file()
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
     //update_protocol_info(rom_number);
+/*
     if (!ecuCalDef[rom_number]->use_romraider_definition && !ecuCalDef[rom_number]->use_ecuflash_definition)
-        QMessageBox::warning(this, tr("Calibration file"), tr("No definition linked to selected ROM, checksums not calculated!\n"));
+    {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("Calibration file");
+        msgBox.setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
+                        "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
+        QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+        QPushButton *doItButton = msgBox.addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox.exec();
+
+        if (msgBox.clickedButton() == doItButton)
+            ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+    }
     else
         ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+*/
+    ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
 
     if (ecuCalDef[rom_number] != NULL)
         fileActions->save_subaru_rom_file(ecuCalDef[rom_number], ecuCalDef[rom_number]->FullFileName);
@@ -1422,10 +1471,25 @@ void MainWindow::save_calibration_file_as()
     QByteArray fullRomDataTmp = ecuCalDef[rom_number]->FullRomData;
 
     //update_protocol_info(rom_number);
+/*
     if (!ecuCalDef[rom_number]->use_romraider_definition && !ecuCalDef[rom_number]->use_ecuflash_definition)
-        QMessageBox::warning(this, tr("Calibration file"), tr("No definition linked to selected ROM, checksums not calculated!\n"));
+    {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("Calibration file");
+        msgBox.setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
+                            "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
+        QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+        QPushButton *doItButton = msgBox.addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox.exec();
+
+        if (msgBox.clickedButton() == doItButton)
+            ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+    }
     else
         ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
+*/
+    ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
 
     if (ecuCalDef[rom_number] != NULL)
     {

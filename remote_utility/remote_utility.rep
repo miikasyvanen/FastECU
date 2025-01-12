@@ -2,4 +2,5 @@ class RemoteUtility
 {
     SLOT (bool send_log_window_message(QString message))
     SLOT (bool set_progressbar_value(int value))
+    SLOT (QString ping(QString message))
 }

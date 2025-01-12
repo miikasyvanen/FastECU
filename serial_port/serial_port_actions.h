@@ -9,6 +9,10 @@
 class SerialPortActions : public QObject
 {
     Q_OBJECT
+
+signals:
+    void stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+
 public:
     explicit SerialPortActions(QString peerAddress="", QWebSocket *web_socket=nullptr, QObject *parent=nullptr);
     ~SerialPortActions();
@@ -143,7 +147,7 @@ private:
 
     const QString autodiscoveryMessage = "FastECU_PTP_Autodiscovery";
     const QString remoteObjectName = "FastECU";
-    const int heartbeatInterval = 1000;
+    const int heartbeatInterval; //Inited in constructor initializer list
     QWebSocket *webSocket;
     WebSocketIoDevice *socket;
     QRemoteObjectNode node;
