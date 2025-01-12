@@ -48,6 +48,8 @@ Support forum found here: https://www.fastecu.fi/forum/
   - Subaru Forester, Impreza, Legacy 2000-2002 K-Line (UJ WA12212930/256KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212940/384KB)
   - Subaru Forester, Impreza, Legacy 2002-2005 K-Line (UJ/Hitachi WA12212970/512KB)
+  - Subaru Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)
+  - Subaru Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)
   - Subaru Forester 2009-2011/Legacy 2010-2011 CAN (Hitachi SH7058/1MB)
   - Subaru Forester, Impreza, Legacy, BRZ 2013+ CAN-bus (Denso SH72531/1.25MB)
   - Subaru Forester 2013+ CAN (Hitachi SH72543/2MB)
@@ -65,8 +67,6 @@ Support forum found here: https://www.fastecu.fi/forum/
   - Subaru Impreza, Legacy Diesel MY17+ EURO6 CAN (SH72543/2MB)
 
 - **ECU models planned**
-  - Subaru Forester 2006, Impreza 2006-2007 K-Line (Hitachi WA12212970WWW/512KB)
-  - Subaru Forester 2007-2008, Impreza 2008+, Legacy 2006+ CAN (Hitachi WA12212970WWW/512KB)
   - Subaru Forester 2013+ CAN (Hitachi SH7059/1.5MB)
 
 ### Unbrick with FastECU (bench flash)
