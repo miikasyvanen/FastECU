@@ -864,19 +864,17 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
         output[10] = (uint8_t)((addr >> 16) & 0xFF);
         output[11] = (uint8_t)((addr >> 8) & 0xFF);
         serial->write_serial_data_echo_check(output);
-        //qDebug() << "0xD8 message sent to kernel initiate dump" << parse_message_to_hex(output);
-        //delay(100);
+        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        //delay(10);
         received = serial->read_serial_data(1, serial_read_timeout);
-        //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
+        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
-        //if (received.length() > 1) {
-            if ((uint8_t)received.at(0) != SID_CAN_START_COMM || (uint8_t)received.at(1) != SID_CAN_DUMP_ROM)
-            {
-                emit LOG_E("Page data request failed!", true, true);
-                emit LOG_E("Received msg: " + parse_message_to_hex(received), true, true);
-                return STATUS_ERROR;
-            }
-        //}
+        if ((uint8_t)received.at(4) != SID_CAN_START_COMM || (uint8_t)received.at(5) != SID_CAN_DUMP_ROM)
+        {
+            emit LOG_E("Page data request failed!", true, true);
+            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
         timeout = 0;
         pagedata.clear();
         while ((uint32_t)pagedata.length() < pagesize && timeout < 1000)
@@ -889,12 +887,12 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
             else
             {
                 emit LOG_E("Page data request failed!", true, true);
-                emit LOG_E("Received msg: " + parse_message_to_hex(received), true, true);
+                emit LOG_E("Received data: " + parse_message_to_hex(received), true, true);
                 emit LOG_E("Pagedata length: " + QString::number(pagedata.length()), true, true);
                 emit LOG_E("Retrying...", true, true);
                 received = serial->read_serial_data(1, serial_read_short_timeout);
                 emit LOG_E("Page data request failed!", true, true);
-                emit LOG_E("Received msg: " + parse_message_to_hex(received), true, true);
+                emit LOG_E("Received data: " + parse_message_to_hex(received), true, true);
                 emit LOG_E("Pagedata length: " + QString::number(pagedata.length()), true, true);
                 //LOG_E("Pagedata: ", true, true);
                 //LOG_E(parse_message_to_hex(pagedata), true, true);
