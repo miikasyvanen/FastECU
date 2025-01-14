@@ -219,6 +219,12 @@ private slots:
     void fast_delay(int timeout);
     void delay(int timeout);
 
+signals:
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
+
 };
 
 #endif // SERIAL_PORT_ACTIONS_DIRECT_H

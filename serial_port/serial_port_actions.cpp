@@ -14,7 +14,13 @@ SerialPortActions::SerialPortActions(QString peerAddress, QWebSocket *web_socket
     , heartbeatInterval(0)
 {
     if (isDirectConnection())
+    {
         serial_direct = new SerialPortActionsDirect(this);
+        connect(serial_direct, SIGNAL(LOG_E(QString,bool,bool)), this, SIGNAL(LOG_E(QString,bool,bool)));
+        connect(serial_direct, SIGNAL(LOG_W(QString,bool,bool)), this, SIGNAL(LOG_W(QString,bool,bool)));
+        connect(serial_direct, SIGNAL(LOG_I(QString,bool,bool)), this, SIGNAL(LOG_I(QString,bool,bool)));
+        connect(serial_direct, SIGNAL(LOG_D(QString,bool,bool)), this, SIGNAL(LOG_D(QString,bool,bool)));
+    }
     else
         startRemote();
 }

@@ -499,8 +499,8 @@ QString SerialPortActionsDirect::open_serial_port()
 
 void SerialPortActionsDirect::reset_connection()
 {
-    close_serial_port();
     close_j2534_serial_port();
+    close_serial_port();
 }
 
 void SerialPortActionsDirect::close_serial_port()
@@ -517,8 +517,34 @@ void SerialPortActionsDirect::close_j2534_serial_port()
     //qDebug() << "J2534_init_ok:" << J2534_init_ok;
     if (j2534->is_serial_port_open())
     {
-        j2534->PassThruDisconnect(chanID);
-        j2534->PassThruClose(devID);
+        bool j2534_disconnect_ok = false;
+        bool j2534_close_ok = false;
+        for (int i = 0; i < 5; i++)
+        {
+            if (!j2534->PassThruDisconnect(chanID))
+            {
+                j2534_disconnect_ok = true;
+                break;
+            }
+            delay(200);
+        }
+        if (!j2534_disconnect_ok)
+            emit LOG_I("J2534 interface disconnect failed!", true, true);
+        else
+            emit LOG_I("J2534 interface disconnected succesfully!", true, true);
+        for (int i = 0; i < 5; i++)
+        {
+            if (!j2534->PassThruClose(devID))
+            {
+                j2534_close_ok = true;
+                break;
+            }
+            delay(200);
+        }
+        if (!j2534_close_ok)
+            emit LOG_I("J2534 interface close failed!", true, true);
+        else
+            emit LOG_I("J2534 interface closed succesfully!", true, true);
     }
     use_openport2_adapter = false;
     J2534_open_ok = false;
@@ -532,6 +558,7 @@ void SerialPortActionsDirect::close_j2534_serial_port()
     char dllName[256];
     j2534->getDllName(dllName);
     delete j2534;
+    delay(200);
     j2534 = new J2534();
     j2534->setDllName(dllName);
 }
@@ -680,7 +707,7 @@ int SerialPortActionsDirect::write_j2534_data(QByteArray output)
 
     txMsgLen = output.length();
     if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
-        txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
+        txMsgLen = PASSTHRU_MSG_DATA_SIZE;
 
     numMsgs = 0;
 
@@ -713,7 +740,7 @@ int SerialPortActionsDirect::write_j2534_data(QByteArray output)
         output.remove(0, txMsgLen);
         txMsgLen = output.length();
         if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
-            txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
+            txMsgLen = PASSTHRU_MSG_DATA_SIZE;
     }
 
     return STATUS_SUCCESS;
@@ -731,7 +758,7 @@ int SerialPortActionsDirect::send_periodic_j2534_data(QByteArray output, int tim
 
     txMsgLen = output.length();
     if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
-        txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
+        txMsgLen = PASSTHRU_MSG_DATA_SIZE;
 
     numMsgs = 0;
 
@@ -757,7 +784,7 @@ int SerialPortActionsDirect::send_periodic_j2534_data(QByteArray output, int tim
         output.remove(0, txMsgLen);
         txMsgLen = output.length();
         if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
-            txMsgLen -= txMsgLen - PASSTHRU_MSG_DATA_SIZE;
+            txMsgLen = PASSTHRU_MSG_DATA_SIZE;
     }
 
     delay(10);
@@ -789,19 +816,26 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
     time_t last_status_update = time(NULL);
     QByteArray received;
 
+    long result = STATUS_NOERROR;
+
     received.clear();
 
     rxmsg.DataSize = 0;
     numRxMsg = 1;
     //j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
     //0 means no error, all other values mean error
-    if (j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout))
+    result = j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    if (result)
+    {
+        qDebug() << "Error" << QString::number(result) << "in msg receive!";
         goto exit;
+    }
     //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
     if (numRxMsg)
     {
-        //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
-        dump_msg(&rxmsg);
+        if (numRxMsg > 1)
+            qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
+        //dump_msg(&rxmsg);
         msgCnt++;
         byteCnt += rxmsg.DataSize;
 

@@ -59,7 +59,7 @@ void J2534::close_serial_port()
     if (serial->isOpen())
     {
         serial->close();
-        delay(500);
+        delay(100);
     }
     opened_serial_port = "";
 }

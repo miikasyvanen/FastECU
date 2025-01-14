@@ -272,6 +272,11 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     //It would be right to init WebSocket outside
     //and pass it already initialized ...
     serial = new SerialPortActions(peerAddress, clientWebSocket);
+    QObject::connect(serial, &SerialPortActions::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(serial, &SerialPortActions::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(serial, &SerialPortActions::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(serial, &SerialPortActions::LOG_D, syslogger, &SystemLogger::log_messages);
+
     remote_utility = new RemoteUtility(peerAddress, clientWebSocket);
     //... and connect it here. Refactor it when you'll need 3rd remote object.
     if (!serial->isDirectConnection())
