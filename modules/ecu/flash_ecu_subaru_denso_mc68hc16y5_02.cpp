@@ -155,7 +155,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     }
 
     // Change serial speed and set 'line end checks' to low level
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    //serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     //if (connect_bootloader_start_countdown(bootloader_start_countdown))
     //    return STATUS_ERROR;
@@ -506,7 +506,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
         data_array[i] = filedata.at(i);
     }
 
-    send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
+    send_log_window_message("--- Comparing ECU flash memory pages to image file ---", true, true);
     send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
     if (get_changed_blocks(&data_array[0], block_modified))
@@ -524,6 +524,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
         }
     }
     send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
+
+    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
 
     if (bcnt)
     {
