@@ -78,11 +78,14 @@ void FlashEcuSubaruDensoSH7055_02::run()
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
-    serial->set_serial_port_baudrate("4800");
+    serial->set_serial_port_baudrate("9600");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
+    serial->change_port_speed("9600");
+    //serial->set_serial_port_baudrate("9600");
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
@@ -159,8 +162,8 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader_subaru_denso_kline_fxt02()
     }
 
     // Change serial speed and set 'line end checks' to low level
-    serial->change_port_speed("9600");
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    //serial->change_port_speed("9600");
+    //serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     //delay(10);
 

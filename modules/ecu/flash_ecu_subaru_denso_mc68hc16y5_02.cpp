@@ -68,11 +68,12 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
-    serial->set_serial_port_baudrate("9600");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
+    serial->change_port_speed("9600");
+    //serial->set_serial_port_baudrate("9600");
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
@@ -168,11 +169,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
     }
     //received = serial->write_serial_data_echo_check(output);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent to bootloader: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent to bootloader: " + parse_message_to_hex(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    delay(50);
     received = serial->read_serial_data(output.length(), serial_read_short_timeout);
-    send_log_window_message("Response from bootloader: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response from bootloader: " + parse_message_to_hex(received);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
     /******************************
      *
@@ -188,18 +188,18 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
 
     if (received.length() < 2 || !check_received_message(denso_bootloader_init_response_wrx02_ok, received))
     {
-        send_log_window_message("Bad response from bootloader: " + parse_message_to_hex(received), true, true);
+        emit LOG_E("Bad response from bootloader: " + parse_message_to_hex(received), true, true);
     }
     else
     {
-        send_log_window_message("Connected to bootloader", true, true);
+        emit LOG_I("Connected to bootloader", true, true);
         return STATUS_SUCCESS;
     }
 
     delay(100);
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
-    send_log_window_message("Checking if Kernel already uploaded, requesting kernel ID", true, true);
+    emit LOG_I("Checking if Kernel already uploaded, requesting kernel ID", true, true);
     //serial->change_port_speed("57600");
     serial->change_port_speed("62500");
     //serial->change_port_speed("39473");
@@ -210,13 +210,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader_subaru_denso_kline_wrx0
             return STATUS_ERROR;
 
         received = request_kernel_id();
-        qDebug() << parse_message_to_hex(received);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 0)
         {
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
-            send_log_window_message("Kernel ID: " + received, true, true);
-            qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+            emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Kernel ID: " + parse_message_to_hex(received), true, true);
             delay(100);
             kernel_alive = true;
             return STATUS_SUCCESS;
@@ -244,17 +244,17 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
 
     if (!serial->is_serial_port_open())
     {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        emit LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
-    //serial->change_port_speed("9600");
+    serial->change_port_speed("9600");
     serial->set_add_iso14230_header(false);
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
     {
-        send_log_window_message("Unable to open kernel file for reading", true, true);
+        emit LOG_E("Unable to open kernel file for reading", true, true);
         return -1;
     }
 
@@ -286,7 +286,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
 
     msg.clear();
     msg.append(QString("Start address to upload kernel: 0x%1, length: 0x%2").arg(start_address,8,16,QLatin1Char('0')).arg(len,4,16,QLatin1Char('0')).toUtf8());
-    send_log_window_message(msg, true, true);
+    emit LOG_I(msg, true, true);
     qDebug() << msg;
 
     output.clear();
@@ -301,7 +301,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     chk_sum = calculate_checksum(output, true);
     output.append((uint8_t)chk_sum);
 
-    send_log_window_message("Start sending kernel... please wait...", true, true);
+    emit LOG_I("Start sending kernel... please wait...", true, true);
     received = serial->write_serial_data_echo_check(output);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     msg.clear();
@@ -311,22 +311,21 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     }
     if (received.length())
     {
-        send_log_window_message("Message received " + QString::number(received.length()) + " bytes '" + msg + "'", true, true);
-        send_log_window_message("Error on kernel upload!", true, true);
+        emit LOG_I("Response: " + QString::number(received.length()) + " bytes '" + msg + "'", true, true);
+        emit LOG_E("Error on kernel upload!", true, true);
         return STATUS_ERROR;
     }
     else
-        send_log_window_message("Kernel uploaded succesfully", true, true);
+        emit LOG_I("Kernel uploaded succesfully", true, true);
 
-    send_log_window_message("Requesting kernel ID", true, true);
-    qDebug() << "Requesting kernel ID";
+    emit LOG_I("Requesting kernel ID", true, true);
 
     delay(1500);
-    qDebug() << "Changing baudrate";
+    emit LOG_D("Changing baudrate", true, true);
     //serial->change_port_speed("57600");
     serial->change_port_speed("62500");
     //serial->change_port_speed("39473");
-    qDebug() << "Baudrate changed";
+    //qDebug() << "Baudrate changed";
     received.clear();
     for (int i = 0; i < 10; i++)
     {
@@ -334,13 +333,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
             return STATUS_ERROR;
 
         received = request_kernel_id();
-        qDebug() << parse_message_to_hex(received);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 0)
         {
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
-            send_log_window_message("Kernel ID: " + received, true, true);
-            qDebug() << "Kernel ID: " << parse_message_to_hex(received);
+            emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Kernel ID: " + parse_message_to_hex(received), true, true);
             delay(100);
             kernel_alive = true;
             return STATUS_SUCCESS;
