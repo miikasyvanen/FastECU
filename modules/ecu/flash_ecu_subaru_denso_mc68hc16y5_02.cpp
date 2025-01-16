@@ -65,6 +65,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
 
     // Set serial port
     serial->set_is_iso14230_connection(false);
+    serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
@@ -99,7 +100,10 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
                 {
                     emit external_logger("Reading ROM, please wait...");
                     send_log_window_message("Reading ROM from Subaru 01-05 16-bit using K-Line", true, true);
-                    result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    if (flash_method.endsWith("_tpu"))
+                        result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    else
+                        result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
@@ -248,8 +252,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
         return STATUS_ERROR;
     }
 
-    serial->change_port_speed("9600");
-    serial->set_add_iso14230_header(false);
+    if (flash_method.endsWith("_ecutek"))
+        serial->change_port_speed("11700");
+    else
+        serial->change_port_speed("9600");
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -265,6 +271,22 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
         pl_encr.append((uint8_t)0x00);
     //len = pl_len;
     len = pl_encr.length();
+
+    uint8_t encryption_xor_value = 0;
+    uint8_t encryption_add_value = 0x10;
+    uint16_t kernel_magic_word = 0;
+
+    if (flash_method.endsWith("_ecutek"))
+    {
+        encryption_xor_value = 0x51;
+        kernel_magic_word = 0x3940;
+    }
+    else
+    {
+        encryption_xor_value = 0x55;
+        kernel_magic_word = 0x3941;
+    }
+
 /*
     QFile kernelfile("kernels/ecuflash_hc16_kernel_106_decrypted.bin.bin");
     if (!kernelfile.open(QIODevice::ReadWrite ))
@@ -273,16 +295,18 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
         return -1;
     }
     for (uint32_t i = 0; i < len; i++) {
-        pl_encr[i] = (uint8_t)(pl_encr[i] - 0x10) ^ 0x55;
+        pl_encr[i] = (uint8_t)(pl_encr[i] - encryption_add_value) ^ encryption_xor_value;
         //chk_sum += pl_encr[i];
     }
     kernelfile.write(pl_encr);
     kernelfile.close();
 */
     for (uint32_t i = 0; i < len; i++) {
-        pl_encr[i] = (uint8_t)(pl_encr[i] ^ 0x55) + 0x10;
+        pl_encr[i] = (uint8_t)(pl_encr[i] ^ encryption_xor_value) + encryption_add_value;
         //chk_sum += pl_encr[i];
     }
+    pl_encr[2] = (kernel_magic_word >> 8) & 0xff;
+    pl_encr[3] = kernel_magic_word & 0xff;
 
     msg.clear();
     msg.append(QString("Start address to upload kernel: 0x%1, length: 0x%2").arg(start_address,8,16,QLatin1Char('0')).arg(len,4,16,QLatin1Char('0')).toUtf8());
