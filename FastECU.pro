@@ -5,15 +5,6 @@ QT += charts
 
 CONFIG += c++11
 
-# Do static build for Windows to have only on portable .exe file that
-# includes everything. On Linux x86_64 and aarch64 use AppImage and/or Flatpack.
-CONFIG(static) {
-    message(win32 static build)
-    # For static build
-    #CONFIG += -static
-    QMAKE_LFLAGS += -static -static-libgcc -static-libstdc++ -lstdc++
-    DEFINES += STATIC
-}
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -27,7 +18,10 @@ DEFINES += QT_DEPRECATED_WARNINGS #QT_SSL
 
 win32 {
     #LIBS += -LC:\Qt\5.9.9\mingw53_32\lib\libQt5OpenGL.a -lopengl32 -lsetupapi
-    LIBS += -lopengl32 -lsetupapi -lcrypto-3
+    #OpenSSL library must be stated first because in case
+    #of static build it cannot be linked static, dynamic only
+    QMAKE_LFLAGS += -lcrypto-3
+    LIBS += -lopengl32 -lsetupapi
     SOURCES += \
     serial_port/J2534_win.cpp
     HEADERS += \
@@ -44,6 +38,25 @@ unix {
     serial_port/J2534_linux.h
     HEADERS += \
     serial_port/J2534_tactrix_linux.h \
+}
+
+# Do static build for Windows to have only on portable .exe file that
+# includes everything. On Linux x86_64 and aarch64 use AppImage and/or Flatpack.
+static {
+    message(win32 static build)
+    # For static build
+    # -static enables static builg globally, for all libs
+    #CONFIG += -static
+
+    #-Wl,-Bstatic means that -Bstatic is passed to linker
+    #and it affects library searching for -l options which follow it.
+    QMAKE_LFLAGS += -Wl,-static -static-libgcc -static-libstdc++ -lstdc++
+    win32:QMAKE_LFLAGS += \
+        -Wl,--whole-archive \
+        -lwinpthread \
+        -Wl,--no-whole-archive
+
+    DEFINES += STATIC
 }
 
 REPC_REPLICA = \

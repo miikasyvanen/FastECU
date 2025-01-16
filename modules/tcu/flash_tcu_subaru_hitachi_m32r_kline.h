@@ -84,8 +84,6 @@ private:
     int read_b8_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
     int read_b0_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
 
-    int generateKey7051(int seed);
-    QByteArray encryptData7051(QByteArray filedata);
     QByteArray subaru_tcu_hitachi_encrypt_32bit_payload();
 
     QByteArray send_subaru_tcu_sid_bf_ssm_init();

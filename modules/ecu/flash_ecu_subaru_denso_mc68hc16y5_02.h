@@ -85,7 +85,7 @@ private:
 
     QByteArray denso_bootloader_init_request_wrx02 = { "\x4D\xFF\xB4" };
     QByteArray denso_bootloader_init_response_stock_wrx02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_ecutek_wrx02_ok = { "\x4D\x00\xB3" };
+    QByteArray denso_bootloader_init_response_ecutek_wrx02_ok = { "\x4C\x00\xB4" };
     QByteArray denso_bootloader_init_response_cobb_wrx02_ok = { "\x4D\x00\xB3" };
     QByteArray denso_bootloader_init_response_wrx02_ok;
 

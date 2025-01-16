@@ -890,8 +890,6 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
                 send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
-            else
-                send_log_window_message("Wrong response from ECU... (" + parse_message_to_hex(received) + ")", true, true);
         }
         timeout = 0;
         pagedata.clear();
@@ -900,10 +898,15 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
             if (kill_process)
                 return STATUS_ERROR;
             received = serial->read_serial_data(1, serial_read_timeout);
+            if (received.length() > 8)
+                send_log_window_message("Response length: " + QString::number(received.length()), true, true);
             if (received.length())
                 pagedata.append(received, 8);
             else
+            {
+                send_log_window_message("No response within 2s!", true, true);
                 return STATUS_ERROR;
+            }
             timeout++;
             //qDebug() << parse_message_to_hex(received);
         }
