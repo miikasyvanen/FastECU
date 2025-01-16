@@ -1519,6 +1519,8 @@ int MainWindow::simulate_obd()
 
     QByteArray sid3e = { "\x81\xf1\x12\x7e" };
 
+    uint8_t sid_4d_ff_b4[] = { 0x4c, 0x00, 0xb4 };
+
     uint8_t sid_81[] = { 0x83, 0xf1, 0x12, 0xc1, 0xef, 0x8f };
     uint8_t sid_82[] = { 0x81, 0xf1, 0x12, 0xc2 };
     uint8_t sid_83_00[] = { 0x80, 0xf1, 0x12, 0x07, 0xc3, 0x00, 0x00, 0xef, 0x00, 0x78, 0x00 };
@@ -1550,52 +1552,59 @@ int MainWindow::simulate_obd()
     ecuid.clear();
     ecu_init_complete = false;
 
-    serial->set_add_iso14230_header(true);
+    serial->set_add_iso14230_header(false);
+    //serial->set_add_iso14230_header(true);
     open_serial_port();
-    serial->change_port_speed("10400");
+    //serial->change_port_speed("10400");
+    serial->change_port_speed("9600");
 
     while (simulate_obd_on)
     {
+        received.clear();
         output.clear();
-        received = serial->read_serial_data(10, 100);
+        received = serial->read_serial_data(16, 100);
         if (received != "")
-            qDebug() << "Received:" << parse_message_to_hex(received);
-
-        if ((uint8_t)received.at(3) == 0x3e || (uint8_t)received.at(4) == 0x3e)
-            output = sid3e;
-
-        if ((uint8_t)received.at(3) == 0x81 || (uint8_t)received.at(4) == 0x81)
-            for (uint8_t i = 0; i < sizeof(sid_81); i++) output.append((uint8_t)sid_81[i]);
-        if ((uint8_t)received.at(3) == 0x82 || (uint8_t)received.at(4) == 0x82)
-            for (uint8_t i = 0; i < sizeof(sid_82); i++) output.append((uint8_t)sid_82[i]);
-        if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x00) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x00))
-            for (uint8_t i = 0; i < sizeof(sid_83_00); i++) output.append((uint8_t)sid_83_00[i]);
-        if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x02) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x02))
-            for (uint8_t i = 0; i < sizeof(sid_83_02); i++) output.append((uint8_t)sid_83_02[i]);
-        if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x03) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x03))
-            for (uint8_t i = 0; i < sizeof(sid_83_03); i++) output.append((uint8_t)sid_83_03[i]);
-
-        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x01) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x01))
-            for (uint8_t i = 0; i < sizeof(sid_27_01); i++) output.append((uint8_t)sid_27_01[i]);
-        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x02) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x02))
-            for (uint8_t i = 0; i < sizeof(sid_27_02); i++) output.append((uint8_t)sid_27_02[i]);
-        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x10) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x10))
-            for (uint8_t i = 0; i < sizeof(sid_27_10); i++) output.append((uint8_t)sid_27_10[i]);
-        if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x11) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x11))
-            for (uint8_t i = 0; i < sizeof(sid_27_11); i++) output.append((uint8_t)sid_27_11[i]);
-
-        if ((uint8_t)received.at(1) == 0x1a && (uint8_t)received.at(2) == 0x90)
-            for (uint8_t i = 0; i < sizeof(sid_1a_90); i++) output.append((uint8_t)sid_1a_90[i]);
-
-        if ((uint8_t)received.at(3) == 0x21 && (uint8_t)received.at(4) == 0x09)
-            for (uint8_t i = 0; i < sizeof(sid_21_09); i++) output.append((uint8_t)sid_21_09[i]);
-
-        if (output != "")
         {
-            qDebug() << "Send msg:" << parse_message_to_hex(output);
-            received = serial->write_serial_data_echo_check(output);
-        }
+            qDebug() << "Received:" << parse_message_to_hex(received);
+            // sid_4d_ff_b4
+            if ((uint8_t)received.at(0) == 0x4d || (uint8_t)received.at(1) == 0xff || (uint8_t)received.at(2) == 0xb4)
+                for (uint8_t i = 0; i < sizeof(sid_4d_ff_b4); i++) output.append((uint8_t)sid_4d_ff_b4[i]);
+/*
+            if ((uint8_t)received.at(3) == 0x3e || (uint8_t)received.at(4) == 0x3e)
+                output = sid3e;
 
+            if ((uint8_t)received.at(3) == 0x81 || (uint8_t)received.at(4) == 0x81)
+                for (uint8_t i = 0; i < sizeof(sid_81); i++) output.append((uint8_t)sid_81[i]);
+            if ((uint8_t)received.at(3) == 0x82 || (uint8_t)received.at(4) == 0x82)
+                for (uint8_t i = 0; i < sizeof(sid_82); i++) output.append((uint8_t)sid_82[i]);
+            if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x00) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x00))
+                for (uint8_t i = 0; i < sizeof(sid_83_00); i++) output.append((uint8_t)sid_83_00[i]);
+            if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x02) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x02))
+                for (uint8_t i = 0; i < sizeof(sid_83_02); i++) output.append((uint8_t)sid_83_02[i]);
+            if (((uint8_t)received.at(3) == 0x83 && (uint8_t)received.at(4) == 0x03) || ((uint8_t)received.at(4) == 0x83 && (uint8_t)received.at(5) == 0x03))
+                for (uint8_t i = 0; i < sizeof(sid_83_03); i++) output.append((uint8_t)sid_83_03[i]);
+
+            if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x01) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x01))
+                for (uint8_t i = 0; i < sizeof(sid_27_01); i++) output.append((uint8_t)sid_27_01[i]);
+            if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x02) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x02))
+                for (uint8_t i = 0; i < sizeof(sid_27_02); i++) output.append((uint8_t)sid_27_02[i]);
+            if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x10) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x10))
+                for (uint8_t i = 0; i < sizeof(sid_27_10); i++) output.append((uint8_t)sid_27_10[i]);
+            if (((uint8_t)received.at(3) == 0x27 && (uint8_t)received.at(4) == 0x11) || ((uint8_t)received.at(4) == 0x27 && (uint8_t)received.at(5) == 0x11))
+                for (uint8_t i = 0; i < sizeof(sid_27_11); i++) output.append((uint8_t)sid_27_11[i]);
+
+            if ((uint8_t)received.at(1) == 0x1a && (uint8_t)received.at(2) == 0x90)
+                for (uint8_t i = 0; i < sizeof(sid_1a_90); i++) output.append((uint8_t)sid_1a_90[i]);
+
+            if ((uint8_t)received.at(3) == 0x21 && (uint8_t)received.at(4) == 0x09)
+                for (uint8_t i = 0; i < sizeof(sid_21_09); i++) output.append((uint8_t)sid_21_09[i]);
+*/
+            if (output != "")
+            {
+                qDebug() << "Send msg:" << parse_message_to_hex(output);
+                received = serial->write_serial_data_echo_check(output);
+            }
+        }
     }
 
     // 81 f1 12 7e
