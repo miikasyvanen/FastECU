@@ -40,5 +40,5 @@ modules:
     sources:
       - type: git
         url: https://github.com/miikasyvanen/FastECU.git
-        branch: development
+        branch: master
 

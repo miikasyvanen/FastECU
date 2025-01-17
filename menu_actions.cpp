@@ -119,7 +119,7 @@ void MainWindow::inc_dec_value(QString action)
     QString mapType = "";
     bool bStatus;
 
-    //qDebug() << "Inc/dec value";
+    //qDebug() << "Inc/dec value:" << action;
     QMdiSubWindow* w = ui->mdiArea->activeSubWindow();
     if (w)
     {
@@ -143,6 +143,8 @@ void MainWindow::inc_dec_value(QString action)
             uint32_t map_data_address = ecuCalDef[mapRomNumber]->AddressList[mapNumber].toUInt(&bStatus, 16);
             int mapXSize = ecuCalDef[mapRomNumber]->XSizeList[mapNumber].toInt();
             int mapYSize = ecuCalDef[mapRomNumber]->YSizeList[mapNumber].toInt();
+            //qDebug() << "Coarse:" << map_coarse_inc_value;
+            //qDebug() << "Fine:" << map_fine_inc_value;
 
             if (!mapTableWidget->selectedRanges().isEmpty())
             {
@@ -198,7 +200,7 @@ void MainWindow::inc_dec_value(QString action)
                 if (map_value_storagetype == "uint24")
                     map_max_value = 0xffffff;
                 if (map_value_storagetype == "float")
-                    map_max_value = 0xfffffff;
+                    map_max_value = 0xffffffff;
                 if (map_value_storagetype == "uint32")
                     map_max_value = 0xffffffff;
 
@@ -321,6 +323,8 @@ void MainWindow::set_value()
 
             if (bStatus && !text.isEmpty()){
                 QStringList map_data_cell_text = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
+                float map_coarse_inc_value = ecuCalDef[mapRomNumber]->YScaleCoarseIncList[mapNumber].toFloat();
+                float map_fine_inc_value = ecuCalDef[mapRomNumber]->YScaleFineIncList[mapNumber].toFloat();
                 QString map_format = ecuCalDef[mapRomNumber]->FormatList[mapNumber];
                 QString map_value_to_byte = ecuCalDef[mapRomNumber]->ToByteList[mapNumber];
                 QString map_value_from_byte = ecuCalDef[mapRomNumber]->FromByteList[mapNumber];
@@ -398,8 +402,8 @@ void MainWindow::set_value()
                                 map_data_value.four_byte_value = (uint32_t)(qRound(map_data_value.float_value));
 
                             bool zero_addition = false;
-                            while (rom_data_value == QString::number(map_data_value.float_value) && zero_addition == false)
-                            {
+                            //while (rom_data_value == QString::number(map_data_value.float_value) && zero_addition == false)
+                            //{
                                 if (text.at(0) == '+'){
                                     QStringList mapItemText = text.split("+");
                                     mapItemValue = mapItemValue + mapItemText[1].toFloat();
@@ -454,7 +458,7 @@ void MainWindow::set_value()
                                         break;
                                     }
                                 }
-                            }
+                            //}
                             if (map_value_storagetype.startsWith("uint"))
                                 mapItemValue = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, QString::number((float)map_data_value.four_byte_value)));
                             else

@@ -395,7 +395,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 {
                     if (rom_scale_child.tagName() == "scaling")
                     {
-                        //qDebug() << "Table scaling";
+                        qDebug() << "Table scaling";
                         if (ecuCalDef->StorageTypeList.at(def_map_index) == " ")
                             ecuCalDef->StorageTypeList.replace(def_map_index, rom_scale_child.attribute("storagetype", " "));
                         if (ecuCalDef->UnitsList.at(def_map_index) == " ")
@@ -403,7 +403,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         if (ecuCalDef->CoarseIncList.at(def_map_index) == " ")
                             ecuCalDef->CoarseIncList.replace(def_map_index, rom_scale_child.attribute("inc", " "));
                         if (ecuCalDef->FineIncList.at(def_map_index) == " ")
-                            //ecuCalDef->FineIncList.replace(def_map_index, rom_scale_child.attribute("inc", " "));
                             ecuCalDef->FineIncList.replace(def_map_index, QString::number(ecuCalDef->CoarseIncList.at(def_map_index).toFloat() / 10.0f));
                         if (ecuCalDef->MinValueList.at(def_map_index) == " ")
                             ecuCalDef->MinValueList.replace(def_map_index, rom_scale_child.attribute("min", " "));
