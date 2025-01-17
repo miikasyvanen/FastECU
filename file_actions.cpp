@@ -99,7 +99,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         }
         // Copy latest version directory path
         if (configDirList.length() > 1)
-            latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
+            latest_config_dir = configDirList.at(0).absoluteFilePath();
         //else
         //    latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
 
@@ -2097,7 +2097,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
-        save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "default.bin");
+        qDebug() << "Save file to:" << configValues->base_config_directory + configValues->software_version + "/calibrations/" + "read.bin";
+        save_subaru_rom_file(ecuCalDef, configValues->base_config_directory + configValues->software_version + "/calibrations/" + "read.bin");
 
         if (filename == "")
             filename = "default.bin";
@@ -2484,7 +2485,7 @@ FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::
     if (!file.open(QIODevice::WriteOnly ))
     {
         //qDebug() << "Unable to open file for writing";
-        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
+        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file " + filename + " for writing");
         return NULL;
     }
 

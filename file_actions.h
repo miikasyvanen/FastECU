@@ -67,7 +67,7 @@ public:
     struct ConfigValuesStructure {
         QString software_name = "FastECU";
         QString software_title = "FastECU";
-        QString software_version = "0.1.0-beta.3";
+        QString software_version = "0.1.0-beta.4";
 
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
