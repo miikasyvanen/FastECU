@@ -351,6 +351,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                         }
                                         TableChild = TableChild.nextSibling().toElement();
                                     }
+                                    selection_name.replace("on", "enabled");
+                                    selection_name.replace("off", "disabled");
                                     ecuCalDef->SelectionsNameList.replace(i, selection_name);
                                     ecuCalDef->SelectionsValueList.replace(i, selection_value);
                                 }

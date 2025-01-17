@@ -24,8 +24,8 @@
 #define SID_OE_KERNEL_CRC                       0x02
 #define SID_OE_KERNEL_READ_AREA                 0x03
 #define SID_OE_KERNEL_PROG_VOLT                 0x04
-#define SID_OE_KERNEL_UNK_1                     0x05
-#define SID_OE_KERNEL_UNK_2                     0x06
+#define SID_OE_KERNEL_GET_MAX_MSG_SIZE          0x05
+#define SID_OE_KERNEL_GET_MAX_BLK_SIZE          0x06
 
 #define SID_OE_KERNEL_FLASH_ENABLE				0x20
 #define SID_OE_KERNEL_FLASH_DISABLE				0x21

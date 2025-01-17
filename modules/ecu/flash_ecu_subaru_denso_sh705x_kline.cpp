@@ -598,7 +598,7 @@ int FlashEcuSubaruDensoSH705xKline::write_mem_subaru_denso_sh705x_kline(bool tes
     }
 
     send_log_window_message("--- Comparing ECU flash memory pages to image file ---", true, true);
-    send_log_window_message("seg\tstart\tlength\tecu crc\timg crc\tsame?", true, true);
+    send_log_window_message("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
     if (get_changed_blocks_denso_sh705x_kline(&data_array[0], block_modified))
     {
@@ -649,7 +649,7 @@ int FlashEcuSubaruDensoSH705xKline::write_mem_subaru_denso_sh705x_kline(bool tes
         set_progressbar_value(100);
 
         send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
-        send_log_window_message("seg\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
+        send_log_window_message("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
         if (get_changed_blocks_denso_sh705x_kline(&data_array[0], block_modified))
         {
