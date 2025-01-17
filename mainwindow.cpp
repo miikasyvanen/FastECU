@@ -632,9 +632,9 @@ void MainWindow::select_protocol()
     connect(&protocolSelect, SIGNAL(finished (int)), this, SLOT(select_protocol_finished(int)));
     protocolSelect.exec();
 
-    QRect  screenGeometry = this->geometry();
-    protocolSelect.move(screenGeometry.center() - protocolSelect.rect().center());
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    //QRect screenGeometry = this->geometry();
+    //protocolSelect.move(screenGeometry.center() - protocolSelect.rect().center());
+    //QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
@@ -666,9 +666,9 @@ void MainWindow::select_vehicle()
     connect(&vehicleSelect, SIGNAL(finished (int)), this, SLOT(select_vehicle_finished(int)));
     vehicleSelect.exec();
 
-    QRect  screenGeometry = this->geometry();
-    vehicleSelect.move(screenGeometry.center() - vehicleSelect.rect().center());
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    //QRect screenGeometry = this->geometry();
+    //vehicleSelect.move(screenGeometry.center() - vehicleSelect.rect().center());
+    //QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");

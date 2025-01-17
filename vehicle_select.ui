@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>VehicleSelectWindow</class>
- <widget class="QDialog" name="VehicleSelectWindow">
+ <class>VehicleSelect</class>
+ <widget class="QDialog" name="VehicleSelect">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Select protocol</string>
+   <string>Select vehicle</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="2,3,0">
    <item>

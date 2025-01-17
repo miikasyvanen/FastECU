@@ -14,7 +14,7 @@
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
-    class VehicleSelectWindow;
+    class VehicleSelect;
 }
 QT_END_NAMESPACE
 
@@ -58,7 +58,7 @@ private:
     QString flash_protocol_family;
 
     FileActions::ConfigValuesStructure *configValues;
-    Ui::VehicleSelectWindow *ui;
+    Ui::VehicleSelect *ui;
 
 
 private slots:

@@ -3,7 +3,7 @@
 
 VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::VehicleSelectWindow)
+    , ui(new Ui::VehicleSelect)
     , configValues(configValues)
 {
     ui->setupUi(this);
