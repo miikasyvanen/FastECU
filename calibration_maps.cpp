@@ -199,7 +199,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
     if (ecuCalDef->TypeList.at(mapIndex) == "Switch")
     {
-        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'switch'";
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'switch'";
         bool checked = false;
         bool bStatus = false;
         QString state;
@@ -239,7 +239,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     }
     else if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
     {
-        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'MultiSelectable'";
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'MultiSelectable'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QStringList selectionsList = ecuCalDef->SelectionsNameList.at(mapIndex).split(",");
         QStringList yScaleCellText = ecuCalDef->YScaleUnitsList.at(mapIndex).split(",");
@@ -266,7 +266,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     }
     else if (ecuCalDef->TypeList.at(mapIndex) == "Selectable")
     {
-        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Selectable'";
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Selectable'";
         QString mapDataCellText = ecuCalDef->MapData.at(mapIndex);//.split(",");
         QStringList selectionNameList = ecuCalDef->SelectionsNameList.at(mapIndex).split(",");
         QStringList selectionValueList = ecuCalDef->SelectionsValueList.at(mapIndex).split(",");
@@ -293,13 +293,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     }
     else if (xSize > 1 && (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis"))
     {
-        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type: 'Static'";
-        /*
-        if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
-            qDebug() << "static Y: xSize" << xSize;
-        else
-            qDebug() << "Y: xSize" << xSize;
-            */
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type: 'Static'";
 
         QStringList xScaleCellText;
         if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
@@ -337,7 +331,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     }
     else if (ySize > 1 && ecuCalDef->TypeList.at(mapIndex) != "Switch")
     {
-        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Y Axis 2D'";
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Y Axis 2D'";
         QStringList yScaleCellText = ecuCalDef->YScaleData.at(mapIndex).split(",");
         int maxWidth = 0;
         for (int i = 0; i < ySize; i++)
@@ -363,7 +357,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
     if (ecuCalDef->TypeList.at(mapIndex) == "1D")
     {
-        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '1D'";
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '1D'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QTableWidgetItem *cellItem = new QTableWidgetItem;
         cellItem->setTextAlignment(Qt::AlignCenter);
@@ -377,13 +371,13 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
     if (ecuCalDef->TypeList.at(mapIndex) == "2D" || ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
-        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '2D/3D'";
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '2D/3D'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QStringList xScaleCellText = ecuCalDef->XScaleData.at(mapIndex).split(",");
         ecuCalDef->MaxValueList[mapIndex] = "-1000";
         ecuCalDef->MinValueList[mapIndex] = "1000";
 
-        qDebug() << "xScaleCellText:" << xScaleCellText;
+        //qDebug() << "xScaleCellText:" << xScaleCellText;
         for (int i = 0; i < mapDataCellText.length(); i++)
         {
             if (mapDataCellText.at(i).toFloat() < ecuCalDef->MinValueList.at(mapIndex).toFloat())
@@ -403,7 +397,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             if (i < xScaleCellText.count())
                 cellItem->setText(xScaleCellDataText);
             ui->mapDataTableWidget->setItem(0, i + xSizeOffset, cellItem);
-            qDebug() << "xScaleCellText:" << xScaleCellText;
+            //qDebug() << "xScaleCellText:" << xScaleCellText;
 
             QFontMetrics fm(cellFont);
             int width = fm.horizontalAdvance(xScaleCellDataText) + 20;

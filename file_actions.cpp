@@ -2113,7 +2113,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->use_ecuflash_definition = false;
     ecuCalDef->use_romraider_definition = false;
 
-    if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
+    if ((configValues->primary_definition_base == "ecuflash"  || configValues->use_romraider_definitions != "enabled") && configValues->ecuflash_definition_files_directory.length())
     {
         if (configValues->use_ecuflash_definitions == "enabled")
         {
