@@ -983,7 +983,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
     }
 
     send_log_window_message("--- comparing ECU flash memory pages to image file ---", true, true);
-    send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+    send_log_window_message("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
     if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
     {
@@ -1034,7 +1034,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
         set_progressbar_value(100);
 
         send_log_window_message("--- comparing ECU flash memory pages to image file after reflash ---", true, true);
-        send_log_window_message("seg\tstart\tlen\tsame?", true, true);
+        send_log_window_message("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
         if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
         {
@@ -1407,8 +1407,8 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
         {
             if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_WB)
             {
-                qDebug() << "Flashing of 128 byte block unsuccessful, stopping";
-                qDebug() << hex << num_128_byte_blocks << "/" << (i & 0xFFFF);
+                LOG_E("Flashing of 128 byte block unsuccessful, stopping", true, true);
+                LOG_E(QString::number(num_128_byte_blocks, 16) + " / " + QString::number(i & 0xFFFF, 16), true, true);
                 //return STATUS_ERROR;
             }
             else
@@ -1420,7 +1420,7 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
         msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        send_log_window_message(msg, true, true);
+        LOG_I(msg, true, true);
 
         remain -= blocksize;
         start += blocksize;

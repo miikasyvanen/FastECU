@@ -637,9 +637,9 @@ void MainWindow::select_protocol()
     connect(&protocolSelect, SIGNAL(finished (int)), this, SLOT(select_protocol_finished(int)));
     protocolSelect.exec();
 
-    QRect  screenGeometry = this->geometry();
-    protocolSelect.move(screenGeometry.center() - protocolSelect.rect().center());
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    //QRect screenGeometry = this->geometry();
+    //protocolSelect.move(screenGeometry.center() - protocolSelect.rect().center());
+    //QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
@@ -671,9 +671,9 @@ void MainWindow::select_vehicle()
     connect(&vehicleSelect, SIGNAL(finished (int)), this, SLOT(select_vehicle_finished(int)));
     vehicleSelect.exec();
 
-    QRect  screenGeometry = this->geometry();
-    vehicleSelect.move(screenGeometry.center() - vehicleSelect.rect().center());
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    //QRect screenGeometry = this->geometry();
+    //vehicleSelect.move(screenGeometry.center() - vehicleSelect.rect().center());
+    //QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     qDebug() << "Selected protocol:" << configValues->flash_protocol_selected_id;
     //status_bar_ecu_label->setText(configValues->flash_protocol_selected_description + " ");
@@ -1565,7 +1565,6 @@ void MainWindow::selectable_combobox_item_changed(QString item)
                         for (int k = 0; k < storagesize; k++)
                         {
                             dataByte = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).mid(0, 2).toUInt(&bStatus, 16);
-                            qDebug() << "Databyte:" << dataByte;
                             ecuCalDef[mapRomNumber]->FullRomData[byteAddress] = dataByte;
                         }
                     }
@@ -1683,7 +1682,6 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
         int romNumber = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedFilesTreeItem);
         int mapIndex = selectedDataTreeItem->text(1).toInt();
         int romIndex = selectedFilesTreeItem->text(2).toInt();
-
         for (int i = 0; i < ecuCalDef[romNumber]->NameList.count(); i++)
         {
             if (ecuCalDef[romNumber]->NameList.at(i) == selectedText && i == mapIndex)
@@ -1694,7 +1692,6 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
                     QList<QMdiSubWindow *> list = ui->mdiArea->findChildren<QMdiSubWindow *>();
                     foreach(QMdiSubWindow *w, list)
                     {
-                        //qDebug() << map_index << w->objectName();
                         map_index++;
                         if (w->objectName().startsWith(QString::number(romIndex) + "," + QString::number(i) + "," + ecuCalDef[romNumber]->NameList.at(i)))
                         {

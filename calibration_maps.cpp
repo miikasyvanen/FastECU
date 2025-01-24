@@ -197,76 +197,9 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     cellFont.setFamily("Franklin Gothic");
     //qDebug() << "Cell font size =" << cellFont.pointSize();
 
-    if (xSize > 1 || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
-    {
-        /*
-        if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis")
-            qDebug() << "static Y: xSize" << xSize;
-        else
-            qDebug() << "Y: xSize" << xSize;
-            */
-
-        QStringList xScaleCellText;
-        if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
-            xScaleCellText = ecuCalDef->XScaleStaticDataList.at(mapIndex).split(",");
-        else
-            xScaleCellText = ecuCalDef->XScaleData.at(mapIndex).split(",");
-
-        for (int i = 0; i < xSize; i++)
-        {
-            QTableWidgetItem *cellItem = new QTableWidgetItem;
-            QString xScaleCellDataText = xScaleCellText.at(i);
-            if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
-                xScaleCellDataText = xScaleCellText.at(i);
-            else
-                xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->XScaleFormatList.at(mapIndex)));
-            //qDebug() << "Y: xSize" << i << "/" << xSize;
-
-            cellItem->setTextAlignment(Qt::AlignCenter);
-            cellItem->setFont(cellFont);
-            if (i < xScaleCellText.count())
-                cellItem->setText(xScaleCellDataText);
-            ui->mapDataTableWidget->setItem(0, i + xSizeOffset, cellItem);
-/*
-            if (ySize > 1)
-                ui->mapDataTableWidget->setItem(0, i + 1, cellItem);
-            else
-                ui->mapDataTableWidget->setItem(0, i, cellItem);
-*/
-            QFontMetrics fm(cellFont);
-            int width = fm.horizontalAdvance(xScaleCellDataText) + 20;
-            if (width > maxWidth)
-                maxWidth = width;
-            ui->mapDataTableWidget->horizontalHeader()->resizeSection(i, maxWidth);
-        }
-    }
-    if (ySize > 1 && ecuCalDef->TypeList.at(mapIndex) != "Switch")
-    {
-        QStringList yScaleCellText = ecuCalDef->YScaleData.at(mapIndex).split(",");
-        int maxWidth = 0;
-        for (int i = 0; i < ySize; i++)
-        {
-            QTableWidgetItem *cellItem = new QTableWidgetItem;
-            QString yScaleCellDataText = yScaleCellText.at(i);
-            yScaleCellDataText = QString::number(yScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->YScaleFormatList.at(mapIndex)));
-
-            cellItem->setTextAlignment(Qt::AlignCenter);
-            cellItem->setFont(cellFont);
-            if (i < yScaleCellText.count())
-                cellItem->setText(yScaleCellDataText);
-            ui->mapDataTableWidget->setItem(i + ySizeOffset, 0, cellItem);
-
-            QFontMetrics fm(cellFont);
-            int width = fm.horizontalAdvance(yScaleCellDataText) + 20;
-            if (width > maxWidth)
-                maxWidth = width;
-
-        }
-        ui->mapDataTableWidget->horizontalHeader()->resizeSection(0, maxWidth);
-    }
     if (ecuCalDef->TypeList.at(mapIndex) == "Switch")
     {
-        //qDebug() << "Map type 'switch'";
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'switch'";
         bool checked = false;
         bool bStatus = false;
         QString state;
@@ -304,8 +237,9 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         ui->mapDataTableWidget->setCellWidget(0, 0, checkbox);
         connect(checkbox, SIGNAL(stateChanged(int)), this, SIGNAL(checkbox_state_changed(int)));
     }
-    if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
+    else if (ecuCalDef->TypeList.at(mapIndex) == "MultiSelectable")
     {
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'MultiSelectable'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QStringList selectionsList = ecuCalDef->SelectionsNameList.at(mapIndex).split(",");
         QStringList yScaleCellText = ecuCalDef->YScaleUnitsList.at(mapIndex).split(",");
@@ -322,7 +256,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             selectableComboBox->setFont(cellFont);
             selectableComboBox->setFixedWidth(mapCellWidthSelectable);
             for (int j = 0; j < selectionsList.length(); j++){
-                    selectableComboBox->addItem(selectionsList.at(j));
+                selectableComboBox->addItem(selectionsList.at(j));
             }
             selectableComboBox->setObjectName("selectableComboBox");
             selectableComboBox->setCurrentIndex(mapDataCellText.at(0).toInt());
@@ -330,8 +264,9 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectable_combobox_item_changed(QString)));
         }
     }
-    if (ecuCalDef->TypeList.at(mapIndex) == "Selectable")
+    else if (ecuCalDef->TypeList.at(mapIndex) == "Selectable")
     {
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Selectable'";
         QString mapDataCellText = ecuCalDef->MapData.at(mapIndex);//.split(",");
         QStringList selectionNameList = ecuCalDef->SelectionsNameList.at(mapIndex).split(",");
         QStringList selectionValueList = ecuCalDef->SelectionsValueList.at(mapIndex).split(",");
@@ -356,9 +291,73 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         ui->mapDataTableWidget->setCellWidget(0, 0, selectableComboBox);
         connect(selectableComboBox, SIGNAL(currentTextChanged(QString)), this, SIGNAL(selectable_combobox_item_changed(QString)));
     }
+    else if (xSize > 1 && (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis"))
+    {
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type: 'Static'";
+
+        QStringList xScaleCellText;
+        if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
+            xScaleCellText = ecuCalDef->XScaleStaticDataList.at(mapIndex).split(",");
+        else
+            xScaleCellText = ecuCalDef->XScaleData.at(mapIndex).split(",");
+
+        for (int i = 0; i < xSize; i++)
+        {
+            QTableWidgetItem *cellItem = new QTableWidgetItem;
+            QString xScaleCellDataText = xScaleCellText.at(i);
+            if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
+                xScaleCellDataText = xScaleCellText.at(i);
+            else
+                xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->XScaleFormatList.at(mapIndex)));
+            //qDebug() << "Y: xSize" << i << "/" << xSize;
+
+            cellItem->setTextAlignment(Qt::AlignCenter);
+            cellItem->setFont(cellFont);
+            if (i < xScaleCellText.count())
+                cellItem->setText(xScaleCellDataText);
+            ui->mapDataTableWidget->setItem(0, i + xSizeOffset, cellItem);
+/*
+            if (ySize > 1)
+                ui->mapDataTableWidget->setItem(0, i + 1, cellItem);
+            else
+                ui->mapDataTableWidget->setItem(0, i, cellItem);
+*/
+            QFontMetrics fm(cellFont);
+            int width = fm.horizontalAdvance(xScaleCellDataText) + 20;
+            if (width > maxWidth)
+                maxWidth = width;
+            ui->mapDataTableWidget->horizontalHeader()->resizeSection(i, maxWidth);
+        }
+    }
+    else if (ySize > 1 && ecuCalDef->TypeList.at(mapIndex) != "Switch")
+    {
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Y Axis 2D'";
+        QStringList yScaleCellText = ecuCalDef->YScaleData.at(mapIndex).split(",");
+        int maxWidth = 0;
+        for (int i = 0; i < ySize; i++)
+        {
+            QTableWidgetItem *cellItem = new QTableWidgetItem;
+            QString yScaleCellDataText = yScaleCellText.at(i);
+            yScaleCellDataText = QString::number(yScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->YScaleFormatList.at(mapIndex)));
+
+            cellItem->setTextAlignment(Qt::AlignCenter);
+            cellItem->setFont(cellFont);
+            if (i < yScaleCellText.count())
+                cellItem->setText(yScaleCellDataText);
+            ui->mapDataTableWidget->setItem(i + ySizeOffset, 0, cellItem);
+
+            QFontMetrics fm(cellFont);
+            int width = fm.horizontalAdvance(yScaleCellDataText) + 20;
+            if (width > maxWidth)
+                maxWidth = width;
+
+        }
+        ui->mapDataTableWidget->horizontalHeader()->resizeSection(0, maxWidth);
+    }
 
     if (ecuCalDef->TypeList.at(mapIndex) == "1D")
     {
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '1D'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QTableWidgetItem *cellItem = new QTableWidgetItem;
         cellItem->setTextAlignment(Qt::AlignCenter);
@@ -372,11 +371,13 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
     if (ecuCalDef->TypeList.at(mapIndex) == "2D" || ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
-        //qDebug() << "2D map" << ecuCalDef->NameList.at(mapIndex);
+        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '2D/3D'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
+        QStringList xScaleCellText = ecuCalDef->XScaleData.at(mapIndex).split(",");
         ecuCalDef->MaxValueList[mapIndex] = "-1000";
         ecuCalDef->MinValueList[mapIndex] = "1000";
 
+        //qDebug() << "xScaleCellText:" << xScaleCellText;
         for (int i = 0; i < mapDataCellText.length(); i++)
         {
             if (mapDataCellText.at(i).toFloat() < ecuCalDef->MinValueList.at(mapIndex).toFloat())
@@ -384,14 +385,22 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             if (mapDataCellText.at(i).toFloat() > ecuCalDef->MaxValueList.at(mapIndex).toFloat())
                 ecuCalDef->MaxValueList[mapIndex] = QString::number(mapDataCellText.at(i).toFloat() * 2);
         }
-        //qDebug() << "Y: ySize" << ySize;
 
         for (int i = 0; i < xSize; i++)
         {
-            QString cellDataText;
-            cellDataText = QString::number(mapDataCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->FormatList.at(mapIndex)));
+            QTableWidgetItem *cellItem = new QTableWidgetItem;
+            QString xScaleCellDataText;
+            xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->FormatList.at(mapIndex)));
+
+            cellItem->setTextAlignment(Qt::AlignCenter);
+            cellItem->setFont(cellFont);
+            if (i < xScaleCellText.count())
+                cellItem->setText(xScaleCellDataText);
+            ui->mapDataTableWidget->setItem(0, i + xSizeOffset, cellItem);
+            //qDebug() << "xScaleCellText:" << xScaleCellText;
+
             QFontMetrics fm(cellFont);
-            int width = fm.horizontalAdvance(cellDataText) + 20;
+            int width = fm.horizontalAdvance(xScaleCellDataText) + 20;
             if (width > maxWidth)
                 maxWidth = width;
         }

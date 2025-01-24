@@ -99,7 +99,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         }
         // Copy latest version directory path
         if (configDirList.length() > 1)
-            latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
+            latest_config_dir = configDirList.at(0).absoluteFilePath();
         //else
         //    latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
 
@@ -2097,7 +2097,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
-        save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "default.bin");
+        qDebug() << "Save file to:" << configValues->base_config_directory + configValues->software_version + "/calibrations/" + "read.bin";
+        save_subaru_rom_file(ecuCalDef, configValues->base_config_directory + configValues->software_version + "/calibrations/" + "read.bin");
 
         if (filename == "")
             filename = "default.bin";
@@ -2112,7 +2113,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->use_ecuflash_definition = false;
     ecuCalDef->use_romraider_definition = false;
 
-    if (configValues->primary_definition_base == "ecuflash" && configValues->ecuflash_definition_files_directory.length())
+    if ((configValues->primary_definition_base == "ecuflash"  || configValues->use_romraider_definitions != "enabled") && configValues->ecuflash_definition_files_directory.length())
     {
         if (configValues->use_ecuflash_definitions == "enabled")
         {
@@ -2268,7 +2269,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
     QByteArray padding;
     padding.clear();
-    if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < 190 * 1024)
+    if (ecuCalDef->RomInfo.at(FlashMethod).startsWith("sub_ecu_denso_mc68hc16y5_02") && ecuCalDef->FileSize.toUInt() < 190 * 1024)
     {
         for (int i = 0; i < 0x8000; i++)
             ecuCalDef->FullRomData.insert(0x20000, (uint8_t)0xff);
@@ -2484,7 +2485,7 @@ FileActions::EcuCalDefStructure *FileActions::save_subaru_rom_file(FileActions::
     if (!file.open(QIODevice::WriteOnly ))
     {
         //qDebug() << "Unable to open file for writing";
-        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
+        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file " + filename + " for writing");
         return NULL;
     }
 

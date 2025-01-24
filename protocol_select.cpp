@@ -14,7 +14,7 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
     ui->treeWidget->setHeaderLabels(tree_widget_headers);
     ui->treeWidget->setFont(font);
 
-    QRect  screenGeometry = this->geometry();
+    //QRect  screenGeometry = this->geometry();
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
     //ui->treeWidget->setColumnWidth(0, 150);
@@ -65,6 +65,12 @@ ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues,
     description_width += 20;
     ui->treeWidget->setColumnWidth(0, protocol_width);
     ui->treeWidget->setColumnWidth(1, description_width);
+/*
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect  screenGeometry = screen->geometry();
+    if (this->width() < screenGeometry.width() && this->height() < screenGeometry.height())
+        this->showMaximized();
+*/
     ui->treeWidget->setFixedWidth(protocol_width + description_width + 20);
 
     for (int i = 0; i < protocols_sorted.length(); i++)
