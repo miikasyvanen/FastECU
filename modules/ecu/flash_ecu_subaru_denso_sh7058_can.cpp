@@ -817,8 +817,7 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
     uint32_t len_done = 0;  //total data written to file
 
-    send_log_window_message("Start reading ROM, please wait..." + received, true, true);
-    qDebug() << "Start reading ROM, please wait...";
+    LOG_I("Start reading ROM, please wait..." + received, true, true);
 
     // send 0xD8 command to kernel to dump the chunk from ROM
     output.clear();
@@ -864,10 +863,10 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
         output[10] = (uint8_t)((addr >> 16) & 0xFF);
         output[11] = (uint8_t)((addr >> 8) & 0xFF);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         //delay(10);
         received = serial->read_serial_data(1, serial_read_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         if ((uint8_t)received.at(4) != SID_CAN_START_COMM || (uint8_t)received.at(5) != SID_CAN_DUMP_ROM)
         {
@@ -877,39 +876,15 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
         }
         timeout = 0;
         pagedata.clear();
-        while ((uint32_t)pagedata.length() < pagesize && timeout < 1000)
-        {
-            if (kill_process)
-                return STATUS_ERROR;
-            received = serial->read_serial_data(1, serial_read_timeout);
-            if (received.length() == 8)
-                pagedata.append(received, 8);
-            else
-            {
-                emit LOG_E("Page data request failed!", true, true);
-                emit LOG_E("Received data: " + parse_message_to_hex(received), true, true);
-                emit LOG_E("Pagedata length: " + QString::number(pagedata.length()), true, true);
-                emit LOG_E("Retrying...", true, true);
-                received = serial->read_serial_data(1, serial_read_short_timeout);
-                emit LOG_E("Page data request failed!", true, true);
-                emit LOG_E("Received data: " + parse_message_to_hex(received), true, true);
-                emit LOG_E("Pagedata length: " + QString::number(pagedata.length()), true, true);
-                //LOG_E("Pagedata: ", true, true);
-                //LOG_E(parse_message_to_hex(pagedata), true, true);
-                return STATUS_ERROR;
 
-            }
-            timeout++;
-            //qDebug() << parse_message_to_hex(received);
-        }
-        if (timeout >= 1000)
-        {
-            send_log_window_message("Page data timeout!", true, true);
+        if (kill_process)
             return STATUS_ERROR;
-        }
+        received = serial->read_serial_data(1, serial_read_timeout);
+        //emit LOG_D("Received data: " + parse_message_to_hex(received), true, true);
+        received.remove(0, 4);
+        pagedata.append(received, received.length());
+
         mapdata.append(pagedata);
-        //qDebug() << "Page data length:" << pagedata.length();
-        //qDebug() << "Page data:" << parse_message_to_hex(pagedata);
 
         // don't count skipped first bytes //
         cplen = (numblocks * pagesize) - skip_start; //this is the actual # of valid bytes in buf[]
@@ -931,8 +906,8 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        send_log_window_message(msg, true, true);
-        delay(1);
+        LOG_I(msg, true, true);
+        //delay(1);
 
         // and drop extra bytes at the end //
         uint32_t extrabytes = (cplen + len_done);   //hypothetical new length
@@ -947,9 +922,7 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
         willget -= (numblocks * pagesize);
     }
 
-    send_log_window_message("ROM read ready" + received, true, true);
-    qDebug() << "ROM read ready";
-    //qDebug() << "Map data length:" << mapdata.length();
+    LOG_I("ROM read ready", true, true);
 
     ecuCalDef->FullRomData = mapdata;
     set_progressbar_value(100);

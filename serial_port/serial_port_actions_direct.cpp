@@ -833,8 +833,8 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
     //qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
     if (numRxMsg)
     {
-        if (numRxMsg > 1)
-            qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
+        //if (numRxMsg > 1)
+        //    qDebug() << numRxMsg << "messages, rx status" << rxmsg.RxStatus;
         //dump_msg(&rxmsg);
         msgCnt++;
         byteCnt += rxmsg.DataSize;
