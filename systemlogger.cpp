@@ -43,18 +43,19 @@ void SystemLogger::log_messages(QString message, bool timestamp, bool linefeed)
 
     // Check if timestamp added
     if (timestamp)
+    {
         msg += dateTimeString;
 
-    // Check log type
-    if (metaMethod.name() == "LOG_E")
-        msg += "(EE) ";
-    else if (metaMethod.name() == "LOG_W")
-        msg += "(WW) ";
-    else if (metaMethod.name() == "LOG_I")
-        msg += "(II) ";
-    else if (metaMethod.name() == "LOG_D")
-        msg += "(DD) ";
-
+        // Check log type
+        if (metaMethod.name() == "LOG_E")
+            msg += "(EE) ";
+        else if (metaMethod.name() == "LOG_W")
+            msg += "(WW) ";
+        else if (metaMethod.name() == "LOG_I")
+            msg += "(II) ";
+        else if (metaMethod.name() == "LOG_D")
+            msg += "(DD) ";
+    }
     msg += message;
 
     qDebug() << msg;
