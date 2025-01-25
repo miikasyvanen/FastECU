@@ -511,14 +511,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
     QByteArray received;
     uint16_t chksum;
 
-    if (ecuCalDef->FileSize.toUInt() < 190 * 1024)
+    filedata = ecuCalDef->FullRomData;
+
+    if (filedata.length() < 190 * 1024)
     {
         for (int i = 0; i < 0x8000; i++)
-            ecuCalDef->FullRomData.insert(0x20000, (uint8_t)0xff);
-        ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
+            filedata.insert(0x20000, (uint8_t)0xff);
     }
-
-    filedata = ecuCalDef->FullRomData;
 
     QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
@@ -537,7 +536,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
     }
 
     send_log_window_message("--- Comparing ECU flash memory pages to image file ---", true, true);
-    send_log_window_message("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
+    send_log_window_message("blk\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
     if (get_changed_blocks(&data_array[0], block_modified))
     {
@@ -590,7 +589,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
         set_progressbar_value(100);
 
         send_log_window_message("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
-        send_log_window_message("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
+        send_log_window_message("blk\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
         if (get_changed_blocks(&data_array[0], block_modified))
         {
