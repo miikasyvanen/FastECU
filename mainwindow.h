@@ -100,7 +100,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QString peerAddress = "", QWidget *parent = nullptr);
+    MainWindow(QString peerAddress = "", QString peerPassword = "", QWidget *parent = nullptr);
     ~MainWindow();
 
     void delay(int n);
@@ -126,8 +126,8 @@ private:
     QProgressBar *startUpSplashProgressBar;
 
     QString peerAddress;
+    QString peerPassword;
     QSplashScreen *splash;
-    QWebSocket *clientWebSocket;
     RemoteUtility *remote_utility;
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;

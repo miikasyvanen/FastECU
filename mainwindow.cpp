@@ -9,11 +9,11 @@ const QColor MainWindow::RED_LIGHT_ON = QColor(255, 64, 64);
 const QColor MainWindow::YELLOW_LIGHT_ON = QColor(223, 223, 64);
 const QColor MainWindow::GREEN_LIGHT_ON = QColor(64, 255, 64);
 
-MainWindow::MainWindow(QString peerAddress, QWidget *parent)
+MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , peerAddress(peerAddress)
-    , clientWebSocket(nullptr)
+    , peerPassword(peerPassword)
 {
     ui->setupUi(this);
     qApp->installEventFilter(this);
@@ -244,7 +244,6 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
         splash->move(screenGeometry.center() - splash->rect().center());
         QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
-        clientWebSocket = new QWebSocket("",QWebSocketProtocol::VersionLatest,this);
         QString wt = this->windowTitle();
         if (peerAddress.length() > 0)
             wt += " - Remote Connection to " + peerAddress;
@@ -268,16 +267,10 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     });
     timer->start();
 
-    //WebSocket now initializes and connects in constructor
-    //It would be right to init WebSocket outside
-    //and pass it already initialized ...
-    serial = new SerialPortActions(peerAddress, clientWebSocket);
-    remote_utility = new RemoteUtility(peerAddress, clientWebSocket);
-    //... and connect it here. Refactor it when you'll need 3rd remote object.
+    serial = new SerialPortActions(peerAddress, peerPassword);
+    remote_utility = new RemoteUtility(peerAddress, peerPassword);
     if (!serial->isDirectConnection())
     {
-        //Connection over single Web Socket should be established simultaneously
-        //Then it is possible to run several remote objects over single Web Socket
         serial->waitForSource();
         remote_utility->waitForSource();
     }
