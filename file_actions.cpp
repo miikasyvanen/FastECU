@@ -2627,6 +2627,8 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                     ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
                 if (ecuCalDef->RomId.startsWith("4"))
                     ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
+                if (ecuCalDef->RomId.startsWith("6"))
+                    ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_can"))
             {

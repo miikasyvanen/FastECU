@@ -162,7 +162,6 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     delay(100);
 
     send_log_window_message("Checking if OBK is running", true, true);
-    //serial->change_port_speed("38400");
     serial->change_port_speed("15625");
     //received = send_subaru_sid_bf_ssm_init();
     output.clear();
@@ -489,10 +488,10 @@ int FlashEcuSubaruHitachiM32rKline::write_mem(bool test_write)
 
     if (bcnt)
     {
-//        emit LOG_I("--- erasing ECU flash memory ---", true, true);
+//        emit LOG_I("--- Erasing ECU flash memory ---", true, true);
 //        if (erase_subaru_ecu_hitachi_can())
 //        {
-//            emit LOG_E("--- erasing did not complete successfully ---", true, true);
+//            emit LOG_E("--- Erasing did not complete successfully ---", true, true);
 //            return STATUS_ERROR;
 //        }
 //        received = send_subaru_ecu_sid_83_request_timings();
@@ -508,7 +507,7 @@ int FlashEcuSubaruHitachiM32rKline::write_mem(bool test_write)
             }
         }
 
-        emit LOG_I("--- start writing ROM file to ECU flash memory ---", true, true);
+        emit LOG_I("--- Start writing ROM file to ECU flash memory ---", true, true);
         for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)  // hack so that only 1 flash loop done for the entire ROM above 0x8000
         {
             if (block_modified[blockno])
@@ -689,16 +688,16 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         data_len -= 128;
 
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        //emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+        //emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
         received = serial->read_serial_data(20, 200);
-        //emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
 
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
         msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        LOG_I(msg, true, true);
+        emit LOG_I(msg, true, true);
 
         remain -= blocksize;
         start += blocksize;
