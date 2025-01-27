@@ -26,6 +26,8 @@
 #define SUB_KERNEL_PROG_VOLT                0x04
 #define SUB_KERNEL_GET_MAX_MSG_SIZE         0x05
 #define SUB_KERNEL_GET_MAX_BLK_SIZE         0x06
+#define SUB_KERNEL_READ_EEPROM              0x07
+#define SUB_KERNEL_WRITE_EEPROM             0x08
 
 #define SUB_KERNEL_FLASH_ENABLE             0x20
 #define SUB_KERNEL_FLASH_DISABLE			0x21
