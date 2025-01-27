@@ -210,7 +210,6 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_subarucan()
     }
 
     emit LOG_I("Checking if kernel is already running...", true, true);
-
     emit LOG_I("Requesting kernel ID", true, true);
 
     received.clear();
@@ -779,7 +778,7 @@ int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t star
     QByteArray mapdata;
     uint32_t cplen = 0;
     uint32_t timeout = 0;
-
+    uint32_t datalen = 6;
     uint32_t pagesize = 0x400;
     if (pagesize > length)
         pagesize = length;
@@ -797,8 +796,11 @@ int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t star
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xe0);
-    output.append((uint8_t)SUB_DENSOCAN_START_COMM);
-    output.append((uint8_t)(SID_CAN_DUMP_EEPROM + 0x06));
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)SUB_KERNEL_READ_EEPROM);
     output.append((uint8_t)EEPROM_MODE);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -829,26 +831,31 @@ int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t star
         //length = 256;
         emit LOG_I("Read EEPROM start at: 0x" + QString::number(start_addr, 16) + " and size of 0x" + QString::number(pagesize, 16), true, true);
 
-        //output[6] = (uint8_t)((pagesize >> 16) & 0xFF);
-        output[7] = (uint8_t)((pagesize >> 8) & 0xFF);
-        output[8] = (uint8_t)((pagesize >> 0) & 0xFF);
-        output[9] = (uint8_t)((addr >> 16) & 0xFF);
-        output[10] = (uint8_t)((addr >> 8) & 0xFF);
-        output[11] = (uint8_t)((addr >> 0) & 0xFF);
+        output[10] = (uint8_t)((addr >> 16) & 0xFF);
+        output[11] = (uint8_t)((addr >> 8) & 0xFF);
+        output[12] = (uint8_t)((addr >> 0) & 0xFF);
+        output[13] = (uint8_t)((pagesize >> 8) & 0xFF);
+        output[14] = (uint8_t)((pagesize >> 0) & 0xFF);
         serial->write_serial_data_echo_check(output);
         emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
         //delay(100);
         received = serial->read_serial_data(1, serial_read_timeout);
         emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
-        if (received.length()) {
-            if ((uint8_t)received.at(4) != SUB_DENSOCAN_START_COMM || (uint8_t)received.at(5) != SID_CAN_DUMP_EEPROM)
+        if (received.length() > 9)
+        {
+            if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_READ_EEPROM | 0x40))
             {
-                emit LOG_E("Page data request failed!", true, true);
-                emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+                emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
         }
+        else
+        {
+            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+
         timeout = 0;
         pagedata.clear();
         while ((uint32_t)pagedata.length() < pagesize && timeout < 100)

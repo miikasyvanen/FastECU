@@ -455,13 +455,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
 
         if (received.length() > 5)
         {
-            if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF))
+            if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_READ_AREA | 0x40))
             {
-                //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
-                received.remove(0, 5);
-                received.remove(received.length() - 1, 1);
-                mapdata.append(received);
-                //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
+                emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -470,6 +467,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
             return STATUS_ERROR;
         }
 
+        //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
+        received.remove(0, 5);
+        received.remove(received.length() - 1, 1);
+        mapdata.append(received);
+        //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
         cplen = (numblocks * pagesize);
 
         chrono = timer.elapsed();

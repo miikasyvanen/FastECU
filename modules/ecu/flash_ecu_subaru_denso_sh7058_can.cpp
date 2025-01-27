@@ -1053,7 +1053,7 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
     LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
-        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != 0x42)
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CRC | 0x40))
         {
             emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -1062,25 +1062,6 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
     else
     {
         emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
-    }
-
-    if (received.length())
-    {
-        if (received.at(4) == 0x7f)
-        {
-            emit LOG_E("Failed: Wrong answer from ECU", true, true);
-            return STATUS_ERROR;
-        }
-        uint8_t len = ((uint8_t)received.at(6) << 8) | (uint8_t)received.at(7);
-        if (len > 3)
-        {
-            received.remove(0, 9);
-        }
-    }
-    else
-    {
-        emit LOG_E("Failed: No answer from ECU", true, true);
         return STATUS_ERROR;
     }
 
