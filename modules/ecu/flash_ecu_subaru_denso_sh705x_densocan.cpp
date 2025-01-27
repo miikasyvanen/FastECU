@@ -445,6 +445,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
     send_log_window_message("Kernel uploaded, starting kernel...", true, true);
     qDebug() << "Kernel uploaded, starting kernel...";
 
+    // 7A B1 81 FF 80 00 00 00 ??? Jump address
     // send 0xA0 command to jump into kernel
     output[5] = (uint8_t)(SID_KERNEL_JUMP + 0x04);
     output[6] = (uint8_t)((end_address >> 24) & 0xFF);
