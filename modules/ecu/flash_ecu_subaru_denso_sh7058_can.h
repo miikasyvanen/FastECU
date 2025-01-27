@@ -88,7 +88,7 @@ private:
     int read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length);
     int write_mem_subaru_denso_subarucan(bool test_write);
     int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
-    int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
+    int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
     int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
     int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 

@@ -457,6 +457,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         {
             if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF))
             {
+                //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
                 received.remove(0, 5);
                 received.remove(received.length() - 1, 1);
                 mapdata.append(received);
