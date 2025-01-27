@@ -314,7 +314,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel_subaru_denso_kline_wrx02(QSt
     qDebug() << msg;
 
     output.clear();
-    output.append((uint8_t)(SID_OE_UPLOAD_KERNEL) & 0xFF);
+    output.append((uint8_t)(SUB_UPLOAD_KERNEL) & 0xFF);
     output.append((uint8_t)(start_address >> 16) & 0xFF);
     output.append((uint8_t)(start_address >> 8) & 0xFF);
     output.append((uint8_t)(len >> 16) & 0xFF);
@@ -435,11 +435,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         }
 
         output.clear();
-        output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-        output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+        output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
         output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
         output.append((uint8_t)(datalen + 1) & 0xFF);
-        output.append((uint8_t)SID_OE_KERNEL_READ_AREA & 0xFF);
+        output.append((uint8_t)SUB_KERNEL_READ_AREA & 0xFF);
         output.append((uint8_t)0x00 & 0xFF);
         output.append((uint8_t)(addr >> 16) & 0xFF);
         output.append((uint8_t)(addr >> 8) & 0xFF);
@@ -455,7 +455,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
 
         if (received.length() > 5)
         {
-            if ((uint8_t)received.at(0) == ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SID_OE_KERNEL_START_COMM & 0xFF))
+            if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF))
             {
                 received.remove(0, 5);
                 received.remove(received.length() - 1, 1);
@@ -677,11 +677,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
     flash_write_init = false;
 
     output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
-    output.append((uint8_t)SID_OE_KERNEL_CRC & 0xFF);
+    output.append((uint8_t)SUB_KERNEL_CRC & 0xFF);
     output.append((uint8_t)(start >> 24) & 0xFF);
     output.append((uint8_t)(start >> 16) & 0xFF);
     output.append((uint8_t)(start >> 8) & 0xFF);
@@ -707,7 +707,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
-        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x42)
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x42)
         {
             send_log_window_message("", false, true);
             send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
@@ -820,11 +820,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
 
     datalen = 0;
     output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
-    output.append((uint8_t)(SID_OE_KERNEL_GET_MAX_MSG_SIZE & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_GET_MAX_MSG_SIZE & 0xFF));
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
@@ -834,7 +834,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
-        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x45)
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x45)
         {
             emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -855,11 +855,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
 
     datalen = 0;
     output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
-    output.append((uint8_t)(SID_OE_KERNEL_GET_MAX_BLK_SIZE & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_GET_MAX_BLK_SIZE & 0xFF));
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
@@ -869,7 +869,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
-        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x46)
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x46)
         {
             emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -889,19 +889,19 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     }
 
 
-    uint8_t SID_OE_KERNEL_CMD = 0;
+    uint8_t SUB_KERNEL_CMD = 0;
     if (test_write)
-        SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_FLASH_DISABLE & 0xFF);
+        SUB_KERNEL_CMD = (uint8_t)(SUB_KERNEL_FLASH_DISABLE & 0xFF);
     else if (!test_write)
-        SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_FLASH_ENABLE & 0xFF);
+        SUB_KERNEL_CMD = (uint8_t)(SUB_KERNEL_FLASH_ENABLE & 0xFF);
 
     datalen = 0;
     output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
-    output.append((uint8_t)(SID_OE_KERNEL_CMD & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_CMD & 0xFF));
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
@@ -911,7 +911,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SID_OE_KERNEL_CMD | 0x40))
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_CMD | 0x40))
         {
             emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -965,11 +965,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, cons
 
     datalen = 0;
     output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
-    output.append((uint8_t)(SID_OE_KERNEL_PROG_VOLT & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_PROG_VOLT & 0xFF));
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
@@ -979,7 +979,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, cons
     qDebug() << "Response:" << parse_message_to_hex(received);
     if (received.length() > 7)
     {
-        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x44)
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x44)
         {
             send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
             qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
@@ -1039,11 +1039,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
     {
         datalen = 4;
         output.clear();
-        output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-        output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+        output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
         output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
         output.append((uint8_t)(datalen + 1) & 0xFF);
-        output.append((uint8_t)(SID_OE_KERNEL_BLANK_16K_PAGE & 0xFF));
+        output.append((uint8_t)(SUB_KERNEL_BLANK_PAGE & 0xFF));
         output.append((uint8_t)(start >> 24) & 0xFF);
         output.append((uint8_t)(start >> 16) & 0xFF);
         output.append((uint8_t)(start >> 8) & 0xFF);
@@ -1058,7 +1058,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         qDebug() << "Response:" << parse_message_to_hex(received);
         if (received.length() > 7)
         {
-            if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x65)
+            if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x65)
             {
                 send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                 qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
@@ -1080,11 +1080,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
 
         datalen = blocksize + 4; // 0x200 + 4
         output.clear();
-        output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-        output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+        output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
         output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
         output.append((uint8_t)(datalen + 1) & 0xFF);
-        output.append((uint8_t)(SID_OE_KERNEL_WRITE_FLASH_BUFFER & 0xFF));
+        output.append((uint8_t)(SUB_KERNEL_WRITE_FLASH_BUFFER & 0xFF));
         output.append((uint8_t)(start >> 24) & 0xFF);
         output.append((uint8_t)(start >> 16) & 0xFF);
         output.append((uint8_t)(start >> 8) & 0xFF);
@@ -1110,7 +1110,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         }
         if (received.length() > 5)
         {
-            if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x62)
+            if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x62)
             {
                 send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                 qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
@@ -1158,23 +1158,23 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
             send_log_window_message("Flashblock: write complete, validating... ", true, false);
             imgcrc32 = crc32(&src[flashblockstart], flashblocksize);
 
-            uint8_t SID_OE_KERNEL_CMD = 0;
+            uint8_t SUB_KERNEL_CMD = 0;
             if (test_write)
             {
-                SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_VALIDATE_FLASH_BUFFER & 0xFF);
+                SUB_KERNEL_CMD = (uint8_t)(SUB_KERNEL_VALIDATE_FLASH_BUFFER & 0xFF);
             }
             else if (!test_write)
             {
-                SID_OE_KERNEL_CMD = (uint8_t)(SID_OE_KERNEL_COMMIT_FLASH_BUFFER & 0xFF);
+                SUB_KERNEL_CMD = (uint8_t)(SUB_KERNEL_COMMIT_FLASH_BUFFER & 0xFF);
             }
 
             datalen = 10;
             output.clear();
-            output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-            output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+            output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+            output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
             output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
             output.append((uint8_t)(datalen + 1) & 0xFF);
-            output.append((uint8_t)(SID_OE_KERNEL_CMD & 0xFF));
+            output.append((uint8_t)(SUB_KERNEL_CMD & 0xFF));
             output.append((uint8_t)(flashblockstart >> 24) & 0xFF);
             output.append((uint8_t)(flashblockstart >> 16) & 0xFF);
             output.append((uint8_t)(flashblockstart >> 8) & 0xFF);
@@ -1194,7 +1194,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
             qDebug() << "Response:" << parse_message_to_hex(received);
             if (received.length() > 5)
             {
-                if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SID_OE_KERNEL_CMD + 0x40))
+                if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_CMD + 0x40))
                 {
                     send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                     qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
@@ -1249,11 +1249,11 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
     request_denso_kernel_id = true;
 
     output.clear();
-    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)0x00 & 0xFF);
     output.append((uint8_t)0x01 & 0xFF);
-    output.append((uint8_t)(SID_OE_KERNEL_ID & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
 
     chk_sum = calculate_checksum(output, false);
     output.append((uint8_t) chk_sum);

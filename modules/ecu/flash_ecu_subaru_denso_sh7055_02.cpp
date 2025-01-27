@@ -306,7 +306,7 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel_subaru_denso_kline_fxt02(QString
 
     send_log_window_message("Create kernel data header...", true, true);
     output.clear();
-    output.append((uint8_t)SID_OE_UPLOAD_KERNEL & 0xFF);
+    output.append((uint8_t)SUB_UPLOAD_KERNEL & 0xFF);
     output.append((uint8_t)(start_address >> 16) & 0xFF);
     output.append((uint8_t)(start_address >> 8) & 0xFF);
     output.append((uint8_t)((len + 4) >> 16) & 0xFF);

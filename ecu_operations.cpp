@@ -73,8 +73,8 @@ QByteArray EcuOperations::request_kernel_id()
         request_denso_kernel_id = true;
 
         output.clear();
-        output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-        output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+        output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
         output.append((uint8_t)0x00 & 0xFF);
         output.append((uint8_t)0x01 & 0xFF);
         output.append((uint8_t)(SID_OE_KERNEL_ID & 0xFF));
@@ -194,8 +194,8 @@ int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         }
 
         output.clear();
-        output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-        output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+        output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+        output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
         output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
         output.append((uint8_t)(datalen + 1) & 0xFF);
         output.append((uint8_t)SID_OE_KERNEL_READ_AREA & 0xFF);
@@ -1027,8 +1027,8 @@ int EcuOperations::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, 
                 return STATUS_ERROR;
 
             output.clear();
-            output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
-            output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+            output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+            output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
             output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
             output.append((uint8_t)(datalen + 1) & 0xFF);
             output.append((uint8_t)SID_OE_KERNEL_CRC & 0xFF);
