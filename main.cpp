@@ -1,21 +1,34 @@
+#include <QCommandLineParser>
 #include "mainwindow.h"
 
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    QString addr = "";
     bool debug_console = false;
 
-    //if (argc == 2)
-    //    addr = QString(argv[1]);
+    QCommandLineParser cmdParser;
+    cmdParser.setApplicationDescription("FastECU - software to work on and modify ECUs");
+    cmdParser.addHelpOption();
+    QCommandLineOption cmdHost(QStringList() << "s" << "host",
+                               "Remote host address and port, for example 127.0.0.1:33314, local:33315",
+                               "host:port");
+    cmdParser.addOption(cmdHost);
+    QCommandLineOption cmdPassword(QStringList() << "p" << "password",
+                                   "Remote host password",
+                                   "password");
+    cmdParser.addOption(cmdPassword);
+    QCommandLineOption cmdDebug(QStringList() << "d" << "debug",
+                                "Enable console debug output");
+    cmdParser.addOption(cmdDebug);
 
+    //Locate debug option before QCommandLineParser to open console properly
     for (int i = 1; i < argc; i++)
     {
-        if (!strcmp(argv[i], "debug"))
+        if (!strcmp(argv[i], "-d") ||
+            !strcmp(argv[i], "--debug") ||
+            !strcmp(argv[i],  "-debug"))
             debug_console = true;
-        else
-            addr = QString(argv[i]);
     }
 
 #ifdef _WIN32
@@ -41,7 +54,13 @@ int main(int argc, char *argv[])
     {
         QApplication a(argc, argv);
 
-        MainWindow w(addr, nullptr);
+        //Parser works only after QApplication initialization
+        cmdParser.process(a);
+
+        QString addr = cmdParser.value(cmdHost);
+        QString password = cmdParser.value(cmdPassword);
+
+        MainWindow w(addr, password, nullptr);
 
         QScreen *screen = QGuiApplication::primaryScreen();
         QRect  screenGeometry = screen->geometry();
