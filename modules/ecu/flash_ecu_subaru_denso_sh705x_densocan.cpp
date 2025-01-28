@@ -164,10 +164,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
     }
 
     serial->set_add_iso14230_header(false);
-
-    //if (connect_bootloader_start_countdown(bootloader_start_countdown))
-    //    return STATUS_ERROR;
-
+/*
     send_log_window_message("Checking if kernel is already running...", true, true);
     qDebug() << "Checking if kernel is already running...";
 
@@ -181,10 +178,11 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
         return STATUS_SUCCESS;
     }
     send_log_window_message("No response from kernel, continue bootloader initialization...", true, true);
-
+*/
     send_log_window_message("Initializing bootloader", true, true);
     qDebug() << "Initializing bootloader";
-
+/*
+    QTime dieTime = QTime::currentTime().addMSecs(2000);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x0F);
@@ -198,11 +196,38 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
+    while (QTime::currentTime() < dieTime)
+    {
+        serial->send_periodic_j2534_data(output, 10);
+    }
+    serial->stop_periodic_j2534_data();
+    delay(50);
+*/
 
-    serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(20, 10);
+    QTime dieTime = QTime::currentTime().addMSecs(2000);
+    while (QTime::currentTime() < dieTime)
+    {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        output.clear();
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x0F);
+        output.append((uint8_t)0xFF);
+        output.append((uint8_t)0xFE);
+        output.append((uint8_t)((SID_CAN_ENTER_BL >> 8) & 0xFF));
+        output.append((uint8_t)(SID_CAN_ENTER_BL & 0xFF));
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
 
+        serial->write_serial_data_echo_check(output);
+        delay(200);
+        received = serial->read_serial_data(20, 10);
+    }
+
+/*
     send_log_window_message("Connecting to bootloader", true, true);
     qDebug() << "Connecting to bootloader";
 
@@ -227,6 +252,8 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
         }
     }
     return STATUS_ERROR;
+*/
+    return STATUS_SUCCESS;
 }
 
 /*

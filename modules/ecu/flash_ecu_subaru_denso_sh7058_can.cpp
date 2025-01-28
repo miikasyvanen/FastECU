@@ -428,7 +428,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
 
     if (flash_method.endsWith("_ecutek"))
         seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
-    if (flash_method.endsWith("_cobb"))
+    else if (flash_method.endsWith("_cobb"))
         seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
     else
         seed_key = subaru_denso_generate_can_seed_key(seed);
