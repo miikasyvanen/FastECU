@@ -842,12 +842,13 @@ int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t star
         received = serial->read_serial_data(1, serial_read_timeout);
         emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
-        if (received.length() > 9)
+        if (received.length() > 8)
         {
-            if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_READ_EEPROM | 0x40))
+            if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_READ_AREA | 0x40))
             {
-                emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-                return STATUS_ERROR;
+                received.remove(0, 9);
+                mapdata.append(received);
+                //qDebug() << "DATA:" << addr << parse_message_to_hex(received);
             }
         }
         else
@@ -873,8 +874,8 @@ int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t star
             return STATUS_ERROR;
         }
 
-        if (pagedata.length() > 4)
-            pagedata.remove(0, 4);
+        if (pagedata.length() > 7)
+            pagedata.remove(0, 8);
 
         QByteArray data;
         for (int i = 0; i < pagedata.length(); i+=16)
@@ -1349,31 +1350,34 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)SUB_DENSOCAN_START_COMM);
-    output.append((uint8_t)0xA0);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)0x00 & 0xFF);
+    output.append((uint8_t)0x01 & 0xFF);
+    output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
 
-    received = serial->write_serial_data_echo_check(output);
-    qDebug() << "Request kernel id sent:" << parse_message_to_hex(output);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Request kernel id sent: " + parse_message_to_hex(output), true, true);
     delay(100);
-    received = serial->read_serial_data(100, serial_read_timeout);
-    qDebug() << "Request kernel id received:" << parse_message_to_hex(received);
+    received = serial->read_serial_data(100, serial_read_short_timeout);
+    emit LOG_D("Request kernel id received: " + parse_message_to_hex(received), true, true);
 
-    received.remove(0, 4);
-    qDebug() << "Initial request kernel id received and length:" << parse_message_to_hex(received) << received.length();
+    if (received.length() > 7)
+        received.remove(0, 8);
+    emit LOG_D("Initial request kernel id received and length:" + parse_message_to_hex(received) + " " + received.length(), true, true);
     kernelid = received;
 
-    while (received != "")
+    while (received.length())
     {
         received = serial->read_serial_data(10, serial_read_short_timeout);
-        qDebug() << "Request kernel id received:" << parse_message_to_hex(received);
-        received.remove(0, 4);
+        emit LOG_D("Request kernel id received:" + parse_message_to_hex(received), true, true);
+        if (received.length() > 7)
+            received.remove(0, 8);
         kernelid.append(received);
+        delay(100);
     }
 
     request_denso_kernel_id = false;

@@ -992,7 +992,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, cons
     }
     float prog_voltage = (((uint8_t)received.at(5) << 8) + (uint8_t)received.at(6)) / 50.0;
     emit LOG_I("Programming voltage: " + QString::number(prog_voltage) + "V", true, true);
-    //delay(500);
 
     if (flash_block(newdata, start, len)) {
         emit LOG_E("Reflash error! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands!", true, true);
