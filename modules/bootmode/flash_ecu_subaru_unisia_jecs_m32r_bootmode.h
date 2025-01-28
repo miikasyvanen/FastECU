@@ -82,6 +82,7 @@ private:
 
     QString mcu_type_string;
     QString flash_method;
+    QString kernel;
 
     void closeEvent(QCloseEvent *event);
 

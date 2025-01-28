@@ -36,6 +36,7 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
     QString mcu_name = flashdevices[mcu_type_index].name;
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
 
+    kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
 
     emit external_logger("Starting");
@@ -60,7 +61,7 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
     serial->open_serial_port();
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
-                                   tr("Turn ignition ON and press OK to start initializing connection to ECU"),
+                                   tr("Make sure VPP and MOD1 is connected and turn ignition ON and press OK to start initializing connection to ECU"),
                                    QMessageBox::Ok | QMessageBox::Cancel,
                                    QMessageBox::Ok);
 
@@ -71,14 +72,19 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
         if (cmd_type == "read")
         {
             emit external_logger("Reading ROM, please wait...");
-            send_log_window_message("Reading ROM from Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
+            emit LOG_I("Reading ROM from Subaru Unisia Jecs UJ20/30WWW using K-Line", true, true);
             result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
         }
         else if (cmd_type == "write")
         {
-            emit external_logger("Writing ROM, please wait...");
-            send_log_window_message("Writing ROM to Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
-            result = write_mem();
+            emit LOG_I("Uploading kernel to Subaru Unisia Jecs UJ20/30WWW using K-Line", true, true);
+            result = upload_kernel(kernel);
+            if (result == STATUS_SUCCESS)
+            {
+                emit external_logger("Writing ROM, please wait...");
+                emit LOG_I("Writing ROM to Subaru Unisia Jecs UJ20/30WWW using K-Line", true, true);
+                result = write_mem();
+            }
         }
         emit external_logger("Finished");
 
@@ -272,18 +278,24 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
     QByteArray received;
     float pleft = 0;
 
-    serial->set_serial_port_baudrate("39063");
+    LOG_I("Initialising serial port, please wait...", true, true);
+    serial->reset_connection();
     serial->set_serial_port_parity(QSerialPort::EvenParity);
+    serial->open_serial_port();
+
+    LOG_I("Baudrate: " + serial->get_serial_port_baudrate(), true, true);
 
     if (!serial->is_serial_port_open())
     {
         send_log_window_message("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
+    serial->change_port_speed("39063");
+    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
     {
-        send_log_window_message("Unable to open kernel file for reading", true, true);
+        LOG_E("Unable to open kernel file for reading", true, true);
         return STATUS_ERROR;
     }
 
@@ -292,30 +304,18 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
 
     int filesize = kerneldata.length();
 
-    send_log_window_message("Initialising serial port, please wait...", true, true);
-    qDebug() << "Initialising serial port, please wait...";
-    if (!serial->is_serial_port_open())
+    LOG_I("Uploading kernel, please wait...", true, true);
+    for (int i = 0; i < filesize; i++)
     {
-        send_log_window_message("Serial port error!", true, true);
-        qDebug() << "Serial port error!";
-        return STATUS_ERROR;
+        output.clear();
+        output.append(kerneldata.at(i));
+        serial->write_serial_data_echo_check(output);
+        pleft = (float)i / (float)filesize * 100.0f;
+        set_progressbar_value(pleft);
     }
-    else
-    {
-        send_log_window_message("Uploading UJ20 kernel, please wait...", true, true);
-        qDebug() << "Uploading kernel, please wait...";
-        for (int i = 0; i < filesize; i++)
-        {
-            output.clear();
-            output.append(kerneldata.at(i));
-            serial->write_serial_data_echo_check(output);
-            pleft = (float)i / (float)filesize * 100.0f;
-            set_progressbar_value(pleft);
-        }
-        delay(500);
-        received = serial->read_serial_data(100, 200);
-        received.clear();
-    }
+    delay(500);
+    received = serial->read_serial_data(100, 200);
+    received.clear();
 
     set_progressbar_value(100);
 
@@ -332,9 +332,10 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
 
     QMessageBox::information(this, tr("Flash file"), "Remove MOD1 voltage and press ok to continue.");
 
-    serial->set_serial_port_baudrate("19200");
-    serial->set_serial_port_parity(QSerialPort::NoParity);
     serial->reset_connection();
+    serial->set_serial_port_parity(QSerialPort::NoParity);
+    serial->open_serial_port();
+    serial->change_port_speed("19200");
 
     send_log_window_message("Initialising serial port, please wait...", true, true);
     qDebug() << "Initialising serial port, please wait...";
