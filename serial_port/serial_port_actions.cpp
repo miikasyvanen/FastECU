@@ -100,7 +100,7 @@ void SerialPortActions::waitForSource(void)
     while (!serial_remote->waitForSource(10000))
     {
         sendAutoDiscoveryMessage();
-        qDebug() << "Waiting for remote peer...";
+        qDebug() << "SerialPortActions: Waiting for remote peer...";
     }
 }
 

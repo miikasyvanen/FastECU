@@ -27,6 +27,7 @@
 #include <QStandardItemModel>
 #include <QStackedWidget>
 #include <QSplashScreen>
+#include <QAtomicInteger>
 
 #include <QFuture>
 #include <QDebug>
@@ -124,10 +125,11 @@ private:
     QSplashScreen *startUpSplash;
     QLabel *startUpSplashLabel;
     QProgressBar *startUpSplashProgressBar;
+    QAtomicInteger<bool> restartQuestionActive{false};
 
     QString peerAddress;
     QString peerPassword;
-    QSplashScreen *splash;
+    QSplashScreen *netSplash;
     RemoteUtility *remote_utility;
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;

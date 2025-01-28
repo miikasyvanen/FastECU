@@ -71,9 +71,12 @@ void RemoteUtility::websocket_connected(void)
 
 void RemoteUtility::waitForSource(void)
 {
-    //Don't wait for replication too long
-    //This class is not very important
-    remote_utility->waitForSource(10000);
+    //Wait for replication
+    while (!remote_utility->waitForSource(1000))
+    {
+        sendAutoDiscoveryMessage();
+        qDebug() << "RemoteUtility: Waiting for remote peer...";
+    }
 }
 
 void RemoteUtility::sendAutoDiscoveryMessage()

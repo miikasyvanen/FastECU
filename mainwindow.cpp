@@ -224,24 +224,32 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
 
     setSplashScreenProgress("Preparing remote connection...", 10);
     //Splash screen
-    splash = new QSplashScreen();
-    QVBoxLayout *layout = new QVBoxLayout(splash);
-    layout->setAlignment(Qt::AlignCenter);
-    QLabel *label1 = new QLabel(QString("Waiting for peer "+peerAddress+"..."), splash);
-    QPushButton *button1 = new QPushButton("Close app", splash);
-    layout->addWidget(label1);
-    layout->addWidget(button1);
+    netSplash = new QSplashScreen();
+    QVBoxLayout *netSplashLayout = new QVBoxLayout(netSplash);
+    netSplashLayout->setAlignment(Qt::AlignCenter);
+    QLabel *netSplashLabel = new QLabel(QString("Waiting for peer "+peerAddress+"..."), netSplash);
+    netSplashLabel->setAlignment(Qt::AlignCenter);
+    QProgressBar *netSplashProgressBar = new QProgressBar(netSplash);
+    netSplashProgressBar->setAlignment(Qt::AlignCenter);
+    netSplashProgressBar->setMinimum(0);
+    //Number of network connection stages
+    netSplashProgressBar->setMaximum(2);
+    netSplashProgressBar->setValue(0);
+    QPushButton *btnCloseApp = new QPushButton("Close app", netSplash);
+    netSplashLayout->addWidget(netSplashLabel);
+    netSplashLayout->addWidget(netSplashProgressBar);
+    netSplashLayout->addWidget(btnCloseApp);
     //splash->setLayout(layout);
-    splash->resize(350,50);
+    netSplash->resize(350,50);
     //Show it in remote mode only
     //Prepare for remote mode
     if (!peerAddress.isEmpty())
     {
-        splash->show();
+        netSplash->show();
         // Move splashscreen to the center of the screen
         QScreen *screen = QGuiApplication::primaryScreen();
         QRect  screenGeometry = screen->geometry();
-        splash->move(screenGeometry.center() - splash->rect().center());
+        netSplash->move(screenGeometry.center() - netSplash->rect().center());
         QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
         QString wt = this->windowTitle();
@@ -250,9 +258,9 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
         this->setWindowTitle(wt);
     }
     //Add option to close app while waiting for network connection
-    QObject::connect(button1, &QPushButton::released, this, [&]()
+    QObject::connect(btnCloseApp, &QPushButton::released, this, [&]()
                      {
-                         label1->setText("Closing app, please wait...");
+                         netSplashLabel->setText("Closing app, please wait...");
                          exit(1);
                      });
 
@@ -267,17 +275,22 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     });
     timer->start();
 
-    serial = new SerialPortActions(peerAddress, peerPassword);
-    remote_utility = new RemoteUtility(peerAddress, peerPassword);
+    serial = new SerialPortActions(peerAddress, peerPassword, nullptr, this);
+    remote_utility = new RemoteUtility(peerAddress, peerPassword, nullptr, this);
     if (!serial->isDirectConnection())
     {
+        netSplashProgressBar->setValue(0);
+        netSplashProgressBar->setFormat("Connecting to J2534 and serial devices...");
         serial->waitForSource();
+        netSplashProgressBar->setValue(1);
+        netSplashProgressBar->setFormat("Connecting to utility functions...");
         remote_utility->waitForSource();
+        netSplashProgressBar->setValue(2);
     }
     external_logger("Connection successfull.");
 
     timer->stop();
-    splash->close();
+    netSplash->close();
     timer->deleteLater();
     connect(serial, &SerialPortActions::stateChanged,
             this, &MainWindow::network_state_changed, Qt::DirectConnection);
@@ -432,7 +445,7 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     }
 
     startUpSplash->close();
-    splash->deleteLater();
+    netSplash->deleteLater();
 /*
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
@@ -515,6 +528,9 @@ void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemot
     }
     else if (oldState == QRemoteObjectReplica::Valid)
     {
+        if (restartQuestionActive == true)
+            return;
+        restartQuestionActive = true;
         qDebug() << "Network connection lost, reconnecting...";
         QMessageBox msgBox;
         msgBox.setText("Network connection lost.");
@@ -534,6 +550,8 @@ void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemot
             qApp->exit(RESTART_CODE);
         else if (msgBox.clickedButton() == quitButton)
             qApp->exit(1);
+
+        restartQuestionActive = false;
     }
 }
 
@@ -2160,7 +2178,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
     Q_UNUSED(target)
     //Filter all mouse and keyboard events for splashscreen
-    if (target == splash)
+    if (target == netSplash)
         if(     (event->type() == QEvent::MouseButtonPress) ||
                 (event->type() == QEvent::MouseButtonDblClick) ||
                 (event->type() == QEvent::MouseButtonRelease) ||
