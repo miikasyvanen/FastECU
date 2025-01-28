@@ -1,11 +1,16 @@
 #include "remote_utility.h"
 
 RemoteUtility::RemoteUtility(QString peerAddress,
-                            QWebSocket *web_socket,
-                            QObject *parent)
+                             QString password,
+                             QWebSocket *web_socket,
+                             QObject *parent)
     : QObject{parent}
     , peerAddress(peerAddress)
-    , webSocket(web_socket)
+    , password(password)
+    , webSocket(web_socket == nullptr ?
+                    new QWebSocket("",QWebSocketProtocol::VersionLatest,this)
+                    :
+                    web_socket)
     , socket(new WebSocketIoDevice(webSocket, webSocket))
     , keepalive_timer(new QTimer(this))
     , heartbeatInterval(0)
@@ -36,16 +41,32 @@ void RemoteUtility::startLocal(void)
 
 void RemoteUtility::startOverNetwok()
 {
-    node.setHeartbeatInterval(heartbeatInterval);
-    remote_utility = node.acquire<RemoteUtilityReplica>(remoteObjectNameUtility);
+    QSslConfiguration sslConfiguration;
+    sslConfiguration.setPeerVerifyMode(QSslSocket::VerifyNone);
+    webSocket->setSslConfiguration(sslConfiguration);
     //Start node when Web Socket will be up
-    //If it is already connected, connection could not be established
     QObject::connect(webSocket, &QWebSocket::connected, this, &RemoteUtility::websocket_connected);
+    node.setHeartbeatInterval(heartbeatInterval);
+    QObject::connect(webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
+                     this, [=](QAbstractSocket::SocketError error)
+                     { qDebug() << this->metaObject()->className() << "startOverNetwok QWebSocket error:" << error; });
+    //WebSocket over SSL
+    QUrl url("wss://"+peerAddress);
+    url.setPath(wssPath);
+    QNetworkRequest req;
+    req.setRawHeader(webSocketPasswordHeader.toUtf8(), password.toUtf8());
+    req.setUrl(url);
+    webSocket->open(req);
+
+    //Connect to source published with name
+    remote_utility = node.acquire<RemoteUtilityReplica>(remoteObjectNameUtility);
+    //Don't wait for replication here, it should be done from outside
 }
 
 void RemoteUtility::websocket_connected(void)
 {
     node.addClientSideConnection(socket);
+    sendAutoDiscoveryMessage();
 }
 
 void RemoteUtility::waitForSource(void)
@@ -54,6 +75,15 @@ void RemoteUtility::waitForSource(void)
     //This class is not very important
     remote_utility->waitForSource(10000);
 }
+
+void RemoteUtility::sendAutoDiscoveryMessage()
+{
+    if (webSocket->isValid())
+    {
+        webSocket->sendTextMessage(autodiscoveryMessage);
+    }
+}
+
 
 bool RemoteUtility::send_log_window_message(QString message)
 {

@@ -11,7 +11,8 @@ class RemoteUtility : public QObject
     Q_OBJECT
 public:
     explicit RemoteUtility(QString peerAddress,
-                           QWebSocket *web_socket,
+                           QString password,
+                           QWebSocket *web_socket = nullptr,
                            QObject *parent = nullptr);
     ~RemoteUtility();
 
@@ -30,8 +31,12 @@ signals:
 
 private:
     QString peerAddress;
+    QString password;
+    const QString autodiscoveryMessage = "FastECU_PTP_Autodiscovery";
     RemoteUtilityReplica *remote_utility;
     const QString remoteObjectNameUtility = "FastECU_Utility";
+    const QString wssPath = "/" + remoteObjectNameUtility;
+    const QString webSocketPasswordHeader = "fastecu-basic-password";
     const int heartbeatInterval;//Inited in constructor initializer list
     QWebSocket *webSocket;
     WebSocketIoDevice *socket;
@@ -46,6 +51,7 @@ private:
     void startOverNetwok(void);
     void startLocal(void);
     void send_keepalive(void);
+    void sendAutoDiscoveryMessage();
 
 private slots:
     void utilityRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
