@@ -381,7 +381,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
 
     if (flash_method.endsWith("_ecutek"))
         seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
-    if (flash_method.endsWith("_cobb"))
+    else if (flash_method.endsWith("_cobb"))
         seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
     else
         seed_key = subaru_denso_generate_can_seed_key(seed);
@@ -1130,6 +1130,88 @@ void FlashEcuSubaruDensoSH7058Can::init_crc32_tab( void ) {
 
 }  /* init_crc32_tab */
 
+int FlashEcuSubaruDensoSH7058Can::init_flash_write()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray msg;
+
+    uint32_t datalen = 0;
+    uint16_t chksum;
+
+    datalen = 0;
+    output.clear();
+    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)(SID_OE_KERNEL_GET_MAX_MSG_SIZE & 0xFF));
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
+    received = serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    delay(200);
+    received = serial->read_serial_data(10, serial_read_short_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 9)
+    {
+        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x45)
+        {
+            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+        else
+        {
+            flashmsgsize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            msg.clear();
+            msg.append(QString("Max message length: 0x%1").arg(flashmsgsize,4,16,QLatin1Char('0')).toUtf8());
+            emit LOG_I(msg, true, true);
+        }
+    }
+    else
+    {
+        emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+
+    datalen = 0;
+    output.clear();
+    output.append((uint8_t)((SID_OE_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SID_OE_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)(SID_OE_KERNEL_GET_MAX_BLK_SIZE & 0xFF));
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
+    received = serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    delay(200);
+    received = serial->read_serial_data(10, serial_read_short_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 9)
+    {
+        if ((uint8_t)received.at(0) != ((SID_OE_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SID_OE_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x46)
+        {
+            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+        else
+        {
+            flashblocksize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            msg.clear();
+            msg.append(QString("Flashblock size: 0x%1").arg(flashblocksize,4,16,QLatin1Char('0')).toUtf8());
+            emit LOG_I(msg, true, true);
+        }
+    }
+    else
+    {
+        emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+
+    return STATUS_ERROR;
+}
+
 /*
  * Reflash ROM 32bit CAN (iso15765) ECUs
  *
@@ -1145,6 +1227,10 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
     QByteArray output;
     QByteArray received;
     QByteArray msg;
+
+    if (!flash_write_init)
+        if (init_flash_write())
+            return STATUS_ERROR;
 
     if (blockno >= fdt->numblocks)
     {

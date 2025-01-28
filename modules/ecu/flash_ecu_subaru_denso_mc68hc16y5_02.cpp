@@ -841,9 +841,9 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
         }
         else
         {
-            flashblocksize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            flashmsgsize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
             msg.clear();
-            msg.append(QString("Max message length: 0x%1").arg(flashblocksize,4,16,QLatin1Char('0')).toUtf8());
+            msg.append(QString("Max message length: 0x%1").arg(flashmsgsize,4,16,QLatin1Char('0')).toUtf8());
             emit LOG_I(msg, true, true);
         }
     }

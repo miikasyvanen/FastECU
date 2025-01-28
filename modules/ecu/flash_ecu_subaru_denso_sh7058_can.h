@@ -59,6 +59,7 @@ private:
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
 
+    bool flash_write_init = false;
     int result;
     int mcu_type_index;
     int bootloader_start_countdown = 3;
@@ -74,6 +75,8 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint32_t flashmsgsize = 0;
+    uint32_t flashblocksize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
@@ -89,6 +92,7 @@ private:
     int write_mem_subaru_denso_subarucan(bool test_write);
     int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
     int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    int init_flash_write();
     int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
     int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
