@@ -291,7 +291,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         return STATUS_ERROR;
     }
 
-    emit LOG_I("Checking if OBK is running", true, true);
+    emit LOG_I("Checking if ECU in read mode", true, true);
     serial->change_port_speed("38400");
     received = send_subaru_sid_bf_ssm_init();
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
@@ -306,7 +306,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         {
             msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
         }
-        emit LOG_I("Connected to OBK, ECU ID: " + msg, true, true);
+        emit LOG_I("Connected, ECU ID: " + msg, true, true);
         ecuid = msg;
     }
 
