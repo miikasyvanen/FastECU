@@ -59,6 +59,7 @@ private:
 #define SID_UNISIA_JECS_FLASH_WRITE_END             0x69//???
 
     bool kill_process = false;
+    bool kernel_alive = false;
     bool test_write = false;
     int result;
     int mcu_type_index;

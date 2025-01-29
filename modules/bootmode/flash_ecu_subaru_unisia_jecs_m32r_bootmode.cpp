@@ -51,12 +51,17 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
     }
 
     // Set serial port
+    serial->reset_connection();
+    serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
+    serial->set_serial_port_parity(QSerialPort::EvenParity);
     tester_id = 0xF0;
     target_id = 0x10;
     serial->open_serial_port();
+    serial->change_port_speed("39063");
+    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Make sure VPP and MOD1 is connected and turn ignition ON and press OK to start initializing connection to ECU"),
@@ -131,9 +136,14 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
     QByteArray received;
     QString msg;
     QByteArray mapdata;
+    QString ecuid;
 
     uint32_t pagesize = 0;
     uint32_t cplen = 0;
+
+    serial->reset_connection();
+    serial->set_serial_port_parity(QSerialPort::NoParity);
+    serial->open_serial_port();
 
     if (!serial->is_serial_port_open())
     {
@@ -141,35 +151,63 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
         return STATUS_ERROR;
     }
 
-    serial->set_add_iso14230_header(false);
-
-    serial->change_port_speed("4800");
-    // SSM init
-    received = send_subaru_sid_bf_ssm_init();
-    if (received == "" || (uint8_t)received.at(4) != 0xff)
-        return STATUS_ERROR;
-
-    received.remove(0, 8);
-    received.remove(5, received.length() - 5);
-
-    for (int i = 0; i < received.length(); i++)
-    {
-        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-    }
-    QString ecuid = msg;
-    emit LOG_I("ECU ID = " + ecuid, true, true);
-
-    received = send_subaru_sid_b8_change_baudrate_38400();
-    //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-    if (received == "" || (uint8_t)received.at(4) != 0xf8)
-        return STATUS_ERROR;
-
+    emit LOG_I("Checking if OBK is running", true, true);
     serial->change_port_speed("38400");
-
-    // Checking connection after baudrate change with SSM Init
     received = send_subaru_sid_bf_ssm_init();
-    if (received == "" || (uint8_t)received.at(4) != 0xff)
-        return STATUS_ERROR;
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
+    if (received != "" && received.length() > 12)
+    {
+        kernel_alive = true;
+        received.remove(0, 8);
+        received.remove(5, received.length() - 5);
+
+        for (int i = 0; i < received.length(); i++)
+        {
+            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        }
+        emit LOG_I("Connected to OBK, ECU ID: " + msg, true, true);
+        ecuid = msg;
+    }
+
+    if(!kernel_alive)
+    {
+        // SSM init
+        serial->change_port_speed("4800");
+        received = send_subaru_sid_bf_ssm_init();
+        if (received == "" && (uint8_t)received.at(4) != 0xff)
+            return STATUS_ERROR;
+
+        if (received.length() < 13)
+            return STATUS_ERROR;
+
+        received.remove(0, 8);
+        received.remove(5, received.length() - 5);
+
+        for (int i = 0; i < received.length(); i++)
+        {
+            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        }
+        ecuid = msg;
+        emit LOG_I("ECU ID = " + ecuid, true, true);
+        //send_log_window_message("ECU ID = " + ecuid, true, true);
+
+        received = send_subaru_sid_b8_change_baudrate_38400();
+        //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
+        //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
+        if (received == "" || (uint8_t)received.at(4) != 0xf8)
+            return STATUS_ERROR;
+
+        serial->change_port_speed("38400");
+
+        // Checking connection after baudrate change with SSM Init
+        received = send_subaru_sid_bf_ssm_init();
+        emit LOG_D("Init response: " + parse_message_to_hex(received), true, true);
+        if (received == "" || (uint8_t)received.at(4) != 0xff)
+            return STATUS_ERROR;
+    }
+
+    ecuCalDef->RomId = ecuid;
 
     pagesize = 0x80;
     if (start_addr == 0 && length == 0)
@@ -274,20 +312,12 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
     QByteArray received;
     float pleft = 0;
 
-    emit LOG_I("Initialising serial port, please wait...", true, true);
-    serial->reset_connection();
-    serial->set_serial_port_parity(QSerialPort::EvenParity);
-    serial->open_serial_port();
-
-    emit LOG_I("Baudrate: " + serial->get_serial_port_baudrate(), true, true);
-
     if (!serial->is_serial_port_open())
     {
         LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
-    serial->change_port_speed("39063");
-    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
+
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
     {
