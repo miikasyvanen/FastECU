@@ -1711,7 +1711,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     received = serial->write_serial_data_echo_check(output);
     qDebug() << "Request kernel id sent:" << parse_message_to_hex(output);
     delay(100);
-    received = serial->read_serial_data(100, serial_read_timeout);
+    received = serial->read_serial_data(100, serial_read_short_timeout);
     qDebug() << "Request kernel id received:" << parse_message_to_hex(received);
 
     if (received.length() > 1)
