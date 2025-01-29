@@ -896,7 +896,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
     }
 
     emit LOG_I("--- Comparing ECU flash memory pages to image file ---", true, true);
-    emit LOG_I("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
+    emit LOG_I("blk\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
     if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
     {
@@ -947,7 +947,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
         set_progressbar_value(100);
 
         emit LOG_I("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
-        emit LOG_I("blk\t\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
+        emit LOG_I("blk\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
         if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
         {
@@ -1323,10 +1323,6 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
             }
         }
 
-        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
-        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        emit LOG_I(msg, true, true);
-
         remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
@@ -1347,6 +1343,10 @@ int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src
             tleft = 9999;
         }
         tleft++;
+
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
+        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * byteindex / flashbytescount,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        emit LOG_I(msg, true, true);
 
         float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
         set_progressbar_value(pleft);
@@ -1519,10 +1519,9 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteAr
     seed += (requested_seed.at(1) << 16) & 0x00FF0000;
     seed += (requested_seed.at(2) << 8) & 0x0000FF00;
     seed += requested_seed.at(3) & 0x000000FF;
-    //seed = reconst_32(seed8);
 
-    for (ki = 15; ki >= 0; ki--) {
-
+    for (ki = 15; ki >= 0; ki--)
+    {
         wordtogenerateindex = seed;
         wordtobeencrypted = seed >> 16;
         index = wordtogenerateindex ^ keytogenerateindex[ki];
@@ -1544,8 +1543,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteAr
     key.append((uint8_t)(seed >> 16));
     key.append((uint8_t)(seed >> 8));
     key.append((uint8_t)seed);
-
-    //write_32b(seed, key);
 
     return key;
 }
@@ -1734,19 +1731,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
 
     return kernelid;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
