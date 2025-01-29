@@ -444,7 +444,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
 
         //emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
-        delay(5);
+        //delay(5);
         received.clear();
         if (output.at(1) == 0x61)
         {
@@ -465,7 +465,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
                         return STATUS_ERROR;
                     }
                 }
-                delay(50);
+                //delay(50);
             }
         }
         else
@@ -498,7 +498,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
             curspeed += 1;
         }
 
-        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
+        tleft = ((float)flashdatasize - byteindex) / curspeed;  //s
         if (tleft > 9999) {
             tleft = 9999;
         }

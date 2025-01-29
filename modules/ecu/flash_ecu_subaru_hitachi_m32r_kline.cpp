@@ -584,7 +584,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
     emit LOG_I(msg, true, true);
 
-    emit LOG_I("Settting flash start & length...", true, true);
+    emit LOG_I("Setting flash start & length...", true, true);
 
 //    delay(200);
     serial->change_port_speed("15625");
@@ -647,7 +647,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
             {
                 emit LOG_E("", false, true);
                 emit LOG_E("Flash erase failed!", true, true);
-                emit LOG_E("Received: " + parse_message_to_hex(received), true, true);
+                emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
         }
@@ -657,7 +657,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     {
         emit LOG_E("", false, true);
         emit LOG_E("Flash erase failed, no answer from ECU!", true, true);
-        emit LOG_E("Received: " + parse_message_to_hex(received), true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
 
         return STATUS_ERROR;
     }
