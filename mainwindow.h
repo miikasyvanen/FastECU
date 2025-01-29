@@ -32,6 +32,7 @@
 #include <QFuture>
 #include <QDebug>
 #include <QThread>
+#include <QMutex>
 
 #include <cipher.h>
 #include <calibration_maps.h>
@@ -125,7 +126,7 @@ private:
     QSplashScreen *startUpSplash;
     QLabel *startUpSplashLabel;
     QProgressBar *startUpSplashProgressBar;
-    QAtomicInteger<bool> restartQuestionActive{false};
+    QMutex restartQuestionActive;
 
     QString peerAddress;
     QString peerPassword;

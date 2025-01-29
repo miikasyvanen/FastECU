@@ -528,9 +528,8 @@ void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemot
     }
     else if (oldState == QRemoteObjectReplica::Valid)
     {
-        if (restartQuestionActive == true)
+        if (!restartQuestionActive.tryLock())
             return;
-        restartQuestionActive = true;
         qDebug() << "Network connection lost, reconnecting...";
         QMessageBox msgBox;
         msgBox.setText("Network connection lost.");
@@ -551,7 +550,7 @@ void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemot
         else if (msgBox.clickedButton() == quitButton)
             qApp->exit(1);
 
-        restartQuestionActive = false;
+        restartQuestionActive.unlock();
     }
 }
 
