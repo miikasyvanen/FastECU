@@ -164,50 +164,16 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
     }
 
     serial->set_add_iso14230_header(false);
-/*
-    send_log_window_message("Checking if kernel is already running...", true, true);
-    qDebug() << "Checking if kernel is already running...";
 
-    received.clear();
-    received = request_kernel_id();
-    send_log_window_message("Kernel ID: " + received, true, true);
-    qDebug() << "Kernel ID:" << received << parse_message_to_hex(received);
-    if (received != "")
-    {
-        kernel_alive = true;
-        return STATUS_SUCCESS;
-    }
-    send_log_window_message("No response from kernel, continue bootloader initialization...", true, true);
-*/
     send_log_window_message("Initializing bootloader", true, true);
     qDebug() << "Initializing bootloader";
-/*
-    QTime dieTime = QTime::currentTime().addMSecs(2000);
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x0F);
-    output.append((uint8_t)0xFF);
-    output.append((uint8_t)0xFE);
-    output.append((uint8_t)((SID_CAN_ENTER_BL >> 8) & 0xFF));
-    output.append((uint8_t)(SID_CAN_ENTER_BL & 0xFF));
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    while (QTime::currentTime() < dieTime)
-    {
-        serial->send_periodic_j2534_data(output, 10);
-    }
-    serial->stop_periodic_j2534_data();
-    delay(50);
-*/
 
+    uint16_t loopcount = 0;
     QTime dieTime = QTime::currentTime().addMSecs(2000);
-    while (QTime::currentTime() < dieTime)
+    //while (QTime::currentTime() < dieTime)
+    while (loopcount < 1000)
     {
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        //QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         output.clear();
         output.append((uint8_t)0x00);
         output.append((uint8_t)0x0F);
@@ -223,13 +189,15 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
         output.append((uint8_t)0x00);
 
         serial->write_serial_data_echo_check(output);
-        delay(200);
-        received = serial->read_serial_data(20, 10);
+        received = serial->read_serial_data(20, 5);
+        //delay(5);
+        loopcount++;
     }
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    received = serial->read_serial_data(20, 10);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
-/*
-    send_log_window_message("Connecting to bootloader", true, true);
-    qDebug() << "Connecting to bootloader";
+    emit LOG_I("Connecting to bootloader", true, true);
 
     output[4] = (uint8_t)SID_CAN_START_COMM;
     output[5] = (uint8_t)(SID_CAN_CHECK_COMM_BL & 0xFF);
@@ -240,19 +208,35 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
     output[10] = (uint8_t)0x00;
     output[11] = (uint8_t)0x00;
     serial->write_serial_data_echo_check(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(20, 10);
-    //send_log_window_message("0x7A 0x90 response: " + parse_message_to_hex(received), true, true);
-    //qDebug() << "0x7A 0x90 response:" << parse_message_to_hex(received);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
     if (received.length()) {
         if ((uint8_t)(received.at(1) & 0xF8) == 0x90)
         {
-            send_log_window_message("Connected to bootloader, start kernel upload", true, true);
+            emit LOG_I("Connected to bootloader, start kernel upload", true, true);
             return STATUS_SUCCESS;
         }
     }
+
+
+    send_log_window_message("Checking if kernel is already running...", true, true);
+    qDebug() << "Checking if kernel is already running...";
+
+    received.clear();
+    received = request_kernel_id();
+    send_log_window_message("Kernel ID: " + received, true, true);
+    qDebug() << "Kernel ID:" << received << parse_message_to_hex(received);
+    if (received != "")
+    {
+        kernel_alive = true;
+        return STATUS_SUCCESS;
+    }
+    send_log_window_message("No response from kernel, continue bootloader initialization...", true, true);
+
     return STATUS_ERROR;
-*/
+
     return STATUS_SUCCESS;
 }
 
@@ -365,11 +349,11 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
     QString mcu_name;
 
     start_address = kernel_start_addr;//flashdevices[mcu_type_index].kblocks->start;
-    qDebug() << "Start address to upload kernel:" << hex << start_address;
+    emit LOG_D("Start address to upload kernel: " + QString::number(start_address, 16), true, true);
 
     if (!serial->is_serial_port_open())
     {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        emit LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
@@ -378,7 +362,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
     {
-        send_log_window_message("Unable to open kernel file for reading", true, true);
+        emit LOG_E("Unable to open kernel file for reading", true, true);
         return STATUS_ERROR;
     }
     file_len = file.size();
@@ -388,8 +372,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
     if((file_len % 6) != 0) maxblocks++;
     end_address = (start_address + (maxblocks * 6)) & 0xFFFFFFFF;
 
-    send_log_window_message("Starting kernel upload, please wait...", true, true);
-    qDebug() << "Starting kernel upload, please wait...";
+    emit LOG_I("Starting kernel upload, please wait...", true, true);
     // Send kernel address
     output.clear();
     output.append((uint8_t)0x00);
@@ -405,23 +388,24 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     received = serial->write_serial_data_echo_check(output);
-    qDebug() << parse_message_to_hex(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(20, 10);
+    emit LOG_I("Response: " + parse_message_to_hex(output), true, true);
 
     output[5] = (uint8_t)(0xA8 + 0x06);
 
     set_progressbar_value(0);
 
-    send_log_window_message("Uploading kernel, please wait...", true, true);
-    qDebug() << "Uploading kernel, please wait...";
+    emit LOG_I("Uploading kernel, please wait...", true, true);
 
+    emit LOG_D("Sending " + QString::number(maxblocks) + "blocks", true, true);
     for(int blockno = 0; blockno < maxblocks; blockno++)
     {
         if (kill_process)
             return STATUS_ERROR;
 
-        qDebug() << "Send block:" << blockno;
+        //emit LOG_D("Send block: " + QString::number(blockno), true, true);
         for(int j = 0; j < 6; j++)
         {
             if (pl_encr.length() > (byte_counter + j))
@@ -441,7 +425,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
 
         byte_counter += 6;
         received = serial->write_serial_data_echo_check(output);
-        qDebug() << "0xA8 message sent to bootloader to load kernel for block:" << blockno;
+        //emit LOG_D("Sent kernel block to bootloader: " + QString::number(blockno), true, true);
 
         delay(1);
 
@@ -452,7 +436,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
 
     set_progressbar_value(100);
 
-    //qDebug() << "All 0xA8 messages sent, checksum:" << hex << chk_sum;
+    emit LOG_D("All kernel blocks sent, checksum: " + QString::number(chk_sum, 16), true, true);
 
     // send 0xB0 command to check checksum
     output[5] = (uint8_t)(SID_KERNEL_CHECKSUM + 0x04);
@@ -463,14 +447,12 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
     output[10] = (uint8_t)0x00;
     output[11] = (uint8_t)0x00;
     serial->write_serial_data_echo_check(output);
-    //qDebug() << parse_message_to_hex(output);
-    //qDebug() << "0xB0 message sent to bootloader to check checksum, waiting for response...";
+    emit LOG_D("Verifying kernel checksum, please wait...", true, true);
     delay(200);
     received = serial->read_serial_data(20, 10);
-    //qDebug() << "Response to 0xB0 message:" << parse_message_to_hex(received);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
-    send_log_window_message("Kernel uploaded, starting kernel...", true, true);
-    qDebug() << "Kernel uploaded, starting kernel...";
+    emit LOG_I("Kernel uploaded, starting kernel...", true, true);
 
     // 7A B1 81 FF 80 00 00 00 ??? Jump address
     // send 0xA0 command to jump into kernel
@@ -482,18 +464,13 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel_subaru_denso_sh705x_densoca
     output[10] = (uint8_t)0x00;
     output[11] = (uint8_t)0x00;
     serial->write_serial_data_echo_check(output);
-    //qDebug() << parse_message_to_hex(output);
-    //qDebug() << "0xA0 message sent to bootloader to jump into kernel";
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
 
-    //qDebug() << "ECU should now be running from kernel";
-
-    send_log_window_message("Requesting kernel ID", true, true);
-    qDebug() << "Requesting kernel ID";
+    emit LOG_I("Requesting kernel ID", true, true);
 
     received.clear();
     received = request_kernel_id();
-    send_log_window_message("Kernel ID: " + received, true, true);
-    qDebug() << "Kernel ID:" << parse_message_to_hex(received);
+    emit LOG_I("Kernel ID: " + received, true, true);
     if (received == "")
         return STATUS_ERROR;
 
