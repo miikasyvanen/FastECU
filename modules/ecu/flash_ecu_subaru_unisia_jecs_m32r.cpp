@@ -357,7 +357,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
         emit LOG_I(".", false, false);
         if (received.length() > 6)
         {
-            if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef)// && (uint8_t)received.at(5) == 0x42)
+            if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x42)
             {
                 emit LOG_I("", false, true);
                 emit LOG_I("Flash erase in progress, please wait...", true, true);
@@ -385,12 +385,12 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
     received.clear();
     for (int i = 0; i < 40; i++)
     {
-        received.append(serial->read_serial_data(8, receive_timeout));
+        received.append(serial->read_serial_data(10, receive_timeout));
         emit LOG_I(".", false, false);
         qDebug() << ".";
         if (received.length() > 6)
         {
-            if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef)// && (uint8_t)received.at(5) == 0x52)
+            if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x52)
             {
                 emit LOG_I("", false, true);
                 emit LOG_I("Flash erased!", true, true);

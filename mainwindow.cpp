@@ -449,13 +449,24 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
 /*
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
-    QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
-    QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4\x00" };
+    QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f" };
+    //QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4" };
+    QByteArray challenge = { "\x3D\xA9\x19\x57\x6E\x88\xD3\xBF\x25\x2C\x02\xC4\x4F\x70\x0B\x63" };
     QByteArray response;
+    qDebug() << "*********";
     response.append(aes_ecb_test(challenge, key));
-    qDebug() << "Challenge reply:";
-    qDebug() << parse_message_to_hex(response);
-    aes_ecb_example();
+    key = "\xE8\xCC\x52\xD5\xD8\xF2\x07\x06\x42\x48\x13\x12\x6F\xA7\xAB\xDD";
+    response.append(aes_ecb_test(challenge, key));
+    key = "\xE4\x0E\xAF\xE4\x50\x74\xA0\xA0\xBE\x99\x17\xB0\xBF\x59\xF9\x9B";
+    response.append(aes_ecb_test(challenge, key));
+    key = "\x9A\x71\x1B\x32\xAC\xC0\xFF\x40\x89\xA7\x25\x45\x41\x64\x70\xC6";
+    response.append(aes_ecb_test(challenge, key));
+    key = "\x8F\xA3\xCA\x5E\x63\x2D\xB8\x0E\x4E\xE7\x88\x9F\x08\xB4\x3D\xB0";
+    response.append(aes_ecb_test(challenge, key));
+    key = "\x09\x0D\xF6\x5A\x3C\x5E\x74\x6F\xBA\x51\x0C\xC3\xD3\x01\xA9\xAE";
+    response.append(aes_ecb_test(challenge, key));
+    qDebug() << "*********";
+    //aes_ecb_example();
     // AES-128 ECB examples end
 */
     emit LOG_I("FastECU initialized", true, true);
@@ -491,32 +502,15 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     int decrypted_len, encrypted_len;
 
     // Encrypt the original data
-    qDebug() << "Encrypt challenge";
     encrypted_len = cipher.encrypt_aes128_ecb((unsigned char*)data, strlen(data), (unsigned char*)cKey, encrypted);
     // Decrypt the encrypted data
-    qDebug() << "Decrypt reply";
     decrypted_len = cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
-
-    qDebug() << "Received challenge:";
-    qDebug() << parse_message_to_hex(challenge);
-    qDebug() << "Challenge length:" << challenge.length();
-
-    qDebug() << "Received challenge key:";
-    qDebug() << parse_message_to_hex(key);
-    qDebug() << "Challenge key length:" << (key.length() * 8) << "bits";
-
     QByteArray challengeReply(QByteArray::fromRawData((const char*)encrypted, 16));
-    //encrypted[16] = '\0';
     qDebug() << "Challenge reply:";
     qDebug() << parse_message_to_hex(challengeReply);
     qDebug() << "Challenge reply length:" << encrypted_len;
 
     QByteArray challengeDecrypt(QByteArray::fromRawData((const char*)decrypted, 16));
-    //decrypted[16] = '\0';
-    qDebug() << "Decrypted data is:";
-    qDebug() << parse_message_to_hex(challengeDecrypt);
-    qDebug() << "Decrypted length:" << decrypted_len;
-
     return challengeReply;
 }
 
