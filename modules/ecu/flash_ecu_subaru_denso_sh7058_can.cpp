@@ -183,6 +183,116 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     // Open serial port
     serial->open_serial_port();
 
+    emit emit LOG_I("Check RAM at loc 0xffff1e64...", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x1e);
+    output.append((uint8_t)0x64);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x1e);
+    output.append((uint8_t)0x65);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x1e);
+    output.append((uint8_t)0x66);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x1e);
+    output.append((uint8_t)0x67);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, receive_timeout);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+
+    received.remove(0, 5);
+    PTR_DAT_000fa93c = (received.at(0) << 24) & 0xFF000000;
+    PTR_DAT_000fa93c += (received.at(1) << 16) & 0x00FF0000;
+    PTR_DAT_000fa93c += (received.at(2) << 8) & 0x0000FF00;
+    PTR_DAT_000fa93c += received.at(3) & 0x000000FF;
+    emit LOG_I("PTR_DAT_000fa93c = 0x" + QString::number(PTR_DAT_000fa93c, 16), true, true);
+    //PTR_DAT_000fa93c += 0x006D9C5D;
+    //emit LOG_I("PTR_DAT_000fa93c = 0x" + QString::number(PTR_DAT_000fa93c, 16), true, true);
+    //PTR_DAT_000fa93c = (PTR_DAT_000fa93c & 0x00FFFFFF);
+
+    emit emit LOG_I("Check RAM at loc 0xfffff600...", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0xf6);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0xf6);
+    output.append((uint8_t)0x01);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0xf2);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0xf6);
+    output.append((uint8_t)0x03);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, receive_timeout);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+
+    received.remove(0, 5);
+    DAT_000fa924 = (received.at(0) << 24) & 0xFF000000;
+    DAT_000fa924 += (received.at(1) << 16) & 0x00FF0000;
+    DAT_000fa924 += (received.at(2) << 8) & 0x0000FF00;
+    DAT_000fa924 += received.at(3) & 0x000000FF;
+
+    emit emit LOG_I("Check RAM block at loc 0xffff3000...", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x30);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x30);
+    output.append((uint8_t)0x01);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(0x20, 1000);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+
+    emit emit LOG_I("Check RAM at loc 0xffff678f...", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x67);
+    output.append((uint8_t)0x8f);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x67);
+    output.append((uint8_t)0x90);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x67);
+    output.append((uint8_t)0x91);
+    output.append((uint8_t)0xff);
+    output.append((uint8_t)0x67);
+    output.append((uint8_t)0x92);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, receive_timeout);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+
     emit LOG_I("Initializing bootloader", true, true);
 
     output.clear();
@@ -362,13 +472,9 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    seed.append((uint8_t)0xD3);
-    seed.append((uint8_t)0x80);
-    seed.append((uint8_t)0xE8);
-    seed.append((uint8_t)0x94);
-
     if (flash_method.endsWith("_ecutek"))
-        seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
+        seed_key = subaru_denso_generate_ecutek_racerom_can_seed_key(seed);
+        //seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
     else if (flash_method.endsWith("_cobb"))
         seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
     else
@@ -403,6 +509,12 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
     }
 
     emit LOG_I("Seed key ok", true, true);
@@ -1432,6 +1544,220 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByt
     return key;
 }
 
+void FlashEcuSubaruDensoSH7058Can::FUN_000fac38(uint32_t*local_1c,uint32_t*local_20)
+
+{
+    *local_1c = (*local_20 & 0xF0000000) >> 0x1c | *local_1c << 4;
+    *local_20 = *local_20 << 4;
+    return;
+}
+
+void FlashEcuSubaruDensoSH7058Can::FUN_000fac5a(uint param_1,uint param_2,uint *param_3,uint *param_4)
+{
+    uint uVar1;
+    ushort local_10;
+    ushort local_c;
+
+    *param_4 = (param_1 & 0xffff) * (param_2 & 0xffff);
+    local_c = (ushort)(param_1 >> 0x10);
+    local_10 = (ushort)(param_2 >> 0x10);
+    uVar1 = (*param_4 >> 0x10) + (param_2 & 0xffff) * (uint)local_c + (param_1 & 0xffff) * (uint)local_10;
+    *param_4 = (*param_4 & 0xffff) | uVar1 * 0x10000;
+    uVar1 = uVar1 >> 0x10;
+    *param_3 = uVar1;
+    *param_3 = uVar1 + (uint)local_c * (uint)local_10;
+    return;
+}
+
+int FlashEcuSubaruDensoSH7058Can::FUN_000facc8(uint param_1,int param_2)
+{
+    int iVar1;
+    uint uVar2;
+    uint uVar3;
+
+    iVar1 = 0;
+    uVar2 = param_2 << 4;
+    for (uVar3 = 0x10; uVar3 != 0; uVar3 = uVar3 >> 1) {
+        for (; uVar2 <= param_1; param_1 = param_1 - uVar2) {
+            iVar1 = iVar1 + uVar3;
+        }
+        uVar2 = uVar2 >> 1;
+    }
+    return iVar1;
+}
+
+
+void FlashEcuSubaruDensoSH7058Can::FUN_000facee(uint param_1,uint param_2,int param_3,int *param_4,uint *param_5)
+{
+    int iVar1;
+    int iVar2;
+    uint local_20;
+    uint local_1c [3];
+
+    iVar2 = 9;
+    *param_4 = 0;
+    local_20 = param_2;
+    local_1c[0] = param_1;
+    do {
+        iVar1 = FUN_000facc8(local_1c[0],param_3);
+        *param_4 = *param_4 * 0x10 + iVar1;
+        local_1c[0] = local_1c[0] - param_3 * iVar1;
+        *param_5 = local_1c[0];
+        FUN_000fac38(local_1c,&local_20);
+        iVar2 = iVar2 + -1;
+    } while (iVar2 != 0);
+    return;
+}
+
+
+uint32_t FlashEcuSubaruDensoSH7058Can::FUN_000fad48(uint param_1,uint param_2,int param_3)
+{
+    uint uStack_18;
+    uint uStack_14;
+    uint uStack_10;
+    int iStack_c;
+    int iStack_8;
+
+    iStack_8 = param_3;
+    FUN_000fac5a(param_1,param_2,&uStack_14,&uStack_10);
+    FUN_000facee(uStack_14,uStack_10,iStack_8,&iStack_c,&uStack_18);
+    return uStack_18;
+}
+
+
+uint32_t FlashEcuSubaruDensoSH7058Can::FUN_000fad72(uint param_1,uint param_2,int param_3)
+{
+    uint uVar1;
+
+    uVar1 = 1;
+    for (; param_2 != 0; param_2 = param_2 >> 1) {
+        if ((param_2 & 1) != 0) {
+            uVar1 = FUN_000fad48(uVar1,param_1,param_3);
+        }
+        param_1 = FUN_000fad48(param_1,param_1,param_3);
+    }
+    return uVar1;
+}
+
+
+uint32_t FlashEcuSubaruDensoSH7058Can::FUN_000fa83e(void)
+{
+    uint uVar1;
+    uint uVar2;
+
+    // Ecutek License Key 0xf80: 0xfe = enable, 0xff = disable
+    // Ecutek License Key 0xf81: 0x791f00a3
+    // Ecutek Dongle ID 0xffa0a: 0x6d9c5d // 0e
+
+    //PTR_DAT_000fa93c = 0xffffff;//0x6d9c5d;
+
+    uint DAT_000fa924 = 0xF600;
+    uint PTR_DAT_000fa940 = 0x41C64E6D;
+    uint DAT_000fa944 = 0x00FFFFFF;
+
+    uVar2 = (DAT_000fa924 >> 8) * PTR_DAT_000fa940 + PTR_DAT_000fa93c;
+    uVar1 = DAT_000fa944 & uVar2;
+    //PTR_DAT_000fa93c = uVar2;
+    //emit LOG_I("PTR_DAT_000fa93c = 0x" + QString::number(PTR_DAT_000fa93c, 16), true, true);
+    return uVar1;
+}
+
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_ecutek_racerom_seed_key(uint32_t req_seed)//QByteArray requested_seed)
+{
+    QByteArray key;
+    uint32_t seed;
+    //seed = (requested_seed.at(0) << 24) & 0xFF000000;
+    //seed += (requested_seed.at(1) << 16) & 0x00FF0000;
+    //seed += (requested_seed.at(2) << 8) & 0x0000FF00;
+    //seed += requested_seed.at(3) & 0x000000FF;
+    seed = req_seed;
+    uint puVar1;
+    uint uVar2;
+
+    uint PTR_DAT_000fae38 = 0x00329809;
+    uint PTR_DAT_000fae34 = 0x0fda9293;
+    //PTR_DAT_000fa93c = seed;
+
+    uVar2 = FUN_000fa83e();
+    puVar1 = PTR_DAT_000fae38;
+    //*(uint *)(PTR_DAT_000fae30 + *(ushort *)PTR_s_RaceROM_000fae2c) = uVar2 + 2;
+    //uVar2 = FUN_000fad72(uVar2 + 2, puVar1, PTR_DAT_000fae34);
+    uVar2 = FUN_000fad72(uVar2 + 2, PTR_DAT_000fae38, PTR_DAT_000fae34);
+
+    key.append((uVar2 >> 24) & 0xff);
+    key.append((uVar2 >> 16) & 0xff);
+    key.append((uVar2 >> 8) & 0xff);
+    key.append((uVar2 >> 0) & 0xff);
+
+    return key;
+}
+
+QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_can_seed_key(QByteArray requested_seed)
+{
+    // Function 000a86fc
+    QByteArray key;
+    uint32_t calc_key = 0;
+    QByteArray inv_requested_seed;
+    uint32_t seed;
+    seed = (requested_seed.at(0) << 24) & 0xFF000000;
+    seed += (requested_seed.at(1) << 16) & 0x00FF0000;
+    seed += (requested_seed.at(2) << 8) & 0x0000FF00;
+    seed += requested_seed.at(3) & 0x000000FF;
+    //seed = 0x0fcadd4d;
+
+    emit LOG_I("********", true, true);
+    emit LOG_I("Seed: " + parse_message_to_hex(requested_seed), true, true);
+    emit LOG_I("Seed: 0x" + QString::number(seed, 16), true, true);
+
+    uint32_t loop = 0x00200000;
+    while (calc_key != seed && loop < 0xFFFFFFFF)
+    {
+        if (kill_process)
+            return key;
+        loop++;
+        key = subaru_denso_calculate_ecutek_racerom_seed_key(loop);//requested_seed);
+        //emit LOG_I("Seed key: " + parse_message_to_hex(key), true, true);
+        if (loop % 0x100000 == 0){
+            emit LOG_I("Loop: 0x" + QString::number(loop, 16), true, true);
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        }
+        calc_key = (key.at(0) << 24) & 0xFF000000;
+        calc_key += (key.at(1) << 16) & 0x00FF0000;
+        calc_key += (key.at(2) << 8) & 0x0000FF00;
+        calc_key += key.at(3) & 0x000000FF;
+    }
+    //loop = calc_key;
+    emit LOG_I("Loop: 0x" + QString::number(loop, 16), true, true);
+    emit LOG_I("Calc key: 0x" + QString::number(calc_key, 16), true, true);
+    emit LOG_I("Seed key: " + parse_message_to_hex(key), true, true);
+/*
+    inv_requested_seed = key;
+    key = subaru_denso_calculate_ecutek_racerom_seed_key(inv_requested_seed);
+    emit LOG_I("Seed key from key: " + parse_message_to_hex(key), true, true);
+
+    inv_requested_seed[0] = key[3];
+    inv_requested_seed[1] = key[2];
+    inv_requested_seed[2] = key[1];
+    inv_requested_seed[3] = key[0];
+    key = subaru_denso_calculate_ecutek_racerom_seed_key(inv_requested_seed);
+    emit LOG_I("Seed key inverted from key: " + parse_message_to_hex(key), true, true);
+
+    inv_requested_seed[0] = requested_seed[3];
+    inv_requested_seed[1] = requested_seed[2];
+    inv_requested_seed[2] = requested_seed[1];
+    inv_requested_seed[3] = requested_seed[0];
+    key = subaru_denso_calculate_ecutek_racerom_seed_key(inv_requested_seed);
+    emit LOG_I("Seed key inverted: " + parse_message_to_hex(key), true, true);
+    emit LOG_I("********", true, true);
+*/
+    key.clear();
+    key.append((loop >> 24) & 0xff);
+    key.append((loop >> 16) & 0xff);
+    key.append((loop >> 8) & 0xff);
+    key.append((loop >> 0) & 0xff);
+
+    return key;
+}
 /*
  * Generate denso can ecutek seed key from received seed bytes
  *
