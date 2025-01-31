@@ -449,23 +449,21 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
 /*
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
-    QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f" };
+    //QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f" };
+    QByteArray key = { "\x7D\x89\xDD\xE1\xC9\x5A\x22\x4E\xD7\x23\xE0\x44\x96\xF4\xC0\xAE" };
     //QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4" };
     QByteArray challenge = { "\x3D\xA9\x19\x57\x6E\x88\xD3\xBF\x25\x2C\x02\xC4\x4F\x70\x0B\x63" };
     QByteArray response;
     qDebug() << "*********";
     response.append(aes_ecb_test(challenge, key));
-    key = "\xE8\xCC\x52\xD5\xD8\xF2\x07\x06\x42\x48\x13\x12\x6F\xA7\xAB\xDD";
+    key = "\x5C\x9F\x97\xAD\xE5\x1D\xA6\xD0\x60\x9D\x49\xBB\x05\xA4\x17\xE9";
     response.append(aes_ecb_test(challenge, key));
-    key = "\xE4\x0E\xAF\xE4\x50\x74\xA0\xA0\xBE\x99\x17\xB0\xBF\x59\xF9\x9B";
+    key = "\xC9\x22\x70\xE6\x64\x63\x39\x54\x07\xF6\xC3\x01\x4D\xC8\x90\xB0";
     response.append(aes_ecb_test(challenge, key));
-    key = "\x9A\x71\x1B\x32\xAC\xC0\xFF\x40\x89\xA7\x25\x45\x41\x64\x70\xC6";
+    key = "\x66\xD5\x36\x4A\x0D\x2D\x45\xC6\x7E\x8D\xB1\x20\xED\x47\x14\x38";
     response.append(aes_ecb_test(challenge, key));
-    key = "\x8F\xA3\xCA\x5E\x63\x2D\xB8\x0E\x4E\xE7\x88\x9F\x08\xB4\x3D\xB0";
+    key = "\x37\x49\x0E\x2C\x46\xC5\x7F\x8C\xB2\x2F\xEC\x48\x13\x39\x65\xD6";    qDebug() << "*********";
     response.append(aes_ecb_test(challenge, key));
-    key = "\x09\x0D\xF6\x5A\x3C\x5E\x74\x6F\xBA\x51\x0C\xC3\xD3\x01\xA9\xAE";
-    response.append(aes_ecb_test(challenge, key));
-    qDebug() << "*********";
     //aes_ecb_example();
     // AES-128 ECB examples end
 */
@@ -506,9 +504,13 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     // Decrypt the encrypted data
     decrypted_len = cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
     QByteArray challengeReply(QByteArray::fromRawData((const char*)encrypted, 16));
-    qDebug() << "Challenge reply:";
+    qDebug() << "Key:";
+    qDebug() << parse_message_to_hex(key);
+    qDebug() << "Challenge:";
+    qDebug() << parse_message_to_hex(challenge);
+    qDebug() << "Decrypted:";
     qDebug() << parse_message_to_hex(challengeReply);
-    qDebug() << "Challenge reply length:" << encrypted_len;
+    qDebug() << "Length:" << encrypted_len;
 
     QByteArray challengeDecrypt(QByteArray::fromRawData((const char*)decrypted, 16));
     return challengeReply;
