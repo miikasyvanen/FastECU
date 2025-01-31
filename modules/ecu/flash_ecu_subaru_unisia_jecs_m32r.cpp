@@ -344,7 +344,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
     serial->change_port_speed("19200");
 
     emit LOG_I("Set programming voltage +12v to Line End Check 1", true, true);
-    serial->set_lec_lines(0, 1);
+    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
 
     emit LOG_I("Sending request to erase flash", true, true);
     received = send_subaru_unisia_jecs_sid_af_erase_memory_block();
@@ -510,6 +510,8 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
     }
     set_progressbar_value(100);
     emit LOG_I("File " + flashdata_filename + " written to flash.", true, true);
+    emit LOG_I("Set programming voltage +12v to Line End Check 1", true, true);
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     return STATUS_SUCCESS;
 }
