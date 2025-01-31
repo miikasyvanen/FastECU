@@ -1149,18 +1149,19 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(10, serial_read_short_timeout);
+    received = serial->read_serial_data(13, serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
-        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_GET_MAX_MSG_SIZE | 0x40))
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_GET_MAX_MSG_SIZE | 0x40))
         {
-            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("Wrong response from ECU!", true, true);
+            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
         else
         {
-            flashmessagesize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            flashmessagesize = (uint8_t)received.at(9) << 24 | (uint8_t)received.at(10) << 16 | (uint8_t)received.at(11) << 8 | (uint8_t)received.at(12) << 0;
             msg.clear();
             msg.append(QString("Max message length: 0x%1").arg(flashmessagesize,4,16,QLatin1Char('0')).toUtf8());
             emit LOG_I(msg, true, true);
@@ -1168,7 +1169,8 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     }
     else
     {
-        emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        emit LOG_E("Wrong response from ECU!", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
 
@@ -1182,18 +1184,19 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(10, serial_read_short_timeout);
+    received = serial->read_serial_data(13, serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
-        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_GET_MAX_BLK_SIZE | 0x40))
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_GET_MAX_BLK_SIZE | 0x40))
         {
-            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("Wrong response from ECU!", true, true);
+            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
         else
         {
-            flashblocksize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            flashblocksize = (uint8_t)received.at(9) << 24 | (uint8_t)received.at(10) << 16 | (uint8_t)received.at(11) << 8 | (uint8_t)received.at(12) << 0;
             msg.clear();
             msg.append(QString("Flashblock size: 0x%1").arg(flashblocksize,4,16,QLatin1Char('0')).toUtf8());
             emit LOG_I(msg, true, true);
@@ -1201,7 +1204,8 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     }
     else
     {
-        emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        emit LOG_E("Wrong response from ECU!", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
 
@@ -1225,15 +1229,17 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_CMD | 0x40))
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CMD | 0x40))
         {
-            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("Wrong response from ECU!", true, true);
+            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
     else
     {
-        emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        emit LOG_E("Wrong response from ECU!", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
 
@@ -1247,22 +1253,24 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     //delay(50);
-    received = serial->read_serial_data(8, serial_read_short_timeout);
+    received = serial->read_serial_data(11, serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
-        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x44)
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_PROG_VOLT | 0x40))
         {
-            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("Wrong response from ECU!", true, true);
+            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
     else
     {
-        emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+        emit LOG_E("Wrong response from ECU!", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-    float prog_voltage = (((uint8_t)received.at(5) << 8) + (uint8_t)received.at(6)) / 50.0;
+    float prog_voltage = (((uint8_t)received.at(9) << 8) + (uint8_t)received.at(10)) / 50.0;
     emit LOG_I("Programming voltage: " + QString::number(prog_voltage) + "V", true, true);
 
     flash_write_init = true;
