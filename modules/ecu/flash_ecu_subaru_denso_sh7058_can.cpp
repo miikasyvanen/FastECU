@@ -181,7 +181,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
 
     emit LOG_I("Initializing bootloader", true, true);
-    qDebug() << "Initializing bootloader";
 
     bool connected = false;
     //serial->set_j2534_stmin_tx();
@@ -1069,7 +1068,7 @@ int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *sr
     if (received.length() > 3)
     {
         qDebug() << "Get rom crc from msg";
-        ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
+        ecucrc32 = ((uint8_t)received.at(9) << 24) | ((uint8_t)received.at(10) << 16) | ((uint8_t)received.at(2) << 11) | (uint8_t)received.at(12);
     }
     msg.clear();
     msg.append(QString("ROM CRC: 0x%1 IMG CRC: 0x%2").arg(ecucrc32,8,16,QLatin1Char('0')).arg(imgcrc32,8,16,QLatin1Char('0')).toUtf8());
@@ -1341,7 +1340,7 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
 
     if (received.length() > 1)
     {
-        if((uint8_t)received.at(0) != SUB_DENSOCAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_EB)
+        if((uint8_t)received.at(4) != SUB_DENSOCAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_EB)
         {
             qDebug() << "Not ready for 128byte block writing";
             return STATUS_ERROR;
