@@ -921,7 +921,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     }
     flash_write_init = true;
 
-    return STATUS_ERROR;
     return STATUS_SUCCESS;
 }
 
