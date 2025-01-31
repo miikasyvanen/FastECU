@@ -75,7 +75,7 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
-    uint32_t flashmsgsize = 0;
+    uint32_t flashmessagesize = 0;
     uint32_t flashblocksize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;

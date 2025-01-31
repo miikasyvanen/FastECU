@@ -1146,8 +1146,6 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_GET_MAX_MSG_SIZE & 0xFF));
-    chksum = calculate_checksum(output, false);
-    output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
@@ -1162,9 +1160,9 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
         }
         else
         {
-            flashmsgsize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            flashmessagesize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
             msg.clear();
-            msg.append(QString("Max message length: 0x%1").arg(flashmsgsize,4,16,QLatin1Char('0')).toUtf8());
+            msg.append(QString("Max message length: 0x%1").arg(flashmessagesize,4,16,QLatin1Char('0')).toUtf8());
             emit LOG_I(msg, true, true);
         }
     }
@@ -1181,8 +1179,6 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_GET_MAX_BLK_SIZE & 0xFF));
-    chksum = calculate_checksum(output, false);
-    output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
@@ -1222,8 +1218,6 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_CMD & 0xFF));
-    chksum = calculate_checksum(output, false);
-    output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
@@ -1250,8 +1244,6 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_PROG_VOLT & 0xFF));
-    chksum = calculate_checksum(output, false);
-    output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     //delay(50);
@@ -1276,6 +1268,7 @@ int FlashEcuSubaruDensoSH7058Can::init_flash_write()
     flash_write_init = true;
 
     return STATUS_ERROR;
+    return STATUS_SUCCESS;
 }
 
 /*
