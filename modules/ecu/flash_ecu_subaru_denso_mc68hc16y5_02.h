@@ -59,8 +59,8 @@ private:
     bool test_write = false;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
-
     bool flash_write_init = false;
+
     int result;
     int mcu_type_index;
     int bootloader_start_countdown = 3;
@@ -77,6 +77,7 @@ private:
 
     uint32_t flashmsgsize = 0;
     uint32_t flashblocksize = 0;
+    uint32_t flashmessagesize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 

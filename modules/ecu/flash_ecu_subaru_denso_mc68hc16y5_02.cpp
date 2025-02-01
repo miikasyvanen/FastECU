@@ -841,9 +841,9 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
         }
         else
         {
-            flashmsgsize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
+            flashmessagesize = (uint8_t)received.at(6) << 24 | (uint8_t)received.at(7) << 16 | (uint8_t)received.at(8) << 8 | (uint8_t)received.at(9) << 0;
             msg.clear();
-            msg.append(QString("Max message length: 0x%1").arg(flashmsgsize,4,16,QLatin1Char('0')).toUtf8());
+            msg.append(QString("Max message length: 0x%1").arg(flashmessagesize,4,16,QLatin1Char('0')).toUtf8());
             emit LOG_I(msg, true, true);
         }
     }
@@ -951,7 +951,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, cons
             return STATUS_ERROR;
 
     if (blockno >= fdt->numblocks) {
-        emit LOG_E("block " + QString::number(blockno) + " out of range !", true, true);
+        emit LOG_E("Block " + QString::number(blockno) + " out of range!", true, true);
         return STATUS_ERROR;
     }
 
@@ -1033,6 +1033,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
 
     if (!test_write)
     {
+        emit LOG_I("Erasing flash page...", true, false);
         datalen = 4;
         output.clear();
         output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
@@ -1044,7 +1045,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         output.append((uint8_t)(start >> 16) & 0xFF);
         output.append((uint8_t)(start >> 8) & 0xFF);
         output.append((uint8_t)start & 0xFF);
-
         chksum = calculate_checksum(output, false);
         output.append((uint8_t)chksum & 0xFF);
         received = serial->write_serial_data_echo_check(output);
@@ -1052,17 +1052,25 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         delay(500);
         received = serial->read_serial_data(8, serial_read_extra_long_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        if (received.length() > 7)
+        if (received.length() > 5)
         {
-            if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x65)
+            if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_BLANK_PAGE | 0x40))
             {
-                LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                emit LOG_I("erased", false, true);
+                emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                return STATUS_ERROR;
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
         }
         else
         {
-            LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
@@ -1117,7 +1125,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        msg = QString("Writing buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         LOG_I(msg, true, true);
 
         remain -= blocksize;

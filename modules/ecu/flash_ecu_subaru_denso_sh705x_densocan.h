@@ -84,7 +84,6 @@ private:
     void closeEvent(QCloseEvent *event);
 
     int connect_bootloader_subaru_denso_sh705x_densocan();
-    int connect_bootloader_subaru_denso_sh705x_densocan_recovery();
     int upload_kernel_subaru_denso_sh705x_densocan(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_denso_sh705x_densocan(uint32_t start_addr, uint32_t length);
     int write_mem_subaru_denso_sh705x_densocan(bool test_write);
@@ -117,9 +116,7 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

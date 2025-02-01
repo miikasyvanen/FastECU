@@ -27,10 +27,12 @@
 #include <QStandardItemModel>
 #include <QStackedWidget>
 #include <QSplashScreen>
+#include <QAtomicInteger>
 
 #include <QFuture>
 #include <QDebug>
 #include <QThread>
+#include <QMutex>
 
 #include <cipher.h>
 #include <calibration_maps.h>
@@ -100,7 +102,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QString peerAddress = "", QWidget *parent = nullptr);
+    MainWindow(QString peerAddress = "", QString peerPassword = "", QWidget *parent = nullptr);
     ~MainWindow();
 
     void delay(int n);
@@ -124,10 +126,11 @@ private:
     QSplashScreen *startUpSplash;
     QLabel *startUpSplashLabel;
     QProgressBar *startUpSplashProgressBar;
+    QMutex restartQuestionActive;
 
     QString peerAddress;
-    QSplashScreen *splash;
-    QWebSocket *clientWebSocket;
+    QString peerPassword;
+    QSplashScreen *netSplash;
     RemoteUtility *remote_utility;
     static const QColor RED_LIGHT_OFF;
     static const QColor RED_LIGHT_ON;

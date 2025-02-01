@@ -9,11 +9,11 @@ const QColor MainWindow::RED_LIGHT_ON = QColor(255, 64, 64);
 const QColor MainWindow::YELLOW_LIGHT_ON = QColor(223, 223, 64);
 const QColor MainWindow::GREEN_LIGHT_ON = QColor(64, 255, 64);
 
-MainWindow::MainWindow(QString peerAddress, QWidget *parent)
+MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , peerAddress(peerAddress)
-    , clientWebSocket(nullptr)
+    , peerPassword(peerPassword)
 {
     ui->setupUi(this);
     qApp->installEventFilter(this);
@@ -224,36 +224,43 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
 
     setSplashScreenProgress("Preparing remote connection...", 10);
     //Splash screen
-    splash = new QSplashScreen();
-    QVBoxLayout *layout = new QVBoxLayout(splash);
-    layout->setAlignment(Qt::AlignCenter);
-    QLabel *label1 = new QLabel(QString("Waiting for peer "+peerAddress+"..."), splash);
-    QPushButton *button1 = new QPushButton("Close app", splash);
-    layout->addWidget(label1);
-    layout->addWidget(button1);
+    netSplash = new QSplashScreen();
+    QVBoxLayout *netSplashLayout = new QVBoxLayout(netSplash);
+    netSplashLayout->setAlignment(Qt::AlignCenter);
+    QLabel *netSplashLabel = new QLabel(QString("Waiting for peer "+peerAddress+"..."), netSplash);
+    netSplashLabel->setAlignment(Qt::AlignCenter);
+    QProgressBar *netSplashProgressBar = new QProgressBar(netSplash);
+    netSplashProgressBar->setAlignment(Qt::AlignCenter);
+    netSplashProgressBar->setMinimum(0);
+    //Number of network connection stages
+    netSplashProgressBar->setMaximum(2);
+    netSplashProgressBar->setValue(0);
+    QPushButton *btnCloseApp = new QPushButton("Close app", netSplash);
+    netSplashLayout->addWidget(netSplashLabel);
+    netSplashLayout->addWidget(netSplashProgressBar);
+    netSplashLayout->addWidget(btnCloseApp);
     //splash->setLayout(layout);
-    splash->resize(350,50);
+    netSplash->resize(350,50);
     //Show it in remote mode only
     //Prepare for remote mode
     if (!peerAddress.isEmpty())
     {
-        splash->show();
+        netSplash->show();
         // Move splashscreen to the center of the screen
         QScreen *screen = QGuiApplication::primaryScreen();
         QRect  screenGeometry = screen->geometry();
-        splash->move(screenGeometry.center() - splash->rect().center());
+        netSplash->move(screenGeometry.center() - netSplash->rect().center());
         QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
 
-        clientWebSocket = new QWebSocket("",QWebSocketProtocol::VersionLatest,this);
         QString wt = this->windowTitle();
         if (peerAddress.length() > 0)
             wt += " - Remote Connection to " + peerAddress;
         this->setWindowTitle(wt);
     }
     //Add option to close app while waiting for network connection
-    QObject::connect(button1, &QPushButton::released, this, [&]()
+    QObject::connect(btnCloseApp, &QPushButton::released, this, [&]()
                      {
-                         label1->setText("Closing app, please wait...");
+                         netSplashLabel->setText("Closing app, please wait...");
                          exit(1);
                      });
 
@@ -268,28 +275,22 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     });
     timer->start();
 
-    //WebSocket now initializes and connects in constructor
-    //It would be right to init WebSocket outside
-    //and pass it already initialized ...
-    serial = new SerialPortActions(peerAddress, clientWebSocket);
-    QObject::connect(serial, &SerialPortActions::LOG_E, syslogger, &SystemLogger::log_messages);
-    QObject::connect(serial, &SerialPortActions::LOG_W, syslogger, &SystemLogger::log_messages);
-    QObject::connect(serial, &SerialPortActions::LOG_I, syslogger, &SystemLogger::log_messages);
-    QObject::connect(serial, &SerialPortActions::LOG_D, syslogger, &SystemLogger::log_messages);
-
-    remote_utility = new RemoteUtility(peerAddress, clientWebSocket);
-    //... and connect it here. Refactor it when you'll need 3rd remote object.
+    serial = new SerialPortActions(peerAddress, peerPassword, nullptr, this);
+    remote_utility = new RemoteUtility(peerAddress, peerPassword, nullptr, this);
     if (!serial->isDirectConnection())
     {
-        //Connection over single Web Socket should be established simultaneously
-        //Then it is possible to run several remote objects over single Web Socket
+        netSplashProgressBar->setValue(0);
+        netSplashProgressBar->setFormat("Connecting to J2534 and serial devices...");
         serial->waitForSource();
+        netSplashProgressBar->setValue(1);
+        netSplashProgressBar->setFormat("Connecting to utility functions...");
         remote_utility->waitForSource();
+        netSplashProgressBar->setValue(2);
     }
     external_logger("Connection successfull.");
 
     timer->stop();
-    splash->close();
+    netSplash->close();
     timer->deleteLater();
     connect(serial, &SerialPortActions::stateChanged,
             this, &MainWindow::network_state_changed, Qt::DirectConnection);
@@ -444,17 +445,26 @@ MainWindow::MainWindow(QString peerAddress, QWidget *parent)
     }
 
     startUpSplash->close();
-    splash->deleteLater();
+    netSplash->deleteLater();
 /*
     // AES-128 ECB examples start
     qDebug() << "Solving challenge...";
-    QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f\x00" };
-    QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4\x00" };
+    //QByteArray key = { "\x46\x9a\x20\xab\x30\x8d\x5c\xa6\x4b\xcd\x5b\xbe\x53\x5b\xd8\x5f" };
+    QByteArray key = { "\x7D\x89\xDD\xE1\xC9\x5A\x22\x4E\xD7\x23\xE0\x44\x96\xF4\xC0\xAE" };
+    //QByteArray challenge = { "\x5f\x75\x8c\x11\x92\xdc\x56\xfb\x69\xe3\x40\x2d\x83\xfb\x75\xe4" };
+    QByteArray challenge = { "\x3D\xA9\x19\x57\x6E\x88\xD3\xBF\x25\x2C\x02\xC4\x4F\x70\x0B\x63" };
     QByteArray response;
+    qDebug() << "*********";
     response.append(aes_ecb_test(challenge, key));
-    qDebug() << "Challenge reply:";
-    qDebug() << parse_message_to_hex(response);
-    aes_ecb_example();
+    key = "\x5C\x9F\x97\xAD\xE5\x1D\xA6\xD0\x60\x9D\x49\xBB\x05\xA4\x17\xE9";
+    response.append(aes_ecb_test(challenge, key));
+    key = "\xC9\x22\x70\xE6\x64\x63\x39\x54\x07\xF6\xC3\x01\x4D\xC8\x90\xB0";
+    response.append(aes_ecb_test(challenge, key));
+    key = "\x66\xD5\x36\x4A\x0D\x2D\x45\xC6\x7E\x8D\xB1\x20\xED\x47\x14\x38";
+    response.append(aes_ecb_test(challenge, key));
+    key = "\x37\x49\x0E\x2C\x46\xC5\x7F\x8C\xB2\x2F\xEC\x48\x13\x39\x65\xD6";    qDebug() << "*********";
+    response.append(aes_ecb_test(challenge, key));
+    //aes_ecb_example();
     // AES-128 ECB examples end
 */
     emit LOG_I("FastECU initialized", true, true);
@@ -490,32 +500,19 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     int decrypted_len, encrypted_len;
 
     // Encrypt the original data
-    qDebug() << "Encrypt challenge";
     encrypted_len = cipher.encrypt_aes128_ecb((unsigned char*)data, strlen(data), (unsigned char*)cKey, encrypted);
     // Decrypt the encrypted data
-    qDebug() << "Decrypt reply";
     decrypted_len = cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
-
-    qDebug() << "Received challenge:";
-    qDebug() << parse_message_to_hex(challenge);
-    qDebug() << "Challenge length:" << challenge.length();
-
-    qDebug() << "Received challenge key:";
-    qDebug() << parse_message_to_hex(key);
-    qDebug() << "Challenge key length:" << (key.length() * 8) << "bits";
-
     QByteArray challengeReply(QByteArray::fromRawData((const char*)encrypted, 16));
-    //encrypted[16] = '\0';
-    qDebug() << "Challenge reply:";
+    qDebug() << "Key:";
+    qDebug() << parse_message_to_hex(key);
+    qDebug() << "Challenge:";
+    qDebug() << parse_message_to_hex(challenge);
+    qDebug() << "Decrypted:";
     qDebug() << parse_message_to_hex(challengeReply);
-    qDebug() << "Challenge reply length:" << encrypted_len;
+    qDebug() << "Length:" << encrypted_len;
 
     QByteArray challengeDecrypt(QByteArray::fromRawData((const char*)decrypted, 16));
-    //decrypted[16] = '\0';
-    qDebug() << "Decrypted data is:";
-    qDebug() << parse_message_to_hex(challengeDecrypt);
-    qDebug() << "Decrypted length:" << decrypted_len;
-
     return challengeReply;
 }
 
@@ -527,6 +524,8 @@ void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemot
     }
     else if (oldState == QRemoteObjectReplica::Valid)
     {
+        if (!restartQuestionActive.tryLock())
+            return;
         qDebug() << "Network connection lost, reconnecting...";
         QMessageBox msgBox;
         msgBox.setText("Network connection lost.");
@@ -546,6 +545,8 @@ void MainWindow::network_state_changed(QRemoteObjectReplica::State state, QRemot
             qApp->exit(RESTART_CODE);
         else if (msgBox.clickedButton() == quitButton)
             qApp->exit(1);
+
+        restartQuestionActive.unlock();
     }
 }
 
@@ -2172,7 +2173,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
     Q_UNUSED(target)
     //Filter all mouse and keyboard events for splashscreen
-    if (target == splash)
+    if (target == netSplash)
         if(     (event->type() == QEvent::MouseButtonPress) ||
                 (event->type() == QEvent::MouseButtonDblClick) ||
                 (event->type() == QEvent::MouseButtonRelease) ||

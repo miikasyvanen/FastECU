@@ -1345,6 +1345,10 @@ int SerialPortActionsDirect::set_j2534_iso9141_timings()
         scp[2].Value = 0;
         scp[3].Value = 0;
         scp[4].Value = NO_PARITY;
+        if (serial_port_parity == QSerialPort::OddParity)
+            scp[4].Value = ODD_PARITY;
+        else if (serial_port_parity == QSerialPort::EvenParity)
+            scp[4].Value = EVEN_PARITY;
         scp[5].Value = 25;
         scl.ConfigPtr = scp;
         if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
