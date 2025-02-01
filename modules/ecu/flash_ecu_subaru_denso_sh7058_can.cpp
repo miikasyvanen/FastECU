@@ -362,9 +362,10 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    if (flash_method.endsWith("_ecutek"))
+    if (flash_method.endsWith("_ecutek_racerom"))
         seed_key = subaru_denso_generate_ecutek_racerom_can_seed_key(seed);
-        //seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
+    if (flash_method.endsWith("_ecutek"))
+        seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
     else if (flash_method.endsWith("_cobb"))
         seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
     else
@@ -457,25 +458,19 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     QFile file(kernel);
 
     QByteArray output;
-    QByteArray payload;
     QByteArray received;
-    QByteArray msg;
     QByteArray pl_encr;
     uint32_t file_len = 0;
     uint32_t pl_len = 0;
     uint32_t start_address = 0;
     uint32_t end_addr = 0;
-    QByteArray cks_bypass;
     uint32_t chk_sum = 0;
     uint32_t blockaddr = 0;
     uint16_t blockno = 0;
     uint16_t maxblocks = 0;
-    int byte_counter = 0;
-
-    QString mcu_name;
 
     start_address = kernel_start_addr;//flashdevices[mcu_type_index].kblocks->start;
-    emit LOG_D("Start address to upload kernel: " + QString::number(start_address), true, true);
+    emit LOG_D("Start address to upload kernel: 0x" + QString::number(start_address, 16), true, true);
 
     if (!serial->is_serial_port_open())
     {
@@ -1406,8 +1401,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByt
 {
     QByteArray key;
 
-    qDebug() << "Calculate Denso seed key";
-
     const uint16_t keytogenerateindex_1[]={
         0x78B1, 0x4625, 0x201C, 0x9EA5,
         0xAD6B, 0x35F4, 0xFD21, 0x5E71,
@@ -1451,6 +1444,7 @@ int FlashEcuSubaruDensoSH7058Can::decrypt_racerom_seed(int base, int expo, int m
 
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_can_seed_key(QByteArray requested_seed)
 {
+    emit LOG_I("Calculating EcuTek RaceRom seed key with RSA", true, true);
     // Function 000a86fc
     QByteArray key;
     uint32_t seed;
@@ -1479,6 +1473,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_ca
  */
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
 {
+    emit LOG_I("Calculating EcuTek seed key", true, true);
     QByteArray key;
 
     const uint16_t keytogenerateindex_1[]={
@@ -1512,6 +1507,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_k
  ***********************************/
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
 {
+    emit LOG_I("Calculating COBB seed key", true, true);
     QByteArray key;
 
     // 2017 VA model
@@ -1549,6 +1545,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key
  */
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
+    emit LOG_I("Calculating seed key", true, true);
     QByteArray key;
 
     uint32_t seed, index;
