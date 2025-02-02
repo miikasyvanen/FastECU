@@ -29,6 +29,30 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     bool ok = false;
 
+    /*******************
+     *
+     * Check RSA
+     *
+     * ****************/
+/*
+    int seed = 0x13e9278e;//0x00a80730;
+    int d = 0x0A863281;
+    int n = 0x0fda9293;
+    int resu = 0xadfedd;//0x00e530c7;
+    uint32_t res = 0;
+
+    const unsigned long long base = 0x086163bf;//0xe3e9278e;//0x00a80730;
+    const unsigned long long exponent = 0x0A863281;
+    const unsigned long long modulus = 0x0fda9293;
+
+    emit LOG_I("*********************", true, true);
+    //res = modularPow(base, exponent, modulus);
+    emit LOG_I("1. RSA: 0x" + QString::number(res, 16), true, true);
+    //res = decrypt_racerom_seed(base, exponent, modulus);
+    emit LOG_I("2. RSA: 0x" + QString::number(res, 16), true, true);
+    emit LOG_I("Result is: 0x" + QString::number(resu, 16), true, true);
+    emit LOG_I("*********************", true, true);
+*/
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -1428,6 +1452,16 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByt
 }
 
 // RSA: Function to compute base^expo mod m
+unsigned long long FlashEcuSubaruDensoSH7058Can::modularPow(const unsigned long long base, const unsigned long long exponent, const unsigned long long modulus) {
+    unsigned long long result = 1;
+    for(unsigned long long i = 0; i < exponent; i++) {
+        result *= base;
+        result %= modulus;
+    }
+    return result;
+}
+
+// RSA: Function to compute base^expo mod m
 int FlashEcuSubaruDensoSH7058Can::decrypt_racerom_seed(int base, int expo, int m)
 {
     emit LOG_I("Calculating seed key with RSA", true, true);
@@ -1457,6 +1491,9 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_ca
     int d = 0x0A863281;
     int n = 0x0fda9293;
     int decrypted = decrypt_racerom_seed(seed, d, n);
+    emit LOG_I("1. Seed: 0x" + QString::number(decrypted, 16), true, true);
+    decrypted = modularPow(seed, d, n);
+    emit LOG_I("2. Seed: 0x" + QString::number(decrypted, 16), true, true);
 
     key.clear();
     key.append((decrypted >> 24) & 0xff);
