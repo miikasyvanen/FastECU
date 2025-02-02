@@ -1643,7 +1643,7 @@ int FlashEcuSubaruDensoSH7058Can::flash_block(const uint8_t *src, uint32_t start
 
         if ((flashblockstart + flashblocksize) == start)
         {
-            LOG_I("Write complete, validating... ", true, true);
+            LOG_I("Flash buffer write complete... ", true, true);
             imgcrc32 = crc32(&src[flashblockstart], flashblocksize);
             LOG_D("Image CRC32: 0x" + QString::number(imgcrc32, 16), true, true);
 
@@ -1658,7 +1658,6 @@ int FlashEcuSubaruDensoSH7058Can::flash_block(const uint8_t *src, uint32_t start
             else if (!test_write)
             {
                 SUB_KERNEL_CMD = (uint8_t)(SUB_KERNEL_COMMIT_FLASH_BUFFER & 0xFF);
-                SUB_KERNEL_CMD = (uint8_t)(SUB_KERNEL_VALIDATE_FLASH_BUFFER & 0xFF);
                 emit LOG_I("Committ flash addr: 0x" + QString::number(flashblockstart, 16), true, false);
                 emit LOG_I(" len: 0x" + QString::number(flashblocksize, 16), false, false);
                 emit LOG_I(" crc32: 0x" + QString::number(imgcrc32, 16), false, true);
