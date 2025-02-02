@@ -141,8 +141,7 @@ private:
     uint32_t FUN_000fa83e(void);
     QByteArray subaru_denso_calculate_ecutek_racerom_seed_key(uint32_t req_seed);//QByteArray requested_seed);
     QByteArray subaru_denso_generate_ecutek_racerom_can_seed_key(QByteArray requested_seed);
-    int decrypt_racerom_seed(int base, int expo, int m);
-    unsigned long long modularPow(const unsigned long long base, const unsigned long long exponent, const unsigned long long modulus);
+    unsigned long long decrypt_racerom_seed(const unsigned long long base, const unsigned long long exponent, const unsigned long long modulus);
 
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
