@@ -25,8 +25,6 @@ void FlashEcuSubaruDensoSH7058Can::run()
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    //result = init_flash_denso_subarucan(ecuCalDef, cmd_type);
-
     bool ok = false;
 
     mcu_type_string = ecuCalDef->McuType;
@@ -215,6 +213,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         }
     }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+    }
 
     output[4] = ((uint8_t)0x09);
     output[5] = ((uint8_t)0x02);
@@ -242,6 +245,43 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         }
     }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+    }
+
+    output[4] = ((uint8_t)0x09);
+    output[5] = ((uint8_t)0x04);
+
+    serial->write_serial_data_echo_check(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
+        {
+            QByteArray response = received;
+            response.remove(0, 6);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_I("CAL ID: " + msg, true, true);
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+    }
 
     output[4] = ((uint8_t)0x09);
     output[5] = ((uint8_t)0x06);
@@ -268,6 +308,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             emit LOG_E("Wrong response from ECU", true, true);
             emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
     }
 
     bool req_10_03_connected = false;
@@ -299,6 +344,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         }
     }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+    }
 
     output[4] = ((uint8_t)0x10);
     output[5] = ((uint8_t)0x43);
@@ -325,6 +375,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             emit LOG_E("Wrong response from ECU", true, true);
             emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
         }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
     }
 
     output[4] = ((uint8_t)0x27);
@@ -353,6 +408,12 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             return STATUS_ERROR;
         }
     }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
 
     emit LOG_I("Seed request ok", true, true);
 
@@ -364,7 +425,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
 
     if (flash_method.endsWith("_ecutek_racerom"))
         seed_key = subaru_denso_generate_ecutek_racerom_can_seed_key(seed);
-    if (flash_method.endsWith("_ecutek"))
+    else if (flash_method.endsWith("_ecutek"))
         seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
     else if (flash_method.endsWith("_cobb"))
         seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
@@ -443,6 +504,12 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
     }
 
     return STATUS_SUCCESS;
@@ -1422,6 +1489,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByt
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
+    emit LOG_I("Using stock seed key algo", true, true);
     key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
@@ -1439,7 +1507,7 @@ unsigned long long FlashEcuSubaruDensoSH7058Can::decrypt_racerom_seed(const unsi
 
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_can_seed_key(QByteArray requested_seed)
 {
-    emit LOG_I("Calculating EcuTek RaceRom seed key with RSA", true, true);
+    emit LOG_I("Using EcuTek RaceRom RSA algo", true, true);
     // Function 000a86fc
     QByteArray key;
     uint32_t seed;
@@ -1448,16 +1516,19 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_ca
     seed += (requested_seed.at(1) << 16) & 0x00FF0000;
     seed += (requested_seed.at(2) << 8) & 0x0000FF00;
     seed += requested_seed.at(3) & 0x000000FF;
+    //seed = 0x00a80730;
 
-    int d = 0x0A863281;
-    int n = 0x0fda9293;
-    int decrypted = decrypt_racerom_seed(seed, d, n);
+    uint32_t d = 0x0A863281;
+    uint32_t n = 0x0fda9293;
+    seed = decrypt_racerom_seed(seed, d, n);
+    QString msg = QString("Seed key: 0x%1").arg(seed, 8, 16, QLatin1Char('0')).toUtf8();
+    emit LOG_I(msg, true, true);
 
     key.clear();
-    key.append((decrypted >> 24) & 0xff);
-    key.append((decrypted >> 16) & 0xff);
-    key.append((decrypted >> 8) & 0xff);
-    key.append((decrypted >> 0) & 0xff);
+    key.append((uint8_t)(seed >> 24));
+    key.append((uint8_t)(seed >> 16));
+    key.append((uint8_t)(seed >> 8));
+    key.append((uint8_t)seed);
 
     return key;
 }
@@ -1468,7 +1539,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_ca
  */
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
 {
-    emit LOG_I("Calculating EcuTek seed key", true, true);
     QByteArray key;
 
     const uint16_t keytogenerateindex_1[]={
@@ -1492,6 +1562,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_k
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
+    emit LOG_I("Using EcuTek seed key algo", true, true);
     key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
@@ -1502,7 +1573,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_k
  ***********************************/
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
 {
-    emit LOG_I("Calculating COBB seed key", true, true);
     QByteArray key;
 
     // 2017 VA model
@@ -1528,6 +1598,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
+    emit LOG_I("Using COBB seed key algo", true, true);
     key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
@@ -1540,7 +1611,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key
  */
 QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
-    emit LOG_I("Calculating seed key", true, true);
     QByteArray key;
 
     uint32_t seed, index;
@@ -1569,6 +1639,8 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteAr
     }
 
     seed = (seed >> 16) + (seed << 16);
+    QString msg = QString("Seed key: 0x%1").arg(seed, 8, 16, QLatin1Char('0')).toUtf8();
+    emit LOG_I(msg, true, true);
 
     key.clear();
     key.append((uint8_t)(seed >> 24));
