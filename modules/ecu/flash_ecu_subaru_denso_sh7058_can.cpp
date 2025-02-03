@@ -186,6 +186,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
+    serial->set_serial_port_baudrate("4800");
     serial->set_can_speed("500000");
     serial->set_can_source_address(0x7E0);
     serial->set_can_destination_address(0x7E8);
@@ -193,6 +194,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     serial->set_iso15765_destination_address(0x7E8);
     // Open serial port
     serial->open_serial_port();
+    serial->change_port_speed("4800");
 
     if (flash_method.endsWith("_ecutek_racerom_alt"))
     {
