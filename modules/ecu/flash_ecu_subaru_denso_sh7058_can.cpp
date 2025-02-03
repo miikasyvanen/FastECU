@@ -71,6 +71,8 @@ void FlashEcuSubaruDensoSH7058Can::run()
     serial->set_iso15765_destination_address(0x7E8);
     serial->set_can_source_address(0x7E0);
     serial->set_can_destination_address(0x7E8);
+    tester_id = 0xF0;
+    target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
 
@@ -566,11 +568,6 @@ uint32_t FlashEcuSubaruDensoSH7058Can::read_ram_location(uint32_t loc)
         output.append((uint8_t)0x00);
         output.append((uint8_t)0x07);
         output.append((uint8_t)0xE0);
-    }
-    else
-    {
-        tester_id = 0xF0;
-        target_id = 0x10;
     }
 
     output.append((uint8_t)0xA8);
