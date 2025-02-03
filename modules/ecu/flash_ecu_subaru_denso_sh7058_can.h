@@ -132,18 +132,10 @@ private:
     void set_progressbar_value(int value);
     void delay(int timeout);
 
-    void FUN_000fac38(uint32_t *param_1,uint32_t *param_2);
-    void FUN_000fac5a(uint32_t param_1,uint32_t param_2,uint32_t *param_3,uint32_t *param_4);
-    int FUN_000facc8(uint32_t param_1,int param_2);
-    void FUN_000facee(uint32_t param_1,uint32_t param_2,int param_3,int *param_4,uint32_t *param_5);
-    uint FUN_000fad48(uint32_t param_1,uint32_t param_2,int param_3);
-    uint FUN_000fad72(uint32_t param_1,uint32_t param_2,int param_3);
-    uint FUN_000fa83e();
-    uint FUN_000fadba(uint32_t seed);
     QByteArray subaru_denso_calculate_ecutek_racerom_seed_key(uint32_t req_seed);//QByteArray requested_seed);
     QByteArray subaru_denso_generate_ecutek_racerom_can_seed_key(QByteArray requested_seed);
     unsigned long long decrypt_racerom_seed(const unsigned long long base, const unsigned long long exponent, const unsigned long long modulus);
-    unsigned int decrypt_racerom_seed_test(unsigned int base, unsigned int exponent, unsigned int modulus);
+    uint32_t read_ram_location(uint32_t loc);
 
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;

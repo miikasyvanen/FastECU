@@ -150,6 +150,13 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     QByteArray seed_key;
     QByteArray msg;
 
+    uint32_t ram_value = 0;
+    uint32_t seed_alter = 0;
+    uint32_t xor_multi = 0x01000193;
+    uint8_t xor_byte_1 = 0;
+    uint8_t xor_byte_2 = 0;
+    uint32_t et_rr_seed = 0;
+
     if (!serial->is_serial_port_open())
     {
         emit LOG_E("ERROR: Serial port is not open.", true, true);
@@ -171,7 +178,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     serial->reset_connection();
     serial->set_is_iso14230_connection(false);
     serial->set_is_can_connection(false);
-    serial->set_is_iso15765_connection(true);
+    serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
     serial->set_can_speed("500000");
     serial->set_can_source_address(0x7E0);
@@ -181,7 +188,31 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     // Open serial port
     serial->open_serial_port();
 
-    emit LOG_I("Initializing bootloader", true, true);
+    if (flash_method.endsWith("_ecutek_racerom_alt"))
+    {
+        // AE5Z500V
+        //ram_value = read_ram_location(0xffff1ed8);
+        //emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
+        //ram_value = read_ram_location(0xffff1e80);
+        //emit LOG_D("Value at RAM loc 0xffff1e80: 0x" + QString::number(ram_value, 16), true, true);
+        //xor_byte_1 = ((ram_value >> 8) & 0xff);
+        //xor_byte_2 = (ram_value & 0xff);
+
+        // AE5I910V
+        ram_value = read_ram_location(0xffffbba8);
+        emit LOG_D("Value at RAM loc 0xffffbba8: 0x" + QString::number(ram_value, 16), true, true);
+        seed_alter = ram_value;
+        ram_value = read_ram_location(0xffffbbf0);
+        emit LOG_D("Value at RAM loc 0xffffbbf0: 0x" + QString::number(ram_value, 16), true, true);
+        xor_byte_1 = ((ram_value >> 8) & 0xff);
+        xor_byte_2 = (ram_value & 0xff);
+
+        serial->reset_connection();
+        serial->set_is_iso15765_connection(true);
+        serial->open_serial_port();
+    }
+
+    emit LOG_I("Initializing connection...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -192,7 +223,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     output.append((uint8_t)0x00);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -205,25 +236,25 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
+    emit LOG_I("Requesting VIN", true, true);
     output[4] = ((uint8_t)0x09);
     output[5] = ((uint8_t)0x02);
-
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -231,63 +262,55 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
         {
             QByteArray response = received;
-            response.remove(0, 6);
-            QString msg;
-            msg.clear();
-            for (int i = 0; i < response.length(); i++)
-                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
-            emit LOG_I("VIN: " + msg, true, true);
+            response.remove(0, 7);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_I("VIN: " + response, true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
+    emit LOG_I("Requesting CAL ID", true, true);
     output[4] = ((uint8_t)0x09);
     output[5] = ((uint8_t)0x04);
-
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
         {
             QByteArray response = received;
-            response.remove(0, 6);
-            QString msg;
-            msg.clear();
-            for (int i = 0; i < response.length(); i++)
-                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
-            emit LOG_I("CAL ID: " + msg, true, true);
+            response.remove(0, 7);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_I("CAL ID: " + response, true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
+    emit LOG_I("Requesting CVN", true, true);
     output[4] = ((uint8_t)0x09);
     output[5] = ((uint8_t)0x06);
-
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -295,34 +318,34 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x06)
         {
             QByteArray response = received;
-            response.remove(0, 6);
+            response.remove(0, 7);
             QString msg;
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             emit LOG_I("CVN: " + msg, true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
     bool req_10_03_connected = false;
     bool req_10_43_connected = false;
 
+    emit LOG_I("Requesting session mode", true, true);
     output[4] = ((uint8_t)0x10);
     output[5] = ((uint8_t)0x03);
-
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -336,25 +359,24 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
     output[4] = ((uint8_t)0x10);
     output[5] = ((uint8_t)0x43);
-
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -368,25 +390,25 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
     output[4] = ((uint8_t)0x27);
     output[5] = ((uint8_t)0x01);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -399,19 +421,19 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
 
@@ -423,7 +445,9 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    if (flash_method.endsWith("_ecutek_racerom"))
+    if (flash_method.endsWith("_ecutek_racerom_alt"))
+        seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
+    else if (flash_method.endsWith("_ecutek_racerom"))
         seed_key = subaru_denso_generate_ecutek_racerom_can_seed_key(seed);
     else if (flash_method.endsWith("_ecutek"))
         seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
@@ -432,15 +456,31 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     else
         seed_key = subaru_denso_generate_can_seed_key(seed);
 
+    if (flash_method.endsWith("_ecutek_racerom_alt"))
+    {
+        et_rr_seed = ((uint8_t)seed_key.at(0) << 24) & 0xFF000000;
+        et_rr_seed += ((uint8_t)seed_key.at(1) << 16) & 0x00FF0000;
+        et_rr_seed += ((uint8_t)seed_key.at(2) << 8) & 0x0000FF00;
+        et_rr_seed += (uint8_t)seed_key.at(3) & 0x000000FF;
+
+        et_rr_seed = ((seed_alter^et_rr_seed)^xor_byte_1)*0x01000193;
+        et_rr_seed = (et_rr_seed^xor_byte_2)*0x01000193;
+    }
+
+    seed_key.clear();
+    seed_key.append((uint8_t)(et_rr_seed >> 24) & 0xff);
+    seed_key.append((uint8_t)(et_rr_seed >> 16) & 0xff);
+    seed_key.append((uint8_t)(et_rr_seed >> 8) & 0xff);
+    seed_key.append((uint8_t)(et_rr_seed & 0xff));
+
     emit LOG_I("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
     emit LOG_I("Sending seed key", true, true);
-
     output[4] = ((uint8_t)0x27);
     output[5] = ((uint8_t)0x02);
     output.append(seed_key);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -453,24 +493,25 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
 
     emit LOG_I("Seed key ok", true, true);
 
+    emit LOG_I("Set session mode", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -483,7 +524,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         output.append((uint8_t)0x42);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
@@ -496,23 +537,80 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
+    emit LOG_I("Succesfully set to programming session", true, true);
 
     return STATUS_SUCCESS;
+}
+
+uint32_t FlashEcuSubaruDensoSH7058Can::read_ram_location(uint32_t loc)
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray response;
+
+    emit LOG_I("Reading RAM value at location: 0x" + QString::number(loc, 16), true, true);
+
+    output.clear();
+    if (serial->get_is_iso15765_connection())
+    {
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x07);
+        output.append((uint8_t)0xE0);
+    }
+    else
+    {
+        tester_id = 0xF0;
+        target_id = 0x10;
+    }
+
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    for (int i = 0; i < 4; i++)
+    {
+        output.append((uint8_t)((loc >> 16) & 0xff));
+        output.append((uint8_t)((loc >> 8) & 0xff));
+        output.append((uint8_t)(loc & 0xff));
+        loc++;
+    }
+    if (!serial->get_is_iso15765_connection())
+        output = add_ssm_header(output, tester_id, target_id, false);
+
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(1, serial_read_timeout);
+    response = received;
+    if (!serial->get_is_iso15765_connection())
+    {
+        while(received.length()){
+            received = serial->read_serial_data(1, serial_read_short_timeout);
+            response.append(received);
+        }
+    }
+    emit LOG_D("Response: " + parse_message_to_hex(response), true, false);
+
+    uint32_t result = 0;
+    result = (response.at(5) << 24) & 0xFF000000;
+    result += (response.at(6) << 16) & 0x00FF0000;
+    result += (response.at(7) << 8) & 0x0000FF00;
+    result += response.at(8) & 0x000000FF;
+
+    return result;
 }
 
 /*
@@ -595,7 +693,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     output.append((uint8_t)(data_len & 0xFF));
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, 10);
     if (received.length() > 5)
@@ -609,7 +707,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
             emit LOG_E("Wrong response from ECU... (" + parse_message_to_hex(received), true, true);
@@ -681,7 +779,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     output.append((uint8_t)0x37);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, 10);
     if (received.length() > 4)
@@ -695,7 +793,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
             emit LOG_E("Wrong response from ECU... (" + parse_message_to_hex(received), true, true);
@@ -718,7 +816,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     output.append((uint8_t)0x02);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, 10);
     if (received.length() > 4)
@@ -732,7 +830,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
             msg.clear();
             for (int i = 0; i < response.length(); i++)
                 msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
             emit LOG_E("Wrong response from ECU... (" + parse_message_to_hex(received), true, true);
@@ -861,7 +959,7 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
             if ((uint8_t)received.at(0) != SID_CAN_START_COMM || (uint8_t)received.at(1) != SID_CAN_DUMP_ROM)
             {
                 emit LOG_E("Page data request failed!", true, true);
-                emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
         }
@@ -1258,7 +1356,7 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
         if((uint8_t)received.at(0) != SID_CAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FLASH)
         {
             emit LOG_E("Initialize of erasing / flashing microcodes failed!", true, true);
-            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
@@ -1496,11 +1594,14 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByt
 }
 
 // RSA: Function to compute base^expo mod m
-unsigned long long FlashEcuSubaruDensoSH7058Can::decrypt_racerom_seed(const unsigned long long base, const unsigned long long exponent, const unsigned long long modulus) {
+unsigned long long FlashEcuSubaruDensoSH7058Can::decrypt_racerom_seed(unsigned long long base, unsigned long long exponent, unsigned long long modulus) {
     unsigned long long result = 1;
-    for(unsigned long long i = 0; i < exponent; i++) {
-        result *= base;
-        result %= modulus;
+    base = base % modulus;
+    while (exponent > 0) {
+        if (exponent & 1)
+            result = (result * 1LL * base) % modulus;
+        base = (base * 1LL * base) % modulus;
+        exponent = exponent / 2;
     }
     return result;
 }
