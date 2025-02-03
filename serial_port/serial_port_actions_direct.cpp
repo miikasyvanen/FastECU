@@ -1248,11 +1248,12 @@ int SerialPortActionsDirect::set_j2534_can_filters()
 
 int SerialPortActionsDirect::set_j2534_iso9141()
 {
+    baudrate = serial_port_baudrate.toUInt();
+
     if (is_iso14230_connection)
     {
         protocol = ISO14230;
         flags = ISO9141_NO_CHECKSUM | CAN_ID_BOTH;
-        //baudrate = 10400;
     }
     else
     {
@@ -1261,7 +1262,6 @@ int SerialPortActionsDirect::set_j2534_iso9141()
     }
 
     qDebug() << "Protocol:" << protocol;
-    //baudrate = 4800;
 
     if (J2534_is_denso_dsti)
     {
@@ -1277,7 +1277,6 @@ int SerialPortActionsDirect::set_j2534_iso9141()
             break;
         case ISO14230:
             flags = ISO9141_K_LINE_ONLY;
-            //baudrate = 10400;
             break;
         }
     }
