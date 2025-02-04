@@ -1095,7 +1095,12 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         /*
         * Denso CAN
         */
-        if (configValues->flash_protocol_selected_protocol_name.endsWith("_densocan"))
+        if (configValues->flash_protocol_selected_protocol_name.endsWith("_densocan") && configValues->flash_protocol_selected_protocol_name.contains("eeprom"))
+        {
+            EepromEcuSubaruDensoSH705xCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
+        else if (configValues->flash_protocol_selected_protocol_name.endsWith("_densocan"))
         {
             FlashEcuSubaruDensoSH705xDensoCan flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
             connect_signals_and_run_module(&flash_module);

@@ -150,6 +150,18 @@ const struct flashblock fblocks_SH7058[] = {
     {0x000E0000,    0x00020000},
 };
 
+const struct ramblock rblocks_SH7058[] = {
+    {0xFFFF3000,    0x00009000},//0xFFFFBFFF // 36k
+};
+
+const struct kernelblock kblocks_SH7058[] = {
+    {0xFFFF3000,    0x00009000},//0xFFFFBFFF // 36k
+};
+
+const struct eepromblock eblocks_SH7058[] = {
+    {0x00000000,    0x00000100},
+    };
+
 const struct flashblock fblocks_SH7058_1block[] = {
     {0x00000000,    0x00100000},
 };
@@ -175,18 +187,6 @@ const struct flashblock fblocks_N83M_1_5MB[] = {
 const struct flashblock fblocks_SH72543R[] = {
     {0x00000000,    0x00006000},
     {0x00006000,    0x001FA000},
-};
-
-const struct ramblock rblocks_SH7058[] = {
-    {0xFFFF3000,    0x00009000},//0xFFFFBFFF // 36k
-};
-
-const struct kernelblock kblocks_SH7058[] = {
-    {0xFFFF3000,    0x00009000},//0xFFFFBFFF // 36k
-};
-
-const struct eepromblock eblocks_SH7058[] = {
-    {0x00000000,    0x00000100},
 };
 
 const struct flashblock fblocks_SH7055[] = {

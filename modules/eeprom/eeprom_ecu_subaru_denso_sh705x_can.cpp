@@ -42,7 +42,7 @@ void EepromEcuSubaruDensoSH705xCan::run()
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
     //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
+    qDebug() << "MCU type: " + mcu_name + " (" + mcu_type_string + ") and index: " + QString::number(mcu_type_index);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -1366,7 +1366,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
     emit LOG_D("Request kernel id received: " + parse_message_to_hex(received), true, true);
 
     if (received.length() > 7)
-        received.remove(0, 8);
+        received.remove(0, 9);
     emit LOG_D("Initial request kernel id received and length:" + parse_message_to_hex(received) + " " + received.length(), true, true);
     kernelid = received;
 
@@ -1375,7 +1375,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
         received = serial->read_serial_data(10, serial_read_short_timeout);
         emit LOG_D("Request kernel id received:" + parse_message_to_hex(received), true, true);
         if (received.length() > 7)
-            received.remove(0, 8);
+            received.remove(0, 9);
         kernelid.append(received);
         delay(100);
     }

@@ -47,11 +47,11 @@
 #define SID_CAN_DUMP_ROM            0xD8
 #define SID_CAN_DUMP_EEPROM         0xB8
 
-#define SID_KERNEL_ADDRESS          0x98
-#define SID_KERNEL_CHECKSUM         0xB0
-#define SID_KERNEL_JUMP             0xA0
+#define SUB_DENSOCAN_KERNEL_ADDRESS          0x98
+#define SUB_DENSOCAN_KERNEL_CHECKSUM         0xB0
+#define SUB_DENSOCAN_KERNEL_JUMP             0xA0
 
-#define SID_KERNEL_STOP_CAN         0xFFC8
+#define SUB_DENSOCAN_KERNEL_STOP_CAN         0xFFC8
 
 /* SID_FLASH and subcommands */
 #define SID_CAN_FLASH               0xE0	/* low-level reflash commands; only available after successful RequestDownload */
