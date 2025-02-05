@@ -770,7 +770,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
         float pleft = (float)blockno / (float)maxblocks * 100;
         set_progressbar_value(pleft);
     }
-    emit LOG_I("Data bytes sent: 0x" + QString::number(data_bytes_sent), true, true);
+    emit LOG_D("Data bytes sent: 0x" + QString::number(data_bytes_sent), true, true);
 
     connected = false;
     output.clear();
