@@ -62,6 +62,8 @@ void FlashEcuSubaruDensoSH705xDensoCan::run()
     }
 
     // Set serial port
+    serial->reset_connection();
+    serial->set_add_iso14230_header(false);
     serial->set_is_iso14230_connection(false);
     serial->set_is_can_connection(true);
     serial->set_is_iso15765_connection(false);
@@ -155,8 +157,6 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
         emit LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
-
-    serial->set_add_iso14230_header(false);
 
     emit LOG_I("Checking if kernel is already running...", true, true);
 
