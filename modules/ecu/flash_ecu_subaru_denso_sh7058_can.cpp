@@ -98,7 +98,7 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     // Set serial port
     serial->reset_connection();
-    delay(500);
+    serial->set_add_iso14230_header(false);
     serial->set_is_iso14230_connection(false);
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(true);
@@ -2064,9 +2064,11 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     QByteArray output;
     QByteArray received;
     QByteArray kernelid;
+    uint32_t datalen = 0;
 
     request_denso_kernel_id = true;
 
+    datalen = 0;
     emit LOG_I("Request kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
@@ -2075,8 +2077,8 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     output.append((uint8_t)0xE0);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
-    output.append((uint8_t)0x00 & 0xFF);
-    output.append((uint8_t)0x01 & 0xFF);
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -2088,16 +2090,16 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     received = serial->read_serial_data(100, serial_read_short_timeout);
     emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
-    if (received.length() > 7)
+    if (received.length() > 8)
         received.remove(0, 9);
-    emit LOG_D("Initial request kernel id received and length:" + parse_message_to_hex(received) + " " + received.length(), true, true);
+    emit LOG_D("Initial request kernel id received and length:" + parse_message_to_hex(received) + " " + QString::number(received.length()), true, true);
     kernelid = received;
 
     while (received.length())
     {
         received = serial->read_serial_data(10, serial_read_short_timeout);
         emit LOG_D("Request kernel id received:" + parse_message_to_hex(received), true, true);
-        if (received.length() > 7)
+        if (received.length() > 8)
             received.remove(0, 9);
         kernelid.append(received);
         delay(100);
@@ -2107,11 +2109,6 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
 
     return kernelid;
 }
-
-
-
-
-
 
 /*
  * Add SSM header to message

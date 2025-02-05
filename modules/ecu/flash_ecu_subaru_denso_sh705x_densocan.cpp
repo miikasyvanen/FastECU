@@ -62,6 +62,7 @@ void FlashEcuSubaruDensoSH705xDensoCan::run()
     }
 
     // Set serial port
+    serial->reset_connection();
     serial->set_is_iso14230_connection(false);
     serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(true);
@@ -157,7 +158,6 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    serial->set_add_iso14230_header(false);
 
     emit LOG_I("Checking if kernel is already running...", true, true);
 
@@ -172,6 +172,12 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
     emit LOG_I("No response from kernel, continue initializing bootloader...", true, true);
 
     emit LOG_I("Initializing bootloader", true, true);
+
+    //serial->reset_connection();
+    //serial->set_is_can_connection(true);
+    //serial->set_is_iso15765_connection(false);
+    //serial->set_is_29_bit_id(true);
+    //serial->open_serial_port();
 
     uint16_t loopcount = 0;
     //QTime dieTime = QTime::currentTime().addMSecs(2000);
@@ -295,7 +301,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel(QString kernel, uint32_t ke
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(20, 10);
-    emit LOG_I("Response: " + parse_message_to_hex(output), true, true);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
     output[5] = (uint8_t)(0xA8 + 0x06);
 
@@ -351,6 +357,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel(QString kernel, uint32_t ke
     output[10] = (uint8_t)0x00;
     output[11] = (uint8_t)0x00;
     serial->write_serial_data_echo_check(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     emit LOG_D("Verifying kernel checksum, please wait...", true, true);
     delay(200);
     received = serial->read_serial_data(20, 10);
@@ -369,6 +376,15 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel(QString kernel, uint32_t ke
     output[11] = (uint8_t)0x00;
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    delay(200);
+    received = serial->read_serial_data(20, 10);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
+    serial->reset_connection();
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    //serial->set_is_29_bit_id(false);
+    serial->open_serial_port();
 
     emit LOG_I("Requesting kernel ID", true, true);
 
@@ -410,9 +426,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::read_mem(uint32_t start_addr, uint32_t le
     // send 0xD8 command to kernel to dump the chunk from ROM
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xe0);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -686,9 +702,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::check_romcrc(const uint8_t *src, uint32_t
     // Test 32-bit CRC with block size
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -802,9 +818,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::init_flash_write()
     datalen = 0;
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -843,9 +859,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::init_flash_write()
     datalen = 0;
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -895,9 +911,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::init_flash_write()
     datalen = 0;
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -969,9 +985,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::reflash_block(const uint8_t *newdata, con
     datalen = 0;
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -1048,9 +1064,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
     datalen = 4;
     output.clear();
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -1099,9 +1115,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
         datalen = blocksize + 4; // 0x200 + 4
         output.clear();
         output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x07);
-        output.append((uint8_t)0xE0);
+        output.append((uint8_t)0x0F);
+        output.append((uint8_t)0xFF);
+        output.append((uint8_t)0xFE);
         output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
         output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
         output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -1193,9 +1209,9 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
             datalen = 10;
             output.clear();
             output.append((uint8_t)0x00);
-            output.append((uint8_t)0x00);
-            output.append((uint8_t)0x07);
-            output.append((uint8_t)0xE0);
+            output.append((uint8_t)0x0F);
+            output.append((uint8_t)0xFF);
+            output.append((uint8_t)0xFE);
             output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
             output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
             output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
@@ -1591,16 +1607,19 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::request_kernel_id()
 {
     QByteArray output;
     QByteArray received;
-    QByteArray msg;
     QByteArray kernelid;
+    uint32_t datalen = 0;
 
     request_denso_kernel_id = true;
 
+    datalen = 0;
+    emit LOG_I("Request kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x0F);
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
+/*
     output.append((uint8_t)SUB_DENSOCAN_START_COMM);
     output.append((uint8_t)SID_CAN_RECUID);
     output.append((uint8_t)0x00);
@@ -1609,24 +1628,35 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::request_kernel_id()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
+*/
+    output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
+    output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
 
     serial->write_serial_data_echo_check(output);
-    qDebug() << "Request kernel id sent:" << parse_message_to_hex(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(100);
     received = serial->read_serial_data(100, serial_read_short_timeout);
-    qDebug() << "Request kernel id received:" << parse_message_to_hex(received);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
-    if (received.length() > 1)
-        received.remove(0, 2);
-    qDebug() << "Initial request kernel id received and length:" << parse_message_to_hex(received) << received.length();
+    if (received.length() > 4)
+        received.remove(0, 5);
+    emit LOG_D("Initial request kernel id received and length:" + parse_message_to_hex(received) + " " + QString::number(received.length()), true, true);
     kernelid = received;
 
-    while (received != "")
+    while (received.length())
     {
         received = serial->read_serial_data(10, serial_read_short_timeout);
-        qDebug() << "Request kernel id received:" << parse_message_to_hex(received);
-        received.remove(0, 2);
+        emit LOG_D("Request kernel id received:" + parse_message_to_hex(received), true, true);
+        if (received.length() > 4)
+            received.remove(0, 5);
         kernelid.append(received);
+        delay(100);
     }
 
     request_denso_kernel_id = false;

@@ -64,6 +64,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     }
 
     // Set serial port
+    serial->reset_connection();
     serial->set_is_iso14230_connection(false);
     serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(false);
@@ -1240,17 +1241,18 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
     QByteArray received;
     QByteArray msg;
     QByteArray kernelid;
-
+    uint32_t datalen = 0;
     uint8_t chk_sum = 0;
 
     qDebug() << "Request kernel id";
     request_denso_kernel_id = true;
 
+    datalen = 0;
     output.clear();
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
-    output.append((uint8_t)0x00 & 0xFF);
-    output.append((uint8_t)0x01 & 0xFF);
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
 
     chk_sum = calculate_checksum(output, false);
