@@ -59,6 +59,7 @@
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs.h>
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.h>
+//#include <modules/ecu/flash_ecu_subaru_hitachi_m32r_kline_recovery.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_can.h>
 #include <modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.h>
 #include <modules/tcu/flash_tcu_subaru_hitachi_m32r_can.h>
