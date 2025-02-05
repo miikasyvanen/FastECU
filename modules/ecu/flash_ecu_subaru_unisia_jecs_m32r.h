@@ -59,6 +59,7 @@ private:
     #define SID_UNISIA_JECS_FLASH_WRITE_END             0x69//???
 
     bool kill_process = false;
+    bool kernel_alive = false;
     bool test_write = false;
     int result;
     int mcu_type_index;
@@ -86,7 +87,7 @@ private:
     void closeEvent(QCloseEvent *event);
 
     int read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_unisia_jecs(bool test_write);
+    int write_mem_subaru_unisia_jecs();
 
     QByteArray send_subaru_sid_bf_ssm_init();
     QByteArray send_subaru_sid_b8_change_baudrate_4800();
@@ -94,8 +95,6 @@ private:
 
     QByteArray send_subaru_unisia_jecs_sid_af_enter_flash_mode(QByteArray ecu_id);
     QByteArray send_subaru_unisia_jecs_sid_af_erase_memory_block();
-    QByteArray send_subaru_unisia_jecs_sid_af_write_memory_block(uint32_t address, QByteArray payload);
-    QByteArray send_subaru_unisia_jecs_sid_af_write_last_memory_block(uint32_t address, QByteArray payload);
 
     QByteArray subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len);
     QByteArray subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len);
@@ -106,7 +105,6 @@ private:
 
     int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

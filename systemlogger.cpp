@@ -31,7 +31,7 @@ void SystemLogger::log_messages(QString message, bool timestamp, bool linefeed)
 
     QDateTime dateTime = dateTime.currentDateTime();
 
-    QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
+    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz'] ");
     QMetaMethod metaMethod;
 
     if (sender())
@@ -43,18 +43,19 @@ void SystemLogger::log_messages(QString message, bool timestamp, bool linefeed)
 
     // Check if timestamp added
     if (timestamp)
+    {
         msg += dateTimeString;
 
-    // Check log type
-    if (metaMethod.name() == "LOG_E")
-        msg += "(EE) ";
-    else if (metaMethod.name() == "LOG_W")
-        msg += "(WW) ";
-    else if (metaMethod.name() == "LOG_I")
-        msg += "(II) ";
-    else if (metaMethod.name() == "LOG_D")
-        msg += "(DD) ";
-
+        // Check log type
+        if (metaMethod.name() == "LOG_E")
+            msg += "(EE) ";
+        else if (metaMethod.name() == "LOG_W")
+            msg += "(WW) ";
+        else if (metaMethod.name() == "LOG_I")
+            msg += "(II) ";
+        else if (metaMethod.name() == "LOG_D")
+            msg += "(DD) ";
+    }
     msg += message;
 
     qDebug() << msg;

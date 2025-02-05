@@ -34,29 +34,29 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
     serial_port_baudrate = portSpeed;
     baudrate = portSpeed.toInt();
 
-    qDebug() << "Changing baudrate, checking if port is open...";
+    emit LOG_D("Changing baudrate, checking if port is open...", true, true);
     if (is_serial_port_open())
     {
-        qDebug() << "Port is open, checking adapter type...";
+        emit LOG_D("Port is open, checking adapter type...", true, true);
         if (!use_openport2_adapter)
         {
-            qDebug() << "Adapter type is generic OBD2...";
+            emit LOG_D("Adapter type is generic OBD2...", true, true);
 
             if (serial->setBaudRate(serial_port_baudrate.toDouble()))
             {
                 delay(50);
-                qDebug() << "Baudrate set to" << serial_port_baudrate;
+                emit LOG_D("Baudrate set to " + portSpeed + " OK", true, true);
                 return STATUS_SUCCESS;
             }
             else
             {
-                qDebug() << "ERROR setting baudrate!";
+                emit LOG_D("ERROR setting baudrate!", true, true);
                 return STATUS_ERROR;
             }
         }
         else
         {
-            qDebug() << "Adapter type is J2534...";
+            emit LOG_D("Adapter type is J2534...", true, true);
 
             SCONFIG_LIST scl;
             SCONFIG scp[1] = {{DATA_RATE,0}};
@@ -65,7 +65,7 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
             scl.ConfigPtr = scp;
             if (!j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
             {
-                qDebug() << "Baudrate set to" << baudrate << "OK";
+                emit LOG_D("Baudrate set to " + portSpeed + " OK", true, true);
                 return STATUS_SUCCESS;
             }
             else
@@ -137,7 +137,7 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
         /* Send init data */
         received = write_serial_data_echo_check(output);
         received.append(read_serial_data(1, 10));
-        qDebug() << parse_message_to_hex(received);
+        LOG_D("Fast init response: " + parse_message_to_hex(received), true, true);
         delay(100);
     }
 
@@ -1311,6 +1311,10 @@ int SerialPortActionsDirect::set_j2534_iso9141_timings()
         scp[2].Value = 0;
         scp[3].Value = 0;
         scp[4].Value = NO_PARITY;
+        if (serial_port_parity == QSerialPort::OddParity)
+            scp[4].Value = ODD_PARITY;
+        else if (serial_port_parity == QSerialPort::EvenParity)
+            scp[4].Value = EVEN_PARITY;
         scp[5].Value = 25;
         scl.ConfigPtr = scp;
         if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))

@@ -14,7 +14,10 @@ signals:
     void stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
 
 public:
-    explicit SerialPortActions(QString peerAddress="", QWebSocket *web_socket=nullptr, QObject *parent=nullptr);
+    explicit SerialPortActions(QString peerAddress="",
+                               QString password="",
+                               QWebSocket *web_socket=nullptr,
+                               QObject *parent=nullptr);
     ~SerialPortActions();
 
     bool isDirectConnection(void);
@@ -144,9 +147,12 @@ private:
     SerialPortActionsDirect        *serial_direct;
     SerialPortActionsRemoteReplica *serial_remote;
     QString peerAddress;
+    QString password;
 
     const QString autodiscoveryMessage = "FastECU_PTP_Autodiscovery";
     const QString remoteObjectName = "FastECU";
+    const QString wssPath = "/" + remoteObjectName;
+    const QString webSocketPasswordHeader = "fastecu-basic-password";
     const int heartbeatInterval; //Inited in constructor initializer list
     QWebSocket *webSocket;
     WebSocketIoDevice *socket;

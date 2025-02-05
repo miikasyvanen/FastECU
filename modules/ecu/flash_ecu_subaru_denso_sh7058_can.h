@@ -58,6 +58,7 @@ private:
     bool test_write = false;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
+    bool flash_write_init = false;
 
     int result;
     int mcu_type_index;
@@ -74,12 +75,17 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint32_t flashblocksize = 0;
+    uint32_t flashmessagesize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
     QString mcu_type_string;
     QString flash_method;
     QString kernel;
+
+    uint32_t PTR_DAT_000fa93c = 0;
+    uint32_t DAT_000fa924 = 0;
 
     void closeEvent(QCloseEvent *event);
 
@@ -89,6 +95,7 @@ private:
     int write_mem_subaru_denso_subarucan(bool test_write);
     int get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified);
     int check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
+    int init_flash_write();
     int flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len);
     int reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
@@ -121,11 +128,20 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
+
+    void FUN_000fac38(uint32_t *param_1,uint32_t *param_2);
+    void FUN_000fac5a(uint32_t param_1,uint32_t param_2,uint32_t *param_3,uint32_t *param_4);
+    int FUN_000facc8(uint32_t param_1,int param_2);
+    void FUN_000facee(uint32_t param_1,uint32_t param_2,int param_3,int *param_4,uint32_t *param_5);
+    uint32_t FUN_000fad48(uint32_t param_1,uint32_t param_2,int param_3);
+    uint32_t FUN_000fad72(uint32_t param_1,uint32_t param_2,int param_3);
+    uint32_t FUN_000fa83e(void);
+    QByteArray subaru_denso_calculate_ecutek_racerom_seed_key(uint32_t req_seed);//QByteArray requested_seed);
+    QByteArray subaru_denso_generate_ecutek_racerom_can_seed_key(QByteArray requested_seed);
+    int decrypt_racerom_seed(int base, int expo, int m);
 
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;

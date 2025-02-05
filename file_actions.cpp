@@ -2097,11 +2097,11 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
-        qDebug() << "Save file to:" << configValues->base_config_directory + configValues->software_version + "/calibrations/" + "read.bin";
-        save_subaru_rom_file(ecuCalDef, configValues->base_config_directory + configValues->software_version + "/calibrations/" + "read.bin");
+        qDebug() << "Save file to:" << configValues->calibration_files_directory + "read.bin";
+        save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "read.bin");
 
         if (filename == "")
-            filename = "default.bin";
+            filename = "read.bin";
 
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());
@@ -2626,6 +2626,8 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 if (ecuCalDef->RomId.startsWith("3"))
                     ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
                 if (ecuCalDef->RomId.startsWith("4"))
+                    ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
+                if (ecuCalDef->RomId.startsWith("6"))
                     ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_can"))
