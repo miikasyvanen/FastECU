@@ -62,6 +62,7 @@ void FlashEcuSubaruDensoSH705xDensoCan::run()
     }
 
     // Set serial port
+    serial->set_add_iso14230_header(false);
     serial->set_is_iso14230_connection(false);
     serial->set_is_can_connection(true);
     serial->set_is_iso15765_connection(false);
@@ -156,8 +157,6 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
         return STATUS_ERROR;
     }
 
-    serial->set_add_iso14230_header(false);
-
     emit LOG_I("Checking if kernel is already running...", true, true);
 
     received.clear();
@@ -193,7 +192,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader_subaru_denso_sh705x_de
         output.append((uint8_t)0x00);
 
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(20, 3);
+        received = serial->read_serial_data(20, 5);
         //delay(5);
         loopcount++;
     }

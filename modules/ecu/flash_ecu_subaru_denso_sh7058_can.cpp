@@ -61,8 +61,8 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     // Set serial port
     serial->set_is_iso14230_connection(false);
-    serial->set_is_can_connection(true);
-    serial->set_is_iso15765_connection(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
     serial->set_is_29_bit_id(false);
     serial->set_can_speed("500000");
     serial->set_iso15765_source_address(0x7E0);
@@ -190,14 +190,16 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
 
     if (flash_method.endsWith("_ecutek_racerom_alt"))
     {
-        // AE5Z500V
-        //ram_value = read_ram_location(0xffff1ed8);
-        //emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
-        //ram_value = read_ram_location(0xffff1e80);
-        //emit LOG_D("Value at RAM loc 0xffff1e80: 0x" + QString::number(ram_value, 16), true, true);
-        //xor_byte_1 = ((ram_value >> 8) & 0xff);
-        //xor_byte_2 = (ram_value & 0xff);
 
+        // AE5Z500V
+        ram_value = read_ram_location(0xffff1ed8);
+        emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
+        seed_alter = ram_value;
+        ram_value = read_ram_location(0xffff1e80);
+        emit LOG_D("Value at RAM loc 0xffff1e80: 0x" + QString::number(ram_value, 16), true, true);
+        xor_byte_1 = ((ram_value >> 8) & 0xff);
+        xor_byte_2 = (ram_value & 0xff);
+/*
         // AE5I910V
         ram_value = read_ram_location(0xffffbba8);
         emit LOG_D("Value at RAM loc 0xffffbba8: 0x" + QString::number(ram_value, 16), true, true);
@@ -206,7 +208,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         emit LOG_D("Value at RAM loc 0xffffbbf0: 0x" + QString::number(ram_value, 16), true, true);
         xor_byte_1 = ((ram_value >> 8) & 0xff);
         xor_byte_2 = (ram_value & 0xff);
-
+*/
         serial->reset_connection();
         serial->set_is_iso15765_connection(true);
         serial->open_serial_port();
@@ -463,8 +465,8 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
         et_rr_seed += ((uint8_t)seed_key.at(2) << 8) & 0x0000FF00;
         et_rr_seed += (uint8_t)seed_key.at(3) & 0x000000FF;
 
-        et_rr_seed = ((seed_alter^et_rr_seed)^xor_byte_1)*0x01000193;
-        et_rr_seed = (et_rr_seed^xor_byte_2)*0x01000193;
+        et_rr_seed = ((seed_alter^et_rr_seed)^xor_byte_1)*xor_multi;
+        et_rr_seed = (et_rr_seed^xor_byte_2)*xor_multi;
     }
 
     seed_key.clear();
