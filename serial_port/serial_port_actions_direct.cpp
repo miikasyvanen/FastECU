@@ -501,6 +501,7 @@ void SerialPortActionsDirect::reset_connection()
 {
     close_j2534_serial_port();
     close_serial_port();
+    delay(250);
 }
 
 void SerialPortActionsDirect::close_serial_port()
@@ -1186,6 +1187,7 @@ int SerialPortActionsDirect::set_j2534_can_filters()
             reportJ2534Error();
             return STATUS_ERROR;
         }
+        qDebug() << "msgId" << msgId;
     }
     else if (protocol == ISO15765)
     {

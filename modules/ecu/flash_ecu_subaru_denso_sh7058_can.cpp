@@ -1678,9 +1678,9 @@ int FlashEcuSubaruDensoSH7058Can::flash_block(const uint8_t *src, uint32_t start
 
         if ((flashblockstart + flashblocksize) == start)
         {
-            LOG_I("Flash buffer write complete... ", true, true);
+            emit LOG_I("Flash buffer write complete... ", true, true);
             imgcrc32 = crc32(&src[flashblockstart], flashblocksize);
-            LOG_D("Image CRC32: 0x" + QString::number(imgcrc32, 16), true, true);
+            emit LOG_D("Image CRC32: 0x" + QString::number(imgcrc32, 16), true, true);
 
             uint8_t SUB_KERNEL_CMD = 0;
             if (test_write)
@@ -2085,10 +2085,10 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     output.append((uint8_t)0x00);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(100);
     received = serial->read_serial_data(100, serial_read_short_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received.length() > 8)
         received.remove(0, 9);

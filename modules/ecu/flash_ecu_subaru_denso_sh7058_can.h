@@ -83,9 +83,6 @@ private:
     QString flash_method;
     QString kernel;
 
-    uint32_t PTR_DAT_000fa93c = 0;
-    uint32_t DAT_000fa924 = 0;
-
     void closeEvent(QCloseEvent *event);
 
     int connect_bootloader();
