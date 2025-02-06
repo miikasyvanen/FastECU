@@ -159,7 +159,6 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
     //delay(100);
 
-    //serial->change_port_speed("15625");
     emit LOG_I("Port speed: " + serial->get_serial_port_baudrate(), true, true);
 
     if (flash_method == "sub_ecu_hitachi_m32r_kline_recovery")
@@ -182,7 +181,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
             serial->write_serial_data_echo_check(output);
             //received = serial->read_serial_data(6, 50);
-            received = serial->read_serial_data(8, 15);
+            received = serial->read_serial_data(8, 50);
             emit LOG_I(".", false, false);
             if (received.length() > 5)
             {
@@ -274,6 +273,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         return STATUS_SUCCESS;
     }
 
+    serial->change_port_speed("15625");
     emit LOG_I("Checking if OBK is running", true, true);
     output.clear();
     output.append((uint8_t)0x34);
