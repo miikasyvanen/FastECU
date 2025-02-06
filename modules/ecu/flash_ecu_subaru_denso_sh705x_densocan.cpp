@@ -383,7 +383,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel(QString kernel, uint32_t ke
     serial->reset_connection();
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(true);
-    //serial->set_is_29_bit_id(false);
+    serial->set_is_29_bit_id(true);
     serial->open_serial_port();
 
     emit LOG_I("Requesting kernel ID", true, true);
