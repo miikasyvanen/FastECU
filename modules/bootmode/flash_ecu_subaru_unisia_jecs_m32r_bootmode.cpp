@@ -328,13 +328,17 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
     QByteArray kerneldata = file.readAll();
     file.close();
 
+    while (kerneldata.length() % 0x80)
+        kerneldata.append((uint8_t)0x00);
+
     int filesize = kerneldata.length();
 
     emit LOG_I("Uploading kernel, please wait...", true, true);
-    for (int i = 0; i < filesize; i++)
+    for (int i = 0; i < filesize; i+=0x80)
     {
         output.clear();
-        output.append(kerneldata.at(i));
+        for (int j = 0; j < 0x80; j++)
+            output.append(kerneldata.at(i + j));
         serial->write_serial_data_echo_check(output);
         pleft = (float)i / (float)filesize * 100.0f;
         set_progressbar_value(pleft);
