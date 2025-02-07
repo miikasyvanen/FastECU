@@ -356,6 +356,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     float pleft = 0;
     uint32_t dataaddr = 0;
 
+    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
     QMessageBox::information(this, tr("Flash file"), "Remove MOD1 voltage and press ok to continue.");
 
     serial->reset_connection();

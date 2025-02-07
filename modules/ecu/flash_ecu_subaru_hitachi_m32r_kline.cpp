@@ -157,10 +157,6 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         return STATUS_ERROR;
     }
 
-    //delay(100);
-
-    emit LOG_I("Port speed: " + serial->get_serial_port_baudrate(), true, true);
-
     if (flash_method == "sub_ecu_hitachi_m32r_kline_recovery")
     {
         send_log_window_message("Testing with recovery mode", true, true);

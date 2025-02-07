@@ -52,8 +52,8 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
     }
 
     // Set serial port
-    serial->set_is_iso14230_connection(false);
     serial->set_add_iso14230_header(false);
+    serial->set_is_iso14230_connection(false);
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
@@ -316,8 +316,11 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
         return STATUS_ERROR;
     }
 
-    serial->set_add_iso14230_header(false);
+    //serial->change_port_speed("19200");
+    //emit LOG_I("Checking if OBK is running", true, true);
+    //received = send_subaru_unisia_jecs_sid_af_erase_memory_block();
 
+    serial->change_port_speed("4800");
     // SSM init
     received = send_subaru_sid_bf_ssm_init();
     emit LOG_I("SSM init: " + parse_message_to_hex(received), true, true);
@@ -344,7 +347,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem_subaru_unisia_jecs()
     serial->change_port_speed("19200");
 
     emit LOG_I("Set programming voltage +12v to Line End Check 1", true, true);
-    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
+    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
 
     emit LOG_I("Sending request to erase flash", true, true);
     received = send_subaru_unisia_jecs_sid_af_erase_memory_block();
