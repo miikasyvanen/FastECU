@@ -109,6 +109,7 @@ SOURCES += \
     modules/ecu/flash_ecu_subaru_denso_sh7xxx_densocan.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_can.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.cpp \
+    modules/ecu/flash_ecu_subaru_hitachi_m32r_kline_recovery.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.cpp \
     modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.cpp \
@@ -174,6 +175,7 @@ HEADERS += \
     modules/ecu/flash_ecu_subaru_denso_sh7xxx_densocan.h \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_can.h \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.h \
+    modules/ecu/flash_ecu_subaru_hitachi_m32r_kline_recovery.h \
     modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.h \
     modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h \
     modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.h \
@@ -247,13 +249,6 @@ DISTFILES += \
     config/logger.cfg \
     config/menu.cfg \
     config/protocols.cfg \
-    definitions/16BITBASE.xml \
-    definitions/32BITBASE.xml \
-    definitions/A2ZJ601A.xml \
-    definitions/A4SE700D.xml \
-    definitions/A8DH200Z.xml \
-    definitions/ecu_defs.xml \
-    definitions/logger_METRIC_EN_v370.xml \
     external/FastECU-mc68hc16-bdm.ino \
     fastecu.rc \
     flatpak/fi.fastecu.FastECU.desktop \
@@ -265,29 +260,16 @@ DISTFILES += \
     flatpak/fi.fastecu.FastECU_256x256.png \
     flatpak/fi.fastecu.FastECU_32x32.png \
     flatpak/fi.fastecu.FastECU_64x64.png \
-    kernels/ssmk_CAN_SH7055.bin \
-    kernels/ssmk_CAN_SH7058.bin \
-    kernels/ssmk_HC16.bin \
-    kernels/ssmk_HC16_decryp.bin \
-    kernels/ssmk_SH7055.bin \
-    kernels/ssmk_SH7058.bin \
-    kernels/ssmk_SH7058_EEPSCI3.bin \
-    kernels/ssmk_SH7058_EEPSCI4.bin \
     kernels/ssmk_can_sh7055.bin \
     kernels/ssmk_can_sh7058.bin \
     kernels/ssmk_can_sh7059d_euro5.bin \
     kernels/ssmk_can_tp_sh7058.bin \
     kernels/ssmk_can_tp_sh7058d_euro4.bin \
     kernels/ssmk_can_tp_sh7059d_euro5.bin \
-    kernels/ssmk_hc16.bin \
-    kernels/ssmk_hc16_decryp.bin \
     kernels/ssmk_kline_sh7055.bin \
     kernels/ssmk_kline_sh7058.bin \
     kernels/ssmk_mc68hc916y5.bin \
     kernels/ssmk_tcu_can_sh7055_35.bin \
-    kernels/ssmk_tcu_can_sh7058.bin \
-    precompiled/FastECU-Linux.zip \
-    precompiled/FastECU-Win7-64bit.zip \
-    precompiled/FastECU-Windows.zip
+    kernels/ssmk_tcu_can_sh7058.bin
 
 RC_FILE = fastecu.rc

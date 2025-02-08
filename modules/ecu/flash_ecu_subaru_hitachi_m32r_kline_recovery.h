@@ -1,5 +1,5 @@
-#ifndef FLASH_ECU_SUBARU_UNISIA_JECS_M32R_H
-#define FLASH_ECU_SUBARU_UNISIA_JECS_M32R_H
+#ifndef FLASHECUUNISIAJECS0X27_H
+#define FLASHECUUNISIAJECS0X27_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -11,9 +11,10 @@
 #include <QTimer>
 #include <QWidget>
 
+#include <kernelcomms.h>
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
-#include <serial_port/serial_port_actions.h>
+#include <serial_port_actions.h>
 #include <ui_ecu_operations.h>
 
 QT_BEGIN_NAMESPACE
@@ -23,13 +24,13 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class FlashEcuSubaruUnisiaJecsM32r : public QDialog
+class FlashEcuSubaruHitachiM32rKlineRecovery : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuSubaruUnisiaJecsM32r(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent);
-    ~FlashEcuSubaruUnisiaJecsM32r();
+    explicit FlashEcuSubaruHitachiM32rKlineRecovery(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruHitachiM32rKlineRecovery();
 
     void run();
 
@@ -45,22 +46,15 @@ private:
     FileActions::EcuCalDefStructure *ecuCalDef;
     QString cmd_type;
 
-    #define STATUS_SUCCESS	0x00
-    #define STATUS_ERROR	0x01
-
-    #define SID_UNISIA_JECS_BLOCK_READ                  0xA0
-    #define SID_UNISIA_JECS_ADDR_READ                   0xA8
-    #define SID_UNISIA_JECS_BLOCK_WRITE                 0xB0
-    #define SID_UNISIA_JECS_ADDR_WRITE                  0xB8
-    #define SID_UNISIA_JECS_FLASH_READ                  0x00//???
-
-    #define SID_UNISIA_JECS_FLASH_ERASE                 0x31//???
-    #define SID_UNISIA_JECS_FLASH_WRITE                 0x61
-    #define SID_UNISIA_JECS_FLASH_WRITE_END             0x69//???
+    #define STATUS_SUCCESS							0x00
+    #define STATUS_ERROR							0x01
 
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
+    bool request_denso_kernel_init = false;
+    bool request_denso_kernel_id = false;
+
     int result;
     int mcu_type_index;
     int bootloader_start_countdown = 3;
@@ -83,18 +77,28 @@ private:
 
     QString mcu_type_string;
     QString flash_method;
+    QString kernel;
 
     void closeEvent(QCloseEvent *event);
 
+    int connect_bootloader();
     int read_mem(uint32_t start_addr, uint32_t length);
-    int write_mem();
+    int write_mem(bool test_write);
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     QByteArray send_sid_bf_ssm_init();
-    QByteArray send_sid_b8_change_baudrate_4800();
     QByteArray send_sid_b8_change_baudrate_38400();
+    QByteArray send_sid_81_start_communication();
+    QByteArray send_sid_83_request_timings();
+    QByteArray send_sid_27_request_seed();
+    QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
+    QByteArray send_sid_10_start_diagnostic();
+    QByteArray send_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
+    QByteArray send_sid_b8_byte_read(uint32_t dataaddr);
+    QByteArray send_sid_b0_block_write(uint32_t dataaddr, uint32_t datalen);
 
-    QByteArray send_sid_af_enter_flash_mode(QByteArray ecu_id);
-    QByteArray send_sid_af_erase_memory_block();
+    QByteArray generate_seed_key(QByteArray seed);
+    QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray encrypt_payload(QByteArray buf, uint32_t len);
     QByteArray decrypt_payload(QByteArray buf, uint32_t len);
@@ -103,6 +107,7 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
+    //int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);
     void delay(int timeout);
@@ -110,6 +115,9 @@ private:
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
 
+private slots:
+    int send_log_window_message(QString message, bool timestamp, bool linefeed);
+
 };
 
-#endif // FLASH_ECU_SUBARU_UNISIA_JECS_M32R_H
+#endif // FLASHECUUNISIAJECS0X27_H
