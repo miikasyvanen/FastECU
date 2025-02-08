@@ -6,11 +6,9 @@ FileActions::FileActions(QWidget *parent)
 
 }
 
-FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesStructure *configValues)
+FileActions::ConfigValuesStructure *FileActions::set_base_dirs(ConfigValuesStructure *configValues)
 {
     QDir currentPath(QDir::currentPath());
-    QDir copyConfigFromDirectory;
-    QDir copyKernelsFromDirectory;
     QStringList isDevPath = currentPath.absolutePath().split("build");
     bool isDevFile = false;
 
@@ -25,23 +23,11 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
     QString filename;
     QDirIterator it(AppRootPath, QStringList() << "*.*", QDir::Files, QDirIterator::Subdirectories);
 
-    emit LOG_D("App path: " + AppFilePath, true, true);
-    emit LOG_D("App root path: " + AppRootPath, true, true);
-/*
-    while (it.hasNext())
-    {
-        filename = it.next();
-        emit LOG_D("Files in AppImage: " + filename, true, true);
-    }
-*/
-
-    emit LOG_D("APP DIRECTORY: " + currentPath.absolutePath(), true, true);
     if(QFileInfo::exists("./build.txt"))
     {
         isDevFile = true;
-        emit LOG_D("build.txt found", true, true);
     }
-    emit LOG_D("isDevPath length " + QString::number(isDevPath.length()), true, true);
+
     if (isDevPath.length() > 1 || isDevFile)
     {
         emit LOG_D("App is started on dev path, base path set to:" + currentPath.absolutePath(), true, true);//isDevPath.at(0);
@@ -75,6 +61,35 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dir(ConfigValuesSt
         configValues->logger_file = configValues->config_files_directory + "logger.cfg";
         copyConfigFromDirectory.setPath(AppRootPath + "./config");
         copyKernelsFromDirectory.setPath(AppRootPath + "./kernels");
+    }
+
+    return configValues;
+}
+
+FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesStructure *configValues)
+{
+    QDir currentPath(QDir::currentPath());
+    QStringList isDevPath = currentPath.absolutePath().split("build");
+    bool isDevFile = false;
+
+    QString AppFilePath = QApplication::applicationFilePath();
+#if defined Q_OS_UNIX
+    QString AppRootPath = AppFilePath.split("usr").at(0);
+    if (AppRootPath.contains("FastECU"))
+        AppRootPath = "/config";
+#elif defined Q_OS_WIN32
+    QString AppRootPath = currentPath.absolutePath();
+#endif
+    QString filename;
+    QDirIterator it(AppRootPath, QStringList() << "*.*", QDir::Files, QDirIterator::Subdirectories);
+
+    emit LOG_D("App path: " + AppFilePath, true, true);
+    emit LOG_D("App root path: " + AppRootPath, true, true);
+    emit LOG_D("APP DIRECTORY: " + currentPath.absolutePath(), true, true);
+    if(QFileInfo::exists("./build.txt"))
+    {
+        isDevFile = true;
+        emit LOG_D("build.txt found", true, true);
     }
 
     emit LOG_D(copyConfigFromDirectory.absolutePath(), true, true);
