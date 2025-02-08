@@ -21,6 +21,11 @@ SerialPortActions::SerialPortActions(QString peerAddress,
         serial_direct = new SerialPortActionsDirect(this);
     else
         startRemote();
+
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_E, this, &SerialPortActions::LOG_E);
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_W, this, &SerialPortActions::LOG_W);
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_I, this, &SerialPortActions::LOG_I);
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_D, this, &SerialPortActions::LOG_D);
 }
 
 SerialPortActions::~SerialPortActions()
@@ -626,6 +631,7 @@ QString SerialPortActions::get_serial_port_baudrate(void)
 }
 bool SerialPortActions::set_serial_port_baudrate(QString value)
 {
+    emit LOG_D("Setting serialport baudrate in SerialPortActions", true, true);
     bool r = true;
     if (isDirectConnection())
         serial_direct->serial_port_baudrate = value;

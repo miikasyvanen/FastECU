@@ -276,6 +276,11 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     timer->start();
 
     serial = new SerialPortActions(peerAddress, peerPassword, nullptr, this);
+    QObject::connect(serial, &SerialPortActions::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(serial, &SerialPortActions::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(serial, &SerialPortActions::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(serial, &SerialPortActions::LOG_D, syslogger, &SystemLogger::log_messages);
+
     remote_utility = new RemoteUtility(peerAddress, peerPassword, nullptr, this);
     if (!serial->isDirectConnection())
     {
