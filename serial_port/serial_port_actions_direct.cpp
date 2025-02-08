@@ -9,10 +9,12 @@ SerialPortActionsDirect::SerialPortActionsDirect(QObject *parent)
     , serial(new QSerialPort(this))
 {
     j2534 = new J2534();
+#if defined Q_OS_UNIX
     QObject::connect(j2534, &J2534::LOG_E, this, &SerialPortActionsDirect::LOG_E);
     QObject::connect(j2534, &J2534::LOG_W, this, &SerialPortActionsDirect::LOG_W);
     QObject::connect(j2534, &J2534::LOG_I, this, &SerialPortActionsDirect::LOG_I);
     QObject::connect(j2534, &J2534::LOG_D, this, &SerialPortActionsDirect::LOG_D);
+#endif
 }
 
 SerialPortActionsDirect::~SerialPortActionsDirect()
@@ -330,7 +332,7 @@ QStringList SerialPortActionsDirect::check_j2534_devices(QMap<QString, QString> 
     bool j2534DeviceFound = false;
     QStringList j2534_devices;
     int driver_count = 0;
-    for (const QString vendor : installed_drivers.keys())
+    for (const QString &vendor : installed_drivers.keys())
     {
         driver_count++;
         j2534->disable();
@@ -340,24 +342,24 @@ QStringList SerialPortActionsDirect::check_j2534_devices(QMap<QString, QString> 
         j2534->setDllName(j2534DllName.toLocal8Bit().data());
         if (j2534->init())
         {
-            emit LOG_D(j2534DllName << "init successfull", true, true);
+            emit LOG_D(j2534DllName + " init successfull", true, true);
             //0 means no error
             if (!j2534->PassThruOpen(NULL, &devID))
             {
-                emit LOG_D("Successfully opened " + devID + " / " + vendor + " / " + j2534DllName, true, true);
+                emit LOG_D("Successfully opened " + QString::number(devID) + " / " + vendor + " / " + j2534DllName, true, true);
                 j2534_devices.append(vendor);
                 j2534DeviceFound = true;
                 j2534->PassThruClose(devID);
             }
             else
-                emit LOG_E(devID + " / " + vendor + " device not connected", true, true);
+                emit LOG_E(QString::number(devID) + " / " + vendor + " device not connected", true, true);
         }
         else
             emit LOG_D(j2534DllName + " not found", true, true);
         if (j2534DeviceFound)
             break;
     }
-    emit LOG_D("Tested installed drivers: " + driver_count, true, true);
+    emit LOG_D("Tested installed drivers: " + QString::number(driver_count), true, true);
 
     return j2534_devices;
 }
@@ -366,6 +368,7 @@ QMap<QString, QString> SerialPortActionsDirect::getAllJ2534DriversNames()
 {
     QSettings registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\PassThruSupport.04.04", REGISTRY_FORMAT);
     QMap<QString, QString> drivers_map;
+    emit LOG_D("Found installed drivers: ", true, false);
     for (const QString &i : registry.childGroups())
     {
         QString vendor = i;
@@ -373,8 +376,9 @@ QMap<QString, QString> SerialPortActionsDirect::getAllJ2534DriversNames()
         vendor.replace("\\", "/");
         QString dllName = registry.value(i+"/FunctionLibrary").toString();
         drivers_map[vendor] = dllName;
+        emit LOG_D(dllName + ", ", false, false);
     }
-    emit LOG_D("Found installed drivers: " + drivers_map, true, true);
+    emit LOG_D(" ", false, true);
     return drivers_map;
 }
 #endif
@@ -413,7 +417,7 @@ QString SerialPortActionsDirect::open_serial_port()
 
         QMap<QString, QString> user_j2534_drivers;
 
-        emit LOG_D("Opening device: " + serial_port;
+        emit LOG_D("Opening device: " + serial_port, true, true);
         QStringList j2534_driver;
         user_j2534_drivers[serial_port] = localDllName;
         j2534_driver = check_j2534_devices(user_j2534_drivers);
@@ -423,7 +427,7 @@ QString SerialPortActionsDirect::open_serial_port()
         if (!j2534_driver.isEmpty())
             j2534->setDllName(j2534_driver.at(0).toLocal8Bit().data());
         else
-            emit LOG_E("Initializing interface failed!";
+            emit LOG_E("Initializing interface failed!", true, true);
 #endif
         long result;
 
@@ -536,10 +540,12 @@ void SerialPortActionsDirect::close_j2534_serial_port()
     delete j2534;
     j2534 = new J2534();
     j2534->setDllName(dllName);
+#if defined Q_OS_UNIX
     QObject::connect(j2534, &J2534::LOG_E, this, &SerialPortActionsDirect::LOG_E);
     QObject::connect(j2534, &J2534::LOG_W, this, &SerialPortActionsDirect::LOG_W);
     QObject::connect(j2534, &J2534::LOG_I, this, &SerialPortActionsDirect::LOG_I);
     QObject::connect(j2534, &J2534::LOG_D, this, &SerialPortActionsDirect::LOG_D);
+#endif
 }
 
 QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t timeout)
