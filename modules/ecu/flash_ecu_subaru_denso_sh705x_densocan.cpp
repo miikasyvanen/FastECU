@@ -63,6 +63,7 @@ void FlashEcuSubaruDensoSH705xDensoCan::run()
 
     // Set serial port
     serial->reset_connection();
+    serial->set_add_iso14230_header(false);
     serial->set_is_iso14230_connection(false);
     serial->set_add_iso14230_header(false);
     serial->set_is_can_connection(false);

@@ -138,6 +138,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     QByteArray seed;
     QByteArray seed_key;
     QByteArray response;
+    QString msg;
 
     if (!serial->is_serial_port_open())
     {
@@ -198,14 +199,14 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
         {
             send_log_window_message("Bad response from ECU", true, true);
             qDebug() << "Bad response from ECU";
-            //return STATUS_ERROR;
+            return STATUS_ERROR;
         }
     }
     else
     {
         send_log_window_message("Bad response from ECU", true, true);
         qDebug() << "Bad response from ECU";
-        //return STATUS_ERROR;
+        return STATUS_ERROR;
     }
     send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     qDebug() << "Response:" << parse_message_to_hex(received);
@@ -238,14 +239,14 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
         {
             send_log_window_message("Bad response from ECU", true, true);
             qDebug() << "Bad response from ECU";
-            //return STATUS_ERROR;
+            return STATUS_ERROR;
         }
     }
     else
     {
         send_log_window_message("Bad response from ECU", true, true);
         qDebug() << "Bad response from ECU";
-        //return STATUS_ERROR;
+        return STATUS_ERROR;
     }
 
     response.clear();
@@ -283,7 +284,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
 
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(5) != 0xA0 && (uint8_t)received.at(5) != 0x20)
+        if ((uint8_t)received.at(5) != 0xA0 && (uint8_t)received.at(6) != 0x20)
         {
             send_log_window_message("In Car Programming, Accessing...", true, true);
             delay(800);
@@ -466,9 +467,15 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             seed.append(received.at(8));
             seed.append(received.at(9));
 
+            msg = parse_message_to_hex(seed);
+            emit LOG_I("Received seed: " + msg, true, true);
+
             seed_key = generate_seed_key(seed);
 
-            send_log_window_message("Sending seed key...", true, true);
+            msg = parse_message_to_hex(seed_key);
+            emit LOG_I("Calculated seed key: " + msg, true, true);
+
+            send_log_window_message("Sending seed key to ECU", true, true);
             qDebug() << "Sending seed key...";
             output.clear();
             output.append((uint8_t)0x00);
@@ -708,10 +715,15 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             seed.append(received.at(8));
             seed.append(received.at(9));
 
+            msg = parse_message_to_hex(seed);
+            emit LOG_I("Received seed: " + msg, true, true);
+
             seed_key = generate_seed_key(seed);
 
-            send_log_window_message("Sending seed key...", true, true);
-            qDebug() << "Sending seed key...";
+            msg = parse_message_to_hex(seed_key);
+            emit LOG_I("Calculated seed key: " + msg, true, true);
+
+            emit LOG_I("Sending seed key to ECU...", true, true);
             output.clear();
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
