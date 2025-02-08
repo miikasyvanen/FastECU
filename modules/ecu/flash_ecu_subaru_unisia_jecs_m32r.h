@@ -86,24 +86,23 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_unisia_jecs();
+    int read_mem(uint32_t start_addr, uint32_t length);
+    int write_mem();
 
-    QByteArray send_subaru_sid_bf_ssm_init();
-    QByteArray send_subaru_sid_b8_change_baudrate_4800();
-    QByteArray send_subaru_sid_b8_change_baudrate_38400();
+    QByteArray send_sid_bf_ssm_init();
+    QByteArray send_sid_b8_change_baudrate_4800();
+    QByteArray send_sid_b8_change_baudrate_38400();
 
-    QByteArray send_subaru_unisia_jecs_sid_af_enter_flash_mode(QByteArray ecu_id);
-    QByteArray send_subaru_unisia_jecs_sid_af_erase_memory_block();
+    QByteArray send_sid_af_enter_flash_mode(QByteArray ecu_id);
+    QByteArray send_sid_af_erase_memory_block();
 
-    QByteArray subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray encrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray decrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);
     void delay(int timeout);
