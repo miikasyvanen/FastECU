@@ -567,7 +567,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
     received = serial->read_serial_data(20, 10);
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) == 0x34 || (uint8_t)received.at(5) == 0x20)
+        if ((uint8_t)received.at(4) == 0x74 && (uint8_t)received.at(5) == 0x20)
         {
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }

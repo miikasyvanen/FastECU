@@ -40,29 +40,29 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
     serial_port_baudrate = portSpeed;
     baudrate = portSpeed.toInt();
 
-    emit emit LOG_D("Changing baudrate, checking if port is open...", true, true);
+    emit LOG_D("Changing baudrate, checking if port is open...", true, true);
     if (is_serial_port_open())
     {
-        emit emit LOG_D("Port is open, checking adapter type...", true, true);
+        emit LOG_D("Port is open, checking adapter type...", true, true);
         if (!use_openport2_adapter)
         {
-            emit emit LOG_D("Adapter type is generic OBD2...", true, true);
+            emit LOG_D("Adapter type is generic OBD2...", true, true);
 
             if (serial->setBaudRate(serial_port_baudrate.toDouble()))
             {
                 delay(50);
-                emit emit LOG_D("Baudrate set to " + portSpeed + " OK", true, true);
+                emit LOG_D("Baudrate set to " + portSpeed + " OK", true, true);
                 return STATUS_SUCCESS;
             }
             else
             {
-                emit emit LOG_E("ERROR setting baudrate!", true, true);
+                emit LOG_E("ERROR setting baudrate!", true, true);
                 return STATUS_ERROR;
             }
         }
         else
         {
-            emit emit LOG_D("Adapter type is J2534...", true, true);
+            emit LOG_D("Adapter type is J2534...", true, true);
 
             SCONFIG_LIST scl;
             SCONFIG scp[1] = {{DATA_RATE,0}};
@@ -71,7 +71,7 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
             scl.ConfigPtr = scp;
             if (!j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
             {
-                emit emit LOG_D("Baudrate set to " + portSpeed + " OK", true, true);
+                emit LOG_D("Baudrate set to " + portSpeed + " OK", true, true);
                 return STATUS_SUCCESS;
             }
             else
@@ -300,7 +300,7 @@ QStringList SerialPortActionsDirect::check_serial_ports()
 
     for (const QSerialPortInfo &serialPortInfo : serialPortsInfo){
         serial_ports.append(serialPortInfo.portName() + " - " + serialPortInfo.description());
-        emit emit LOG_D("Serial port name: " + serialPortInfo.portName() + " " + serialPortInfo.description(), true, true);
+        emit LOG_D("Serial port name: " + serialPortInfo.portName() + " " + serialPortInfo.description(), true, true);
     }
     std::sort(serial_ports.begin(), serial_ports.end(), std::less<QString>());
 

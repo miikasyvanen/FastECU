@@ -70,7 +70,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
 {
     QDir currentPath(QDir::currentPath());
     QStringList isDevPath = currentPath.absolutePath().split("build");
-    bool isDevFile = false;
+    //bool isDevFile = false;
 
     QString AppFilePath = QApplication::applicationFilePath();
 #if defined Q_OS_UNIX
@@ -80,7 +80,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
 #elif defined Q_OS_WIN32
     QString AppRootPath = currentPath.absolutePath();
 #endif
-    QString filename;
+    //QString filename;
     QDirIterator it(AppRootPath, QStringList() << "*.*", QDir::Files, QDirIterator::Subdirectories);
 
     emit LOG_D("App path: " + AppFilePath, true, true);
@@ -88,7 +88,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
     emit LOG_D("APP DIRECTORY: " + currentPath.absolutePath(), true, true);
     if(QFileInfo::exists("./build.txt"))
     {
-        isDevFile = true;
+        //isDevFile = true;
         emit LOG_D("build.txt found", true, true);
     }
 
@@ -2536,7 +2536,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
         mcu_type_index++;
     }
     emit LOG_D("ecuCalDef->McuType: " + ecuCalDef->McuType + " " + configValues->flash_protocol_selected_mcu, true, true);
-    emit LOG_D("Size: 0x" + QString(fullRomSize, 16) + " -> 0x" + QString::number(flashdevices[mcu_type_index].romsize, 16), true, true);
+    emit LOG_D("Size: 0x" + QString::number(fullRomSize, 16) + " -> 0x" + QString::number(flashdevices[mcu_type_index].romsize, 16), true, true);
 
     if (!ecuCalDef->use_romraider_definition && !ecuCalDef->use_ecuflash_definition)
     {
