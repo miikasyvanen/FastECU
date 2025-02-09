@@ -85,16 +85,16 @@ private:
     QString flash_method;
     QString kernel;
 
-    QByteArray denso_bootloader_init_request_wrx02 = { "\x4D\xFF\xB4" };
-    QByteArray denso_bootloader_init_response_stock_wrx02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_ecutek_wrx02_ok = { "\x4C\x00\xB4" };
-    QByteArray denso_bootloader_init_response_cobb_wrx02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_wrx02_ok;
+    QByteArray bootloader_init_request_wrx02 = { "\x4D\xFF\xB4" };
+    QByteArray bootloader_init_response_stock_wrx02_ok = { "\x4D\x00\xB3" };
+    QByteArray bootloader_init_response_ecutek_wrx02_ok = { "\x4C\x00\xB4" };
+    QByteArray bootloader_init_response_cobb_wrx02_ok = { "\x4D\x00\xB3" };
+    QByteArray bootloader_init_response_wrx02_ok;
 
     void closeEvent(QCloseEvent *bar);
 
-    int connect_bootloader_subaru_denso_kline_wrx02();
-    int upload_kernel_subaru_denso_kline_wrx02(QString kernel, uint32_t kernel_start_addr);
+    int connect_bootloader();
+    int upload_kernel(QString kernel, uint32_t kernel_start_addr);
 
     int read_mem(uint32_t start_addr, uint32_t length);
     int write_mem(bool test_write);

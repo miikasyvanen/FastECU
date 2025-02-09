@@ -536,9 +536,9 @@ void SerialPortActionsDirect::close_j2534_serial_port()
             delay(200);
         }
         if (!j2534_disconnect_ok)
-            emit LOG_I("J2534 interface disconnect failed!", true, true);
+            emit LOG_D("J2534 interface disconnect failed!", true, true);
         else
-            emit LOG_I("J2534 interface disconnected succesfully!", true, true);
+            emit LOG_D("J2534 interface disconnected succesfully!", true, true);
         for (int i = 0; i < 5; i++)
         {
             if (!j2534->PassThruClose(devID))
@@ -549,9 +549,9 @@ void SerialPortActionsDirect::close_j2534_serial_port()
             delay(200);
         }
         if (!j2534_close_ok)
-            emit LOG_I("J2534 interface close failed!", true, true);
+            emit LOG_D("J2534 interface close failed!", true, true);
         else
-            emit LOG_I("J2534 interface closed succesfully!", true, true);
+            emit LOG_D("J2534 interface closed succesfully!", true, true);
     }
     use_openport2_adapter = false;
     J2534_open_ok = false;
