@@ -1054,7 +1054,7 @@ uint8_t FlashEcuSubaruDensoSH705xDensoCan::cks_add8(QByteArray chksum_data, unsi
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
@@ -1080,7 +1080,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_sid_bf_ssm_init()
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_81_start_communication()
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_81_start_communication()
 {
     QByteArray output;
     QByteArray received;
@@ -1097,7 +1097,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_81_start_com
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_83_request_timings()
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_83_request_timings()
 {
     QByteArray output;
     QByteArray received;
@@ -1115,7 +1115,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_83_request_t
  *
  * @return seed (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_27_request_seed()
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_27_request_seed()
 {
     QByteArray output;
     QByteArray received;
@@ -1134,7 +1134,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_27_request_s
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key)
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_27_send_seed_key(QByteArray seed_key)
 {
     QByteArray output;
     QByteArray received;
@@ -1154,7 +1154,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_27_send_seed
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_10_start_diagnostic()
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_10_start_diagnostic()
 {
     QByteArray output;
     QByteArray received;
@@ -1182,7 +1182,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_10_start_dia
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen)
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen)
 {
     QByteArray output;
     QByteArray received;
@@ -1208,7 +1208,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_34_request_u
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len)
 {
     QByteArray output;
     QByteArray received;
@@ -1267,7 +1267,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_36_transferd
 
 }
 
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_31_start_routine()
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_sid_31_start_routine()
 {
     QByteArray output;
     QByteArray received;
@@ -1287,7 +1287,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::send_subaru_denso_sid_31_start_rou
  *
  * @return encrypted data
  */
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::encrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1302,12 +1302,12 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::subaru_denso_encrypt_32bit_payload
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::decrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypted;
 
@@ -1322,12 +1322,12 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::subaru_denso_decrypt_32bit_payload
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    decrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    decrypted = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return decrypted;
 }
 
-QByteArray FlashEcuSubaruDensoSH705xDensoCan::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH705xDensoCan::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;

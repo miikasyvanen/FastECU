@@ -81,13 +81,13 @@ void FlashEcuSubaruDensoSH7058Can::run()
     {
         case QMessageBox::Ok:
             emit LOG_I("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-            result = connect_bootloader_subaru_denso_subarucan();
+            result = connect_bootloader();
 
             if (result == STATUS_SUCCESS && !kernel_alive)
             {
                 emit external_logger("Preparing, please wait...");
                 emit LOG_I("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-                result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                result = upload_kernel(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
             if (result == STATUS_SUCCESS)
             {
@@ -95,13 +95,13 @@ void FlashEcuSubaruDensoSH7058Can::run()
                 {
                     emit external_logger("Reading ROM, please wait...");
                     emit LOG_I("Reading ROM from Subaru 07+ 32-bit using CAN", true, true);
-                    result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     emit LOG_I("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-                    result = write_mem_subaru_denso_subarucan(test_write);
+                    result = write_mem(test_write);
                 }
             }
             emit external_logger("Finished");
@@ -144,7 +144,7 @@ void FlashEcuSubaruDensoSH7058Can::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
+int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
 {
     QByteArray output;
     QByteArray received;
@@ -365,11 +365,11 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
     if (flash_method.endsWith("_ecutek_racerom"))
         seed_key = subaru_denso_generate_ecutek_racerom_can_seed_key(seed);
     if (flash_method.endsWith("_ecutek"))
-        seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
+        seed_key = generate_ecutek_seed_key(seed);
     else if (flash_method.endsWith("_cobb"))
-        seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
+        seed_key = generate_cobb_seed_key(seed);
     else
-        seed_key = subaru_denso_generate_can_seed_key(seed);
+        seed_key = generate_seed_key(seed);
 
     emit LOG_I("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
     emit LOG_I("Sending seed key", true, true);
@@ -453,7 +453,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader_subaru_denso_subarucan()
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr)
+int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_start_addr)
 {
     QFile file(kernel);
 
@@ -506,8 +506,8 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
     pl_encr.append((uint8_t)((chk_sum >> 16) & 0xFF));
     pl_encr.append((uint8_t)((chk_sum >> 8) & 0xFF));
     pl_encr.append((uint8_t)(chk_sum & 0xFF));
-    pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_encr.length());
-    //pl_encr = subaru_denso_decrypt_32bit_payload(pl_encr, pl_encr.length());
+    pl_encr = encrypt_payload(pl_encr, pl_encr.length());
+    //pl_encr = decrypt_payload(pl_encr, pl_encr.length());
 
     set_progressbar_value(0);
 
@@ -722,7 +722,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel_subaru_denso_subarucan(QString k
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoSH7058Can::read_mem(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -872,7 +872,7 @@ int FlashEcuSubaruDensoSH7058Can::read_mem_subaru_denso_subarucan(uint32_t start
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_write)
+int FlashEcuSubaruDensoSH7058Can::write_mem(bool test_write)
 {
     QByteArray filedata;
 
@@ -895,7 +895,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
     emit LOG_I("--- Comparing ECU flash memory pages to image file ---", true, true);
     emit LOG_I("blk\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
-    if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
+    if (get_changed_blocks(&data_array[0], block_modified))
     {
         emit LOG_E("Error in ROM compare", true, true);
         return STATUS_ERROR;
@@ -929,7 +929,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
         {
             if (block_modified[blockno])
             {
-                if (reflash_block_denso_subarucan(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
                 {
                     emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -946,7 +946,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
         emit LOG_I("--- Comparing ECU flash memory pages to image file after reflash ---", true, true);
         emit LOG_I("blk\tstart\tlen\tecu crc\timg crc\tsame?", true, true);
 
-        if (get_changed_blocks_denso_subarucan(&data_array[0], block_modified))
+        if (get_changed_blocks(&data_array[0], block_modified))
         {
             LOG_E("Error in ROM compare", true, true);
             return STATUS_ERROR;
@@ -986,7 +986,7 @@ int FlashEcuSubaruDensoSH7058Can::write_mem_subaru_denso_subarucan(bool test_wri
  *
  * @return
  */
-int FlashEcuSubaruDensoSH7058Can::get_changed_blocks_denso_subarucan(const uint8_t *src, int *modified)
+int FlashEcuSubaruDensoSH7058Can::get_changed_blocks(const uint8_t *src, int *modified)
 {
     unsigned blockno;
     QByteArray msg;
@@ -1006,7 +1006,7 @@ int FlashEcuSubaruDensoSH7058Can::get_changed_blocks_denso_subarucan(const uint8
         msg = QString("FB" + block_no + "\t0x" + block_start + "\t0x" + block_length).toUtf8();
         emit LOG_I(msg, true, false);
         // do CRC comparison with ECU //
-        if (check_romcrc_denso_subarucan(&src[bs], bs, blen, &modified[blockno])) {
+        if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
             return -1;
         }
     }
@@ -1018,7 +1018,7 @@ int FlashEcuSubaruDensoSH7058Can::get_changed_blocks_denso_subarucan(const uint8
  *
  * @return
  */
-int FlashEcuSubaruDensoSH7058Can::check_romcrc_denso_subarucan(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
+int FlashEcuSubaruDensoSH7058Can::check_romcrc(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified)
 {
     QByteArray output;
     QByteArray received;
@@ -1139,7 +1139,7 @@ void FlashEcuSubaruDensoSH7058Can::init_crc32_tab( void ) {
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruDensoSH7058Can::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
     int errval;
 
@@ -1230,7 +1230,7 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
         }
     }
 
-    errval = flash_block_denso_subarucan(newdata, block_start, block_len);
+    errval = flash_block(newdata, block_start, block_len);
     if (errval)
     {
         LOG_E("Reflash error! Do not panic, do not reset the ECU immediately. The kernel is most likely still running and receiving commands!", true, true);
@@ -1245,7 +1245,7 @@ int FlashEcuSubaruDensoSH7058Can::reflash_block_denso_subarucan(const uint8_t *n
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058Can::flash_block_denso_subarucan(const uint8_t *src, uint32_t start, uint32_t len)
+int FlashEcuSubaruDensoSH7058Can::flash_block(const uint8_t *src, uint32_t start, uint32_t len)
 {
     QByteArray output;
     QByteArray received;
@@ -1397,7 +1397,7 @@ uint8_t FlashEcuSubaruDensoSH7058Can::cks_add8(QByteArray chksum_data, unsigned 
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH7058Can::generate_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1422,7 +1422,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_can_seed_key(QByt
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
 }
@@ -1471,7 +1471,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_racerom_ca
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH7058Can::generate_ecutek_seed_key(QByteArray requested_seed)
 {
     emit LOG_I("Calculating EcuTek seed key", true, true);
     QByteArray key;
@@ -1497,7 +1497,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_k
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
 }
@@ -1505,7 +1505,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_ecutek_can_seed_k
 /************************************
  * COBB'd Denso CAN ECUs seed key
  ***********************************/
-QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH7058Can::generate_cobb_seed_key(QByteArray requested_seed)
 {
     emit LOG_I("Calculating COBB seed key", true, true);
     QByteArray key;
@@ -1533,7 +1533,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
 }
@@ -1543,7 +1543,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_generate_cobb_can_seed_key
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH7058Can::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     emit LOG_I("Calculating seed key", true, true);
     QByteArray key;
@@ -1589,7 +1589,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_seed_key(QByteAr
  *
  * @return encrypted data
  */
-QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH7058Can::encrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1604,12 +1604,12 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_encrypt_32bit_payload(QByt
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH7058Can::decrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1624,12 +1624,12 @@ QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_decrypt_32bit_payload(QByt
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    decrypt = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    decrypt = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return decrypt;
 }
 
-QByteArray FlashEcuSubaruDensoSH7058Can::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH7058Can::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;

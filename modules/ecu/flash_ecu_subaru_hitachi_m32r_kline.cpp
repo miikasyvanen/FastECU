@@ -303,7 +303,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
     emit LOG_I("Initializing K-Line communications", true, true);
     serial->change_port_speed("4800");
-    received = send_subaru_sid_bf_ssm_init();
+    received = send_sid_bf_ssm_init();
 
     if (received == "" || received.length() < 13)
         return STATUS_ERROR;
@@ -405,7 +405,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
 
     emit LOG_I("Checking if ECU in read mode", true, true);
     serial->change_port_speed("38400");
-    received = send_subaru_sid_bf_ssm_init();
+    received = send_sid_bf_ssm_init();
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received != "" && received.length() > 12)
@@ -426,7 +426,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     {
         // SSM init
         serial->change_port_speed("4800");
-        received = send_subaru_sid_bf_ssm_init();
+        received = send_sid_bf_ssm_init();
         if (received == "" && (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
 
@@ -453,7 +453,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         serial->change_port_speed("38400");
 
         // Checking connection after baudrate change with SSM Init
-        received = send_subaru_sid_bf_ssm_init();
+        received = send_sid_bf_ssm_init();
         emit LOG_D("Init response: " + parse_message_to_hex(received), true, true);
         if (received == "" || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
@@ -1063,7 +1063,7 @@ QByteArray FlashEcuSubaruHitachiM32rKline::calculate_32bit_payload(QByteArray bu
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruHitachiM32rKline::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;

@@ -97,12 +97,12 @@ void EepromEcuSubaruDensoSH705xCan::run()
 
             emit external_logger("Preparing, please wait...");
             send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
-            result = connect_bootloader_subaru_denso_subarucan();
+            result = connect_bootloader();
 
             if (result == STATUS_SUCCESS && !kernel_alive)
             {
                 send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
-                result = upload_kernel_subaru_denso_subarucan(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                result = upload_kernel(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
             if (result == STATUS_SUCCESS)
             {
@@ -111,13 +111,13 @@ void EepromEcuSubaruDensoSH705xCan::run()
                     emit external_logger("Reading EEPROM, please wait...");
                     send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
                     qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
-                    result = read_mem_subaru_denso_subarucan(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
+                    result = read_mem(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing EEPROM, please wait...");
                     send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
-                    //result = write_mem_subaru_denso_subarucan(ecuCalDef, test_write);
+                    //result = write_mem(ecuCalDef, test_write);
                 }
             }
             emit external_logger("Finished");
@@ -195,7 +195,7 @@ void EepromEcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int EepromEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_subarucan()
+int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
 {
     QByteArray output;
     QByteArray received;
@@ -477,11 +477,11 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_subarucan()
     seed.append((uint8_t)0x94);
 
     if (flash_method.endsWith("_ecutek"))
-        seed_key = subaru_denso_generate_ecutek_can_seed_key(seed);
+        seed_key = generate_ecutek_seed_key(seed);
     if (flash_method.endsWith("_cobb"))
-        seed_key = subaru_denso_generate_cobb_can_seed_key(seed);
+        seed_key = generate_cobb_seed_key(seed);
     else
-        seed_key = subaru_denso_generate_can_seed_key(seed);
+        seed_key = generate_seed_key(seed);
 
     send_log_window_message("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
     qDebug() << "Calculated seed key:" << parse_message_to_hex(seed_key);
@@ -570,7 +570,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader_subaru_denso_subarucan()
  *
  * @return success
  */
-int EepromEcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_subarucan(QString kernel, uint32_t kernel_start_addr)
+int EepromEcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel_start_addr)
 {
     QFile file(kernel);
 
@@ -629,8 +629,8 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_subarucan(QString 
     pl_encr.append((uint8_t)((chk_sum >> 16) & 0xFF));
     pl_encr.append((uint8_t)((chk_sum >> 8) & 0xFF));
     pl_encr.append((uint8_t)(chk_sum & 0xFF));
-    pl_encr = subaru_denso_encrypt_32bit_payload(pl_encr, pl_encr.length());
-    //pl_encr = subaru_denso_decrypt_32bit_payload(pl_encr, pl_encr.length());
+    pl_encr = encrypt_payload(pl_encr, pl_encr.length());
+    //pl_encr = decrypt_payload(pl_encr, pl_encr.length());
     //qDebug() << "\nEncrypted kernel orig: " << parse_message_to_hex(pl_encr);
     //qDebug() << "Kernel checksum" << hex << chk_sum;
 
@@ -860,7 +860,7 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel_subaru_denso_subarucan(QString 
  *
  * @return success
  */
-int EepromEcuSubaruDensoSH705xCan::read_mem_subaru_denso_subarucan(uint32_t start_addr, uint32_t length)
+int EepromEcuSubaruDensoSH705xCan::read_mem(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -1123,7 +1123,7 @@ uint16_t EepromEcuSubaruDensoSH705xCan::crc16(const uint8_t *data, uint32_t siz)
  *
  * @return seed key (4 bytes)
  */
-QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_can_seed_key(QByteArray requested_seed)
+QByteArray EepromEcuSubaruDensoSH705xCan::generate_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1150,7 +1150,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_can_seed_key(QBy
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
 }
@@ -1160,7 +1160,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_can_seed_key(QBy
  *
  * @return seed key (4 bytes)
  */
-QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_ecutek_can_seed_key(QByteArray requested_seed)
+QByteArray EepromEcuSubaruDensoSH705xCan::generate_ecutek_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1185,7 +1185,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_ecutek_can_seed_
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
 }
@@ -1193,7 +1193,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_ecutek_can_seed_
 /************************************
  * COBB'd Denso CAN ECUs seed key
  ***********************************/
-QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_cobb_can_seed_key(QByteArray requested_seed)
+QByteArray EepromEcuSubaruDensoSH705xCan::generate_cobb_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1220,7 +1220,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_cobb_can_seed_ke
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_denso_calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
     return key;
 }
@@ -1230,7 +1230,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_generate_cobb_can_seed_ke
  *
  * @return seed key (4 bytes)
  */
-QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray EepromEcuSubaruDensoSH705xCan::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1278,7 +1278,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_calculate_seed_key(QByteA
  *
  * @return encrypted data
  */
-QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray EepromEcuSubaruDensoSH705xCan::encrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1293,12 +1293,12 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_encrypt_32bit_payload(QBy
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray EepromEcuSubaruDensoSH705xCan::decrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1313,12 +1313,12 @@ QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_decrypt_32bit_payload(QBy
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    decrypt = subaru_denso_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    decrypt = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return decrypt;
 }
 
-QByteArray EepromEcuSubaruDensoSH705xCan::subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray EepromEcuSubaruDensoSH705xCan::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
