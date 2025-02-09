@@ -174,8 +174,19 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
     }
 
     // Check if fastecu syslog files directory exists
+    QDir syslog_dir(configValues->syslog_files_directory);
     if (!QDir(configValues->syslog_files_directory).exists()){
         QDir().mkdir(configValues->syslog_files_directory);
+    }
+    if (QDir(configValues->syslog_files_directory).exists())
+    {
+        qDebug() << "Check syslog file count";
+        QFileInfoList syslog_dir_list = syslog_dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot, QDir::Time);
+        qDebug() << "Syslog files count:" << syslog_dir_list.length();
+        for (int i = 20; i < syslog_dir_list.length(); i++){
+            qDebug() << "Sorted dir by date:" << syslog_dir_list.at(i).absoluteFilePath() << syslog_dir_list.at(i).lastModified();
+            syslog_dir.remove(syslog_dir_list.at(i).absoluteFilePath());
+        }
     }
 
     return configValues;
