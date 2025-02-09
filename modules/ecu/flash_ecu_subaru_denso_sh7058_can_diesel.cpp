@@ -204,12 +204,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     {
         if ((uint8_t)received.at(4) == 0x41 && (uint8_t)received.at(5) == 0x00)
         {
-            QByteArray response = received;
-            response.remove(0, 6);
-            QString msg;
-            msg.clear();
-            for (int i = 0; i < response.length(); i++)
-                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
@@ -336,6 +330,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x03)
         {
             req_10_03_connected = true;
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
         {
@@ -385,12 +380,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     {
         if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x01)
         {
-            QByteArray response = received;
-            response.remove(0, 6);
-            QString msg;
-            msg.clear();
-            for (int i = 0; i < response.length(); i++)
-                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
@@ -422,24 +411,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     else
         seed_key = generate_seed_key(seed);
 
-    if (flash_method.endsWith("_ecutek_racerom_alt"))
-    {
-        et_rr_seed = ((uint8_t)seed_key.at(0) << 24) & 0xFF000000;
-        et_rr_seed += ((uint8_t)seed_key.at(1) << 16) & 0x00FF0000;
-        et_rr_seed += ((uint8_t)seed_key.at(2) << 8) & 0x0000FF00;
-        et_rr_seed += (uint8_t)seed_key.at(3) & 0x000000FF;
-
-        et_rr_seed = ((seed_alter^et_rr_seed)^xor_byte_1)*xor_multi;
-        et_rr_seed = (et_rr_seed^xor_byte_2)*xor_multi;
-
-        seed_key.clear();
-        seed_key.append((uint8_t)(et_rr_seed >> 24) & 0xff);
-        seed_key.append((uint8_t)(et_rr_seed >> 16) & 0xff);
-        seed_key.append((uint8_t)(et_rr_seed >> 8) & 0xff);
-        seed_key.append((uint8_t)(et_rr_seed & 0xff));
-        emit LOG_I("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
-    }
-
     emit LOG_I("Sending seed key", true, true);
     output[4] = ((uint8_t)0x27);
     output[5] = ((uint8_t)0x02);
@@ -453,12 +424,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     {
         if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x02)
         {
-            QByteArray response = received;
-            response.remove(0, 6);
-            QString msg;
-            msg.clear();
-            for (int i = 0; i < response.length(); i++)
-                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
@@ -478,6 +443,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     emit LOG_I("Seed key ok", true, true);
 
     emit LOG_I("Set session mode", true, true);
+
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -497,12 +463,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     {
         if ((uint8_t)received.at(4) == 0x50 && ((uint8_t)received.at(5) == 0x02 || (uint8_t)received.at(5) == 0x42))
         {
-            QByteArray response = received;
-            response.remove(0, 6);
-            QString msg;
-            msg.clear();
-            for (int i = 0; i < response.length(); i++)
-                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
@@ -582,7 +542,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
     pl_encr.append((uint8_t)((chk_sum >> 8) & 0xFF));
     pl_encr.append((uint8_t)(chk_sum & 0xFF));
     pl_encr = encrypt_payload(pl_encr, pl_encr.length());
-    //pl_encr = subaru_denso_decrypt_32bit_payload(pl_encr, pl_encr.length());
+    //pl_encr = decrypt_payload(pl_encr, pl_encr.length());
 
     set_progressbar_value(0);
 
@@ -1939,8 +1899,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::add_ssm_header(QByteArray output,
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //send_log_window_message("Send: " + parse_message_to_hex(output), true, true);
-    //qDebug () << "Send:" << parse_message_to_hex(output);
+    //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     return output;
 }
 

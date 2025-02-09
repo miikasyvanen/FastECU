@@ -27,6 +27,11 @@ SerialPortActions::SerialPortActions(QString peerAddress,
     }
     else
         startRemote();
+
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_E, this, &SerialPortActions::LOG_E);
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_W, this, &SerialPortActions::LOG_W);
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_I, this, &SerialPortActions::LOG_I);
+    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_D, this, &SerialPortActions::LOG_D);
 }
 
 SerialPortActions::~SerialPortActions()

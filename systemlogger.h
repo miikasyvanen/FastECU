@@ -43,6 +43,10 @@ signals:
     void send_message_to_log_window(QString msg);
     void finished();
     void error(QString err);
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
 
 public slots:
     void enable_log_write_to_file(bool enable);

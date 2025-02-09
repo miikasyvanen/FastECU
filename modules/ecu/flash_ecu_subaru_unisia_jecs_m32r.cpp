@@ -336,7 +336,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
 
     emit LOG_I("Sending request to change to flash mode", true, true);
     received = send_sid_af_enter_flash_mode(received);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received == "" || (uint8_t)received.at(4) != 0xef)
         return STATUS_ERROR;
 
@@ -533,11 +533,11 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_bf_ssm_init()
 
         emit LOG_I("SSM init", true, true);
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
         delay(200);
         received = serial->read_serial_data(100, receive_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         loop_cnt++;
     }
 
@@ -557,10 +557,10 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_b8_change_baudrate_4800()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x15);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(comm_try_timeout);
     received = serial->read_serial_data(8, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -578,10 +578,10 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_b8_change_baudrate_38400()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x75);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(comm_try_timeout);
     received = serial->read_serial_data(8, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -605,10 +605,10 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_af_enter_flash_mode(QByteArray
     output.append((uint8_t)(rom_size >> 8) & 0xFF); // ROM size >> 16
     output.append((uint8_t)rom_size & 0xFF); // ROM size
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(comm_try_timeout);
     received = serial->read_serial_data(8, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -642,7 +642,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::add_ssm_header(QByteArray output, uint8
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    //LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     return output;
 }
 

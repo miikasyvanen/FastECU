@@ -6,6 +6,10 @@ SystemLogger::SystemLogger(QString file_path, QString software_name, QString sof
     software_name(software_name),
     software_version(software_version)
 {
+    QObject::connect(this, &SystemLogger::LOG_E, this, &SystemLogger::log_messages);
+    QObject::connect(this, &SystemLogger::LOG_W, this, &SystemLogger::log_messages);
+    QObject::connect(this, &SystemLogger::LOG_I, this, &SystemLogger::log_messages);
+    QObject::connect(this, &SystemLogger::LOG_D, this, &SystemLogger::log_messages);
 }
 
 SystemLogger::~SystemLogger()
@@ -16,7 +20,7 @@ SystemLogger::~SystemLogger()
 
 void SystemLogger::run()
 {
-    qDebug() << "SystemLogger started...";
+    emit LOG_I("SystemLogger started...", true, true);
     delay(1000);
 }
 
@@ -86,7 +90,7 @@ bool SystemLogger::write_syslog(QString msg)
 
         syslog_file.setFileName(syslog_file_name);
 
-        qDebug() << "Create logfile: " << syslog_file_name;
+        //qDebug() << "Create logfile: " << syslog_file_name;
         if (!syslog_file.open(QIODevice::WriteOnly))
         {
             qDebug() << "Cannot open log file for writing";

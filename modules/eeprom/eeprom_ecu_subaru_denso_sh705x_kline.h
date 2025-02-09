@@ -90,26 +90,26 @@ private:
     void init_crc16_tab(void);
     uint16_t crc16(const uint8_t *data, uint32_t siz);
 
-    QByteArray send_subaru_sid_bf_ssm_init();
-    QByteArray send_subaru_denso_sid_81_start_communication();
-    QByteArray send_subaru_denso_sid_83_request_timings();
-    QByteArray send_subaru_denso_sid_27_request_seed();
-    QByteArray send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key);
-    QByteArray send_subaru_denso_sid_10_start_diagnostic();
-    QByteArray send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
-    QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    QByteArray send_subaru_denso_sid_31_start_routine();
+    QByteArray send_sid_bf_ssm_init();
+    QByteArray send_sid_81_start_communication();
+    QByteArray send_sid_83_request_timings();
+    QByteArray send_sid_27_request_seed();
+    QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
+    QByteArray send_sid_10_start_diagnostic();
+    QByteArray send_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
+    QByteArray send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
+    QByteArray send_sid_31_start_routine();
 
     QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
     QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
-    QByteArray subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray encrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray decrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);

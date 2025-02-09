@@ -710,7 +710,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
     pl_encr.append((uint8_t)((chk_sum >> 8) & 0xFF));
     pl_encr.append((uint8_t)(chk_sum & 0xFF));
     pl_encr = encrypt_payload(pl_encr, pl_encr.length());
-    //pl_encr = subaru_denso_decrypt_32bit_payload(pl_encr, pl_encr.length());
+    //pl_encr = decrypt_payload(pl_encr, pl_encr.length());
 
     set_progressbar_value(0);
 
@@ -735,7 +735,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
     received = serial->read_serial_data(20, 10);
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) == 0x34 || (uint8_t)received.at(5) == 0x20)
+        if ((uint8_t)received.at(4) == 0x34 && (uint8_t)received.at(5) == 0x20)
         {
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }

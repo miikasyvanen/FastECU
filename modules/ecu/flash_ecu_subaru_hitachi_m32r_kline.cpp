@@ -168,7 +168,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         //output.append((uint8_t)0xbf);
         output.append((uint8_t)0x81);
         output = add_ssm_header(output, tester_id, target_id, false);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         emit LOG_I("Wait for response: " + parse_message_to_hex(received), true, false);
         for (int i = 0; i < 1000; i++)
         {
@@ -189,17 +189,17 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
             }
         }
         emit LOG_I("", false, true);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         /*
         received.append(serial->read_serial_data(100, 500));
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         output.clear();
         output.append((uint8_t)0x81);
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         received = serial->read_serial_data(8, 500);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0xC1)
             return STATUS_ERROR;
 */
@@ -208,9 +208,9 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         output.append((uint8_t)0x00);
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         received = serial->read_serial_data(12, 50);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0xC3)
             return STATUS_ERROR;
 
@@ -219,9 +219,9 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         output.append((uint8_t)0x01);
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         received = serial->read_serial_data(11, 50);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0x67)
             return STATUS_ERROR;
 
@@ -284,7 +284,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(200);
     received = serial->read_serial_data(100, serial_read_short_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     // 26 24 92
     if ((uint8_t)received.at(4) == 0x74 && (uint8_t)received.at(5) == 0x84)
@@ -303,7 +303,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
     emit LOG_I("Initializing K-Line communications", true, true);
     serial->change_port_speed("4800");
-    received = send_subaru_sid_bf_ssm_init();
+    received = send_sid_bf_ssm_init();
 
     if (received == "" || received.length() < 13)
         return STATUS_ERROR;
@@ -405,7 +405,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
 
     emit LOG_I("Checking if ECU in read mode", true, true);
     serial->change_port_speed("38400");
-    received = send_subaru_sid_bf_ssm_init();
+    received = send_sid_bf_ssm_init();
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received != "" && received.length() > 12)
@@ -426,7 +426,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     {
         // SSM init
         serial->change_port_speed("4800");
-        received = send_subaru_sid_bf_ssm_init();
+        received = send_sid_bf_ssm_init();
         if (received == "" && (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
 
@@ -453,7 +453,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         serial->change_port_speed("38400");
 
         // Checking connection after baudrate change with SSM Init
-        received = send_subaru_sid_bf_ssm_init();
+        received = send_sid_bf_ssm_init();
         emit LOG_D("Init response: " + parse_message_to_hex(received), true, true);
         if (received == "" || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
@@ -707,11 +707,11 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     output.append((uint8_t)0x00);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
 
     received = serial->read_serial_data(20, 200);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received == "" || (uint8_t)received.at(4) != 0x74)
     return STATUS_ERROR;
@@ -731,10 +731,10 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     output.append((uint8_t)0xFF);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
     //received = serial->read_serial_data(20, 200);
-    //emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     emit LOG_I("", true, false);
     received.clear();
@@ -846,12 +846,12 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     output.append((uint8_t)0x01);
     output.append((uint8_t)0x02);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(50);
     received = serial->read_serial_data(20, 1000);
     if (received != "")
     {
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
     else if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
     {
@@ -883,9 +883,9 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_a0_block_read(uint32_
     output.append((uint8_t)datalen & 0xFF);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     received = serial->read_serial_data(datalen + 2 + 3, 200);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1063,7 +1063,7 @@ QByteArray FlashEcuSubaruHitachiM32rKline::calculate_32bit_payload(QByteArray bu
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruHitachiM32rKline::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
@@ -1078,11 +1078,11 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_bf_ssm_init()
 
         emit LOG_I("SSM init", true, true);
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
         delay(200);
         received = serial->read_serial_data(100, receive_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         loop_cnt++;
     }
 
@@ -1103,9 +1103,9 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_81_start_communicatio
     output.clear();
     output.append((uint8_t)0x81);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     received = serial->read_serial_data(20, 200);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1125,9 +1125,9 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_83_request_timings()
     output.append((uint8_t)0x83);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     received = serial->read_serial_data(20, 200);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1147,9 +1147,9 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_27_request_seed()
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
     received = serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     received = serial->read_serial_data(11, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1170,9 +1170,9 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_27_send_seed_key(QByt
     output.append((uint8_t)0x02);
     output.append(seed_key);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     received = serial->read_serial_data(8, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1193,9 +1193,9 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_10_start_diagnostic()
     output.append((uint8_t)0x85);
     output.append((uint8_t)0x02);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     received = serial->read_serial_data(7, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1215,10 +1215,10 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_b8_change_baudrate_38
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x75);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    emit LOG_I("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(comm_try_timeout);
     received = serial->read_serial_data(8, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
