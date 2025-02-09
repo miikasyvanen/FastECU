@@ -216,7 +216,7 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader_subaru_denso_kline_fxt02()
     received = request_kernel_init();
     if (received.length() > 0)
     {
-        if ((uint8_t)received.at(1) == SID_KERNEL_INIT + 0x40)
+        if ((uint8_t)received.at(1) == SUB_KERNEL_INIT + 0x40)
         {
             send_log_window_message("Kernel already uploaded, requesting kernel ID", true, true);
             delay(100);
@@ -356,7 +356,7 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel_subaru_denso_kline_fxt02(QString
         send_log_window_message("Kernel init NOK! No response from kernel. " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-    if ((uint8_t)received.at(1) != SID_KERNEL_INIT + 0x40)
+    if ((uint8_t)received.at(1) != SUB_KERNEL_INIT + 0x40)
     {
         qDebug() << "Kernel init NOK! Got bad startcomm response from kernel. " + parse_message_to_hex(received);
         send_log_window_message("Kernel init NOK! Got bad startcomm response from kernel. " + parse_message_to_hex(received), true, true);
@@ -1275,7 +1275,7 @@ QByteArray FlashEcuSubaruDensoSH7055_02::request_kernel_init()
     request_denso_kernel_init = true;
 
     output.clear();
-    output.append(SID_KERNEL_INIT);
+    output.append(SUB_KERNEL_INIT);
     received = serial->write_serial_data_echo_check(output);
     delay(500);
     received = serial->read_serial_data(100, serial_read_short_timeout);

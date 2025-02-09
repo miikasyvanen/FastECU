@@ -1312,7 +1312,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_init()
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFE);
 
-    output.append((uint8_t)SID_KERNEL_INIT);
+    output.append((uint8_t)SUB_KERNEL_INIT);
 
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);

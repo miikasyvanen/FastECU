@@ -36,6 +36,8 @@
 #define SUB_KERNEL_COMMIT_FLASH_BUFFER      0x24
 #define SUB_KERNEL_BLANK_PAGE               0x25
 
+#define SUB_KERNEL_INIT                     0x81
+
 /*************************************
  * NisProg based kernels CAN commands
  * **********************************/
@@ -120,7 +122,6 @@
 
 #define SID_FLREQ                   0x34	/* RequestDownload */
 #define SID_STARTCOMM               0x81    /* startCommunication */
-#define SID_KERNEL_INIT             0x81    /* kernel init, same as startcomm */
 
 #define SID_RESET                   0x11	/* restart ECU */
 

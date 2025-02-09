@@ -259,7 +259,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
     pl_encr = file.readAll();
     while (pl_encr.length() % 0x10)
         pl_encr.append((uint8_t)0x00);
-    //len = pl_len;
     len = pl_encr.length();
 
     uint8_t encryption_xor_value = 0;
@@ -1218,7 +1217,7 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
     QByteArray msg;
     QByteArray kernelid;
     uint32_t datalen = 0;
-    uint8_t chk_sum = 0;
+    uint8_t chksum = 0;
 
     request_denso_kernel_id = true;
 
@@ -1229,13 +1228,13 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
     output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
     output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
-
-    chk_sum = calculate_checksum(output, false);
-    output.append((uint8_t) chk_sum);
+    chksum = calculate_checksum(output, false);
+    output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received.clear();
     received = serial->read_serial_data(100, serial_read_short_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
 
     request_denso_kernel_id = false;

@@ -302,41 +302,37 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     }
 
     emit LOG_I("Initializing K-Line communications", true, true);
+    emit LOG_I("SSM Init", true, true);
     serial->change_port_speed("4800");
     received = send_sid_bf_ssm_init();
-
     if (received == "" || received.length() < 13)
         return STATUS_ERROR;
 
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
     for (int i = 0; i < received.length(); i++)
-    {
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-    }
-    QString calid = msg;
 
-    emit LOG_I("Init Success: CAL ID = " + calid, true, true);
+    QString ecuid = msg;
 
-    // Start communication
-    emit LOG_I("Start communication ok", true, true);
+    emit LOG_I("Init Success: ECU ID = " + ecuid, true, true);
 
-    // Request timing parameters
+    emit LOG_I("Request to start communication", true, true);
     received = send_subaru_sid_81_start_communication();
     if (received == "" || (uint8_t)received.at(4) != 0xC1)
         return STATUS_ERROR;
+    emit LOG_I("Start communication ok", true, true);
 
+    emit LOG_I("Request timings params", true, true);
     received = send_subaru_sid_83_request_timings();
     if (received == "" || (uint8_t)received.at(4) != 0xC3)
         return STATUS_ERROR;
+    emit LOG_I("Timing parameters ok", true, true);
 
-    emit LOG_I("Request timing parameters ok", true, true);
-
-    // Request seed
+    emit LOG_I("Request seed", true, true);
     received = send_subaru_sid_27_request_seed();
     if (received == "" || (uint8_t)received.at(4) != 0x67)
         return STATUS_ERROR;
-
     emit LOG_I("Seed request ok", true, true);
 
     seed.append(received.at(6));
@@ -353,20 +349,17 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     emit LOG_I("Calculated seed key: " + msg, true, true);
 
     emit LOG_I("Sending seed key to ECU", true, true);
-
     received = send_subaru_sid_27_send_seed_key(seed_key);
     emit LOG_D("SID_27_02 = " + parse_message_to_hex(received), true, true);
     if (received == "" || (uint8_t)received.at(4) != 0x67)
        return STATUS_ERROR;
-
     emit LOG_I("Seed key ok", true, true);
 
-    // Start diagnostic session
+    emit LOG_I("Set session mode", true, true);
     received = send_subaru_sid_10_start_diagnostic();
     if (received == "" || (uint8_t)received.at(4) != 0x50)
         return STATUS_ERROR;
-
-    emit LOG_I("Start diagnostic session ok", true, true);
+    emit LOG_I("Succesfully set to programming session", true, true);
 
     kernel_alive = true;
 
@@ -442,11 +435,8 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         }
         ecuid = msg;
         emit LOG_I("ECU ID = " + ecuid, true, true);
-        //send_log_window_message("ECU ID = " + ecuid, true, true);
 
         received = send_subaru_sid_b8_change_baudrate_38400();
-        //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
-        //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
         if (received == "" || (uint8_t)received.at(4) != 0xf8)
             return STATUS_ERROR;
 

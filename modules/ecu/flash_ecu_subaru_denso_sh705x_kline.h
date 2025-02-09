@@ -82,14 +82,14 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int connect_bootloader_subaru_denso_sh705x_kline();
-    int upload_kernel_subaru_denso_sh705x_kline(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_sh705x_kline(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_sh705x_kline(bool test_write);
-    int get_changed_blocks_denso_sh705x_kline(const uint8_t *src, int *modified);
-    int check_romcrc_denso_sh705x_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int flash_block_denso_sh705x_kline(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_denso_sh705x_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int connect_bootloader();
+    int upload_kernel(QString kernel, uint32_t kernel_start_addr);
+    int read_mem(uint32_t start_addr, uint32_t length);
+    int write_mem(bool test_write);
+    int get_changed_blocks(const uint8_t *src, int *modified);
+    int check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    int flash_block(const uint8_t *src, uint32_t start, uint32_t len);
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     unsigned int crc32(const unsigned char *buf, unsigned int len);
     void init_crc32_tab( void );
@@ -105,8 +105,8 @@ private:
     QByteArray send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
     QByteArray send_sid_31_start_routine();
 
-    QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
-    QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
+    QByteArray generate_seed_key(QByteArray seed);
+    QByteArray generate_ecutek_seed_key(QByteArray requested_seed);
     QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray request_kernel_init();
@@ -119,9 +119,7 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

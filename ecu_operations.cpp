@@ -44,7 +44,7 @@ QByteArray EcuOperations::request_kernel_init()
         request_denso_kernel_init = true;
 
         output.clear();
-        output.append(SID_KERNEL_INIT);
+        output.append(SUB_KERNEL_INIT);
         received = serial->write_serial_data_echo_check(output);
         delay(500);
         received = serial->read_serial_data(100, serial_read_short_timeout);

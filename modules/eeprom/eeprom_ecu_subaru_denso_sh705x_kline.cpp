@@ -222,7 +222,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader_subaru_denso_kline_04_32
     received = request_kernel_init();
     if (received.length())
     {
-        if ((uint8_t)received.at(1) == SID_KERNEL_INIT + 0x40)
+        if ((uint8_t)received.at(1) == SUB_KERNEL_INIT + 0x40)
         {
             send_log_window_message("Kernel already running, requesting kernel ID", true, true);
             delay(100);
@@ -461,7 +461,7 @@ int EepromEcuSubaruDensoSH705xKline::upload_kernel_subaru_denso_kline_04_32bit(Q
         send_log_window_message("Kernel init NOK! No response from kernel" + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-    if ((uint8_t)received.at(1) != SID_KERNEL_INIT + 0x40)
+    if ((uint8_t)received.at(1) != SUB_KERNEL_INIT + 0x40)
     {
         send_log_window_message("Kernel init NOK! Got bad startcomm response from kernel" + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
@@ -1211,7 +1211,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::request_kernel_init()
     request_denso_kernel_init = true;
 
     output.clear();
-    output.append(SID_KERNEL_INIT);
+    output.append(SUB_KERNEL_INIT);
     received = serial->write_serial_data_echo_check(output);
     delay(500);
     received = serial->read_serial_data(100, serial_read_short_timeout);
