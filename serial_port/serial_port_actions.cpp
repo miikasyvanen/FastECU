@@ -18,14 +18,16 @@ SerialPortActions::SerialPortActions(QString peerAddress,
     , heartbeatInterval(0)
 {
     if (isDirectConnection())
+    {
         serial_direct = new SerialPortActionsDirect(this);
+        connect(serial_direct, SIGNAL(LOG_E(QString,bool,bool)), this, SIGNAL(LOG_E(QString,bool,bool)));
+        connect(serial_direct, SIGNAL(LOG_W(QString,bool,bool)), this, SIGNAL(LOG_W(QString,bool,bool)));
+        connect(serial_direct, SIGNAL(LOG_I(QString,bool,bool)), this, SIGNAL(LOG_I(QString,bool,bool)));
+        connect(serial_direct, SIGNAL(LOG_D(QString,bool,bool)), this, SIGNAL(LOG_D(QString,bool,bool)));
+    }
     else
         startRemote();
 
-    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_E, this, &SerialPortActions::LOG_E);
-    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_W, this, &SerialPortActions::LOG_W);
-    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_I, this, &SerialPortActions::LOG_I);
-    QObject::connect(serial_direct, &SerialPortActionsDirect::LOG_D, this, &SerialPortActions::LOG_D);
 }
 
 SerialPortActions::~SerialPortActions()

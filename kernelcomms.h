@@ -17,22 +17,51 @@
 /***********************************
  * OpenECU (HC16) kernel commands
  * ********************************/
-#define SID_OE_UPLOAD_KERNEL                    0x53
+#define SUB_UPLOAD_KERNEL                   0x53
 
-#define SID_OE_KERNEL_START_COMM                0xBEEF
-#define SID_OE_KERNEL_ID                        0x01
-#define SID_OE_KERNEL_CRC                       0x02
-#define SID_OE_KERNEL_READ_AREA                 0x03
-#define SID_OE_KERNEL_PROG_VOLT                 0x04
-#define SID_OE_KERNEL_GET_MAX_MSG_SIZE          0x05
-#define SID_OE_KERNEL_GET_MAX_BLK_SIZE          0x06
+#define SUB_KERNEL_START_COMM               0xBEEF
+#define SUB_KERNEL_ID                       0x01
+#define SUB_KERNEL_CRC                      0x02
+#define SUB_KERNEL_READ_AREA                0x03
+#define SUB_KERNEL_PROG_VOLT                0x04
+#define SUB_KERNEL_GET_MAX_MSG_SIZE         0x05
+#define SUB_KERNEL_GET_MAX_BLK_SIZE         0x06
+#define SUB_KERNEL_READ_EEPROM              0x07
+#define SUB_KERNEL_WRITE_EEPROM             0x08
 
-#define SID_OE_KERNEL_FLASH_ENABLE				0x20
-#define SID_OE_KERNEL_FLASH_DISABLE				0x21
-#define SID_OE_KERNEL_WRITE_FLASH_BUFFER		0x22
-#define SID_OE_KERNEL_VALIDATE_FLASH_BUFFER		0x23
-#define SID_OE_KERNEL_COMMIT_FLASH_BUFFER       0x24
-#define SID_OE_KERNEL_BLANK_16K_PAGE            0x25
+#define SUB_KERNEL_FLASH_ENABLE             0x20
+#define SUB_KERNEL_FLASH_DISABLE			0x21
+#define SUB_KERNEL_WRITE_FLASH_BUFFER		0x22
+#define SUB_KERNEL_VALIDATE_FLASH_BUFFER	0x23
+#define SUB_KERNEL_COMMIT_FLASH_BUFFER      0x24
+#define SUB_KERNEL_BLANK_PAGE               0x25
+
+/*************************************
+ * NisProg based kernels CAN commands
+ * **********************************/
+#define SUB_DENSOCAN_START_COMM             0x7A
+#define SUB_DENSOCAN_ENTER_BL               0xFF86
+#define SUB_DENSOCAN_CHECK_COMM_BL          0x90
+
+#define SID_CAN_RECUID              0xA0
+#define SID_CAN_DUMP_ROM            0xD8
+#define SID_CAN_DUMP_EEPROM         0xB8
+
+#define SUB_DENSOCAN_KERNEL_ADDRESS          0x98
+#define SUB_DENSOCAN_KERNEL_CHECKSUM         0xB0
+#define SUB_DENSOCAN_KERNEL_JUMP             0xA0
+
+#define SUB_DENSOCAN_KERNEL_STOP_CAN         0xFFC8
+
+/* SID_FLASH and subcommands */
+#define SID_CAN_FLASH               0xE0	/* low-level reflash commands; only available after successful RequestDownload */
+#define SID_CAN_FL_UNPROTECT    0xA5	//enable erase / write.
+#define SID_CAN_FL_PROTECT      0x00	//disable erase / write.
+#define SID_CAN_FL_EB           0xF0	//erase block. format : <SID_FLASH> <SIDFL_EB> <BLOCK #>
+#define SID_CAN_FL_WB           0xF8
+
+/* SID_CONF and subcommands */
+#define SID_CAN_CONF_CKS            0xD0
 
 /****************************************
  * NisProg based kernels k-line commands
@@ -94,33 +123,6 @@
 #define SID_KERNEL_INIT             0x81    /* kernel init, same as startcomm */
 
 #define SID_RESET                   0x11	/* restart ECU */
-
-/*************************************
- * NisProg based kernels CAN commands
- * **********************************/
-#define SID_CAN_START_COMM          0x7A
-#define SID_CAN_ENTER_BL            0xFF86
-#define SID_CAN_CHECK_COMM_BL       0x90
-
-#define SID_CAN_RECUID              0xA0
-#define SID_CAN_DUMP_ROM            0xD8
-#define SID_CAN_DUMP_EEPROM         0xB8
-
-#define SID_KERNEL_ADDRESS          0x98
-#define SID_KERNEL_CHECKSUM         0xB0
-#define SID_KERNEL_JUMP             0xA0
-
-#define SID_KERNEL_STOP_CAN         0xFFC8
-
-/* SID_FLASH and subcommands */
-#define SID_CAN_FLASH               0xE0	/* low-level reflash commands; only available after successful RequestDownload */
-    #define SID_CAN_FL_UNPROTECT    0xA5	//enable erase / write.
-    #define SID_CAN_FL_PROTECT      0x00	//disable erase / write.
-    #define SID_CAN_FL_EB           0xF0	//erase block. format : <SID_FLASH> <SIDFL_EB> <BLOCK #>
-    #define SID_CAN_FL_WB           0xF8
-
-/* SID_CONF and subcommands */
-#define SID_CAN_CONF_CKS            0xD0
 
 
 /* SID_CONF error codes */

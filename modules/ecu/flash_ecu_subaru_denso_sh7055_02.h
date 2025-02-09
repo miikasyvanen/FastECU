@@ -104,9 +104,9 @@ private:
     void init_crc32_tab(void);
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
 
-    QByteArray send_subaru_sid_bf_ssm_init();
-    QByteArray send_subaru_denso_sid_27_request_seed();
-    QByteArray send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key);
+    QByteArray send_sid_bf_ssm_init();
+    QByteArray send_sid_27_request_seed();
+    QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
 
     QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
     QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);

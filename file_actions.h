@@ -460,7 +460,8 @@ public:
      * Check if FastECU dir exists in users home folder
      * If not, create one with appropriate files
      ***************************************************/
-    ConfigValuesStructure *check_config_dir(ConfigValuesStructure *configValues);
+    ConfigValuesStructure *set_base_dirs(ConfigValuesStructure *configValues);
+    ConfigValuesStructure *check_config_dirs(ConfigValuesStructure *configValues);
     bool copy_directory_files(const QString &source_dir, const QString &target_dir, bool cover_file_if_exist);
 
     /****************************
@@ -554,6 +555,10 @@ public:
      * Calculate ROM map data with parsed expressions
      *************************************************/
     double calculate_value_from_expression(QStringList expression);
+
+private:
+    QDir copyConfigFromDirectory;
+    QDir copyKernelsFromDirectory;
 
 signals:
     void LOG_E(QString message, bool timestamp, bool linefeed);

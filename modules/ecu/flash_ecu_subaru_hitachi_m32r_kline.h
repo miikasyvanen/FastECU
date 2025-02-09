@@ -86,7 +86,7 @@ private:
     int write_mem(bool test_write);
     int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
-    QByteArray send_subaru_sid_bf_ssm_init();
+    QByteArray send_sid_bf_ssm_init();
     QByteArray send_subaru_sid_b8_change_baudrate_38400();
     QByteArray send_subaru_sid_81_start_communication();
     QByteArray send_subaru_sid_83_request_timings();

@@ -168,6 +168,7 @@ private:
 
 private slots:
     void serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+
 };
 
 #endif // SERIAL_PORT_ACTIONS_H

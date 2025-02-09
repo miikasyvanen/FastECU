@@ -306,7 +306,7 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel_subaru_denso_kline_fxt02(QString
 
     send_log_window_message("Create kernel data header...", true, true);
     output.clear();
-    output.append((uint8_t)SID_OE_UPLOAD_KERNEL & 0xFF);
+    output.append((uint8_t)SUB_UPLOAD_KERNEL & 0xFF);
     output.append((uint8_t)(start_address >> 16) & 0xFF);
     output.append((uint8_t)(start_address >> 8) & 0xFF);
     output.append((uint8_t)((len + 4) >> 16) & 0xFF);
@@ -1067,7 +1067,7 @@ uint8_t FlashEcuSubaruDensoSH7055_02::cks_add8(QByteArray chksum_data, unsigned 
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruDensoSH7055_02::send_subaru_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
@@ -1096,7 +1096,7 @@ QByteArray FlashEcuSubaruDensoSH7055_02::send_subaru_sid_bf_ssm_init()
  *
  * @return seed (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH7055_02::send_subaru_denso_sid_27_request_seed()
+QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_27_request_seed()
 {
     QByteArray output;
     QByteArray received;
@@ -1116,7 +1116,7 @@ QByteArray FlashEcuSubaruDensoSH7055_02::send_subaru_denso_sid_27_request_seed()
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruDensoSH7055_02::send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key)
+QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_27_send_seed_key(QByteArray seed_key)
 {
     QByteArray output;
     QByteArray received;

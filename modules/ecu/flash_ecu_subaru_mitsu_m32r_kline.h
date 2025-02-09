@@ -103,9 +103,9 @@ private:
     QByteArray send_subaru_mitsu_sid_27_request_seed();
     QByteArray send_subaru_mitsu_sid_27_send_seed_key(QByteArray seed_key);
     QByteArray send_subaru_mitsu_sid_10_start_diagnostic();
-    //QByteArray send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
-    //QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    //QByteArray send_subaru_denso_sid_31_start_routine();
+    //QByteArray send_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
+    //QByteArray send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
+    //QByteArray send_sid_31_start_routine();
 
 
     //QByteArray request_kernel_init();

@@ -97,14 +97,14 @@ private:
 
     //QByteArray send_subaru_ecu_sid_bf_ssm_init();
     //QByteArray send_subaru_ecu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
-    //QByteArray send_subaru_denso_sid_81_start_communication();
-    //QByteArray send_subaru_denso_sid_83_request_timings();
-    //QByteArray send_subaru_denso_sid_27_request_seed();
-    //QByteArray send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key);
-    //QByteArray send_subaru_denso_sid_10_start_diagnostic();
-    //QByteArray send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
-    //QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    //QByteArray send_subaru_denso_sid_31_start_routine();
+    //QByteArray send_sid_81_start_communication();
+    //QByteArray send_sid_83_request_timings();
+    //QByteArray send_sid_27_request_seed();
+    //QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
+    //QByteArray send_sid_10_start_diagnostic();
+    //QByteArray send_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
+    //QByteArray send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
+    //QByteArray send_sid_31_start_routine();
 
 
     //QByteArray request_kernel_init();
