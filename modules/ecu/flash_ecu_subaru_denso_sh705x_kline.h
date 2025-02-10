@@ -56,8 +56,8 @@ private:
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
-    bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
+    bool flash_write_init = false;
 
     int result;
     int mcu_type_index;
@@ -73,6 +73,8 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint32_t flashmessagesize = 0;
+    uint32_t flashblocksize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
@@ -84,11 +86,12 @@ private:
 
     int connect_bootloader();
     int upload_kernel(QString kernel, uint32_t kernel_start_addr);
-    int read_mem(uint32_t start_addr, uint32_t length);
+    int read_mem(uint32_t addr, uint32_t length);
     int write_mem(bool test_write);
     int get_changed_blocks(const uint8_t *src, int *modified);
-    int check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int flash_block(const uint8_t *src, uint32_t start, uint32_t len);
+    int check_romcrc(const uint8_t *src, uint32_t addr, uint32_t len, int *modified);
+    int init_flash_write();
+    int flash_block(const uint8_t *src, uint32_t addr, uint32_t len);
     int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     unsigned int crc32(const unsigned char *buf, unsigned int len);
@@ -109,7 +112,6 @@ private:
     QByteArray generate_ecutek_seed_key(QByteArray requested_seed);
     QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
-    QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
     QByteArray encrypt_payload(QByteArray buf, uint32_t len);

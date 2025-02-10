@@ -194,18 +194,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     emit LOG_I("Checking if Kernel already uploaded, requesting kernel ID", true, true);
-    //serial->change_port_speed("57600");
     serial->change_port_speed("62500");
-    //serial->change_port_speed("39473");
 
-    for (int i = 0; i < 10; i++)
+    received = request_kernel_id();
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
     {
-        if (kill_process)
-            return STATUS_ERROR;
-
-        received = request_kernel_id();
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        if (received.length() > 0)
+        if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_ID | 0x40))
         {
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
@@ -215,7 +210,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
-        delay(200);
     }
     return STATUS_ERROR;
 }
@@ -432,7 +426,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         output.append((uint8_t)addr & 0xFF);
         output.append((uint8_t)(pagesize >> 8) & 0xFF);
         output.append((uint8_t)pagesize & 0xFF);
-
         chk_sum = calculate_checksum(output, false);
         output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
@@ -441,21 +434,26 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
 
         if (received.length() > 5)
         {
-            if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_READ_AREA | 0x40))
+            if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_READ_AREA | 0x40))
             {
-                emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                received.remove(0, 5);
+                received.remove(received.length() - 1, 1);
+                mapdata.append(received);
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
 
-        received.remove(0, 5);
-        received.remove(received.length() - 1, 1);
-        mapdata.append(received);
         cplen = (numblocks * pagesize);
 
         chrono = timer.elapsed();
