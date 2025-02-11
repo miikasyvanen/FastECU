@@ -196,6 +196,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
     emit LOG_I("Checking if Kernel already uploaded, requesting kernel ID", true, true);
     serial->change_port_speed("62500");
 
+    emit LOG_I("Requesting kernel ID...", true, true);
+
     received = request_kernel_id();
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 4)

@@ -166,6 +166,8 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Checking if kernel is already running...", true, true);
 
+    emit LOG_I("Requesting kernel ID...", true, true);
+
     received = request_kernel_id();
     if (received.length() > 4)
     {
@@ -358,6 +360,8 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kerne
     emit LOG_I("Kernel started, initializing...", true, true);
 
     serial->change_port_speed("62500");
+
+    emit LOG_I("Requesting kernel ID...", true, true);
 
     for (int i = 0; i < 10; i++)
     {

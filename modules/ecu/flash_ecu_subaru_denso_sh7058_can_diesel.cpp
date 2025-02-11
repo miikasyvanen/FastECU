@@ -712,7 +712,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
         return STATUS_ERROR;
     }
 
-    emit LOG_I("Kernel requesting kernel ID...", true, true);
+    emit LOG_I("Requesting kernel ID...", true, true);
 
     received.clear();
     received = request_kernel_id();
@@ -1844,7 +1844,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::request_kernel_id()
 
     request_denso_kernel_id = true;
 
-    emit LOG_I("Request kernel ID", true, true);
+    //emit LOG_I("Request kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);

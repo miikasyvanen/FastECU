@@ -249,7 +249,8 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         xor_byte_1 = ((ram_value >> 8) & 0xff);
         xor_byte_2 = (ram_value & 0xff);
 */
-        emit LOG_D("XOR values are: 0x" + QString::number(xor_byte_1, 16) + " and 0x" + QString::number(xor_byte_2, 16), true, true);
+        emit LOG_I("Seed alter is: 0x" + QString::number(seed_alter, 16), true, true);
+        emit LOG_I("XOR values are: 0x" + QString::number(xor_byte_1, 16) + " and 0x" + QString::number(xor_byte_2, 16), true, true);
         serial->reset_connection();
         serial->set_is_iso15765_connection(true);
         serial->open_serial_port();
@@ -1874,7 +1875,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::generate_ecutek_seed_key(QByteArray req
         seed_key.append((uint8_t)(et_rr_seed >> 16) & 0xff);
         seed_key.append((uint8_t)(et_rr_seed >> 8) & 0xff);
         seed_key.append((uint8_t)(et_rr_seed & 0xff));
-        emit LOG_D("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
+        emit LOG_D("Altered seed key: " + parse_message_to_hex(seed_key), true, true);
     }
 
     return seed_key;
@@ -1934,6 +1935,9 @@ QByteArray FlashEcuSubaruDensoSH7058Can::calculate_seed_key(QByteArray requested
     seed += (requested_seed.at(2) << 8) & 0x0000FF00;
     seed += requested_seed.at(3) & 0x000000FF;
 
+    QString msg = QString("Seed: 0x%1").arg(seed, 8, 16, QLatin1Char('0')).toUtf8();
+    emit LOG_I(msg, true, true);
+
     //for (ki = 0; ki < 16; ki++) // Calculate seed from key
     for (ki = 15; ki >= 0; ki--) // Calculate key from seed
     {
@@ -1952,7 +1956,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::calculate_seed_key(QByteArray requested
     }
 
     seed = (seed >> 16) + (seed << 16);
-    QString msg = QString("Seed key: 0x%1").arg(seed, 8, 16, QLatin1Char('0')).toUtf8();
+    msg = QString("Seed key: 0x%1").arg(seed, 8, 16, QLatin1Char('0')).toUtf8();
     emit LOG_I(msg, true, true);
 
     key.clear();
@@ -2068,7 +2072,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     request_denso_kernel_id = true;
 
     datalen = 0;
-    emit LOG_I("Request kernel ID", true, true);
+    //emit LOG_I("Request kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
