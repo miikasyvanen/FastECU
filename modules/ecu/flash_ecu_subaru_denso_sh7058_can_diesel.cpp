@@ -270,6 +270,8 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
             response.remove(0, 7);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             emit LOG_I("CAL ID: " + response, true, true);
+            if (cmd_type == "read")
+                ecuCalDef->RomId = response;
         }
         else
         {
@@ -1480,7 +1482,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
         }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Writing flash buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        msg = QString("Writing flash buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remain)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         emit LOG_I(msg, true, true);
 
         remain -= blocksize;

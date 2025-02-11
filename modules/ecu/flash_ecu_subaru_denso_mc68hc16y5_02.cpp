@@ -1099,7 +1099,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Writing buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        msg = QString("Writing buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remain)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         emit LOG_I(msg, true, true);
 
         remain -= blocksize;

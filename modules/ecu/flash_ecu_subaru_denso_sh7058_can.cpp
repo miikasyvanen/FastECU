@@ -26,7 +26,7 @@ void FlashEcuSubaruDensoSH7058Can::run()
     set_progressbar_value(0);
 
     bool ok = false;
-
+/*
     uint32_t base = 0x811c9dc5;//0x811c50a5 + 0x4d20;//2d58;
     uint32_t xor_multi = 0x01000193;
     uint8_t xor_byte_1 = 0;//0x4b;//0xf6;
@@ -39,7 +39,7 @@ void FlashEcuSubaruDensoSH7058Can::run()
     uint32_t et_rr_key = 0;//0xb04fdbfc;
     uint32_t et_rr_seed = 0;
     QByteArray req_seed;
-/*
+
     for (int i = 0; i < 9; i++)
     {
         base = (((base^vin_highbyte) * xor_multi) ^ vin_lowbyte) * xor_multi;
@@ -191,7 +191,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     QByteArray received;
     QByteArray seed;
     QByteArray seed_key;
-    QByteArray msg;
+    QString msg;
 
     uint32_t ram_value = 0;
 
@@ -345,6 +345,8 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
             response.remove(0, 7);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             emit LOG_I("CAL ID: " + response, true, true);
+            if (cmd_type == "read")
+                ecuCalDef->RomId = response;
         }
         else
         {
@@ -785,11 +787,8 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
         set_progressbar_value(pleft);
     }
     emit LOG_D("Data bytes sent: 0x" + QString::number(data_bytes_sent), true, true);
-<<<<<<< HEAD
-=======
 
     emit LOG_I("Kernel uploaded, starting...", true, true);
->>>>>>> refs/heads/development
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -1629,7 +1628,7 @@ int FlashEcuSubaruDensoSH7058Can::flash_block(const uint8_t *src, uint32_t start
         }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Writing flash buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        msg = QString("Writing flash buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remain)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         emit LOG_I(msg, true, true);
 
         remain -= blocksize;

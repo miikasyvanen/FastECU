@@ -1343,7 +1343,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
 
                 if (ecuCalDef[ecuCalDefIndex]->RomId.length())
-                    ecuCalDef[ecuCalDefIndex]->FileName = ecuCalDef[ecuCalDefIndex]->RomId + "-" + dateTimeString + ".bin";
+                    ecuCalDef[ecuCalDefIndex]->FileName = ecuCalDef[ecuCalDefIndex]->RomId + "_" + dateTimeString + ".bin";
+                else
+                    ecuCalDef[ecuCalDefIndex]->FileName = "read_image_" + dateTimeString + ".bin";
 
                 //emit LOG_D("Checking definitions, please wait...";
                 fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FileName);

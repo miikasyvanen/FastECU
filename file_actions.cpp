@@ -2127,7 +2127,11 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "read.bin");
 
         if (filename == "")
-            filename = "read.bin";
+        {
+            QDateTime dateTime = dateTime.currentDateTime();
+            QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
+            filename = "read_image_" + dateTimeString + ".bin";
+        }
 
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());

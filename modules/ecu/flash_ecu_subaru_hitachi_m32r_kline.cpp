@@ -645,15 +645,15 @@ int FlashEcuSubaruHitachiM32rKline::write_mem(bool test_write)
 
 int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
-    uint32_t start_address, end_addr;
+    uint32_t start_address;//, end_addr;
     uint32_t pl_len;
     uint16_t maxblocks;
     uint16_t blockctr;
     uint32_t blockaddr;
 
     uint32_t start = fdt->fblocks[blockno].start;
-    uint32_t remain = fdt->fblocks[blockno].len;
-    uint32_t len = fdt->fblocks[blockno].len;
+    //uint32_t remain = fdt->fblocks[blockno].len;
+    //uint32_t len = fdt->fblocks[blockno].len;
     uint32_t byteindex = fdt->fblocks[blockno].start;
     uint8_t blocksize = 0x80;
     unsigned long chrono;
@@ -674,8 +674,8 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
     maxblocks = pl_len / 128;
-    end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - start_address;
+    //end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
+    //uint32_t data_len = end_addr - start_address;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
@@ -764,7 +764,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
 
     emit LOG_I("Flash erased, starting ROM write...", true, true);
 
-    int data_bytes_sent = 0;
+    //int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
@@ -780,9 +780,9 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         for (int i = 0; i < 128; i++)
         {
             output[i + 4] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
-            data_bytes_sent++;
+            //data_bytes_sent++;
         }
-        data_len -= 128;
+        //data_len -= 128;
 
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
         //emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
@@ -793,10 +793,12 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
 
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
-        msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        QString block_len = QString("%1").arg(blocksize,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Kernel write addr: 0x%1 length: 0x%2, %3 B/s %4 s remain").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        //msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         emit LOG_I(msg, true, true);
 
-        remain -= blocksize;
+        //remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
 
