@@ -202,7 +202,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
         output.append((uint8_t)0x00);
 
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(20, 3);
+        received = serial->read_serial_data(20, 5);
         //delay(5);
         loopcount++;
     }

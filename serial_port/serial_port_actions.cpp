@@ -633,6 +633,7 @@ QString SerialPortActions::get_serial_port_baudrate(void)
 }
 bool SerialPortActions::set_serial_port_baudrate(QString value)
 {
+    emit LOG_D("Setting serialport baudrate in SerialPortActions", true, true);
     bool r = true;
     if (isDirectConnection())
         serial_direct->serial_port_baudrate = value;

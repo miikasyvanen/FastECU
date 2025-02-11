@@ -194,11 +194,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     QByteArray msg;
 
     uint32_t ram_value = 0;
-    uint32_t seed_alter = 0;
-    uint32_t xor_multi = 0x01000193;
-    uint8_t xor_byte_1 = 0;
-    uint8_t xor_byte_2 = 0;
-    uint32_t et_rr_seed = 0;
 
     if (!serial->is_serial_port_open())
     {
@@ -236,11 +231,12 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         // Open serial port
         serial->open_serial_port();
 
+        // AE5Z500V
         ram_value = read_ram_location(0xffff1ed8);
-        //emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
+        emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
         seed_alter = ram_value;
         ram_value = read_ram_location(0xffff1e80);
-        //emit LOG_D("Value at RAM loc 0xffff1e80: 0x" + QString::number(ram_value, 16), true, true);
+        emit LOG_D("Value at RAM loc 0xffff1e80: 0x" + QString::number(ram_value, 16), true, true);
         xor_byte_1 = ((ram_value >> 8) & 0xff);
         xor_byte_2 = (ram_value & 0xff);
 /*
@@ -253,7 +249,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         xor_byte_1 = ((ram_value >> 8) & 0xff);
         xor_byte_2 = (ram_value & 0xff);
 */
-        //emit LOG_D("XOR values are: 0x" + QString::number(xor_byte_1, 16) + " and 0x" + QString::number(xor_byte_2, 16), true, true);
+        emit LOG_D("XOR values are: 0x" + QString::number(xor_byte_1, 16) + " and 0x" + QString::number(xor_byte_2, 16), true, true);
         serial->reset_connection();
         serial->set_is_iso15765_connection(true);
         serial->open_serial_port();
@@ -498,24 +494,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         seed_key = generate_cobb_seed_key(seed);
     else
         seed_key = generate_seed_key(seed);
-
-    if (flash_method.endsWith("_ecutek_racerom_alt"))
-    {
-        et_rr_seed = ((uint8_t)seed_key.at(0) << 24) & 0xFF000000;
-        et_rr_seed += ((uint8_t)seed_key.at(1) << 16) & 0x00FF0000;
-        et_rr_seed += ((uint8_t)seed_key.at(2) << 8) & 0x0000FF00;
-        et_rr_seed += (uint8_t)seed_key.at(3) & 0x000000FF;
-
-        et_rr_seed = ((seed_alter^et_rr_seed)^xor_byte_1)*xor_multi;
-        et_rr_seed = (et_rr_seed^xor_byte_2)*xor_multi;
-
-        seed_key.clear();
-        seed_key.append((uint8_t)(et_rr_seed >> 24) & 0xff);
-        seed_key.append((uint8_t)(et_rr_seed >> 16) & 0xff);
-        seed_key.append((uint8_t)(et_rr_seed >> 8) & 0xff);
-        seed_key.append((uint8_t)(et_rr_seed & 0xff));
-        emit LOG_I("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
-    }
 
     emit LOG_I("Sending seed key", true, true);
     output[4] = ((uint8_t)0x27);
@@ -807,8 +785,11 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
         set_progressbar_value(pleft);
     }
     emit LOG_D("Data bytes sent: 0x" + QString::number(data_bytes_sent), true, true);
+<<<<<<< HEAD
+=======
 
     emit LOG_I("Kernel uploaded, starting...", true, true);
+>>>>>>> refs/heads/development
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -1852,7 +1833,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::generate_ecutek_racerom_can_seed_key(QB
  */
 QByteArray FlashEcuSubaruDensoSH7058Can::generate_ecutek_seed_key(QByteArray requested_seed)
 {
-    QByteArray key;
+    QByteArray seed_key;
 
     const uint16_t keytogenerateindex_1[]={
         0x78B1, 0x4625, 0x201C, 0x9EA5,
@@ -1876,9 +1857,28 @@ QByteArray FlashEcuSubaruDensoSH7058Can::generate_ecutek_seed_key(QByteArray req
     };
 
     emit LOG_I("Using EcuTek seed key algo", true, true);
-    key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
+    seed_key = calculate_seed_key(requested_seed, keytogenerateindex_1, indextransformation);
 
-    return key;
+    if (flash_method.endsWith("_ecutek_racerom_alt"))
+    {
+        uint32_t et_rr_seed = 0;
+        et_rr_seed = ((uint8_t)seed_key.at(0) << 24) & 0xFF000000;
+        et_rr_seed += ((uint8_t)seed_key.at(1) << 16) & 0x00FF0000;
+        et_rr_seed += ((uint8_t)seed_key.at(2) << 8) & 0x0000FF00;
+        et_rr_seed += (uint8_t)seed_key.at(3) & 0x000000FF;
+
+        et_rr_seed = ((seed_alter^et_rr_seed)^xor_byte_1)*xor_multi;
+        et_rr_seed = (et_rr_seed^xor_byte_2)*xor_multi;
+
+        seed_key.clear();
+        seed_key.append((uint8_t)(et_rr_seed >> 24) & 0xff);
+        seed_key.append((uint8_t)(et_rr_seed >> 16) & 0xff);
+        seed_key.append((uint8_t)(et_rr_seed >> 8) & 0xff);
+        seed_key.append((uint8_t)(et_rr_seed & 0xff));
+        emit LOG_D("Calculated seed key: " + parse_message_to_hex(seed_key), true, true);
+    }
+
+    return seed_key;
 }
 
 /************************************
