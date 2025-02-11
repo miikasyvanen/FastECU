@@ -203,11 +203,11 @@ int SerialPortActionsDirect::set_lec_lines(int lec1_state, int lec2_state)
 int SerialPortActionsDirect::pulse_lec_1_line(int timeout)
 {
     line_end_check_1_toggled(requestToSendEnabled);
-    delay(timeout);
+    accurate_delay(timeout);
     line_end_check_1_toggled(requestToSendDisabled);
-    delay(timeout);
+    //delay(timeout);
 
-    read_serial_data(100, 50);
+    //read_serial_data(100, 50);
 
     return STATUS_SUCCESS;
 }
@@ -215,11 +215,11 @@ int SerialPortActionsDirect::pulse_lec_1_line(int timeout)
 int SerialPortActionsDirect::pulse_lec_2_line(int timeout)
 {
     line_end_check_2_toggled(dataTerminalEnabled);
-    delay(timeout);
+    accurate_delay(timeout);
     line_end_check_2_toggled(dataTerminalDisabled);
-    delay(timeout);
+    //delay(timeout);
 
-    read_serial_data(100, 50);
+    //read_serial_data(100, 50);
 
     return STATUS_SUCCESS;
 }
@@ -232,7 +232,7 @@ int SerialPortActionsDirect::line_end_check_1_toggled(int state)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, 12000);
 #if defined Q_OS_UNIX
-            delay(17);
+            delay(1);
 #endif
         }
         else
@@ -265,7 +265,7 @@ int SerialPortActionsDirect::line_end_check_2_toggled(int state)
         {
             j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, 12000);
 #if defined Q_OS_UNIX
-            delay(17);
+            delay(1);
 #endif
         }
         else

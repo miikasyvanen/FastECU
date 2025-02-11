@@ -537,11 +537,8 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("ROM read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        LOG_I(msg, true, true);
-        //send_log_window_message(msg, true, true);
-        //qDebug() << msg;
-        //delay(1);
+        msg = QString("Kernel read addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        emit LOG_I(msg, true, true);
 
         len_done += cplen;
         addr += (numblocks * pagesize);
@@ -652,8 +649,6 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     uint32_t blockaddr;
 
     uint32_t start = fdt->fblocks[blockno].start;
-    //uint32_t remain = fdt->fblocks[blockno].len;
-    //uint32_t len = fdt->fblocks[blockno].len;
     uint32_t byteindex = fdt->fblocks[blockno].start;
     uint8_t blocksize = 0x80;
     unsigned long chrono;
@@ -790,12 +785,9 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         received = serial->read_serial_data(6, 200);
         //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
-
-
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
         QString block_len = QString("%1").arg(blocksize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("Kernel write addr: 0x%1 length: 0x%2, %3 B/s %4 s remain").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        //msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         emit LOG_I(msg, true, true);
 
         //remain -= blocksize;

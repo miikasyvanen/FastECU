@@ -919,6 +919,11 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
             //thus, (len_done + cplen) will not exceed len
         }
 
+        QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
+        QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Kernel read addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        emit LOG_I(msg, true, true);
+
         // increment addr, len, etc //
         len_done += cplen;
         addr += (numblocks * pagesize);

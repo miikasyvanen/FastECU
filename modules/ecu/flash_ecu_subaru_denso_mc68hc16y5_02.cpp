@@ -66,11 +66,11 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
+    serial->set_serial_port_baudrate("9600");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
-    serial->change_port_speed("9600");
     //serial->set_serial_port_baudrate("9600");
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
@@ -88,7 +88,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
             if (result == STATUS_SUCCESS && !kernel_alive)
             {
                 emit external_logger("Preparing, please wait...");
-                emit LOG_I("Initializing Subaru 02 32-bit K-Line kernel upload, please wait...", true, true);
+                emit LOG_I("Initializing Subaru 01-05 16-bit K-Line kernel upload, please wait...", true, true);
                 result = upload_kernel(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
             if (result == STATUS_SUCCESS)
@@ -97,10 +97,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
                 {
                     emit external_logger("Reading ROM, please wait...");
                     emit LOG_I("Reading ROM from Subaru 01-05 16-bit using K-Line", true, true);
-                    if (flash_method.endsWith("_tpu"))
-                        result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-                    else
-                        result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
@@ -123,12 +120,12 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
 
             break;
         case QMessageBox::Cancel:
-            LOG_D("Operation canceled", true, true);
+            emit LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            LOG_D("Unknown operation selected!", true, true);
+            emit LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
     }
@@ -157,16 +154,17 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
 
     delay(200);
     serial->pulse_lec_2_line(200);
+    delay(200);
     output.clear();
     for (uint8_t i = 0; i < bootloader_init_request_wrx02.length(); i++)
     {
         output.append(bootloader_init_request_wrx02[i]);
     }
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(output.length(), serial_read_short_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
     /******************************
      *
@@ -180,7 +178,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
     else
         bootloader_init_response_wrx02_ok = bootloader_init_response_stock_wrx02_ok;
 
-    if (received.length() < 2 || !check_received_message(bootloader_init_response_wrx02_ok, received))
+    if (received.length() < 3 || !check_received_message(bootloader_init_response_wrx02_ok, received))
     {
         emit LOG_E("Bad response from bootloader: " + parse_message_to_hex(received), true, true);
     }
@@ -272,20 +270,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
         kernel_magic_word = 0x3941;
     }
 
-/*
-    QFile kernelfile("kernels/ecuflash_hc16_kernel_106_decrypted.bin.bin");
-    if (!kernelfile.open(QIODevice::ReadWrite ))
-    {
-        send_log_window_message("Unable to open kernel file for reading", true, true);
-        return -1;
-    }
-    for (uint32_t i = 0; i < len; i++) {
-        pl_encr[i] = (uint8_t)(pl_encr[i] - encryption_add_value) ^ encryption_xor_value;
-        //chk_sum += pl_encr[i];
-    }
-    kernelfile.write(pl_encr);
-    kernelfile.close();
-*/
     for (uint32_t i = 0; i < len; i++) {
         pl_encr[i] = (uint8_t)(pl_encr[i] ^ encryption_xor_value) + encryption_add_value;
         //chk_sum += pl_encr[i];
@@ -310,7 +294,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
     output.append((uint8_t)chk_sum);
 
     emit LOG_I("Start sending kernel... please wait...", true, true);
-    received = serial->write_serial_data_echo_check(output);
+    serial->write_serial_data_echo_check(output);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     msg.clear();
     for (int i = 0; i < received.length(); i++)
@@ -329,8 +313,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
     emit LOG_I("Requesting kernel ID", true, true);
 
     delay(1500);
-    emit LOG_D("Changing baudrate", true, true);
-    //serial->change_port_speed("57600");
     serial->change_port_speed("62500");
     received.clear();
     for (int i = 0; i < 10; i++)
@@ -473,7 +455,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        msg = QString("Kernel read addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
         delay(1);
 
@@ -765,7 +747,8 @@ unsigned int FlashEcuSubaruDensoMC68HC16Y5_02::crc32(const unsigned char *buf, u
     return crc ^ 0xFFFFFFFF;
 }
 
-void FlashEcuSubaruDensoMC68HC16Y5_02::init_crc32_tab(void) {
+void FlashEcuSubaruDensoMC68HC16Y5_02::init_crc32_tab(void)
+{
     uint32_t i, j;
     uint32_t crc, c;
 
@@ -785,7 +768,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::init_crc32_tab(void) {
 
     crc_tab32_init = 1;
 
-}  /* init_crc32_tab */
+}
 
 int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
 {
@@ -988,8 +971,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, cons
  */
 int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t start, uint32_t len)
 {
-
-    // program 128-byte chunks //
     uint32_t remain = len;
     uint32_t byteindex = flashbytesindex;
     uint32_t datalen = 0;
@@ -1101,7 +1082,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Writing buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s remain)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
+        msg = QString("Write flash buffer: 0x%1 (%2\% - %3 B/s, ~ %4 s)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
         emit LOG_I(msg, true, true);
 
         remain -= blocksize;
@@ -1191,22 +1172,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
     return STATUS_SUCCESS;
 }
 
-
-bool FlashEcuSubaruDensoMC68HC16Y5_02::check_programming_voltage(double voltage)
-{
-    return (voltage > 11.4 && voltage < 12.6);
-}
-
-QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_init()
-{
-    QByteArray output;
-    QByteArray received;
-
-    LOG_E("No kernel init option in 16-bit denso yet", true, true);
-
-    return received;
-}
-
 /*******************************************************
  *  Request kernel id
  ******************************************************/
@@ -1258,8 +1223,6 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::add_ssm_header(QByteArray output, u
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //send_log_window_message("Send: " + parse_message_to_hex(output), true, true);
-    //qDebug () << "Send:" << parse_message_to_hex(output);
     return output;
 }
 

@@ -59,8 +59,8 @@ private:
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
-    bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
+    bool flash_write_init = false;
 
     int result;
     int mcu_type_index;
@@ -76,6 +76,9 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint32_t flashmsgsize = 0;
+    uint32_t flashblocksize = 0;
+    uint32_t flashmessagesize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
@@ -83,22 +86,23 @@ private:
     QString flash_method;
     QString kernel;
 
-    QByteArray denso_bootloader_init_request_fxt02 = { "\x4D\xFF\xB4" };
-    QByteArray denso_bootloader_init_response_stock_fxt02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_ecutek_fxt02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_cobb_fxt02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_fxt02_ok;
+    QByteArray bootloader_init_request_fxt02 = { "\x4D\xFF\xB4" };
+    QByteArray bootloader_init_response_stock_fxt02_ok = { "\x4D\x00\xB3" };
+    QByteArray bootloader_init_response_ecutek_fxt02_ok = { "\x4D\x00\xB3" };
+    QByteArray bootloader_init_response_cobb_fxt02_ok = { "\x4D\x00\xB3" };
+    QByteArray bootloader_init_response_fxt02_ok;
 
     void closeEvent(QCloseEvent *bar);
 
-    int connect_bootloader_subaru_denso_kline_fxt02();
-    int upload_kernel_subaru_denso_kline_fxt02(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_kline_32bit(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_kline_32bit(bool test_write);
-    int get_changed_blocks_kline_32bit(const uint8_t *src, int *modified);
-    int check_romcrc_kline_32bit(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int flash_block_kline_32bit(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_kline_32bit(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int connect_bootloader();
+    int upload_kernel(QString kernel, uint32_t kernel_start_addr);
+    int read_mem(uint32_t start_addr, uint32_t length);
+    int write_mem(bool test_write);
+    int get_changed_blocks(const uint8_t *src, int *modified);
+    int check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
+    int init_flash_write();
+    int flash_block(const uint8_t *src, uint32_t start, uint32_t len);
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     unsigned int crc32(const unsigned char *buf, unsigned int len);
     void init_crc32_tab(void);
@@ -108,20 +112,13 @@ private:
     QByteArray send_sid_27_request_seed();
     QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
 
-    QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
-    QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_encrypt_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
-    QByteArray subaru_denso_decrypt_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
-
     QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     int check_received_message(QByteArray msg, QByteArray received);
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 
