@@ -424,9 +424,6 @@ int FlashEcuSubaruDensoSH705xKline::read_mem(uint32_t start_addr, uint32_t lengt
         float pleft = 0;
         unsigned long chrono;
 
-        //uint32_t curblock = (addr / pagesize);
-
-
         pleft = (float)(addr - start_addr) / (float)length * 100.0f;
         set_progressbar_value(pleft);
 
@@ -445,12 +442,14 @@ int FlashEcuSubaruDensoSH705xKline::read_mem(uint32_t start_addr, uint32_t lengt
         chksum = calculate_checksum(output, false);
         output.append((uint8_t)chksum & 0xFF);
         serial->write_serial_data_echo_check(output);
-        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         //delay(10);
-        received = serial->read_serial_data(pagesize + 5, serial_read_extra_long_timeout);
-        //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+        QByteArray response = received;
+        response.remove(5, response.length()-1);
+        emit LOG_D("Response: " + parse_message_to_hex(response), true, true);
 
-        if (received.length() > 8)
+        if (received.length() > 5)
         {
             if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_READ_AREA | 0x40))
             {
@@ -1019,7 +1018,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
     uint32_t datalen = 0;
     uint32_t imgcrc32 = 0;
     uint32_t flashblockstart = start;
-    uint16_t blocksize = 0x100;
+    uint16_t blocksize = 0x80;
     uint8_t chksum = 0;
 
     QElapsedTimer timer;
