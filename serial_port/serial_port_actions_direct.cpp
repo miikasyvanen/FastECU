@@ -397,8 +397,11 @@ QString SerialPortActionsDirect::open_serial_port()
 #endif
     emit LOG_D("Interface: " + serial_port, true, true);
 
-    emit LOG_D("Serial port: " + serial_port_list.at(0).split(" - ").at(1), true, true);
+#if defined Q_OS_UNIX
     if (!serial_port.isEmpty() && is_j2534 == "OpenPort 2.0")
+#else
+    if (!serial_port.isEmpty())
+#endif
     {
         reset_connection();
         //close_serial_port();
@@ -523,7 +526,6 @@ void SerialPortActionsDirect::close_serial_port()
 
 void SerialPortActionsDirect::close_j2534_serial_port()
 {
-    //emit LOG_D("J2534_init_ok: " + J2534_init_ok;
     if (j2534->is_serial_port_open())
     {
         bool j2534_disconnect_ok = false;
@@ -787,18 +789,11 @@ int SerialPortActionsDirect::write_j2534_data(QByteArray output)
 int SerialPortActionsDirect::send_periodic_j2534_data(QByteArray output, int timeout)
 {
     PASSTHRU_MSG txmsg;
-    unsigned long NumMsgs;
-    unsigned long numMsgs;
-    PASSTHRU_MSG rxmsg;
-    unsigned long numRxMsg;
     long txMsgLen;
-    int PASSTHRU_MSG_MAX_DATA_SIZE = 256;
 
     txMsgLen = output.length();
     if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
         txMsgLen = PASSTHRU_MSG_DATA_SIZE;
-
-    numMsgs = 0;
 
     while (txMsgLen > 0)
     {
@@ -814,11 +809,7 @@ int SerialPortActionsDirect::send_periodic_j2534_data(QByteArray output, int tim
         {
             txmsg.Data[i] = (uint8_t)output.at(i);
         }
-        // Indicate that the PASSTHRU_MSG array contains just a single message.
-        NumMsgs = 1;
-
         j2534->PassThruStartPeriodicMsg(chanID, &txmsg, &msgID, timeout);
-        numMsgs++;
         output.remove(0, txMsgLen);
         txMsgLen = output.length();
         if (txMsgLen > PASSTHRU_MSG_DATA_SIZE)
@@ -849,17 +840,14 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
 {
     PASSTHRU_MSG rxmsg;
     unsigned long numRxMsg;
-    unsigned int msgCnt = 0;
-    unsigned int byteCnt = 0;
-    time_t last_status_update = time(NULL);
     QByteArray received;
 
     received.clear();
 
     rxmsg.DataSize = 0;
     numRxMsg = 1;
-    //j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
-    //0 means no error, all other values mean error
+    // j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    // 0 means no error, all other values mean error
     if(j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout))
         goto exit;
     //emit LOG_D(numRxMsg << "messages, rx status " + rxmsg.RxStatus;
@@ -867,8 +855,6 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
     {
         //emit LOG_D(numRxMsg << "messages, rx status " + rxmsg.RxStatus;
         dump_msg(&rxmsg);
-        msgCnt++;
-        byteCnt += rxmsg.DataSize;
 
         if (is_can_connection)
         {
@@ -1038,26 +1024,22 @@ int SerialPortActionsDirect::init_j2534_connection()
         set_j2534_can();
         set_j2534_can_timings();
         set_j2534_can_filters();
+        emit LOG_D("ISO15765 init ready", true, true);
     }
     else if (is_can_connection)
     {
         set_j2534_can();
         set_j2534_can_timings();
         set_j2534_can_filters();
+        emit LOG_D("CAN init ready", true, true);
     }
     else
     {
         set_j2534_iso9141();
         set_j2534_iso9141_timings();
         set_j2534_iso9141_filters();
-    }
-
-    if(is_iso15765_connection)
-        emit LOG_D("ISO15765 init ready", true, true);
-    else if (is_can_connection)
-        emit LOG_D("CAN init ready", true, true);
-    else
         emit LOG_D("K-Line init ready", true, true);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -1072,7 +1054,7 @@ int SerialPortActionsDirect::set_j2534_can()
         else
             flags = 0;
     }
-    else
+    else if (is_iso15765_connection)
     {
         protocol = ISO15765;
         if (is_29_bit_id)
@@ -1171,7 +1153,6 @@ int SerialPortActionsDirect::set_j2534_can_filters()
             reportJ2534Error();
             return STATUS_ERROR;
         }
-        qDebug() << "msgId" << msgId;
     }
     else if (protocol == ISO15765)
     {
@@ -1229,7 +1210,6 @@ int SerialPortActionsDirect::set_j2534_iso9141()
     }
 
     emit LOG_D("Protocol: " + QString::number(protocol), true, true);
-    //baudrate = 4800;
 
     if (J2534_is_denso_dsti)
     {
