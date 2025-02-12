@@ -1099,7 +1099,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
         chksum = calculate_checksum(output, false);
         output.append((uint8_t)chksum & 0xFF);
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         //delay(50);
         received = serial->read_serial_data(6, serial_read_extra_long_timeout);
         if (received.length() > 5)
