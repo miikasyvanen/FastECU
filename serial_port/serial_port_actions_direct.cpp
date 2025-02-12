@@ -603,7 +603,20 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                 if (protocol == ISO14230)
                 {
                     emit LOG_I("Read with ISO14230", true, true);
-                    //protocol = ISO14230;
+                    while (received.length() < 4 && QTime::currentTime() < dieTime)
+                    {
+                        if (serial->bytesAvailable())
+                            received.append(serial->read(1));
+                        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+                    }
+                    if (received.at(0) & 0x3f)
+                    {
+                        msglen = (received.at(0) & 0x3f) + 1;
+                        req_bytes.append(received.at(3));
+                    }
+                    else
+                        msglen = received.at(3) + 1;
+
                 }
                 else if (protocol == ISO9141)
                 {
@@ -618,17 +631,15 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                         msglen = ((uint8_t)received.at(2) << 8) + (uint8_t)received.at(3) + 1;
                     if (received.startsWith("\x80\xf0"))
                         msglen = (uint8_t)received.at(3) + 1;
-                    //emit LOG_I("msglen: " + QString::number(msglen), true, true);
-                    dieTime = QTime::currentTime().addMSecs(timeout);
-                    while ((uint32_t)req_bytes.length() < msglen && QTime::currentTime() < dieTime)
-                    {
-                        if (serial->bytesAvailable())
-                            req_bytes.append(serial->readAll());
-                        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-                    }
-                    //emit LOG_I("req_bytes: " + QString::number(req_bytes.length()), true, true);
-                    received.append(req_bytes);
                 }
+                dieTime = QTime::currentTime().addMSecs(timeout);
+                while ((uint32_t)req_bytes.length() < msglen && QTime::currentTime() < dieTime)
+                {
+                    if (serial->bytesAvailable())
+                        req_bytes.append(serial->readAll());
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+                }
+                received.append(req_bytes);
             }
         }
         return received;
