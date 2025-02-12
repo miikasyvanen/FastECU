@@ -171,9 +171,8 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
         kernel_alive = true;
         return STATUS_SUCCESS;
     }
-    emit LOG_I("No response from kernel, continue initializing bootloader...", true, true);
 
-    emit LOG_I("Initializing bootloader", true, true);
+    emit LOG_I("No response from kernel, continue initializing bootloader...", true, true);
 
     serial->reset_connection();
     serial->set_is_can_connection(true);
@@ -181,9 +180,15 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
     serial->set_is_29_bit_id(true);
     serial->open_serial_port();
 
+
+    QMessageBox::warning(this, tr("Connecting to ECU"),
+                                   tr("Press OK and then turn ignition ON to start initializing connection to ECU"),
+                                   QMessageBox::Ok | QMessageBox::Cancel,
+                                   QMessageBox::Ok);
+
+    emit LOG_I("Initializing bootloader", true, true);
+
     uint16_t loopcount = 0;
-    //QTime dieTime = QTime::currentTime().addMSecs(2000);
-    //while (QTime::currentTime() < dieTime)
     while (loopcount < 1000)
     {
         //QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
@@ -202,11 +207,12 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
         output.append((uint8_t)0x00);
 
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(20, 5);
-        //delay(5);
+        //received = serial->read_serial_data(20, 5);
+        delay(3);
         loopcount++;
     }
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    serial->clear_rx_buffer();
     received = serial->read_serial_data(20, 10);
     //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
@@ -1726,7 +1732,11 @@ void FlashEcuSubaruDensoSH705xDensoCan::set_progressbar_value(int value)
 
 void FlashEcuSubaruDensoSH705xDensoCan::delay(int timeout)
 {
-    QTime dieTime = QTime::currentTime().addMSecs(timeout);
-    while (QTime::currentTime() < dieTime)
+    double seconds = (double)timeout / 1000.0;
+    auto spinStart = std::chrono::high_resolution_clock::now();
+    while ((std::chrono::high_resolution_clock::now() - spinStart).count() / 1e9 < seconds)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+    //QTime dieTime = QTime::currentTime().addMSecs(timeout);
+    //while (QTime::currentTime() < dieTime)
+    //    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
 }
