@@ -37,7 +37,7 @@ QString J2534::open_serial_port(QString serial_port)
             }
             else
             {
-                emit LOG_E("Couldn't open Linux j2534 serial port '" + serial_port + "'", true, true);
+                emit LOG_D("Couldn't open Linux j2534 serial port '" + serial_port + "'", true, true);
                 return NULL;
             }
 
@@ -176,7 +176,7 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
         result = STATUS_NOERROR;
     }
     else
-        emit LOG_E("Result check failed, not maybe an j2534 interface!", true, true);
+        emit LOG_D("Result check failed, not maybe an j2534 interface!", true, true);
 
     return result;
 }
@@ -291,7 +291,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 //received.append(read_serial_data(4, Timeout));
                 while ((uint8_t)received.at(received.length() - 1) == 0x0d)
                     received.append(read_serial_data(1, Timeout));
-                //emit LOG_E("Error sending message: " + received + " | " + parseMessageToHex(received);
+                //emit LOG_D("Error sending message: " + received + " | " + parseMessageToHex(received);
                 received.clear();
             }
             else if (received.at(2) == 'm')
@@ -959,7 +959,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         /*for (i = 0; i < scl->NumOfParams; i++)
             if (!is_valid_sconfig_param((scl->ConfigPtr)[i]))
             {
-                //emit LOG_E("param not allowed - not passing through and instead faking success" << result;
+                //emit LOG_D("param not allowed - not passing through and instead faking success" << result;
                 return STATUS_NOERROR;
             }*/
 
@@ -1033,7 +1033,7 @@ void J2534::delay(int n)
 
 void J2534::handle_error(QSerialPort::SerialPortError error)
 {
-    //emit LOG_E("Error:" << QString::number(error), true, true);
+    //emit LOG_D("Error:" << QString::number(error), true, true);
 
     if (error == QSerialPort::NoError)
     {

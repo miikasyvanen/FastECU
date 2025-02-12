@@ -517,35 +517,31 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
 
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        delay(5);
         received.clear();
         if (output.at(5) == 0x61)
         {
-            for (int i = 0; i < 500; i++)
+            received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+            if (received.length() > 6)
             {
-                received.append(serial->read_serial_data(10, 1));
-                if (received.length() > 6)
+                if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
                 {
-                    if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
-                    {
-                        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-                        break;
-                    }
-                    else
-                    {
-                        emit LOG_E("Block flash failed!", true, true);
-                        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
-                        return STATUS_ERROR;
-                    }
+                    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                    break;
                 }
-                delay(50);
+                else
+                {
+                    emit LOG_E("Block flash failed!", true, true);
+                    emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+                    return STATUS_ERROR;
+                }
             }
-            if (received == "")
+            else
             {
                 emit LOG_E("Flash failed!", true, true);
                 emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
+            delay(50);
         }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();

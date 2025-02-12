@@ -783,7 +783,17 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         //emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
         received = serial->read_serial_data(6, 200);
-        //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
+        if (received.length() > 4)
+        {
+            if ((uint8_t)received.at(4) != 0x76)
+            {
+                send_log_window_message("Write data failed!", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                return STATUS_ERROR;
+            }
+        }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
         QString block_len = QString("%1").arg(blocksize,8,16,QLatin1Char('0')).toUpper();

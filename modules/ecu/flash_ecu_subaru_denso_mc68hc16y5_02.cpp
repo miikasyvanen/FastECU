@@ -1057,8 +1057,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         chksum = calculate_checksum(output, false);
         output.append((uint8_t)chksum & 0xFF);
         serial->write_serial_data_echo_check(output);
-        delay(50);
-        received = serial->read_serial_data(6, serial_read_long_timeout);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        //delay(50);
+        received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+        /*
         uint8_t loopcount = 0;
         while (received.length() && loopcount < 10)
         {
@@ -1067,17 +1069,24 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
             received.append(serial->read_serial_data(6, 1));
             loopcount++;
         }
+*/
         if (received.length() > 5)
         {
-            if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != 0x62)
+            if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_WRITE_FLASH_BUFFER | 0x40))
             {
-                emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+                emit LOG_D("Data written to flash buffer", true, true);
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
 

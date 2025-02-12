@@ -1022,7 +1022,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
     uint32_t datalen = 0;
     uint32_t imgcrc32 = 0;
     uint32_t flashblockstart = start;
-    uint16_t blocksize = 0x80;
+    uint16_t blocksize = 0x200;
     uint8_t chksum = 0;
 
     QElapsedTimer timer;
@@ -1081,7 +1081,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
         if (kill_process)
             return STATUS_ERROR;
 
-        datalen = blocksize + 4; // 0x200 + 4
+        datalen = blocksize + 4;
         output.clear();
         output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
         output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
@@ -1100,8 +1100,8 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
         output.append((uint8_t)chksum & 0xFF);
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        delay(50);
-        received = serial->read_serial_data(6, serial_read_long_timeout);
+        //delay(50);
+        received = serial->read_serial_data(6, serial_read_extra_long_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_WRITE_FLASH_BUFFER | 0x40))
@@ -1255,8 +1255,8 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
-    uint8_t loop_cnt = 0;
-
+    uint16_t loop_cnt = 0;
+    uint16_t read_cnt = 0;
 
     output.append((uint8_t)0xBF);
     output = add_ssm_header(output, tester_id, target_id, false);
@@ -1270,7 +1270,13 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_bf_ssm_init()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(500);
-        received = serial->read_serial_data(8, receive_timeout);
+        received = serial->read_serial_data(8, serial_read_long_timeout);
+        while(received.length() != (uint8_t)received.at(3) && read_cnt < 100)
+        {
+            received.append(serial->read_serial_data(10, 10));
+            read_cnt++;
+        }
+        //received.append(serial->read_serial_data(10, 10));
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         loop_cnt++;
     }
@@ -1293,7 +1299,8 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_81_start_communication()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1315,7 +1322,8 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_83_request_timings()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1338,7 +1346,8 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_27_request_seed()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1362,7 +1371,8 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_27_send_seed_key(QByteArray 
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1386,7 +1396,8 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_10_start_diagnostic()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(7, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1412,9 +1423,12 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_34_request_upload(uint32_t d
     output.append((uint8_t)(datalen >> 16) & 0xFF);
     output.append((uint8_t)(datalen >> 8) & 0xFF);
     output.append((uint8_t)datalen & 0xFF);
-
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(7, receive_timeout);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1429,6 +1443,7 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
     QByteArray output;
     QByteArray received;
     uint32_t blockaddr = 0;
+    uint32_t blocksize = 0x80;
     uint16_t blockno = 0;
     uint16_t maxblocks = 0;
     uint8_t loop_cnt = 0;
@@ -1439,7 +1454,7 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
         return NULL;
     }
 
-    maxblocks = (len - 1) >> 7;  // number of 128 byte blocks - 1
+    maxblocks = (len - 1) / blocksize;  // number of 128 byte blocks - 1
 
     set_progressbar_value(0);
 
@@ -1448,7 +1463,7 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
         if (kill_process)
             return NULL;
 
-        blockaddr = dataaddr + blockno * 128;
+        blockaddr = dataaddr + blockno * blocksize;
         output.clear();
         output.append(0x36);
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
@@ -1459,21 +1474,41 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
         {
             for (uint32_t i = 0; i < len; i++)
             {
-                output.append(buf.at(i + blockno * 128));
+                output.append(buf.at(i + blockno * blocksize));
             }
         }
         else
         {
-            for (int i = 0; i < 128; i++)
+            for (uint32_t i = 0; i < blocksize; i++)
             {
-                output.append(buf.at(i + blockno * 128));
+                output.append(buf.at(i + blockno * blocksize));
             }
-            len -= 128;
+            len -= blocksize;
         }
 
-        serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        received = serial->read_serial_data(6, receive_timeout);
-
+        output = add_ssm_header(output, tester_id, target_id, false);
+        serial->write_serial_data_echo_check(output);
+        QByteArray header = output;
+        header.remove(8, header.length()-8);
+        emit LOG_D("Sent: " + parse_message_to_hex(header), true, true);
+        received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+        //received.append(serial->read_serial_data(10, 1));
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        if (received.length() > 4)
+        {
+            if ((uint8_t)received.at(4) != 0x76)
+            {
+                emit LOG_E("Write data failed!", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                return received;
+            }
+        }
+        else
+        {
+            emit LOG_E("Write data failed!", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return received;
+        }
         float pleft = (float)blockno / (float)maxblocks * 100;
         set_progressbar_value(pleft);
     }
@@ -1481,7 +1516,6 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
     set_progressbar_value(100);
 
     return received;
-
 }
 
 QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_31_start_routine()
@@ -1493,8 +1527,12 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_31_start_routine()
     output.append((uint8_t)0x31);
     output.append((uint8_t)0x01);
     output.append((uint8_t)0x01);
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    received = serial->read_serial_data(8, receive_timeout);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -1732,7 +1770,7 @@ QByteArray FlashEcuSubaruDensoSH705xKline::request_kernel_id()
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    //delay(200);
+    delay(200);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
@@ -1776,7 +1814,7 @@ uint8_t FlashEcuSubaruDensoSH705xKline::calculate_checksum(QByteArray output, bo
         checksum += (uint8_t)output.at(i);
 
     if (dec_0x100)
-        checksum = (uint8_t) (0x100 - checksum);
+        checksum = (uint8_t)(0x100 - checksum);
 
     return checksum;
 }
