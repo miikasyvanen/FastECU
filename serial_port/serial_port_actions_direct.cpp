@@ -616,11 +616,9 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                     }
                     else
                         msglen = received.at(3) + 1;
-
                 }
                 else if (protocol == ISO9141)
                 {
-                    dieTime = QTime::currentTime().addMSecs(timeout);
                     while (received.length() < 4 && QTime::currentTime() < dieTime)
                     {
                         if (serial->bytesAvailable())
@@ -632,7 +630,6 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                     if (received.startsWith("\x80\xf0"))
                         msglen = (uint8_t)received.at(3) + 1;
                 }
-                dieTime = QTime::currentTime().addMSecs(timeout);
                 while ((uint32_t)req_bytes.length() < msglen && QTime::currentTime() < dieTime)
                 {
                     if (serial->bytesAvailable())
