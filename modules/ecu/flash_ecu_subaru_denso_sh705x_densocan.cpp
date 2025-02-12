@@ -189,32 +189,30 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
     emit LOG_I("Initializing bootloader", true, true);
 
     uint16_t loopcount = 0;
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0F);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFE);
+    output.append((uint8_t)((SUB_DENSOCAN_ENTER_BL >> 8) & 0xFF));
+    output.append((uint8_t)(SUB_DENSOCAN_ENTER_BL & 0xFF));
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+
     while (loopcount < 1000)
     {
-        //QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-        output.clear();
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x0F);
-        output.append((uint8_t)0xFF);
-        output.append((uint8_t)0xFE);
-        output.append((uint8_t)((SUB_DENSOCAN_ENTER_BL >> 8) & 0xFF));
-        output.append((uint8_t)(SUB_DENSOCAN_ENTER_BL & 0xFF));
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-        output.append((uint8_t)0x00);
-
         serial->write_serial_data_echo_check(output);
         //received = serial->read_serial_data(20, 5);
         delay(3);
         loopcount++;
     }
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     serial->clear_rx_buffer();
     received = serial->read_serial_data(20, 10);
-    //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 
     emit LOG_I("Connecting to bootloader", true, true);
 
