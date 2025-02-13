@@ -51,6 +51,7 @@ BiuOperationsSubaru::~BiuOperationsSubaru()
     delete biu_option_result;
     delete switch_result;
     delete data_result;
+
     delete biuOpsSubaruSwitchesIo;
     delete biuOpsSubaruSwitchesLighting;
     delete biuOpsSubaruSwitchesOptions;
@@ -62,7 +63,7 @@ BiuOperationsSubaru::~BiuOperationsSubaru()
     delete biuOpsSubaruDataDest;
     delete biuOpsSubaruDataFactory;
     delete biuOpsSubaruInput1;
-    delete biuOpsSubaruInput2;
+    //delete biuOpsSubaruInput2;
 }
 
 BiuOpsSubaruSwitches* BiuOperationsSubaru::update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches)
@@ -228,7 +229,6 @@ void BiuOperationsSubaru::prepare_biu_set_cmd(QByteArray cmd_settings)
 void BiuOperationsSubaru::prepare_biu_msg()
 {
     output.clear();
-
     output.append((uint8_t)0x80);
     output.append((uint8_t)0x40);
     output.append((uint8_t)0xf0);
@@ -255,18 +255,14 @@ void BiuOperationsSubaru::send_biu_msg()
         return;
     }
 
-    send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
-
     if (connection_state == NOT_CONNECTED && current_command == CONNECT)
-    {
         serial->fast_init(output);
-        //delay(100);
-
-    }
     else
-        received = serial->write_serial_data_echo_check(output);
+        serial->write_serial_data_echo_check(output);
 
-    received = serial->read_serial_data(100, 250);
+    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
+
+    received = serial->read_serial_data(100, serial_read_long_timeout);
 
     /*
     received.clear();
@@ -475,7 +471,7 @@ void BiuOperationsSubaru::send_biu_msg()
     }
     */
 
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
     parse_biu_message(received);
 
     if (connection_state == CONNECTED) keep_alive_timer->start();

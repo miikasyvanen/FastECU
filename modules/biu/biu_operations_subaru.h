@@ -34,6 +34,12 @@ public:
     ~BiuOperationsSubaru();
 
 private:
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_extra_short_timeout = 50;
+    uint16_t serial_read_short_timeout = 200;
+    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_long_timeout = 800;
+    uint16_t serial_read_extra_long_timeout = 3000;
 
     enum BiuCommands {
         NO_COMMAND = 0x00,
