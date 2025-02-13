@@ -40,12 +40,13 @@ BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *par
     connect(ui->send_msg, SIGNAL(clicked(bool)), this, SLOT(parse_biu_cmd()));
     connect(keep_alive_timer, SIGNAL(timeout()), this, SLOT(keep_alive()));
 
-    emit emit LOG_I("BIU started", true, true);
+    emit LOG_I("BIU started", true, true);
 }
 
 BiuOperationsSubaru::~BiuOperationsSubaru()
 {
     keep_alive_timer->stop();
+    /*
     delete ui;
     delete keep_alive_timer;
     delete biu_tt_result;
@@ -65,6 +66,7 @@ BiuOperationsSubaru::~BiuOperationsSubaru()
     delete biuOpsSubaruDataFactory;
     delete biuOpsSubaruInput1;
     //delete biuOpsSubaruInput2;
+*/
 }
 
 BiuOpsSubaruSwitches* BiuOperationsSubaru::update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches)
