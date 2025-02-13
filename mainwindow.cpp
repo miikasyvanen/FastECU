@@ -2246,15 +2246,14 @@ void MainWindow::send_message_to_log_window(QString msg)
     }
     else
     {
-        emit LOG_D("Check if BIU window is open", true, true);
         QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
         if (biuOperationsSubaruWindow)
         {
-            emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+            //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
             QTextEdit *textEdit = biuOperationsSubaruWindow->findChild<QTextEdit*>("text_edit");
             if (textEdit)
             {
-                emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
+                //emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
                 textEdit->insertPlainText(msg);
                 textEdit->ensureCursorVisible();
             }

@@ -1046,7 +1046,6 @@ void MainWindow::show_subaru_biu_window()
     //serial->change_port_speed("4800");
 
     BiuOperationsSubaru biuOperationsSubaru(serial, this);
-    biuOperationsSubaru.setObjectName("BiuOperationsSubaruWindow");
     QObject::connect(&biuOperationsSubaru, &BiuOperationsSubaru::LOG_E, syslogger, &SystemLogger::log_messages);
     QObject::connect(&biuOperationsSubaru, &BiuOperationsSubaru::LOG_W, syslogger, &SystemLogger::log_messages);
     QObject::connect(&biuOperationsSubaru, &BiuOperationsSubaru::LOG_I, syslogger, &SystemLogger::log_messages);
