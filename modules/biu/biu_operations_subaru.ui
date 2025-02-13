@@ -50,6 +50,13 @@
          <height>600</height>
         </size>
        </property>
+       <property name="font">
+        <font>
+         <family>DejaVu Sans Mono</family>
+         <pointsize>10</pointsize>
+         <bold>false</bold>
+        </font>
+       </property>
       </widget>
      </item>
      <item>
