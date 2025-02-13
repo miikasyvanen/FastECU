@@ -13,6 +13,12 @@
     <height>697</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <family>Ubuntu Mono</family>
+    <bold>false</bold>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>Communication Interface with BIU</string>
   </property>

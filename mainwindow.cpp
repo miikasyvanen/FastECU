@@ -2235,13 +2235,29 @@ void MainWindow::send_message_to_log_window(QString msg)
     QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
     if (ecuOperationsWindow)
     {
-        //emit LOG_D("Found ecuOperationsWindow";
+        //emit LOG_D("Found ecuOperationsWindow", true, true);
         QTextEdit *textEdit = ecuOperationsWindow->findChild<QTextEdit*>("text_edit");
         if (textEdit)
         {
-            //emit LOG_D("Found ecuOperationsWindow->textEdit";
+            //emit LOG_D("Found ecuOperationsWindow->textEdit", true, true);
             textEdit->insertPlainText(msg);
             textEdit->ensureCursorVisible();
+        }
+    }
+    else
+    {
+        emit LOG_D("Check if BIU window is open", true, true);
+        QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
+        if (biuOperationsSubaruWindow)
+        {
+            emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+            QTextEdit *textEdit = biuOperationsSubaruWindow->findChild<QTextEdit*>("text_edit");
+            if (textEdit)
+            {
+                emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
+                textEdit->insertPlainText(msg);
+                textEdit->ensureCursorVisible();
+            }
         }
     }
 }
