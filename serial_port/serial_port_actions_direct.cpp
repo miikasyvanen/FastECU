@@ -87,9 +87,11 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
 
 int SerialPortActionsDirect::fast_init(QByteArray output)
 {
+    QByteArray received;
+
     if (use_openport2_adapter)
     {
-        unsigned long status;
+        unsigned long result;
         PASSTHRU_MSG InputMsg;
         PASSTHRU_MSG OutputMsg;
 
@@ -104,46 +106,36 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
         }
         InputMsg.DataSize = output.length();
 
-        status = j2534->PassThruIoctl(chanID, FAST_INIT, &InputMsg, &OutputMsg);
-        if (status)
+        /* Set timeout to 350ms before init */
+        accurate_delay(350);
+
+        result = j2534->PassThruIoctl(chanID, FAST_INIT, &InputMsg, &OutputMsg);
+        if (result)
         {
             reportJ2534Error();
             return STATUS_ERROR;
         }
         else
         {
-            //emit LOG_D("FAST_INIT OK";
+
         }
     }
     else
     {
-        QByteArray init;
-        QByteArray received;
-        double seconds = (double)350 / (double)1000;
-        auto spin_start = std::chrono::high_resolution_clock::now();
-
-        //serial->setBaudRate(10400);
-
-        /* Set timeout to 350ms before init */
-        seconds = (double)350 / (double)1000;
-        spin_start = std::chrono::high_resolution_clock::now();
-        while ((std::chrono::high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
-        /* Set break to set seril line low */
+        // Set timeout to 350ms before init
+        accurate_delay(350);
+        // Set break to set seril line low
         serial->setBreakEnabled(true);
-        /* Set timeout to 25ms to generate 25ms low pulse  */
-        seconds = (double)25.1 / (double)1000;
-        spin_start = std::chrono::high_resolution_clock::now();
-        while ((std::chrono::high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
-        /* Unset break to set seril line high */
+        // Set timeout to 25ms to generate 25ms low pulse
+        accurate_delay(23.7);
+        // Unset break to set seril line high
         serial->setBreakEnabled(false);
-        /* Set timeout to 25ms to generate 25ms high pulse before init data is sent */
-        seconds = (double)24.7 / (double)1000;
-        spin_start = std::chrono::high_resolution_clock::now();
-        while ((std::chrono::high_resolution_clock::now() - spin_start).count() / 1e9 < seconds);
-        /* Send init data */
+        // Set timeout to 25ms to generate 25ms high pulse before init data is sent
+        accurate_delay(23.8);
+        // Send init data
         received = write_serial_data_echo_check(output);
-        received.append(read_serial_data(1, 10));
-        emit LOG_D("Fast init response: " + parse_message_to_hex(received), true, true);
+        received = read_serial_data(1, 10);
+        //emit LOG_D("Fast init response: " + parse_message_to_hex(received), true, true);
         delay(100);
     }
 
@@ -602,7 +594,7 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
             }
             if (serial->bytesAvailable())
             {
-                if (protocol == ISO14230)
+                if (is_iso14230_connection)
                 {
                     emit LOG_I("Read with ISO14230", true, true);
                     while (received.length() < 4 && QTime::currentTime() < dieTime)
@@ -615,11 +607,12 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                     {
                         msglen = (received.at(0) & 0x3f) + 1;
                         req_bytes.append(received.at(3));
+                        received.remove(received.length()-1, 1);
                     }
                     else
                         msglen = received.at(3) + 1;
                 }
-                else if (protocol == ISO9141)
+                else if (!is_iso14230_connection)
                 {
                     while (received.length() < 4 && QTime::currentTime() < dieTime)
                     {
@@ -1418,9 +1411,9 @@ void SerialPortActionsDirect::handle_error(QSerialPort::SerialPortError error)
     }
 }
 
-void SerialPortActionsDirect::accurate_delay(int timeout)
+void SerialPortActionsDirect::accurate_delay(double timeout)
 {
-    double seconds = (double)timeout / 1000.0;
+    double seconds = timeout / 1000.0;
     auto spinStart = std::chrono::high_resolution_clock::now();
     while ((std::chrono::high_resolution_clock::now() - spinStart).count() / 1e9 < seconds);
 }

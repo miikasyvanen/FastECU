@@ -59,7 +59,13 @@ public:
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
 
-    int echo_check_timout = 5000;
+    uint16_t echo_check_timout = 5000;
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_extra_short_timeout = 50;
+    uint16_t serial_read_short_timeout = 200;
+    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_long_timeout = 800;
+    uint16_t serial_read_extra_long_timeout = 3000;
 
     uint8_t iso14230_startbyte = 0;
     uint8_t iso14230_tester_id = 0;
@@ -221,7 +227,7 @@ private slots:
 
     void close_serial_port();
     void handle_error(QSerialPort::SerialPortError error);
-    void accurate_delay(int timeout);
+    void accurate_delay(double timeout);
     void fast_delay(int timeout);
     void delay(int timeout);
 
