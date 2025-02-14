@@ -34,6 +34,12 @@ class HexCommander : public QDialog
 {
     Q_OBJECT
 
+signals:
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
+
 public:
     explicit HexCommander(SerialPortActions *serial, QWidget *parent = nullptr);
     ~HexCommander();
@@ -52,7 +58,6 @@ private:
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int timeout);
 
     SerialPortActions *serial;

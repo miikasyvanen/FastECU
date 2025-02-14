@@ -75,7 +75,7 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
     QByteArray encryptedFileData = encryptedFile.readAll();
     encryptedFile.close();
 
-    send_log_window_message("Files loaded successfully", true, true);
+    emit LOG_I("Files loaded successfully", true, true);
 
     //uint16_t keys[]={
     //    0x3b61, 0x8bef, 0x9e51, 0x1075
@@ -107,10 +107,10 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
         }
     }
 
-    send_log_window_message("Start Time", true, true);
+    emit LOG_I("Start Time", true, true);
     for (j = 0; j < 0x20000; j+=4)   // 0x20000
     {
-        //send_log_window_message("plaintext value = " + parse_message_to_hex(inDWord) + " ciphertext value = " + parse_message_to_hex(outDWord), true, true);
+        //emit LOG_I("plaintext value = " + parse_message_to_hex(inDWord) + " ciphertext value = " + parse_message_to_hex(outDWord), true, true);
 
         if (!alreadyExists[j/4])
         {
@@ -120,10 +120,10 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
 
             /*
             plainText = QRandomGenerator::global()->generate();
-            //send_log_window_message("Plaintext: " + QString::number(plainText, 16) + " Ciphertext " + QString::number(cipherText, 16), true, true);
+            //emit LOG_I("Plaintext: " + QString::number(plainText, 16) + " Ciphertext " + QString::number(cipherText, 16), true, true);
             cipherText = manyRoundAndFlip(plainText, keys, 4);
             cipherText = flipLeftRight(cipherText);
-            //send_log_window_message("Plaintext: " + QString::number(plainText, 16) + " Ciphertext " + QString::number(cipherText, 16), true, true);
+            //emit LOG_I("Plaintext: " + QString::number(plainText, 16) + " Ciphertext " + QString::number(cipherText, 16), true, true);
             */
 
             x4 = cipherText & 0xFFFF;
@@ -141,17 +141,17 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
                     if ((nybble == 0) && (subkey > 0xf)) k4 += 0x01;
                     fOutcome = fFunction(x4, k4);
                     x3Text = ((cipherText >> 16) & 0xffff) ^ fOutcome;
-                    //send_log_window_message("plaintext = " + QString::number(plainText, 16) + " ciphertext = " + QString::number(cipherText, 16) + " x3text = " + QString::number(x3Text, 16), true, true);
+                    //emit LOG_I("plaintext = " + QString::number(plainText, 16) + " ciphertext = " + QString::number(cipherText, 16) + " x3text = " + QString::number(x3Text, 16), true, true);
 
                     uint8_t x3_bits = get_bit(x3Text, inBits[nybble][0]) ^ get_bit(x3Text, inBits[nybble][1]);
                     uint8_t z = p ^ c ^ x3_bits;
-                    //send_log_window_message("p3:" + QString::number(p3, 16) + " p15:" + QString::number(p15, 16) + " p16:" + QString::number(p16, 16) + " p28:" + QString::number(p28, 16) + " p29:" + QString::number(p29, 16) + " c19:" + QString::number(c19, 16) + " c31:" + QString::number(c31, 16) + " c32:" + QString::number(c32, 16) + " x3_28:" + QString::number(x3_28, 16) + " x3_29:" + QString::number(x3_29, 16), true, true);
+                    //emit LOG_I("p3:" + QString::number(p3, 16) + " p15:" + QString::number(p15, 16) + " p16:" + QString::number(p16, 16) + " p28:" + QString::number(p28, 16) + " p29:" + QString::number(p29, 16) + " c19:" + QString::number(c19, 16) + " c31:" + QString::number(c31, 16) + " c32:" + QString::number(c32, 16) + " x3_28:" + QString::number(x3_28, 16) + " x3_29:" + QString::number(x3_29, 16), true, true);
 
                     if (z == 0) counter[nybble][subkey]++;
                 }
             }
         }
-        //if ((j % 3000) == 0) send_log_window_message("Unique plaintext / ciphertext pair tested: " + QString::number(total), true, true);
+        //if ((j % 3000) == 0) emit LOG_I("Unique plaintext / ciphertext pair tested: " + QString::number(total), true, true);
     }
 
 
@@ -171,7 +171,7 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
     {
 
         //uint32_t correctKey = ((keys[3] + ((keys[3] & 0x01) << 16)) >> (12 - (nybble * 4))) & 0x1f;
-        //send_log_window_message("Nybble: " + QString::number(nybble) + "   Correct key: 0x" + QString::number(correctKey, 16) + " Count: " + QString::number(counter[nybble][correctKey]), true, true);
+        //emit LOG_I("Nybble: " + QString::number(nybble) + "   Correct key: 0x" + QString::number(correctKey, 16) + " Count: " + QString::number(counter[nybble][correctKey]), true, true);
 
         int tempMax, tempOrder;
         for (subkey = 1; subkey < 0x20; subkey++)
@@ -191,13 +191,13 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
 
         for (j = 0x1f; j > 0x1e; j--)
         {
-            //send_log_window_message("Nybble: " + QString::number(nybble) + " Predicted key: 0x" + QString::number(order[nybble][j], 16) + " Count: " + QString::number(counter[nybble][j]), true, true);
+            //emit LOG_I("Nybble: " + QString::number(nybble) + " Predicted key: 0x" + QString::number(order[nybble][j], 16) + " Count: " + QString::number(counter[nybble][j]), true, true);
             k4 += (order[nybble][0x1f] & 0xf) << (12 - (nybble * 4));
         }
 
     }
-    send_log_window_message("Predicted k4: 0x" + QString::number(k4, 16), true, true);
-    send_log_window_message("Moving on to k1", true, true);
+    emit LOG_I("Predicted k4: 0x" + QString::number(k4, 16), true, true);
+    emit LOG_I("Moving on to k1", true, true);
 
     // now getting k1
 
@@ -230,17 +230,17 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
                     if ((nybble == 0) && (subkey > 0xf)) k1 += 0x01;
                     fOutcome = fFunction(x1, k1);
                     x2Text = ((plainText >> 16) & 0xffff) ^ fOutcome;
-                    //send_log_window_message("plaintext = " + QString::number(plainText, 16) + " ciphertext = " + QString::number(cipherText, 16) + " x3text = " + QString::number(x3Text, 16), true, true);
+                    //emit LOG_I("plaintext = " + QString::number(plainText, 16) + " ciphertext = " + QString::number(cipherText, 16) + " x3text = " + QString::number(x3Text, 16), true, true);
 
                     uint8_t x2_bits = get_bit(x2Text, inBits[nybble][0]) ^ get_bit(x2Text, inBits[nybble][1]);
                     uint8_t z = p ^ c ^ x2_bits;
-                    //send_log_window_message("p3:" + QString::number(p3, 16) + " p15:" + QString::number(p15, 16) + " p16:" + QString::number(p16, 16) + " p28:" + QString::number(p28, 16) + " p29:" + QString::number(p29, 16) + " c19:" + QString::number(c19, 16) + " c31:" + QString::number(c31, 16) + " c32:" + QString::number(c32, 16) + " x3_28:" + QString::number(x3_28, 16) + " x3_29:" + QString::number(x3_29, 16), true, true);
+                    //emit LOG_I("p3:" + QString::number(p3, 16) + " p15:" + QString::number(p15, 16) + " p16:" + QString::number(p16, 16) + " p28:" + QString::number(p28, 16) + " p29:" + QString::number(p29, 16) + " c19:" + QString::number(c19, 16) + " c31:" + QString::number(c31, 16) + " c32:" + QString::number(c32, 16) + " x3_28:" + QString::number(x3_28, 16) + " x3_29:" + QString::number(x3_29, 16), true, true);
 
                     if (z == 0) counter[nybble][subkey]++;
                 }
             }
         }
-        //if ((j % 3000) == 0) send_log_window_message("Unique plaintext / ciphertext pair tested: " + QString::number(total), true, true);
+        //if ((j % 3000) == 0) emit LOG_I("Unique plaintext / ciphertext pair tested: " + QString::number(total), true, true);
     }
 
 
@@ -259,7 +259,7 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
     {
 
         //uint32_t correctKey = ((keys[0] + ((keys[0] & 0x01) << 16)) >> (12 - (nybble * 4))) & 0x1f;
-        //send_log_window_message("Nybble: " + QString::number(nybble) + "   Correct key: 0x" + QString::number(correctKey, 16) + " Count: " + QString::number(counter[nybble][correctKey]), true, true);
+        //emit LOG_I("Nybble: " + QString::number(nybble) + "   Correct key: 0x" + QString::number(correctKey, 16) + " Count: " + QString::number(counter[nybble][correctKey]), true, true);
 
         int tempMax, tempOrder;
         for (subkey = 1; subkey < 0x20; subkey++)
@@ -279,28 +279,28 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
 
         for (j = 0x1f; j > 0x1e; j--)
         {
-            //send_log_window_message("Nybble: " + QString::number(nybble) + " Predicted key: 0x" + QString::number(order[nybble][j], 16) + " Count: " + QString::number(counter[nybble][j]), true, true);
+            //emit LOG_I("Nybble: " + QString::number(nybble) + " Predicted key: 0x" + QString::number(order[nybble][j], 16) + " Count: " + QString::number(counter[nybble][j]), true, true);
             k1 += (order[nybble][0x1f] & 0xf) << (12 - (nybble * 4));
         }
 
     }
-    send_log_window_message("Predicted k1: 0x" + QString::number(k1, 16), true, true);
-    send_log_window_message("Moving on to k2", true, true);
+    emit LOG_I("Predicted k1: 0x" + QString::number(k1, 16), true, true);
+    emit LOG_I("Moving on to k2", true, true);
 
     // k2 using last plaintext, ciphertext pair
 
     x2Text = ((plainText >> 16) & 0xffff) ^ fFunction(plainText & 0xffff, k1);
     x3Text = ((cipherText >> 16) & 0xffff) ^ fFunction(cipherText & 0xffff, k4);
-    //send_log_window_message("Plaintext: " + QString::number(plainText, 16) + " Ciphertext: " + QString::number(cipherText, 16), true, true);
-    //send_log_window_message("x2Text: " + QString::number(x2Text, 16) + " x3 Text: " + QString::number(x3Text, 16), true, true);
+    //emit LOG_I("Plaintext: " + QString::number(plainText, 16) + " Ciphertext: " + QString::number(cipherText, 16), true, true);
+    //emit LOG_I("x2Text: " + QString::number(x2Text, 16) + " x3 Text: " + QString::number(x3Text, 16), true, true);
 
     for (k2 = 0; k2 < 0x10000; k2++)
     {
         if ((fFunction(x2Text, k2) ^ (plainText & 0xffff)) == x3Text) break;
     }
 
-    send_log_window_message("Predicted k2: 0x" + QString::number(k2, 16), true, true);
-    send_log_window_message("Moving on to k3", true, true);
+    emit LOG_I("Predicted k2: 0x" + QString::number(k2, 16), true, true);
+    emit LOG_I("Moving on to k3", true, true);
 
     // k3 using last plaintext, ciphertext pair
 
@@ -309,8 +309,8 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
         if ((fFunction(x3Text, k3) ^ (cipherText & 0xffff)) == x2Text) break;
     }
 
-    send_log_window_message("Predicted k3: 0x" + QString::number(k3, 16), true, true);
-    send_log_window_message("End Time", true, true);
+    emit LOG_I("Predicted k3: 0x" + QString::number(k3, 16), true, true);
+    emit LOG_I("End Time", true, true);
 
     return STATUS_SUCCESS;
 
@@ -339,7 +339,7 @@ int GetKeyOperationsSubaru::linear_approx_test()
 
     for (c = 0; c < 0x10; c++)
         for (d = 0; d < 0x20; d++)
-            send_log_window_message("Results of Linear Approx: ," + QString::number(approxTable[d][c]) + "," + QString::number(d) + "," + QString::number(c), true, true);
+            emit LOG_I("Results of Linear Approx: ," + QString::number(approxTable[d][c]) + "," + QString::number(d) + "," + QString::number(c), true, true);
 
     return STATUS_SUCCESS;
 }
@@ -435,7 +435,7 @@ void GetKeyOperationsSubaru::findApprox(uint16_t **approxTable)
 
     for (c = 0; c < 0x10; c++)
     {
-        send_log_window_message("Got to: " + QString::number(c), true, true);
+        emit LOG_I("Got to: " + QString::number(c), true, true);
         for (d = 0; d < 0x20; d++)
         {
             for (e = 0; e < 0x20; e++)
@@ -443,36 +443,9 @@ void GetKeyOperationsSubaru::findApprox(uint16_t **approxTable)
                 if (applyMask(e, d) ^ applyMask(sBox(e), c) == 0)
                 {
                     approxTable[d][c]++;
-                    //send_log_window_message(QString::number(d) + "," + QString::number(c) + "," + QString::number(approxTable[d][c]), true, true);
+                    //emit LOG_I(QString::number(d) + "," + QString::number(c) + "," + QString::number(approxTable[d][c]), true, true);
                 }
             }
         }
     }
 }
-
-int GetKeyOperationsSubaru::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
-}
-
-
-

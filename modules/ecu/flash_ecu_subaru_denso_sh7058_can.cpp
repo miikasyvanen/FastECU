@@ -2129,8 +2129,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::add_ssm_header(QByteArray output, uint8
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //send_log_window_message("Send: " + parse_message_to_hex(output), true, true);
-    //qDebug () << "Send:" << parse_message_to_hex(output);
+    //emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     return output;
 }
 

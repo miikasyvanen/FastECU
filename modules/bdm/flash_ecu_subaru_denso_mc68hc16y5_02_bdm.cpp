@@ -37,7 +37,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+    //emit LOG_I("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
     qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
 
     kernel = ecuCalDef->Kernel;
@@ -47,11 +47,11 @@ void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::run()
 
     if (cmd_type == "read")
     {
-        send_log_window_message("Read ROM from Subaru Denso MC68HC16 with BDM", true, true);
+        emit LOG_I("Read ROM from Subaru Denso MC68HC16 with BDM", true, true);
     }
     else if (cmd_type == "write")
     {
-        send_log_window_message("Write ROM to Subaru Denso MC68HC16 with BDM", true, true);
+        emit LOG_I("Write ROM to Subaru Denso MC68HC16 with BDM", true, true);
     }
 
     // Set serial port
@@ -71,19 +71,19 @@ void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::run()
     switch (ret)
     {
         case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru Denso MC68HC16 with BDM, please wait...", true, true);
+            emit LOG_I("Connecting to Subaru Denso MC68HC16 with BDM, please wait...", true, true);
             emit external_logger("Preparing, please wait...");
             if (cmd_type == "read")
             {
                 emit external_logger("Reading ROM, please wait...");
-                send_log_window_message("Reading ROM from Subaru Denso MC68HC16 with BDM", true, true);
+                emit LOG_I("Reading ROM from Subaru Denso MC68HC16 with BDM", true, true);
                 result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 //result = read_mem(0x0, 0x1000);
             }
             if (cmd_type == "write")
             {
                 emit external_logger("Writing ROM, please wait...");
-                send_log_window_message("Writing ROM to Subaru Denso MC68HC16 with BDM", true, true);
+                emit LOG_I("Writing ROM to Subaru Denso MC68HC16 with BDM", true, true);
                 result = write_mem();
                 //if (result == STATUS_SUCCESS)
                 //    int read_result = read_mem(0x0, 0x100);
@@ -233,7 +233,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t
         start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("BDM read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        send_log_window_message(msg, true, true);
+        emit LOG_I(msg, true, true);
         delay(1);
 
         len_done += cplen;
@@ -268,7 +268,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
     {
-        send_log_window_message("Unable to open kernel file for reading", true, true);
+        emit LOG_I("Unable to open kernel file for reading", true, true);
         return -1;
     }
     uint32_t file_len = file.size();
@@ -409,7 +409,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, co
     QString length = QString("%1").arg((uint32_t)len,8,16,QLatin1Char('0')).toUpper();
     QString block = QString("%1").arg((uint32_t)blockno,2,16,QLatin1Char('0')).toUpper();
     msg = QString("Writing block: " + block + " at address 0x" + start_addr).toUtf8();
-    send_log_window_message(msg, true, true);
+    emit LOG_I(msg, true, true);
     msg = QString("wdmem 0x" + start_addr + " 0x" + length).toUtf8();
     //msg = QString("wdmem 0x" + start_addr + " 0x" + length).toUtf8();
     qDebug() << msg;
@@ -458,7 +458,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, co
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
         msg = QString("Writing chunk @ 0x%1 (%2\% - %3 B/s, ~ %4 s remaining)").arg(start_address).arg((unsigned) 100 * (len - remain) / len,1,10,QLatin1Char('0')).arg((uint32_t)curspeed,1,10,QLatin1Char('0')).arg(tleft,1,10,QLatin1Char('0')).toUtf8();
-        send_log_window_message(msg, true, true);
+        emit LOG_I(msg, true, true);
 
         remain -= blocksize;
         start += blocksize;
@@ -485,7 +485,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, co
         float pleft = (float)byteindex / (float)len * 100.0f;
         set_progressbar_value(pleft);
     }
-    send_log_window_message("Block write complete.", true, true);
+    emit LOG_I("Block write complete.", true, true);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     set_progressbar_value(100);
 
@@ -507,36 +507,6 @@ QString FlashEcuSubaruDensoMC68HC16Y5_02_BDM::parse_message_to_hex(QByteArray re
     }
 
     return msg;
-}
-
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::set_progressbar_value(int value)

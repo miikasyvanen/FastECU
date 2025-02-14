@@ -86,7 +86,6 @@ private:
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 
