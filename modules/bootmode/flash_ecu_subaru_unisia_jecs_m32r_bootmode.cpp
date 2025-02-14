@@ -349,6 +349,9 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
     emit LOG_I("Uploading kernel, please wait...", true, true);
     for (int i = 0; i < filesize; i+=0x80)
     {
+        if (kill_process)
+            return 0;
+
         output.clear();
         for (int j = 0; j < 0x80; j++)
             output.append(kerneldata.at(i + j));
@@ -418,6 +421,9 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         received.clear();
         for (int i = 0; i < 20; i++)
         {
+            if (kill_process)
+                return 0;
+
             received.append(serial->read_serial_data(10, 10));
             emit LOG_I(".", false, false);
             if (received.length() > 6)
@@ -453,6 +459,9 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     received.clear();
     for (int i = 0; i < 20; i++)
     {
+        if (kill_process)
+            return 0;
+
         received.append(serial->read_serial_data(10, 10));
         emit LOG_I(".", false, false);
         if (received.length() > 6)
@@ -493,7 +502,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     QElapsedTimer timer;
 
     emit LOG_I("Uploading file " + flashdata_filename + " to flash, please wait...", true, true);
-
+    emit LOG_D("Uploading " + QString::number(blocks) + " blocks", true, true);
     for (int i = 0; i < blocks; i++)
     {
         output.clear();
@@ -509,6 +518,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         output.append((uint8_t)(dataaddr >> 16) & 0xFF);
         output.append((uint8_t)(dataaddr >> 8) & 0xFF);
         output.append((uint8_t)dataaddr & 0xFF);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         for (int j = 0; j < blocksize; j++)
         {
             output.append((filedata.at(i * blocksize + j)));// ^ encrypt));
@@ -516,7 +526,6 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         output.append(calculate_checksum(output, false));
 
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         received.clear();
         if (output.at(5) == 0x61)
         {
@@ -526,7 +535,6 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
                 if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
                 {
                     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-                    break;
                 }
                 else
                 {
@@ -541,7 +549,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
                 emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
-            delay(50);
+            delay(10);
         }
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();

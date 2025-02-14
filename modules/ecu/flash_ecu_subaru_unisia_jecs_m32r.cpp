@@ -312,11 +312,15 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         emit LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
-
-    //serial->change_port_speed("19200");
-    //emit LOG_I("Checking if OBK is running", true, true);
-    //received = send_subaru_unisia_jecs_sid_af_erase_memory_block();
-
+/*
+    serial->change_port_speed("19200");
+    emit LOG_I("Checking if OBK is running", true, true);
+    received = send_sid_af_erase_memory_block();
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x42)
+        kernel_alive = true;
+*/
     serial->change_port_speed("4800");
     // SSM init
     received = send_sid_bf_ssm_init();
@@ -381,6 +385,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
 
         return STATUS_ERROR;
     }
+
     emit LOG_I("", true, false);
     received.clear();
     for (int i = 0; i < 40; i++)
@@ -439,12 +444,12 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         {
             output.append(flashdata.at(i * blocksize + j) ^ encrypt);
         }
-        serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
+        output = add_ssm_header(output, tester_id, target_id, false);
+        serial->write_serial_data_echo_check(output);
+        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
 
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        //delay(5);
         received.clear();
-        if (output.at(1) == 0x61)
+        if (output.at(5) == 0x61)
         {
             received.append(serial->read_serial_data(8, serial_read_extra_long_timeout));
             if (received.length() > 6)
@@ -452,7 +457,6 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
                 if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x52)
                 {
                     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-                    break;
                 }
                 else
                 {
@@ -618,6 +622,9 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_af_erase_memory_block()
     output.append((uint8_t)0xAF);
     output.append((uint8_t)0x31);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    //received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -638,7 +645,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::add_ssm_header(QByteArray output, uint8
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     return output;
 }
 
@@ -671,7 +678,7 @@ QString FlashEcuSubaruUnisiaJecsM32r::parse_message_to_hex(QByteArray received)
 
     for (int i = 0; i < received.length(); i++)
     {
-        msg.append(QString("0x%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
+        msg.append(QString("%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
     }
 
     return msg;
