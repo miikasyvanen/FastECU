@@ -313,31 +313,47 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         return STATUS_ERROR;
     }
 
-    serial->change_port_speed("4800");
-    // SSM init
-    received = send_sid_bf_ssm_init();
-    emit LOG_I("SSM init: " + parse_message_to_hex(received), true, true);
-    //if (received == "" || (uint8_t)received.at(4) != 0xFF)
-        //return STATUS_ERROR;
-
-    received.remove(0, 8);
-    received.remove(5, received.length() - 5);
-
-    for (int i = 0; i < received.length(); i++)
-    {
-        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-    }
-    QString ecuid = msg;
-    emit LOG_I("ECU ID = " + ecuid, true, true);
-
-    emit LOG_I("Sending request to change to flash mode", true, true);
-    received = send_sid_af_enter_flash_mode(received);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-    //if (received == "" || (uint8_t)received.at(4) != 0xef)
-        //return STATUS_ERROR;
-
-    emit LOG_D("Changing baudrate to 19200", true, true);
     serial->change_port_speed("19200");
+    emit LOG_I("Checking if OBK is running", true, true);
+    output.clear();
+    output.append((uint8_t)0xAF);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    // OBK should respond with 0xAF 0x00 when running
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef)
+        kernel_alive = true;
+
+    if (!kernel_alive)
+    {
+        serial->change_port_speed("4800");
+        // SSM init
+        received = send_sid_bf_ssm_init();
+        emit LOG_I("SSM init: " + parse_message_to_hex(received), true, true);
+        if (received == "" || (uint8_t)received.at(4) != 0xFF)
+            return STATUS_ERROR;
+
+        received.remove(0, 8);
+        received.remove(5, received.length() - 5);
+
+        for (int i = 0; i < received.length(); i++)
+        {
+            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        }
+        QString ecuid = msg;
+        emit LOG_I("ECU ID = " + ecuid, true, true);
+
+        emit LOG_I("Sending request to change to flash mode", true, true);
+        received = send_sid_af_enter_flash_mode(received);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        if (received == "" || (uint8_t)received.at(4) != 0xef)
+            return STATUS_ERROR;
+
+        emit LOG_D("Changing baudrate to 19200", true, true);
+        serial->change_port_speed("19200");
+
+    }
 
     emit LOG_D("Set programming voltage +12v to Line End Check 1", true, true);
     serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
