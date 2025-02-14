@@ -352,6 +352,9 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
 
     }
 
+    if (!serial->get_use_openport2_adapter())
+        QMessageBox::information(this, tr("Programming voltage"), "Apply VPP voltage to ECU and continue by pressing OK");
+
     emit LOG_D("Set programming voltage +12v to Line End Check 1", true, true);
     serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
 

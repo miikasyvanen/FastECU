@@ -70,7 +70,7 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
         serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
 
         ret = QMessageBox::warning(this, tr("Connecting to ECU"),
-                                   tr("Make sure VPP and MOD1 is connected and turn ignition ON and press OK to start initializing connection to ECU"),
+                                   tr("Make sure VPP and MOD1 is connected and turn ignition ON and press OK to start initialising connection to ECU"),
                                    QMessageBox::Ok | QMessageBox::Cancel,
                                    QMessageBox::Ok);
     }
