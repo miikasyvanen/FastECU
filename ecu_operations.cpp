@@ -210,7 +210,7 @@ int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
         delay(10);
-        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(pagesize + 6, serial_read_timeout);
 
         if (received.startsWith("\xbe\xef"))
         {
@@ -439,9 +439,6 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
 
         numblocks = 1;
 
-        uint32_t curblock = (addr / pagesize);
-
-
         pleft = (float)(addr - start_addr) / (float)length * 100.0f;
         set_progressbar_value(pleft);
 
@@ -524,27 +521,6 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
     set_progressbar_value(100);
 
     return STATUS_SUCCESS;
-}
-
-int EcuOperations::read_mem_32bit_iso15765(FileActions::EcuCalDefStructure *ecuCalDef, uint32_t start_addr, uint32_t length)
-{
-    QElapsedTimer timer;
-    QByteArray output;
-    QByteArray received;
-    QByteArray msg;
-    QByteArray pagedata;
-    QByteArray mapdata;
-    uint32_t cplen = 0;
-    uint32_t timeout = 0;
-
-    uint32_t pagesize = 0x400;
-
-    uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
-    uint32_t addr = start_addr - skip_start;
-    uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
-
-    return STATUS_ERROR;
 }
 
 /*******************************************************

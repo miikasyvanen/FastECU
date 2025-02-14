@@ -1343,7 +1343,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
 
                 if (ecuCalDef[ecuCalDefIndex]->RomId.length())
-                    ecuCalDef[ecuCalDefIndex]->FileName = ecuCalDef[ecuCalDefIndex]->RomId + "_" + dateTimeString + ".bin";
+                    ecuCalDef[ecuCalDefIndex]->FileName = ecuCalDef[ecuCalDefIndex]->RomId + dateTimeString + ".bin";
                 else
                     ecuCalDef[ecuCalDefIndex]->FileName = "read_image_" + dateTimeString + ".bin";
 

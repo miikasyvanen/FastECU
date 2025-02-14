@@ -478,20 +478,17 @@ QString SerialPortActionsDirect::open_serial_port()
                 qRegisterMetaType<QSerialPort::SerialPortError>();
                 connect(serial, SIGNAL(errorOccurred(QSerialPort::SerialPortError)), this, SLOT(handle_error(QSerialPort::SerialPortError)));
 
-                //send_log_window_message("Serial port '" + serialPort + "' is open at baudrate " + serialPortBaudRate, true, true);
                 emit LOG_D("Serial port '" + serial_port + "' is open at baudrate " + serial_port_baudrate, true, true);
                 return openedSerialPort;
             }
             else
             {
-                //sendLogWindowMessage("Couldn't open serial port '" + serialPort + "'", true, true);
                 emit LOG_E("Couldn't open serial port '" + serial_port + "'", true, true);
                 return NULL;
             }
 
         }
         else{
-            //sendLogWindowMessage("Serial port '" + serialPort + "' is already opened", true, true);
             emit LOG_D("Serial port '" + serial_port + "' is already opened", true, true);
             return openedSerialPort;
         }
@@ -705,7 +702,6 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
 
         return received;
     }
-    //send_log_window_message("Serial port not open", true, true);
 
     return received;
 }

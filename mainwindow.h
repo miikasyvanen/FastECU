@@ -59,7 +59,6 @@
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs.h>
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.h>
-//#include <modules/ecu/flash_ecu_subaru_hitachi_m32r_kline_recovery.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_can.h>
 #include <modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.h>
 #include <modules/tcu/flash_tcu_subaru_hitachi_m32r_can.h>
@@ -82,8 +81,6 @@
 
 #include <systemlogger.h>
 
-#include <modules/ecu/flash_ecu_subaru_denso_sh7xxx_densocan.h>
-//
 #include <remote_utility/remote_utility.h>
 
 extern void log_error(const QString &message, bool timestamp, bool linefeed);
