@@ -529,7 +529,7 @@ void SerialPortActionsDirect::close_j2534_serial_port()
                 j2534_disconnect_ok = true;
                 break;
             }
-            delay(200);
+            delay(100);
         }
         if (!j2534_disconnect_ok)
             emit LOG_D("J2534 interface disconnect failed!", true, true);
@@ -542,7 +542,7 @@ void SerialPortActionsDirect::close_j2534_serial_port()
                 j2534_close_ok = true;
                 break;
             }
-            delay(200);
+            delay(100);
         }
         if (!j2534_close_ok)
             emit LOG_D("J2534 interface close failed!", true, true);
@@ -561,7 +561,7 @@ void SerialPortActionsDirect::close_j2534_serial_port()
     char dllName[256];
     j2534->getDllName(dllName);
     delete j2534;
-    delay(200);
+    delay(100);
     j2534 = new J2534();
     j2534->setDllName(dllName);
 #if defined Q_OS_UNIX
@@ -809,20 +809,17 @@ int SerialPortActionsDirect::send_periodic_j2534_data(QByteArray output, int tim
 
     delay(10);
 
-    emit LOG_D("Periodic msgID: " + QString::number(msgID), true, true);
+    emit LOG_D("Start periodic message chanID: " + QString::number(chanID) + " and msgID: " + QString::number(chanID), true, true);
 
     return STATUS_SUCCESS;
 }
 
 int SerialPortActionsDirect::stop_periodic_j2534_data()
 {
-    PASSTHRU_MSG rxmsg;
-    unsigned long numRxMsg;
-    unsigned long timeout = 100;
-
+    emit LOG_D("Stop periodic message chanID: " + QString::number(chanID) + " and msgID: " + QString::number(chanID), true, true);
     j2534->PassThruStopPeriodicMsg(chanID, msgID);
     delay(10);
-    j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
+    //j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
 
     return STATUS_SUCCESS;
 }
@@ -1039,6 +1036,7 @@ int SerialPortActionsDirect::set_j2534_can()
 {
     if (is_can_connection)
     {
+        emit LOG_D("Set CAN flags", true, true);
         protocol = CAN;
         if (is_29_bit_id)
             flags = CAN_29BIT_ID;
@@ -1047,6 +1045,7 @@ int SerialPortActionsDirect::set_j2534_can()
     }
     else if (is_iso15765_connection)
     {
+        emit LOG_D("Set iso15765 flags", true, true);
         protocol = ISO15765;
         if (is_29_bit_id)
             flags = CAN_29BIT_ID;
@@ -1090,6 +1089,7 @@ int SerialPortActionsDirect::unset_j2534_can()
 int SerialPortActionsDirect::set_j2534_can_timings()
 {
     // Set timeouts etc.
+    emit LOG_D("Set CAN/iso15765 timings", true, true);
     SCONFIG_LIST scl;
     SCONFIG scp[] = {{PARITY,0}, {LOOPBACK, 0}};
     scl.NumOfParams = ARRAYSIZE(scp);
@@ -1117,12 +1117,9 @@ int SerialPortActionsDirect::set_j2534_can_filters()
 
     j2534->PassThruIoctl(chanID, CLEAR_MSG_FILTERS, NULL, NULL);
 
-    // simply create a "pass all" filter so that we can see
-    // everything unfiltered in the raw stream
-
-    if (protocol == CAN)
+    if (is_can_connection)
     {
-        //emit LOG_D("Set CAN filters";
+        emit LOG_D("Set CAN filters", true, true);
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         txmsg.TxFlags = ISO15765_FRAME_PAD;
@@ -1145,8 +1142,9 @@ int SerialPortActionsDirect::set_j2534_can_filters()
             return STATUS_ERROR;
         }
     }
-    else if (protocol == ISO15765)
+    else if (is_iso15765_connection)
     {
+        emit LOG_D("Set iso15765 filters", true, true);
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
         txmsg.TxFlags = ISO15765_FRAME_PAD;
@@ -1177,9 +1175,9 @@ int SerialPortActionsDirect::set_j2534_can_filters()
     else
         return STATUS_ERROR;
 
-    if (protocol == CAN)
+    if (is_can_connection)
         emit LOG_D("CAN filters OK", true, true);
-    else
+    else if (is_iso15765_connection)
         emit LOG_D("ISO15765 filters OK", true, true);
 
     return STATUS_SUCCESS;

@@ -206,16 +206,15 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
     while (loopcount < 1000)
     {
         serial->write_serial_data_echo_check(output);
-        //received = serial->read_serial_data(20, 5);
         delay(3);
         loopcount++;
     }
+
     serial->clear_rx_buffer();
     received = serial->read_serial_data(20, 10);
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 
     emit LOG_I("Connecting to bootloader", true, true);
-
     output[4] = (uint8_t)SUB_DENSOCAN_START_COMM;
     output[5] = (uint8_t)(SUB_DENSOCAN_CHECK_COMM_BL & 0xFF);
     output[6] = (uint8_t)0x00;

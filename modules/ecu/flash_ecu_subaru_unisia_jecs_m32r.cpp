@@ -82,7 +82,7 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
                 emit external_logger("Writing ROM, please wait...");
                 emit LOG_I("Writing ROM to Subaru Unisia Jecs UJ20/30/40/70WWW using K-Line", true, true);
                 result = write_mem();
-                emit LOG_I("Unset programming voltage +12v to Line End Check 1", true, true);
+                emit LOG_D("Removing programming voltage +12v from Line End Check 1", true, true);
                 serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
             }
             emit external_logger("Finished");
@@ -312,21 +312,13 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         emit LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
-/*
-    serial->change_port_speed("19200");
-    emit LOG_I("Checking if OBK is running", true, true);
-    received = send_sid_af_erase_memory_block();
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x42)
-        kernel_alive = true;
-*/
+
     serial->change_port_speed("4800");
     // SSM init
     received = send_sid_bf_ssm_init();
     emit LOG_I("SSM init: " + parse_message_to_hex(received), true, true);
-    if (received == "" || (uint8_t)received.at(4) != 0xFF)
-        return STATUS_ERROR;
+    //if (received == "" || (uint8_t)received.at(4) != 0xFF)
+        //return STATUS_ERROR;
 
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
@@ -341,13 +333,13 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     emit LOG_I("Sending request to change to flash mode", true, true);
     received = send_sid_af_enter_flash_mode(received);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-    if (received == "" || (uint8_t)received.at(4) != 0xef)
-        return STATUS_ERROR;
+    //if (received == "" || (uint8_t)received.at(4) != 0xef)
+        //return STATUS_ERROR;
 
-    emit LOG_I("Changing baudrate to 19200", true, true);
+    emit LOG_D("Changing baudrate to 19200", true, true);
     serial->change_port_speed("19200");
 
-    emit LOG_I("Set programming voltage +12v to Line End Check 1", true, true);
+    emit LOG_D("Set programming voltage +12v to Line End Check 1", true, true);
     serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
 
     emit LOG_I("Sending request to erase flash", true, true);

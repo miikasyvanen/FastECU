@@ -575,7 +575,7 @@ long J2534::PassThruStartPeriodicMsg(unsigned long ChannelID, const PASSTHRU_MSG
     }
 
     write_serial_data(output);
-    PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, timeout);
+    //PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, timeout);
 
     *pMsgID = periodic_msg_id;
 
