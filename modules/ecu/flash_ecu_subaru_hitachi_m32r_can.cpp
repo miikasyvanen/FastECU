@@ -169,8 +169,79 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
 
     emit LOG_I("OBK not active, initialising ECU...", true, true);
 
-    emit LOG_I("Requesting ECU ID...", true, true);
+    emit LOG_I("Requesting ECU ID", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xAA);
 
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) == 0xEA)
+        {
+            QByteArray response = received;
+            response.remove(0, 8);
+            response.remove(5, response.length()-6);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            QString ecuid;
+            for (int i = 0; i < 5; i++)
+                ecuid.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_I("ECU ID: " + ecuid, true, true);
+            if (cmd_type == "read")
+                ecuCalDef->RomId = ecuid + "_";
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    }
+
+    emit LOG_I("Requesting VIN", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x02);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
+        {
+            QByteArray response = received;
+            response.remove(0, 7);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_I("VIN: " + response, true, true);
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    }
+
+    emit LOG_I("Requesting CAL ID...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -181,68 +252,61 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
-    if (received.length() > 14)
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) != 0x49 || (uint8_t)received.at(5) != 0x04)
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
+        {
+            QByteArray response = received;
+            response.remove(0, 7);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_I("CAL ID: " + response, true, true);
+            if (cmd_type == "read")
+                ecuCalDef->RomId.insert(0, QString(response) + "_");
+        }
+        else
         {
             emit LOG_E("Wrong response from ECU", true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-            return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
     }
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
-    response = received;
-    response.remove(0, 7);
-    response.remove(8, received.length() - 1);
-    QString ecuid = QString::fromUtf8(response);
-    emit LOG_I("Init Success: ECU ID = " + ecuid, true, true);
-
-    emit LOG_I("Requesting CAL ID...", true, true);
-
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0xAA);
+    emit LOG_I("Requesting CVN", true, true);
+    output[4] = ((uint8_t)0x09);
+    output[5] = ((uint8_t)0x06);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    delay(500);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
-    if (received.length() > 12)
+    delay(50);
+    received = serial->read_serial_data(20, serial_read_timeout);
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) != 0xEA)
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x06)
+        {
+            QByteArray response = received;
+            response.remove(0, 7);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_I("CVN: " + msg, true, true);
+        }
+        else
         {
             emit LOG_E("Wrong response from ECU", true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-            return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
     }
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    response.clear();
-    response.append(received);
-    response.remove(0, 8);
-    response.remove(5, received.length() - 1);
-
-    QString calid;// = QString::fromUtf8(response);
-    for (int i = 0; i < response.length(); i++)
-        calid.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-    emit LOG_I("Init Success: CAL ID = " + calid, true, true);
 
     emit LOG_I("Initializing bootloader...", true, true);
 
@@ -1139,8 +1203,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
-
-
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         for (int i = 0; i < 256; i++)
         {
             output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
@@ -1149,10 +1212,8 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
-        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        //delay(200);
         received = serial->read_serial_data(20, receive_timeout);
-        //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0xF6)

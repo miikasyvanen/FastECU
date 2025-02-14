@@ -26,6 +26,7 @@ void FlashEcuSubaruDensoSH7058Can::run()
     set_progressbar_value(0);
 
     bool ok = false;
+
 /*
     uint32_t base = 0x811c9dc5;//0x811c50a5 + 0x4d20;//2d58;
     uint32_t xor_multi = 0x01000193;
@@ -294,14 +295,44 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    emit LOG_I("Requesting supported Service PIDs", true, true);
-    output[4] = ((uint8_t)0x09);
-    output[5] = ((uint8_t)0x00);
+    emit LOG_I("Requesting ECU ID", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xAA);
+
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) == 0xEA)
+        {
+            QByteArray response = received;
+            response.remove(0, 8);
+            response.remove(5, response.length()-6);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            QString ecuid;
+            for (int i = 0; i < 5; i++)
+                ecuid.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_I("ECU ID: " + ecuid, true, true);
+            if (cmd_type == "read")
+                ecuCalDef->RomId = ecuid + "_";
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    }
 
     emit LOG_I("Requesting VIN", true, true);
     output[4] = ((uint8_t)0x09);
@@ -347,7 +378,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             emit LOG_I("CAL ID: " + response, true, true);
             if (cmd_type == "read")
-                ecuCalDef->RomId = response;
+                ecuCalDef->RomId.insert(0, QString(response) + "_");
         }
         else
         {

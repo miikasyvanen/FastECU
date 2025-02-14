@@ -445,7 +445,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
             return STATUS_ERROR;
     }
 
-    ecuCalDef->RomId = ecuid;
+    ecuCalDef->RomId = ecuid + "_";
 
     start_addr += 0x00100000;
     datalen = 6;
@@ -816,8 +816,6 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
             tleft = 9999;
         }
         tleft++;
-
-
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
         set_progressbar_value(pleft);
