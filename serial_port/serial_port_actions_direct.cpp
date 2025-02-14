@@ -596,7 +596,7 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
             {
                 if (is_iso14230_connection)
                 {
-                    emit LOG_I("Read with ISO14230", true, true);
+                    qDebug() << "Read with ISO14230";
                     while (received.length() < 4 && QTime::currentTime() < dieTime)
                     {
                         if (serial->bytesAvailable())
@@ -605,12 +605,10 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                     }
                     if (received.at(0) & 0x3f)
                     {
-                        msglen = (received.at(0) & 0x3f) + 1;
-                        req_bytes.append(received.at(3));
-                        received.remove(received.length()-1, 1);
+                        msglen = (received.at(0) & 0x3f); // Byte in index 3 is payload, no +1 for checksum
                     }
                     else
-                        msglen = received.at(3) + 1;
+                        msglen = received.at(3) + 1; // +1 for checksum
                 }
                 else if (!is_iso14230_connection)
                 {
@@ -621,9 +619,9 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
                     }
                     if (received.startsWith("\xbe\xef"))
-                        msglen = ((uint8_t)received.at(2) << 8) + (uint8_t)received.at(3) + 1;
+                        msglen = ((uint8_t)received.at(2) << 8) + (uint8_t)received.at(3) + 1; // +1 for checksum
                     if (received.startsWith("\x80\xf0"))
-                        msglen = (uint8_t)received.at(3) + 1;
+                        msglen = (uint8_t)received.at(3) + 1; // +1 for checksum
                 }
                 while ((uint32_t)req_bytes.length() < msglen && QTime::currentTime() < dieTime)
                 {
