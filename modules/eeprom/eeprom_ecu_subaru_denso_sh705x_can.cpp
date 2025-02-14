@@ -41,8 +41,7 @@ void EepromEcuSubaruDensoSH705xCan::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type: " + mcu_name + " (" + mcu_type_string + ") and index: " + QString::number(mcu_type_index);
+    emit LOG_I("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -51,20 +50,17 @@ void EepromEcuSubaruDensoSH705xCan::run()
 
     if (cmd_type == "read")
     {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+        emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
     else if (cmd_type == "test_write")
     {
         test_write = true;
-        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
     else if (cmd_type == "write")
     {
         test_write = false;
-        send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+        emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
     // Set serial port
@@ -96,12 +92,12 @@ void EepromEcuSubaruDensoSH705xCan::run()
             bool save_and_exit = false;
 
             emit external_logger("Preparing, please wait...");
-            send_log_window_message("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
+            emit LOG_I("Connecting to Subaru 07+ 32-bit CAN bootloader, please wait...", true, true);
             result = connect_bootloader();
 
             if (result == STATUS_SUCCESS && !kernel_alive)
             {
-                send_log_window_message("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
+                emit LOG_I("Initializing Subaru 07+ 32-bit CAN kernel upload, please wait...", true, true);
                 result = upload_kernel(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
             }
             if (result == STATUS_SUCCESS)
@@ -109,14 +105,13 @@ void EepromEcuSubaruDensoSH705xCan::run()
                 if (cmd_type == "read")
                 {
                     emit external_logger("Reading EEPROM, please wait...");
-                    send_log_window_message("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
-                    qDebug() << "Reading EEPROM start at:" << flashdevices[mcu_type_index].eblocks[0].start << "and size of" << flashdevices[mcu_type_index].eblocks[0].len;
+                    emit LOG_I("Reading EEPROM from Subaru 07+ 32-bit using CAN", true, true);
                     result = read_mem(flashdevices[mcu_type_index].eblocks[0].start, flashdevices[mcu_type_index].eblocks[0].len);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing EEPROM, please wait...");
-                    send_log_window_message("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
+                    emit LOG_I("Writing ROM to Subaru 07+ 32-bit using CAN", true, true);
                     //result = write_mem(ecuCalDef, test_write);
                 }
             }
@@ -165,12 +160,12 @@ void EepromEcuSubaruDensoSH705xCan::run()
                 break;
         }
     case QMessageBox::Cancel:
-        qDebug() << "Operation canceled";
+        LOG_D("Operation canceled", true, true);
         this->close();
         break;
     default:
         QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-        qDebug() << "Unknown operation selected!";
+        LOG_D("Unknown operation selected!", true, true);
         this->close();
         break;
     }
@@ -1419,7 +1414,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::add_ssm_header(QByteArray output, uint
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //send_log_window_message("Send: " + parse_message_to_hex(output), true, true);
+    //emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     //qDebug () << "Send:" << parse_message_to_hex(output);
     return output;
 }
@@ -1453,13 +1448,13 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader_start_countdown(int timeou
     {
         if (kill_process)
             break;
-        send_log_window_message("Starting in " + QString::number(i), true, true);
+        emit LOG_I("Starting in " + QString::number(i), true, true);
         //qDebug() << "Countdown:" << i;
         delay(1000);
     }
     if (!kill_process)
     {
-        send_log_window_message("Initializing connection, please wait...", true, true);
+        emit LOG_I("Initializing connection, please wait...", true, true);
         delay(1500);
         return STATUS_SUCCESS;
     }
@@ -1482,35 +1477,6 @@ QString EepromEcuSubaruDensoSH705xCan::parse_message_to_hex(QByteArray received)
     }
 
     return msg;
-}
-
-/*
- * Output text to log window
- *
- * @return
- */
-int EepromEcuSubaruDensoSH705xCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void EepromEcuSubaruDensoSH705xCan::set_progressbar_value(int value)

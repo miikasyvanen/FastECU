@@ -115,9 +115,6 @@ private:
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
 
-private slots:
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
-
 };
 
 #endif // FLASHECUUNISIAJECS0X27_H

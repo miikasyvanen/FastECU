@@ -1664,51 +1664,6 @@ QString FlashEcuSubaruHitachiSH7058Can::parse_message_to_hex(QByteArray received
     return msg;
 }
 
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashEcuSubaruHitachiSH7058Can::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QString filename = "log.txt";
-    QFile file(filename);
-    //QFileInfo fileInfo(file.fileName());
-    //QString file_name_str = fileInfo.fileName();
-
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Append ))
-    {
-        //qDebug() << "Unable to open file for writing";
-        QMessageBox::warning(this, tr("Ecu calibration file"), "Unable to open file for writing");
-        return 0;
-    }
-
-    file.write(message.toUtf8());
-    file.close();
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
-}
-
 void FlashEcuSubaruHitachiSH7058Can::set_progressbar_value(int value)
 {
     bool valueChanged = true;
