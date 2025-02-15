@@ -161,7 +161,6 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         serial->change_port_speed("4800");
 
         output.clear();
-        //output.append((uint8_t)0xbf);
         output.append((uint8_t)0x81);
         output = add_ssm_header(output, tester_id, target_id, false);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
@@ -186,19 +185,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         }
         emit LOG_I("", false, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        /*
-        received.append(serial->read_serial_data(100, 500));
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        output.clear();
-        output.append((uint8_t)0x81);
-        output = add_ssm_header(output, tester_id, target_id, false);
-        serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(8, 500);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        if ((uint8_t)received.at(4) != 0xC1)
-            return STATUS_ERROR;
-*/
+
         output.clear();
         output.append((uint8_t)0x83);
         output.append((uint8_t)0x00);
@@ -297,12 +284,31 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         return STATUS_SUCCESS;
     }
 
-    emit LOG_I("Initializing K-Line communications", true, true);
-    emit LOG_I("SSM Init", true, true);
     serial->change_port_speed("4800");
-    received = send_sid_bf_ssm_init();
-    if (received == "" || received.length() < 13)
+
+    emit LOG_I("Initializing K-Line communications", true, true);
+    output.clear();
+    output.append((uint8_t)0xBF);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0xFF)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
 
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
@@ -310,25 +316,85 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
 
     QString ecuid = msg;
-
-    emit LOG_I("Init Success: ECU ID = " + ecuid, true, true);
+    emit LOG_I("ECU ID: " + ecuid, true, true);
+    if (cmd_type == "read")
+        ecuCalDef->RomId = ecuid;
 
     emit LOG_I("Request to start communication", true, true);
-    received = send_subaru_sid_81_start_communication();
-    if (received == "" || (uint8_t)received.at(4) != 0xC1)
+    output.clear();
+    output.append((uint8_t)0x81);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0xC1)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Start communication ok", true, true);
 
     emit LOG_I("Request timings params", true, true);
-    received = send_subaru_sid_83_request_timings();
-    if (received == "" || (uint8_t)received.at(4) != 0xC3)
+    output.clear();
+    output.append((uint8_t)0x83);
+    output.append((uint8_t)0x00);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0xC3)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Timing parameters ok", true, true);
 
     emit LOG_I("Request seed", true, true);
-    received = send_subaru_sid_27_request_seed();
-    if (received == "" || (uint8_t)received.at(4) != 0x67)
+    output.clear();
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x01);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 9)
+    {
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Seed request ok", true, true);
 
     seed.append(received.at(6));
@@ -345,16 +411,57 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     emit LOG_I("Calculated seed key: " + msg, true, true);
 
     emit LOG_I("Sending seed key to ECU", true, true);
-    received = send_subaru_sid_27_send_seed_key(seed_key);
-    emit LOG_D("SID_27_02 = " + parse_message_to_hex(received), true, true);
-    if (received == "" || (uint8_t)received.at(4) != 0x67)
-       return STATUS_ERROR;
+    output.clear();
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x02);
+    output.append(seed_key);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
     emit LOG_I("Seed key ok", true, true);
 
     emit LOG_I("Set session mode", true, true);
-    received = send_subaru_sid_10_start_diagnostic();
-    if (received == "" || (uint8_t)received.at(4) != 0x50)
+    output.clear();
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x85);
+    output.append((uint8_t)0x02);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x50)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Succesfully set to programming session", true, true);
 
     kernel_alive = true;

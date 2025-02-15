@@ -44,6 +44,7 @@ signals:
 
 private:
     FileActions::EcuCalDefStructure *ecuCalDef;
+    FileActions fileActions;
     QString cmd_type;
 
     #define STATUS_SUCCESS							0x00
@@ -66,6 +67,7 @@ private:
     uint8_t comm_try_count = 4;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;

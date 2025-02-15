@@ -199,7 +199,6 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     delay(100);
 
     emit LOG_I("Initializing K-Line communications", true, true);
-    //received = send_sid_bf_ssm_init();
     output.clear();
     output.append((uint8_t)0xBF);
     output = add_ssm_header(output, tester_id, target_id, false);
@@ -234,7 +233,6 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         ecuCalDef->RomId = ecuid;
 
     emit LOG_I("Request to start communication", true, true);
-    //received = send_sid_81_start_communication();
     output.clear();
     output.append((uint8_t)0x81);
     output = add_ssm_header(output, tester_id, target_id, false);
@@ -260,7 +258,6 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("Start communication ok", true, true);
 
     emit LOG_I("Request timings params", true, true);
-    //received = send_sid_83_request_timings();
     output.clear();
     output.append((uint8_t)0x83);
     output.append((uint8_t)0x00);
@@ -287,7 +284,6 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("Timing parameters ok", true, true);
 
     emit LOG_I("Request seed", true, true);
-    //received = send_sid_27_request_seed();
     output.clear();
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
@@ -330,7 +326,6 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("Calculated seed key: " + msg, true, true);
 
     emit LOG_I("Sending seed key to ECU", true, true);
-    //received = send_sid_27_send_seed_key(seed_key);
     output.clear();
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x02);
@@ -358,7 +353,6 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("Seed key ok", true, true);
 
     emit LOG_I("Set session mode", true, true);
-    //received = send_sid_10_start_diagnostic();
     output.clear();
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x85);
@@ -455,46 +449,145 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kerne
         return STATUS_ERROR;
 
     emit LOG_I("Request kernel upload'", true, true);
-    received = send_sid_34_request_upload(start_address, len);
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
+    output.clear();
+    output.append((uint8_t)0x34);
+    output.append((uint8_t)(start_address >> 16) & 0xFF);
+    output.append((uint8_t)(start_address >> 8) & 0xFF);
+    output.append((uint8_t)start_address & 0xFF);
+    output.append((uint8_t)0x04);
+    output.append((uint8_t)(len >> 16) & 0xFF);
+    output.append((uint8_t)(len >> 8) & 0xFF);
+    output.append((uint8_t)len & 0xFF);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x74)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
-    emit LOG_I("Kernel upload request ok, uploading now, please wait...", true, true);
+    }
+    emit LOG_I("Kernel upload request ok", true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     //pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
     pl_encr = encrypt_payload(pl_encr, pl_len);
 
     emit LOG_I("Transfer kernel data", true, true);
     received = send_sid_36_transferdata(start_address, pl_encr, len);
-    if (received == "" || (uint8_t)received.at(4) != 0x76)
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x76)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
-    //emit LOG_I("Kernel uploaded", true, true);
+    }
+    emit LOG_I("Kernel uploaded", true, true);
 
-    //emit LOG_I("Kernel checksum bypass", true, true);
-    received = send_sid_34_request_upload(start_address + len, 4);
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
+    emit LOG_D("Kernel checksum bypass", true, true);
+    uint32_t cks_addr = start_address + len;
+    uint32_t ckslen = 4;
+    output.clear();
+    output.append((uint8_t)0x34);
+    output.append((uint8_t)(cks_addr >> 16) & 0xFF);
+    output.append((uint8_t)(cks_addr >> 8) & 0xFF);
+    output.append((uint8_t)cks_addr & 0xFF);
+    output.append((uint8_t)0x04);
+    output.append((uint8_t)(ckslen >> 16) & 0xFF);
+    output.append((uint8_t)(ckslen >> 8) & 0xFF);
+    output.append((uint8_t)ckslen & 0xFF);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x74)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     cks_bypass.append((uint8_t)0x00);
     cks_bypass.append((uint8_t)0x00);
     cks_bypass.append((uint8_t)0x5A);
     cks_bypass.append((uint8_t)0xA5);
 
-    cks_bypass = encrypt_payload(cks_bypass, (uint32_t) 4);
+    cks_bypass = encrypt_payload(cks_bypass, ckslen);
 
-    // sid36 transferData for checksum bypass
-    //emit LOG_D("Send 'sid36_transfer_data' for chksum bypass", true, true);
-    received = send_sid_36_transferdata(start_address + len, cks_bypass, 4);
-    if (received == "" || (uint8_t)received.at(4) != 0x76)
+    received = send_sid_36_transferdata(cks_addr, cks_bypass, ckslen);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x76)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
+    emit LOG_D("Checksum bypass ok", true, true);
 
-    //emit LOG_I("Checksum bypass ok", true, true);
     emit LOG_I("Kernel uploaded", true, true);
 
     emit LOG_I("Jump to kernel", true, true);
-    received = send_sid_31_start_routine();
-    if (received == "" || (uint8_t)received.at(4) != 0x71)
+    output.clear();
+    output.append((uint8_t)0x31);
+    output.append((uint8_t)0x01);
+    output.append((uint8_t)0x01);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x71)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Kernel started, initializing...", true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     serial->change_port_speed("62500");
 
@@ -1385,159 +1478,6 @@ uint8_t FlashEcuSubaruDensoSH705xKline::cks_add8(QByteArray chksum_data, unsigne
 }
 
 /*
- * ECU init
- *
- * @return ECU ID and capabilities
- */
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_bf_ssm_init()
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0xBF);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    return received;
-}
-
-/*
- * Start diagnostic connection
- *
- * @return received response
- */
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_81_start_communication()
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0x81);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    return received;
-}
-
-/*
- * Start diagnostic connection
- *
- * @return received response
- */
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_83_request_timings()
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0x83);
-    output.append((uint8_t)0x00);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    return received;
-}
-
-/*
- * Request seed
- *
- * @return seed (4 bytes)
- */
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_27_request_seed()
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0x27);
-    output.append((uint8_t)0x01);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    return received;
-}
-
-/*
- * Send seed key
- *
- * @return received response
- */
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_27_send_seed_key(QByteArray seed_key)
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0x27);
-    output.append((uint8_t)0x02);
-    output.append(seed_key);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    return received;
-}
-
-/*
- * Request start diagnostic
- *
- * @return received response
- */
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_10_start_diagnostic()
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0x10);
-    output.append((uint8_t)0x85);
-    output.append((uint8_t)0x02);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(7, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    return received;
-}
-
-/*
- * Request data upload (kernel)
- *
- * @return received response
- */
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen)
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0x34);
-    output.append((uint8_t)(dataaddr >> 16) & 0xFF);
-    output.append((uint8_t)(dataaddr >> 8) & 0xFF);
-    output.append((uint8_t)dataaddr & 0xFF);
-    output.append((uint8_t)0x04);
-    output.append((uint8_t)(datalen >> 16) & 0xFF);
-    output.append((uint8_t)(datalen >> 8) & 0xFF);
-    output.append((uint8_t)datalen & 0xFF);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(6, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    return received;
-}
-
-/*
  * Transfer data (kernel)
  *
  * @return received response
@@ -1572,7 +1512,6 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
 
         if (blockno == maxblocks)
         {
@@ -1592,6 +1531,7 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
 
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
+        emit LOG_D("Sent: " + parse_message_to_hex(output.remove(8, output.length()-9)), true, true);
         received = serial->read_serial_data(6, serial_read_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 4)
@@ -1614,23 +1554,6 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t dat
     }
 
     set_progressbar_value(100);
-
-    return received;
-}
-
-QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_31_start_routine()
-{
-    QByteArray output;
-    QByteArray received;
-
-    output.append((uint8_t)0x31);
-    output.append((uint8_t)0x01);
-    output.append((uint8_t)0x01);
-    output = add_ssm_header(output, tester_id, target_id, false);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
