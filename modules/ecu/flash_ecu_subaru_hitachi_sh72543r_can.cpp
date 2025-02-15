@@ -603,7 +603,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
-        received = serial->read_serial_data(270, serial_read_timeout);
+        received = serial->read_serial_data(270, serial_read_long_timeout);
         if (received != "")
             break;
         try_count++;
@@ -766,11 +766,10 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
         }
         serial->write_serial_data_echo_check(output);
         delay(10);
-
         received = serial->read_serial_data(200, serial_read_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        received = serial->read_serial_data(200, serial_read_short_timeout);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        //received = serial->read_serial_data(200, serial_read_short_timeout);
+        //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
         QString block_len = QString("%1").arg(blocksize,8,16,QLatin1Char('0')).toUpper();
@@ -805,7 +804,6 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     set_progressbar_value(100);
 
     emit LOG_I("Closing out Flashing of this block...", true, true);
-    try_count = 0;
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -813,6 +811,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0x37);
 
+    try_count = 0;
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
@@ -845,7 +844,6 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
 
     delay(100);
 
-    try_count = 0;
     emit LOG_I("Verifying checksum...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
@@ -858,6 +856,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
 
+    try_count = 0;
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);

@@ -82,7 +82,7 @@ void FlashTcuSubaruHitachiM32rCan::run()
     {
         case QMessageBox::Ok:
             emit LOG_I("Connecting to Subaru TCU Hitachi CAN bootloader, please wait...", true, true);
-            result = connect_bootloader_subaru_tcu_hitachi_can();
+            result = connect_bootloader();
 
             if (result == STATUS_SUCCESS)
             {
@@ -90,13 +90,13 @@ void FlashTcuSubaruHitachiM32rCan::run()
                 {
                     emit external_logger("Reading ROM, please wait...");
                     //emit LOG_I("Not yet implemented: Reading ROM from TCU Subaru Hitachi using CAN", true, true);
-                    result = read_mem_subaru_tcu_hitachi_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     //emit LOG_I("Not yet implemented: Writing ROM to TCU Subaru Hitachi using CAN", true, true);
-                    result = write_mem_subaru_tcu_hitachi_can(test_write);
+                    result = write_mem(test_write);
                 }
             }
             emit external_logger("Finished");
@@ -138,7 +138,7 @@ void FlashTcuSubaruHitachiM32rCan::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
+int FlashTcuSubaruHitachiM32rCan::connect_bootloader()
 {
     QByteArray output;
     QByteArray received;
@@ -178,7 +178,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -218,7 +218,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -253,7 +253,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -283,7 +283,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -312,7 +312,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -332,7 +332,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    seed_key = subaru_tcu_hitachi_generate_can_seed_key(seed);
+    seed_key = generate_seed_key(seed);
 
     emit LOG_I("Sending seed key", true, true);
     output.clear();
@@ -352,7 +352,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -413,7 +413,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -433,7 +433,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader_subaru_tcu_hitachi_can()
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start_addr, uint32_t length)
+int FlashTcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -486,7 +486,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -544,7 +544,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start
         {
             if ((uint8_t)received.at(4) != 0xF7)
             {
-                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -616,7 +616,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start
     {
         if ((uint8_t)received.at(4) != 0x77)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             //return STATUS_ERROR;
         }
@@ -629,7 +629,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start
     }
 
     // now decrypt the data obtained
-    mapdata = subaru_tcu_hitachi_decrypt_32bit_payload(mapdata, mapdata.length());
+    mapdata = decrypt_payload(mapdata, mapdata.length());
 
     // need to pad out first 0x8000 bytes with 0x00
     int i;
@@ -652,7 +652,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem_subaru_tcu_hitachi_can(uint32_t start
  * @return success
  */
 
-int FlashTcuSubaruHitachiM32rCan::write_mem_subaru_tcu_hitachi_can(bool test_write)
+int FlashTcuSubaruHitachiM32rCan::write_mem(bool test_write)
 {
     QByteArray filedata;
 
@@ -666,7 +666,7 @@ int FlashTcuSubaruHitachiM32rCan::write_mem_subaru_tcu_hitachi_can(bool test_wri
     unsigned blockno;
 
     //encrypt the data
-    filedata = subaru_tcu_hitachi_encrypt_32bit_payload(filedata, filedata.length());
+    filedata = encrypt_payload(filedata, filedata.length());
 
     for (int i = 0; i < filedata.length(); i++)
     {
@@ -686,7 +686,7 @@ int FlashTcuSubaruHitachiM32rCan::write_mem_subaru_tcu_hitachi_can(bool test_wri
     if (bcnt)
     {
         emit LOG_I("--- erasing TCU flash memory ---", true, true);
-        if (erase_subaru_tcu_hitachi_can())
+        if (erase_mem())
         {
             emit LOG_I("--- erasing did not complete successfully ---", true, true);
             return STATUS_ERROR;
@@ -708,7 +708,7 @@ int FlashTcuSubaruHitachiM32rCan::write_mem_subaru_tcu_hitachi_can(bool test_wri
         {
             if (block_modified[blockno])
             {
-                if (reflash_block_subaru_tcu_hitachi_can(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
                 {
                     emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -734,7 +734,7 @@ int FlashTcuSubaruHitachiM32rCan::write_mem_subaru_tcu_hitachi_can(bool test_wri
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashTcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -790,7 +790,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
     {
         if ((uint8_t)received.at(4) != 0x74)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -832,7 +832,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
         {
             if ((uint8_t)received.at(4) != 0xF6)
             {
-                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -872,7 +872,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
             }
             else
             {
-                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 //return STATUS_ERROR;
             }
@@ -916,7 +916,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
             }
             else
             {
-                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 //return STATUS_ERROR;
             }
@@ -936,7 +936,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32rCan::erase_subaru_tcu_hitachi_can()
+int FlashTcuSubaruHitachiM32rCan::erase_mem()
 {
     QByteArray output;
     QByteArray received;
@@ -985,7 +985,7 @@ int FlashTcuSubaruHitachiM32rCan::erase_subaru_tcu_hitachi_can()
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_generate_can_seed_key(QByteArray requested_seed)
+QByteArray FlashTcuSubaruHitachiM32rCan::generate_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1003,7 +1003,7 @@ QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_generate_can_seed_ke
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_tcu_hitachi_calculate_seed_key(requested_seed, keytogenerateindex, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex, indextransformation);
 
     return key;
 }
@@ -1013,7 +1013,7 @@ QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_generate_can_seed_ke
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuSubaruHitachiM32rCan::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1061,7 +1061,7 @@ QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_calculate_seed_key(Q
  * @return encrypted data
  */
 
-QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuSubaruHitachiM32rCan::encrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1076,12 +1076,12 @@ QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_encrypt_32bit_payloa
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_tcu_hitachi_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashTcuSubaruHitachiM32rCan::decrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1096,12 +1096,12 @@ QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_decrypt_32bit_payloa
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    decrypt = subaru_tcu_hitachi_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    decrypt = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return decrypt;
 }
 
-QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashTcuSubaruHitachiM32rCan::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;

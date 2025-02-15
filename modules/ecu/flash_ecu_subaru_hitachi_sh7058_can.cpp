@@ -37,7 +37,7 @@ void FlashEcuSubaruHitachiSH7058Can::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-      emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
 
 
     kernel = ecuCalDef->Kernel;
@@ -1149,9 +1149,8 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
         }
         try_count++;
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
-        emit LOG_I("No or bad response received", true, true);
-        //return STATUS_ERROR;
+    if (try_count == 6)
+        return STATUS_ERROR;
 
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
@@ -1188,10 +1187,8 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
 
     }
 
-
     set_progressbar_value(100);
 
-    try_count = 0;
     emit LOG_I("Closing out flashing of this block...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
@@ -1200,6 +1197,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0x37);
 
+    try_count = 0;
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
@@ -1232,7 +1230,6 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
 
     delay(100);
 
-    try_count = 0;
     emit LOG_I("Verifying checksum...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
@@ -1245,6 +1242,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
 
+    try_count = 0;
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
