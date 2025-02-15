@@ -1141,36 +1141,6 @@ QString FlashTcuCvtSubaruMitsuMH8111Can::parse_message_to_hex(QByteArray receive
     return msg;
 }
 
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashTcuCvtSubaruMitsuMH8111Can::emit LOG_I(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
-}
-
 void FlashTcuCvtSubaruMitsuMH8111Can::set_progressbar_value(int value)
 {
     bool valueChanged = true;
