@@ -199,11 +199,27 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     delay(100);
 
     emit LOG_I("Initializing K-Line communications", true, true);
-    received = send_sid_bf_ssm_init();
-    if (received == "" || (uint8_t)received.at(4) != 0xFF)
+    //received = send_sid_bf_ssm_init();
+    output.clear();
+    output.append((uint8_t)0xBF);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
     {
-        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
-        emit LOG_E(nrc, true, true);
+        if ((uint8_t)received.at(4) != 0xFF)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
 
@@ -213,36 +229,86 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
 
     QString ecuid = msg;
-    emit LOG_I("Init Success: ECU ID = " + ecuid, true, true);
+    emit LOG_I("ECU ID: " + ecuid, true, true);
     if (cmd_type == "read")
         ecuCalDef->RomId = ecuid;
 
     emit LOG_I("Request to start communication", true, true);
-    received = send_sid_81_start_communication();
-    if (received == "" || (uint8_t)received.at(4) != 0xC1)
+    //received = send_sid_81_start_communication();
+    output.clear();
+    output.append((uint8_t)0x81);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
     {
-        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
-        emit LOG_E(nrc, true, true);
+        if ((uint8_t)received.at(4) != 0xC1)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     emit LOG_I("Start communication ok", true, true);
 
     emit LOG_I("Request timings params", true, true);
-    received = send_sid_83_request_timings();
-    if (received == "" || (uint8_t)received.at(4) != 0xC3)
+    //received = send_sid_83_request_timings();
+    output.clear();
+    output.append((uint8_t)0x83);
+    output.append((uint8_t)0x00);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
     {
-        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
-        emit LOG_E(nrc, true, true);
+        if ((uint8_t)received.at(4) != 0xC3)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     emit LOG_I("Timing parameters ok", true, true);
 
     emit LOG_I("Request seed", true, true);
-    received = send_sid_27_request_seed();
-    if (received == "" || (uint8_t)received.at(4) != 0x67)
+    //received = send_sid_27_request_seed();
+    output.clear();
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x01);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 9)
     {
-        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
-        emit LOG_E(nrc, true, true);
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     emit LOG_I("Seed request ok", true, true);
@@ -264,21 +330,57 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("Calculated seed key: " + msg, true, true);
 
     emit LOG_I("Sending seed key to ECU", true, true);
-    received = send_sid_27_send_seed_key(seed_key);
-    if (received == "" || (uint8_t)received.at(4) != 0x67)
+    //received = send_sid_27_send_seed_key(seed_key);
+    output.clear();
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x02);
+    output.append(seed_key);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 5)
     {
-        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
-        emit LOG_E(nrc, true, true);
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     emit LOG_I("Seed key ok", true, true);
 
     emit LOG_I("Set session mode", true, true);
-    received = send_sid_10_start_diagnostic();
-    if (received == "" || (uint8_t)received.at(4) != 0x50)
+    //received = send_sid_10_start_diagnostic();
+    output.clear();
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x85);
+    output.append((uint8_t)0x02);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(10, serial_read_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    if (received.length() > 4)
     {
-        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
-        emit LOG_E(nrc, true, true);
+        if ((uint8_t)received.at(4) != 0x50)
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
     emit LOG_I("Succesfully set to programming session", true, true);
@@ -1070,6 +1172,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
     msg = QString("Flash page erase addr: 0x%1 len: 0x%2").arg(block_start,8,16,QLatin1Char('0')).arg(block_len,8,16,QLatin1Char('0')).toUtf8();
     emit LOG_I(msg, true, true);
 
+    emit LOG_I("Erasing flash page...", true, false);
     datalen = 4;
     output.clear();
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
@@ -1088,25 +1191,25 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
     //delay(500);
     received = serial->read_serial_data(6, serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-    if (received.length() > 5)
+    if (received.length() > 4)
     {
-        if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_BLANK_PAGE | 0x40))
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_BLANK_PAGE | 0x40))
         {
-            emit LOG_I("Flash erased", true, true);
-        }
-        else
-        {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("", false, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
     }
     else
     {
+        emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
+
+    emit LOG_I(" erased", false, true);
 
     msg = QString("Start flash write addr: 0x%1 len: 0x%2").arg(block_start,8,16,QLatin1Char('0')).arg(block_len,8,16,QLatin1Char('0')).toUtf8();
     emit LOG_I(msg, true, true);
@@ -1767,7 +1870,7 @@ QByteArray FlashEcuSubaruDensoSH705xKline::request_kernel_id()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(100, serial_read_timeout);
+    received = serial->read_serial_data(100, serial_read_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
 

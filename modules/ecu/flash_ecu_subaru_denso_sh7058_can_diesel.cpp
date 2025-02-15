@@ -456,13 +456,9 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x01)
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        }
-        else
-        {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -475,6 +471,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     }
 
     emit LOG_I("Seed request ok", true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     seed.clear();
     seed.append(received.at(6));
@@ -505,13 +502,9 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x02)
+        if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        }
-        else
-        {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -524,6 +517,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     }
 
     emit LOG_I("Seed key ok", true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     emit LOG_I("Set session mode", true, true);
 
@@ -1487,6 +1481,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
     msg = QString("Flash page erase addr: 0x%1 len: 0x%2").arg(block_start,8,16,QLatin1Char('0')).arg(block_len,8,16,QLatin1Char('0')).toUtf8();
     emit LOG_I(msg, true, true);
 
+    emit LOG_I("Erasing flash page...", true, false);
     datalen = 4;
     output.clear();
     output.append((uint8_t)0x00);
@@ -1509,14 +1504,9 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 8)
     {
-        if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_BLANK_PAGE | 0x40))
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_BLANK_PAGE | 0x40))
         {
-            emit LOG_I("erased", false, true);
-            //return STATUS_SUCCESS;
-        }
-        else
-        {
-            emit LOG_I("", false, true);
+            emit LOG_E("", false, true);
             emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -1524,11 +1514,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
     }
     else
     {
-        emit LOG_I("", false, true);
+        emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
+
+    emit LOG_I(" erased", false, true);
 
     msg = QString("Start flash write addr: 0x%1 len: 0x%2").arg(block_start,8,16,QLatin1Char('0')).arg(block_len,8,16,QLatin1Char('0')).toUtf8();
     emit LOG_I(msg, true, true);
@@ -1923,14 +1915,6 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::calculate_payload(QByteArray buf,
     return encrypted;
 }
 
-
-
-
-
-
-
-
-
 /*
  * Request kernel id
  *
@@ -1962,7 +1946,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::request_kernel_id()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(100, serial_read_timeout);
+    received = serial->read_serial_data(100, serial_read_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
 

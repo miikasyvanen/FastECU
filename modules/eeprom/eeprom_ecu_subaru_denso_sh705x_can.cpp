@@ -1549,24 +1549,6 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
     return kernelid;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
  * Add SSM header to message
  *

@@ -1101,6 +1101,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
     msg = QString("Flash page erase addr: 0x%1 len: 0x%2").arg(block_start,8,16,QLatin1Char('0')).arg(block_len,8,16,QLatin1Char('0')).toUtf8();
     emit LOG_I(msg, true, true);
 
+    emit LOG_I("Erasing flash page...", true, false);
     datalen = 4;
     output.clear();
     output.append((uint8_t)0x00);
@@ -1125,7 +1126,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_BLANK_PAGE | 0x40))
         {
-            emit LOG_I("", false, true);
+            emit LOG_E("", false, true);
             emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -1133,7 +1134,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
     }
     else
     {
-        emit LOG_I("", false, true);
+        emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
