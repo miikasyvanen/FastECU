@@ -34,7 +34,7 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
     flash_method = ecuCalDef->FlashMethod;
 
@@ -43,12 +43,10 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
     if (cmd_type == "read")
     {
         emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
     else if (cmd_type == "write")
     {
         emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
 
     // Set serial port
@@ -400,7 +398,6 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     {
         received.append(serial->read_serial_data(8, receive_timeout));
         emit LOG_I(".", false, false);
-        qDebug() << ".";
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x52) // 0x5a some error?
@@ -557,7 +554,6 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_b8_change_baudrate_4800()
     QByteArray output;
     QByteArray received;
 
-    //qDebug() << "Start B8";
     output.clear();
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);
@@ -578,7 +574,6 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_b8_change_baudrate_38400()
     QByteArray output;
     QByteArray received;
 
-    //qDebug() << "Start B8";
     output.clear();
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);

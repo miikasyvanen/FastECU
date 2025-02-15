@@ -160,7 +160,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x5F);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(6, serial_read_short_timeout);
 
@@ -202,7 +202,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -235,7 +235,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -270,7 +270,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -307,7 +307,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -328,14 +328,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x5F);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_short_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -345,7 +345,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -356,14 +356,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x1D);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(20, serial_read_short_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x62 || (uint8_t)received.at(5) != 0x10)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -373,7 +373,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if ((uint8_t)received.at(7) != 0xFF)
     {
@@ -388,14 +388,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x5F);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x01)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             }
         }
@@ -405,7 +405,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -415,10 +415,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0xC0);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -428,10 +428,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x63);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -441,10 +441,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x03);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -454,10 +454,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x03);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -467,10 +467,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x03);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -480,10 +480,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x85);
         output.append((uint8_t)0x02);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -493,10 +493,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x85);
         output.append((uint8_t)0x02);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -506,10 +506,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x85);
         output.append((uint8_t)0x02);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -519,10 +519,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x85);
         output.append((uint8_t)0x02);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -533,10 +533,10 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x03);
         output.append((uint8_t)0x01);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -546,14 +546,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x27);
         output.append((uint8_t)0x61);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -564,7 +564,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         emit LOG_I("Seed request ok", true, true);
 
@@ -586,14 +586,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x62);
         output.append(seed_key);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x62)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -604,7 +604,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         emit LOG_I("Seed key ok", true, true);
 
@@ -616,14 +616,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x5F);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x63)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -634,7 +634,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
         output.append((uint8_t)0x00);
@@ -645,14 +645,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x1D);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x62 || (uint8_t)received.at(5) != 0x10)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -663,7 +663,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         emit LOG_I("Jump to onboad kernel", true, true);
 
@@ -675,7 +675,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x62);
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_short_timeout);
         bool init_ready = false;
@@ -691,7 +691,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
                 delay(100);
                 received = serial->read_serial_data(20, serial_read_short_timeout);
             }
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             try_count++;
         }
     }
@@ -706,16 +706,16 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0xE0);
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x43);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -736,16 +736,16 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0xE0);
         output.append((uint8_t)0x27);
         output.append((uint8_t)0x61);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -779,16 +779,16 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)seed_key.at(1));
         output.append((uint8_t)seed_key.at(2));
         output.append((uint8_t)seed_key.at(3));
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x62)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -811,14 +811,14 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
         output.append((uint8_t)0xE0);
         output.append((uint8_t)0x10);
         output.append((uint8_t)0x42);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
         received = serial->read_serial_data(20, 200);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         delay(50);
         received = serial->read_serial_data(20, 200);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         bool init_ready = false;
         while (!init_ready && try_count < 50)
         {
@@ -832,7 +832,7 @@ int FlashEcuSubaruDensoSH72531Can::connect_bootloader()
                 delay(100);
                 received = serial->read_serial_data(20, serial_read_short_timeout);
             }
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             try_count++;
         }
     }
@@ -886,15 +886,15 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(20, 200);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -921,15 +921,15 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(20, 200);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -988,7 +988,7 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
         {
             if ((uint8_t)received.at(4) != 0xF7)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -1057,7 +1057,7 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
         received = serial->read_serial_data(20, 500);
         if (received.length() > 4)
@@ -1231,7 +1231,7 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
         output[6] = (uint8_t)(blockaddr >> 16) & 0xFF;
         output[7] = (uint8_t)(blockaddr >> 8) & 0xFF;
         output[8] = (uint8_t)blockaddr & 0xFF;
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
 
         for (int i = 0; i < 256; i++)
         {
@@ -1249,7 +1249,7 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
         {
             if ((uint8_t)received.at(3) != 0xE8 || (uint8_t)received.at(4) != 0xF6)
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -1282,7 +1282,7 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
         received = serial->read_serial_data(20, 200);
         if (received.length() > 4)
@@ -1316,13 +1316,13 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(1000);
     received = serial->read_serial_data(20, 500);
     emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
     if (received.length() != 7)
     {
-        emit LOG_I("Wrong response from ECU", true, true);
+        emit LOG_I("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         emit LOG_I("Checksum not verified", true, true);
         return STATUS_ERROR;
@@ -1331,7 +1331,7 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
     {
         if ((uint8_t)received.at(4) != 0x7F || (uint8_t)received.at(5) != 0x31 || (uint8_t)received.at(6) != 0x78)
         {
-            emit LOG_I("Wrong response from ECU", true, true);
+            emit LOG_I("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             emit LOG_I("Checksum not verified", true, true);
             return STATUS_ERROR;
@@ -1404,14 +1404,14 @@ int FlashEcuSubaruDensoSH72531Can::erase_memory()
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(20, 500);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1439,7 +1439,7 @@ int FlashEcuSubaruDensoSH72531Can::erase_memory()
     output.append((uint8_t)0xff);
     output.append((uint8_t)0xff);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(500);
 
     connected = false;

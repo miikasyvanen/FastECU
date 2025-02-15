@@ -157,7 +157,7 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0xB7);
     serial->write_serial_data_echo_check(output);
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     if (received.length() > 6)
@@ -202,7 +202,7 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -235,7 +235,7 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -270,7 +270,7 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -307,7 +307,7 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -318,7 +318,6 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
     }
 
     emit LOG_I("Initializing bootloader...", true, true);
-    qDebug() << "Initializing bootloader...";
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -331,11 +330,11 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0xD7);
 
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(100, serial_read_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -348,11 +347,11 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
     output.append((uint8_t)0x01);
     output.append((uint8_t)0x3B);
 
-    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(100, serial_read_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     emit LOG_I("Test script complete", true, true);
     return STATUS_SUCCESS;
@@ -405,7 +404,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x03)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -434,7 +433,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -477,7 +476,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -587,10 +586,8 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
     }
 
     emit LOG_I("ROM read complete", true, true);
-    qDebug() << "ROM read complete";
 
     emit LOG_I("Sending stop command...", true, true);
-    qDebug() << "Sending stop command...";
 
     int try_count = 0;
     output.clear();
@@ -604,7 +601,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
     while (try_count < 6)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
         received = serial->read_serial_data(270, serial_read_timeout);
         if (received != "")
@@ -763,13 +760,13 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
 
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         for (int i = 0; i < blocksize; i++)
         {
             output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
         }
         serial->write_serial_data_echo_check(output);
-        //emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(10);
 
         received = serial->read_serial_data(200, serial_read_timeout);
@@ -811,7 +808,6 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     set_progressbar_value(100);
 
     emit LOG_I("Closing out Flashing of this block...", true, true);
-    qDebug() << "Closing out Flashing of this block...";
     try_count = 0;
     output.clear();
     output.append((uint8_t)0x00);
@@ -823,7 +819,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
         received = serial->read_serial_data(20, serial_read_timeout);
         if (received != "")
@@ -834,7 +830,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     {
         if ((uint8_t)received.at(4) != 0x77)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -865,7 +861,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
         received = serial->read_serial_data(20, serial_read_timeout);
         if (received != "")
@@ -876,7 +872,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -929,7 +925,7 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             //return STATUS_ERROR;
         }
@@ -942,7 +938,6 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     }
 
     emit LOG_I("Starting seed request...", true, true);
-    qDebug() << "Starting seed request...";
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -960,7 +955,7 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1002,7 +997,7 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1035,7 +1030,7 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1073,7 +1068,7 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20)
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1086,7 +1081,6 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     }
 
     emit LOG_I("Erasing ECU ROM...", true, true);
-    qDebug() << "Erasing ECU ROM...";
 
     output.clear();
     output.append((uint8_t)0x00);

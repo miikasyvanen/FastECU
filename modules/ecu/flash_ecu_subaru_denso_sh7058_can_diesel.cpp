@@ -178,12 +178,27 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
 
     received.clear();
     received = request_kernel_id();
-    emit LOG_I("Kernel ID: " + received, true, true);
-    if (received != "")
+    if (received.length() > 8)
     {
-        kernel_alive = true;
-        return STATUS_SUCCESS;
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_ID | 0x40))
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
+        else
+        {
+            received.remove(0, 9);
+            emit LOG_I("Kernel ID: " + received, true, true);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
     }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    }
+
     emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
 
     emit LOG_I("Initializing connection...", true, true);
@@ -208,7 +223,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -247,7 +262,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -258,8 +273,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     }
 
     emit LOG_I("Requesting VIN", true, true);
-    output[4] = ((uint8_t)0x09);
-    output[5] = ((uint8_t)0x02);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x02);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
@@ -275,7 +295,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -286,8 +306,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     }
 
     emit LOG_I("Requesting CAL ID", true, true);
-    output[4] = ((uint8_t)0x09);
-    output[5] = ((uint8_t)0x04);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x04);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
@@ -305,7 +330,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -316,8 +341,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     }
 
     emit LOG_I("Requesting CVN", true, true);
-    output[4] = ((uint8_t)0x09);
-    output[5] = ((uint8_t)0x06);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x06);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
@@ -337,7 +367,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -351,8 +381,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     bool req_10_43_connected = false;
 
     emit LOG_I("Requesting session mode", true, true);
-    output[4] = ((uint8_t)0x10);
-    output[5] = ((uint8_t)0x03);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x03);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
@@ -366,7 +401,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -376,8 +411,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    output[4] = ((uint8_t)0x10);
-    output[5] = ((uint8_t)0x43);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x43);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
@@ -391,7 +431,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -401,8 +441,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    output[4] = ((uint8_t)0x27);
-    output[5] = ((uint8_t)0x01);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x01);
 
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
@@ -416,7 +461,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -444,8 +489,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         seed_key = generate_seed_key(seed);
 
     emit LOG_I("Sending seed key", true, true);
-    output[4] = ((uint8_t)0x27);
-    output[5] = ((uint8_t)0x02);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x02);
     output.append(seed_key);
 
     serial->write_serial_data_echo_check(output);
@@ -460,7 +510,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -499,7 +549,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -605,7 +655,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -693,7 +743,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -730,7 +780,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -746,11 +796,30 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
 
     received.clear();
     received = request_kernel_id();
-    emit LOG_I("Kernel ID: " + received, true, true);
-    if (received == "")
+    if (received.length() > 8)
+    {
+        if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_ID | 0x40))
+        {
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+        else
+        {
+            received.remove(0, 9);
+            emit LOG_I("Kernel ID: " + received, true, true);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
+    }
 
-    return STATUS_SUCCESS;
+    return STATUS_ERROR;
 }
 
 /*
@@ -838,7 +907,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::read_mem(uint32_t start_addr, uint32_t l
             }
             else
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -1088,7 +1157,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc(const uint8_t *src, uint32_
         else
         {
             emit LOG_E("", false, true);
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1198,7 +1267,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
         else
         {
             emit LOG_E("", false, true);
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1239,7 +1308,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
         else
         {
             emit LOG_E("", false, true);
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1287,7 +1356,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1363,7 +1432,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block(const uint8_t *newdata, co
         else
         {
             emit LOG_E("", false, true);
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1447,7 +1516,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
         else
         {
             emit LOG_I("", false, true);
-            emit LOG_E("Wrong response from ECU", true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1499,7 +1568,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
             }
             else
             {
-                emit LOG_E("Wrong response from ECU", true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -1595,7 +1664,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
                 }
                 else
                 {
-                    emit LOG_E("Wrong response from ECU", true, true);
+                    emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
                     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                     return STATUS_ERROR;
                 }
@@ -1891,24 +1960,10 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::request_kernel_id()
 
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    delay(100);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    delay(200);
+    received = serial->read_serial_data(100, serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    if (received.length() > 7)
-        received.remove(0, 9);
-    emit LOG_D("Initial request kernel id received and length:" + parse_message_to_hex(received) + " " + received.length(), true, true);
     kernelid = received;
-
-    while (received.length())
-    {
-        received = serial->read_serial_data(10, serial_read_short_timeout);
-        emit LOG_D("Request kernel id received:" + parse_message_to_hex(received), true, true);
-        if (received.length() > 7)
-            received.remove(0, 9);
-        kernelid.append(received);
-        delay(100);
-    }
 
     request_denso_kernel_id = false;
 

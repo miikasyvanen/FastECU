@@ -503,7 +503,6 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
 
-        //qDebug() << "Received map data:" << parse_message_to_hex(received);
         if (received.startsWith("\x80\xf0"))
         {
             received.remove(0, 5);
@@ -513,7 +512,6 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         else
         {
             LOG_E("ERROR IN DATA RECEIVE! " + parse_message_to_hex(received), true, true);
-            //qDebug() << "ERROR IN DATA RECEIVE!" << hex << addr << parse_message_to_hex(received);
         }
 
         cplen = (numblocks * pagesize);
@@ -1195,7 +1193,6 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_b8_change_baudrate_38
     QByteArray msg;
     uint8_t loop_cnt = 0;
 
-    //qDebug() << "Start B8";
     output.clear();
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);
@@ -1231,8 +1228,7 @@ QByteArray FlashEcuSubaruHitachiM32rKline::add_ssm_header(QByteArray output, uin
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //LOG_I("Send: " + parse_message_to_hex(output), true, true);
-    //qDebug () << "Send:" << parse_message_to_hex(output);
+    //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     return output;
 }
 

@@ -2897,3 +2897,19 @@ double FileActions::calculate_value_from_expression(QStringList expression)
         value = 0;
     return value;
 }
+
+QString FileActions::parse_nrc_message(QByteArray nrc)
+{
+    bool ok = false;
+
+    if (nrc.length() > 2 && (uint8_t)nrc.at(0) == 0x7f)
+    {
+        for (int i = 0; i < neg_rsp_codes.length(); i++)
+        {
+            if (neg_rsp_codes.at(i).toUInt(&ok, 16) == (uint8_t)nrc.at(2))
+                return neg_rsp_codes.at(i+1);
+        }
+    }
+
+    return "Unknown error code";
+}

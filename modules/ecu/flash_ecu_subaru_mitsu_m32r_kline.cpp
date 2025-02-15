@@ -37,28 +37,25 @@ void FlashEcuSubaruMitsuM32rKline::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
+    //emit LOG_I("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+    LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
 
     if (cmd_type == "read")
     {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+        emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
     else if (cmd_type == "test_write")
     {
         test_write = true;
-        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
     else if (cmd_type == "write")
     {
         test_write = false;
-        send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+        emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
     serial->set_is_can_connection(false);
@@ -78,21 +75,21 @@ void FlashEcuSubaruMitsuM32rKline::run()
     switch (ret)
     {
         case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru ECU Mitsubishi K-Line bootloader, please wait...", true, true);
+            emit LOG_I("Connecting to Subaru ECU Mitsubishi K-Line bootloader, please wait...", true, true);
 
-            result = connect_bootloader_subaru_ecu_mitsu_kline();
+            result = connect_bootloader();
 
             if (result == STATUS_SUCCESS)
             {
                 if (cmd_type == "read")
                 {
-                    send_log_window_message("Reading ROM from ECU Subaru Mitsubishi using K-Line", true, true);
-                    result = read_mem_subaru_ecu_mitsu_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                    emit LOG_I("Reading ROM from ECU Subaru Mitsubishi using K-Line", true, true);
+                    result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
-                    send_log_window_message("Writing ROM to ECU Subaru Mitsubishi using K-Line", true, true);
-                    result = write_mem_subaru_ecu_mitsu_kline(test_write);
+                    emit LOG_I("Writing ROM to ECU Subaru Mitsubishi using K-Line", true, true);
+                    result = write_mem(test_write);
                 }
             }
             emit external_logger("Finished");
@@ -108,12 +105,12 @@ void FlashEcuSubaruMitsuM32rKline::run()
             }
             break;
         case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
+            LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
+            LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
     }
@@ -134,7 +131,7 @@ void FlashEcuSubaruMitsuM32rKline::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int FlashEcuSubaruMitsuM32rKline::connect_bootloader_subaru_ecu_mitsu_kline()
+int FlashEcuSubaruMitsuM32rKline::connect_bootloader()
 {
     QByteArray received;
     QByteArray seed;
@@ -145,22 +142,20 @@ int FlashEcuSubaruMitsuM32rKline::connect_bootloader_subaru_ecu_mitsu_kline()
 
     if (!serial->is_serial_port_open())
     {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        emit LOG_I("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
     delay(100);
 
-    send_log_window_message("Initializing k-line communications", true, true);
+    emit LOG_I("Initializing k-line communications", true, true);
 
-    received = send_subaru_mitsu_sid_bf_ssm_init();
+    received = send_sid_bf_ssm_init();
 
     //if (received == "")
     //    return STATUS_ERROR;
-    //qDebug() << "SID_BF received:" << parse_message_to_hex(received);
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
-    //qDebug() << "Received length:" << received.length();
     for (int i = 0; i < received.length(); i++)
     {
         msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
@@ -168,33 +163,31 @@ int FlashEcuSubaruMitsuM32rKline::connect_bootloader_subaru_ecu_mitsu_kline()
     QString calid = msg;
     //QString ecuid = QString("%1%2%3%4%5").arg(received.at(0),2,16,QLatin1Char('0')).toUpper().arg(received.at(1),2,16,QLatin1Char('0')).arg(received.at(2),2,16,QLatin1Char('0')).arg(received.at(3),2,16,QLatin1Char('0')).arg(received.at(4),2,16,QLatin1Char('0'));
 
-    send_log_window_message("Init Success: CAL ID = " + calid, true, true);
-    qDebug() << "CAL ID = " << calid;
+    emit LOG_I("Init Success: CAL ID = " + calid, true, true);
 
     // Start communication
 
-    send_log_window_message("Start communication ok", true, true);
-    qDebug() << "Start communication ok";
+    emit LOG_I("Start communication ok", true, true);
 
     // Request timing parameters
-    received = send_subaru_mitsu_sid_81_start_communication();
-//    send_log_window_message("Received = " + parse_message_to_hex(received), true, true);
+    received = send_sid_81_start_communication();
+//    emit LOG_I("Received = " + parse_message_to_hex(received), true, true);
 
-    received = send_subaru_mitsu_sid_83_request_timings();
-//    send_log_window_message("Received = " + parse_message_to_hex(received), true, true);
+    received = send_sid_83_request_timings();
+//    emit LOG_I("Received = " + parse_message_to_hex(received), true, true);
     //if (received == "" || (uint8_t)received.at(4) != 0xC3)
     //    return STATUS_ERROR;
 
-//    send_log_window_message("Request timing parameters ok", true, true);
+//    emit LOG_I("Request timing parameters ok", true, true);
 //    qDebug() << "Request timing parameters ok";
 
     // Request seed
-    received = send_subaru_mitsu_sid_27_request_seed();
-    send_log_window_message("SID_27_01 = " + parse_message_to_hex(received), true, true);
+    received = send_sid_27_request_seed();
+    emit LOG_I("SID_27_01 = " + parse_message_to_hex(received), true, true);
     if (received == "" || (uint8_t)received.at(4) != 0x67)
 //        return STATUS_ERROR;
 
-    send_log_window_message("Seed request ok", true, true);
+    emit LOG_I("Seed request ok", true, true);
 //    qDebug() << "Seed request ok";
 
     seed.append(received.at(6));
@@ -202,28 +195,28 @@ int FlashEcuSubaruMitsuM32rKline::connect_bootloader_subaru_ecu_mitsu_kline()
     seed.append(received.at(8));
     seed.append(received.at(9));
 
-    seed_key = subaru_ecu_mitsu_generate_kline_seed_key(seed);
+    seed_key = generate_seed_key(seed);
     msg = parse_message_to_hex(seed_key);
     //qDebug() << "Calculated seed key: " + msg + ", sending to ECU";
-    send_log_window_message("Calculated seed key: " + msg + ", sending to ECU", true, true);
-    send_log_window_message("Sending seed key", true, true);
+    emit LOG_I("Calculated seed key: " + msg + ", sending to ECU", true, true);
+    emit LOG_I("Sending seed key", true, true);
 //    qDebug() << "Sending seed key";
 
-    received = send_subaru_mitsu_sid_27_send_seed_key(seed_key);
-    send_log_window_message("SID_27_02 = " + parse_message_to_hex(received), true, true);
+    received = send_sid_27_send_seed_key(seed_key);
+    emit LOG_I("SID_27_02 = " + parse_message_to_hex(received), true, true);
     if (received == "" || (uint8_t)received.at(4) != 0x67)
 //       return STATUS_ERROR;
 
-    send_log_window_message("Seed key ok", true, true);
+    emit LOG_I("Seed key ok", true, true);
 //    qDebug() << "Seed key ok";
 
     // Start diagnostic session
-    received = send_subaru_mitsu_sid_10_start_diagnostic();
-    send_log_window_message("SID_10 = " + parse_message_to_hex(received), true, true);
+    received = send_sid_10_start_diagnostic();
+    emit LOG_I("SID_10 = " + parse_message_to_hex(received), true, true);
 //    if (received == "" || (uint8_t)received.at(4) != 0x50)
 //        return STATUS_ERROR;
 
-    send_log_window_message("Start diagnostic session ok", true, true);
+    emit LOG_I("Start diagnostic session ok", true, true);
     //qDebug() << "Start diagnostic session ok";
 
     return STATUS_SUCCESS;
@@ -235,7 +228,7 @@ int FlashEcuSubaruMitsuM32rKline::connect_bootloader_subaru_ecu_mitsu_kline()
  *
  *
  */
-int FlashEcuSubaruMitsuM32rKline::read_mem_subaru_ecu_mitsu_kline(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruMitsuM32rKline::read_mem(uint32_t start_addr, uint32_t length)
 {
 
     QByteArray received;
@@ -251,7 +244,7 @@ int FlashEcuSubaruMitsuM32rKline::read_mem_subaru_ecu_mitsu_kline(uint32_t start
 
     block_size = 128;
 
-    send_log_window_message("Commencing ECU ROM read", true, true);
+    emit LOG_I("Commencing ECU ROM read", true, true);
 
     curr_addr = start_addr; //- 0x00100000;          // manual adjustment until fix processor details
     num_blocks = length / block_size;
@@ -267,11 +260,11 @@ int FlashEcuSubaruMitsuM32rKline::read_mem_subaru_ecu_mitsu_kline(uint32_t start
             block_len = block_size;
 
         msg = QString("ROM read addr: %1 length: %2").arg(curr_addr).arg(block_len).toUtf8();
-        send_log_window_message(msg, true, true);
+        emit LOG_I(msg, true, true);
 
         for (loop_ctr = 0; loop_ctr < 5; loop_ctr++)
         {
-            received = send_subaru_mitsu_sid_a0_block_read(curr_addr, block_len - 1);
+            received = send_sid_a0_block_read(curr_addr, block_len - 1);
             if (received.length() > 5) break;
         }
 
@@ -295,7 +288,7 @@ int FlashEcuSubaruMitsuM32rKline::read_mem_subaru_ecu_mitsu_kline(uint32_t start
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
@@ -308,14 +301,14 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_bf_ssm_init()
         if (kill_process)
             break;
 
-        send_log_window_message("SSM init", true, true);
+        emit LOG_I("SSM init", true, true);
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
         delay(200);
         received = serial->read_serial_data(100, receive_timeout);
         //received = QByteArray::fromHex("80f01839ffa61022ada02160000100800400000000a1462c000800000000000000dc06000829c0047e011e003e00000000000080a6e000fefe00002000da");
-        send_log_window_message("Recd: " + parse_message_to_hex(received), true, true);
+        emit LOG_I("Recd: " + parse_message_to_hex(received), true, true);
         loop_cnt++;
     }
 
@@ -327,7 +320,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_bf_ssm_init()
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_81_start_communication()
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_81_start_communication()
 {
     QByteArray output;
     QByteArray received;
@@ -336,10 +329,10 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_81_start_communic
     output.clear();
     output.append((uint8_t)0x81);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
     received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -349,7 +342,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_81_start_communic
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_83_request_timings()
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_83_request_timings()
 {
     QByteArray output;
     QByteArray received;
@@ -359,11 +352,11 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_83_request_timing
     output.append((uint8_t)0x83);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
 
     received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
 //    QMessageBox::information(this, tr("Init was OK?"), "Press OK to continue");
 
@@ -375,7 +368,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_83_request_timing
  *
  * @return seed (4 bytes)
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_27_request_seed()
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_27_request_seed()
 {
     QByteArray output;
     QByteArray received;
@@ -385,7 +378,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_27_request_seed()
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
     received = serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
     received = serial->read_serial_data(11, receive_timeout);
 
@@ -397,7 +390,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_27_request_seed()
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_27_send_seed_key(QByteArray seed_key)
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_27_send_seed_key(QByteArray seed_key)
 {
     QByteArray output;
     QByteArray received;
@@ -408,7 +401,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_27_send_seed_key(
     output.append((uint8_t)0x02);
     output.append(seed_key);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
     received = serial->read_serial_data(8, receive_timeout);
 
@@ -420,7 +413,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_27_send_seed_key(
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_10_start_diagnostic()
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_10_start_diagnostic()
 {
     QByteArray output;
     QByteArray received;
@@ -431,10 +424,10 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_10_start_diagnost
     output.append((uint8_t)0x85);
     output.append((uint8_t)0x02);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
     received = serial->read_serial_data(7, receive_timeout);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -444,7 +437,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_10_start_diagnost
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_generate_kline_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruMitsuM32rKline::generate_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -462,12 +455,12 @@ QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_generate_kline_seed_ke
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    key = subaru_ecu_mitsu_calculate_seed_key(requested_seed, keytogenerateindex, indextransformation);
+    key = calculate_seed_key(requested_seed, keytogenerateindex, indextransformation);
 
     return key;
 }
 
-int FlashEcuSubaruMitsuM32rKline::write_mem_subaru_ecu_mitsu_kline(bool test_write)
+int FlashEcuSubaruMitsuM32rKline::write_mem(bool test_write)
 {
     QByteArray received;
     QByteArray filedata;
@@ -482,7 +475,7 @@ int FlashEcuSubaruMitsuM32rKline::write_mem_subaru_ecu_mitsu_kline(bool test_wri
     unsigned blockno;
 
     //encrypt the data
-    filedata = subaru_ecu_mitsu_encrypt_32bit_payload(filedata, filedata.length());
+    filedata = encrypt_payload(filedata, filedata.length());
 
     for (int i = 0; i < filedata.length(); i++)
     {
@@ -490,21 +483,21 @@ int FlashEcuSubaruMitsuM32rKline::write_mem_subaru_ecu_mitsu_kline(bool test_wri
     }
 
     bcnt = 0;
-    send_log_window_message("Blocks to flash : ", true, false);
+    emit LOG_I("Blocks to flash : ", true, false);
     for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
         if (block_modified[blockno]) {
-            send_log_window_message(QString::number(blockno) + ", ", false, false);
+            emit LOG_I(QString::number(blockno) + ", ", false, false);
             bcnt += 1;
         }
     }
-    send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
+    emit LOG_I(" (total: " + QString::number(bcnt) + ")", false, true);
 
     if (bcnt)
     {
-//        send_log_window_message("--- erasing TCU flash memory ---", true, true);
+//        emit LOG_I("--- erasing TCU flash memory ---", true, true);
 //        if (erase_subaru_ecu_mitsu_can())
 //        {
-//            send_log_window_message("--- erasing did not complete successfully ---", true, true);
+//            emit LOG_I("--- erasing did not complete successfully ---", true, true);
 //            return STATUS_ERROR;
 //        }
 //        received = send_subaru_ecu_sid_83_request_timings();
@@ -520,20 +513,20 @@ int FlashEcuSubaruMitsuM32rKline::write_mem_subaru_ecu_mitsu_kline(bool test_wri
             }
         }
 
-        send_log_window_message("--- start writing ROM file to ECU flash memory ---", true, true);
+        emit LOG_I("--- start writing ROM file to ECU flash memory ---", true, true);
         for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)  // hack so that only 1 flash loop done for the entire ROM above 0x8000
         {
             if (block_modified[blockno])
             {
-                if (reflash_block_subaru_ecu_mitsu_kline(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
                 {
-                    send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
+                    emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
                 }
                 else
                 {
                     flashbytesindex += flashdevices[mcu_type_index].fblocks[blockno].len;
-                    send_log_window_message("Block " + QString::number(blockno) + " reflash complete.", true, true);
+                    emit LOG_I("Block " + QString::number(blockno) + " reflash complete.", true, true);
                 }
             }
         }
@@ -541,7 +534,7 @@ int FlashEcuSubaruMitsuM32rKline::write_mem_subaru_ecu_mitsu_kline(bool test_wri
     }
     else
     {
-        send_log_window_message("*** No blocks require flash! ***", true, true);
+        emit LOG_I("*** No blocks require flash! ***", true, true);
     }
 
     return STATUS_SUCCESS;
@@ -553,7 +546,7 @@ int FlashEcuSubaruMitsuM32rKline::write_mem_subaru_ecu_mitsu_kline(bool test_wri
  * @return received response
  */
 
-int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
 
     int errval;
@@ -573,7 +566,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
     set_progressbar_value(0);
 
     if (blockno >= fdt->numblocks) {
-        send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
+        emit LOG_I("block " + QString::number(blockno) + " out of range !", true, true);
         return -1;
     }
 
@@ -586,9 +579,9 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
     msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
-    send_log_window_message(msg, true, true);
+    emit LOG_I(msg, true, true);
 
-    send_log_window_message("Settting flash start & length...", true, true);
+    emit LOG_I("Settting flash start & length...", true, true);
     qDebug() << "Settting flash start & length...";
 
     serial->change_port_speed("15625");
@@ -605,18 +598,18 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
     output.append((uint8_t)0x00);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
 
     received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received == "" || (uint8_t)received.at(4) != 0x74)
     return STATUS_ERROR;
 
 //    QMessageBox::information(this, tr("Init was OK?"), "Press OK to continue");
 
-    send_log_window_message("Erasing...", true, true);
+    emit LOG_I("Erasing...", true, true);
 
     output.clear();
     output.append((uint8_t)0x31);
@@ -627,17 +620,17 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
     output.append((uint8_t)0xFF);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
     delay(200);
     received = serial->read_serial_data(20, 200);
-    send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received == "" || (uint8_t)received.at(4) != 0x71)
     return STATUS_ERROR;
 
 //End Of erase...
-    send_log_window_message("Starting ROM Flashing...", true, true);
+    emit LOG_I("Starting ROM Flashing...", true, true);
 
     int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
@@ -661,12 +654,12 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
         data_len -= 128;
 
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-//        send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+//        emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 //        delay(5);
 //        received = serial->read_serial_data(20, 200);
         received = serial->read_serial_data(20, receive_timeout);
 
-//        send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
+//        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
         set_progressbar_value(pleft);
@@ -677,8 +670,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
 
 //    return STATUS_SUCCESS;
 
-    send_log_window_message("Verifying checksum...", true, true);
-    qDebug() << "Verifying checksum...";
+    emit LOG_I("Verifying checksum...", true, true);
 
 //    connected = false;
 //    try_count = 0;
@@ -689,24 +681,23 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
     output.append((uint8_t)0x02);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
     delay(200);
     received = serial->read_serial_data(20, 200);
         if (received != "")
         {
 //            connected = true;
-            send_log_window_message(": 0x31 response: " + parse_message_to_hex(received), true, true);
+            emit LOG_I(": 0x31 response: " + parse_message_to_hex(received), true, true);
         }
 //        try_count++;
         //delay(try_timeout);
     
     if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-        send_log_window_message("No or bad response received", true, true);
+        emit LOG_I("No or bad response received", true, true);
         //return STATUS_ERROR;
 
-    send_log_window_message("Checksum verified...", true, true);
-    qDebug() << "Checksum verified...";
+    emit LOG_I("Checksum verified...", true, true);
 
     return STATUS_SUCCESS;
 
@@ -717,7 +708,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block_subaru_ecu_mitsu_kline(const uin
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_b8_byte_read(uint32_t dataaddr)
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_b8_byte_read(uint32_t dataaddr)
 {
     QByteArray output;
     QByteArray received;
@@ -728,12 +719,12 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_b8_byte_read(uint
     output.append((uint8_t)dataaddr & 0xFF);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
    // delay(100);
     received = serial->read_serial_data(7, receive_timeout);
     //received = QByteArray::fromHex("80f018f8e0");
    // delay(100);
-    send_log_window_message("Recd: " + parse_message_to_hex(received), true, true);
+    emit LOG_I("Recd: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -743,7 +734,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_b8_byte_read(uint
  *
  * @return received response
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen)
+QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen)
 {
     QByteArray output;
     QByteArray received;
@@ -758,11 +749,11 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_a0_block_read(uin
     output.append((uint8_t)datalen & 0xFF);
 
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-    send_log_window_message("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
 //    received = serial->read_serial_data(datalen + 2 + 6, receive_timeout);
     received = serial->read_serial_data(7, receive_timeout);
-    send_log_window_message("Recd: " + parse_message_to_hex(received), true, true);
+    emit LOG_I("Recd: " + parse_message_to_hex(received), true, true);
 
     return received;
 }
@@ -772,7 +763,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_subaru_mitsu_sid_a0_block_read(uin
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruMitsuM32rKline::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -821,7 +812,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_calculate_seed_key(QBy
  * @return encrypted data
  */
 
-QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_encrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruMitsuM32rKline::encrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -837,12 +828,12 @@ QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_encrypt_32bit_payload(
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    encrypted = subaru_ecu_mitsu_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    encrypted = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return encrypted;
 }
 
-QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_decrypt_32bit_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruMitsuM32rKline::decrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -858,12 +849,12 @@ QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_decrypt_32bit_payload(
         0x5, 0xC, 0x1, 0xA, 0x3, 0xD, 0xE, 0x8
     };
 
-    decrypt = subaru_ecu_mitsu_calculate_32bit_payload(buf, len, keytogenerateindex, indextransformation);
+    decrypt = calculate_payload(buf, len, keytogenerateindex, indextransformation);
 
     return decrypt;
 }
 
-QByteArray FlashEcuSubaruMitsuM32rKline::subaru_ecu_mitsu_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruMitsuM32rKline::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -926,8 +917,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::add_ssm_header(QByteArray output, uint8
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //send_log_window_message("Send: " + parse_message_to_hex(output), true, true);
-    //qDebug () << "Send:" << parse_message_to_hex(output);
+    //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     return output;
 }
 
@@ -965,36 +955,6 @@ QString FlashEcuSubaruMitsuM32rKline::parse_message_to_hex(QByteArray received)
     }
 
     return msg;
-}
-
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashEcuSubaruMitsuM32rKline::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void FlashEcuSubaruMitsuM32rKline::set_progressbar_value(int value)

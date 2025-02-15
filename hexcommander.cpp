@@ -211,11 +211,11 @@ void HexCommander::sendToInterface()
             }
             serial->write_serial_data_echo_check(output);
 
-            emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+            emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
             qDebug() << "Sent:" << parse_message_to_hex(output);
             delay(rspDelay);
             received = serial->read_serial_data(100, serial_read_short_timeout);
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
         serial->reset_connection();
@@ -297,11 +297,11 @@ void HexCommander::sendToInterface()
             }
             serial->write_serial_data_echo_check(output);
 
-            emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+            emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
             qDebug() << "Sent:" << parse_message_to_hex(output);
             delay(rspDelay);
             received = serial->read_serial_data(100, serial_read_short_timeout);
-            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             qDebug() << "Response:" << parse_message_to_hex(received);
         }
         serial->reset_connection();

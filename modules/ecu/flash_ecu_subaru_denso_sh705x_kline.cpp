@@ -119,12 +119,12 @@ void FlashEcuSubaruDensoSH705xKline::run()
             }
             break;
         case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
+            LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
+            LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
     }
@@ -189,8 +189,12 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Initializing K-Line communications", true, true);
     received = send_sid_bf_ssm_init();
-    if (received == "")
+    if (received == "" || (uint8_t)received.at(4) != 0xFF)
+    {
+        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
+        emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
+    }
 
     received.remove(0, 8);
     received.remove(5, received.length() - 5);
@@ -201,23 +205,49 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("Init Success: ECU ID = " + ecuid, true, true);
     if (cmd_type == "read")
         ecuCalDef->RomId = ecuid;
-
+/*
+    emit LOG_I("Clear diagnostic codes", true, true);
+    output.clear();
+    output.append((uint8_t)0x14);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0xFF);
+    output.append((uint8_t)0x33);// 0xFF);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    //received.append(serial->read_serial_data(10, 100));
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    //return STATUS_ERROR;
+*/
     emit LOG_I("Request to start communication", true, true);
     received = send_sid_81_start_communication();
     if (received == "" || (uint8_t)received.at(4) != 0xC1)
+    {
+        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
+        emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Start communication ok", true, true);
 
     emit LOG_I("Request timings params", true, true);
     received = send_sid_83_request_timings();
     if (received == "" || (uint8_t)received.at(4) != 0xC3)
+    {
+        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
+        emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Timing parameters ok", true, true);
 
     emit LOG_I("Request seed", true, true);
     received = send_sid_27_request_seed();
     if (received == "" || (uint8_t)received.at(4) != 0x67)
+    {
+        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
+        emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Seed request ok", true, true);
 
     seed.append(received.at(6));
@@ -239,13 +269,21 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("Sending seed key to ECU", true, true);
     received = send_sid_27_send_seed_key(seed_key);
     if (received == "" || (uint8_t)received.at(4) != 0x67)
+    {
+        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
+        emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Seed key ok", true, true);
 
     emit LOG_I("Set session mode", true, true);
     received = send_sid_10_start_diagnostic();
     if (received == "" || (uint8_t)received.at(4) != 0x50)
+    {
+        QString nrc = fileActions.parse_nrc_message(received.remove(0, 4));
+        emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
+    }
     emit LOG_I("Succesfully set to programming session", true, true);
 
     return STATUS_SUCCESS;
@@ -1768,10 +1806,11 @@ QByteArray FlashEcuSubaruDensoSH705xKline::request_kernel_id()
     output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
-    received = serial->write_serial_data_echo_check(output);
+
+    serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(100, serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
 
@@ -1797,7 +1836,6 @@ QByteArray FlashEcuSubaruDensoSH705xKline::add_ssm_header(QByteArray output, uin
     output.append(calculate_checksum(output, dec_0x100));
 
     //emit LOG_I("Send: " + parse_message_to_hex(output), true, true);
-    //qDebug () << "Send:" << parse_message_to_hex(output);
     return output;
 }
 
