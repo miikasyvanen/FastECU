@@ -36,7 +36,7 @@ void FlashEcuSubaruHitachiM32rCan::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    emit LOG_I("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
 
     flash_method = ecuCalDef->FlashMethod;
 
@@ -102,12 +102,12 @@ void FlashEcuSubaruHitachiM32rCan::run()
             }
             break;
         case QMessageBox::Cancel:
-            LOG_D("Operation canceled", true, true);
+            emit LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            LOG_D("Unknown operation selected!", true, true);
+            emit LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
     }

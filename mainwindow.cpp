@@ -71,11 +71,11 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     syslog_thread->start();
 
 #if defined Q_OS_UNIX
-    LOG_D("Running on Linux Desktop ", true, false);
+    emit LOG_D("Running on Linux Desktop ", true, false);
     //serialPort = serialPortLinux;
     serial_port_prefix = "/dev/";
 #elif defined Q_OS_WIN32
-    LOG_D("Running on Windows Desktop ", true, false);
+    emit LOG_D("Running on Windows Desktop ", true, false);
     //serialPort = serialPortWindows;
     serial_port_prefix = "";
 #endif

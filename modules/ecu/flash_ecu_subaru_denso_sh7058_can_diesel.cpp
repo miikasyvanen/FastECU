@@ -40,7 +40,8 @@ void FlashEcuSubaruDensoSH7058CanDiesel::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    emit LOG_D("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
+
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -1143,7 +1144,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc(const uint8_t *src, uint32_
     output.append((uint8_t)(pagesize >> 16) & 0xFF);
     output.append((uint8_t)(pagesize >> 8) & 0xFF);
     output.append((uint8_t)pagesize & 0xFF);
-    LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     received.clear();
     received = serial->read_serial_data(10, serial_read_extra_long_timeout);
@@ -1611,9 +1612,9 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
 
         if ((flashblockstart + flashblocksize) == start)
         {
-            LOG_I("Flash buffer write complete... ", true, true);
+            emit LOG_I("Flash buffer write complete... ", true, true);
             imgcrc32 = crc32(&src[flashblockstart], flashblocksize);
-            LOG_D("Image CRC32: 0x" + QString::number(imgcrc32, 16), true, true);
+            emit LOG_D("Image CRC32: 0x" + QString::number(imgcrc32, 16), true, true);
 
             uint8_t SUB_KERNEL_CMD = 0;
             if (test_write)

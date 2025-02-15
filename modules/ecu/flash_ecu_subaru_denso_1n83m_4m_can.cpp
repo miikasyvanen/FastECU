@@ -114,12 +114,12 @@ void FlashEcuSubaruDenso1N83M_4MCan::run()
             }
             break;
         case QMessageBox::Cancel:
-            LOG_D("Operation canceled", true, true);
+            emit LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            LOG_D("Unknown operation selected!", true, true);
+            emit LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
     }

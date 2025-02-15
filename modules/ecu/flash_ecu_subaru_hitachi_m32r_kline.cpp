@@ -37,7 +37,7 @@ void FlashEcuSubaruHitachiM32rKline::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    LOG_I("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -46,17 +46,17 @@ void FlashEcuSubaruHitachiM32rKline::run()
 
     if (cmd_type == "read")
     {
-        LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
+        emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
     else if (cmd_type == "test_write")
     {
         test_write = true;
-        LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
+        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
     else if (cmd_type == "write")
     {
         test_write = false;
-        LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
+        emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
     serial->set_is_iso14230_connection(false);
@@ -81,19 +81,19 @@ void FlashEcuSubaruHitachiM32rKline::run()
             if (cmd_type == "read")
             {
                 emit external_logger("Reading ROM, please wait...");
-                LOG_I("Reading ROM from ECU using K-Line", true, true);
+                emit LOG_I("Reading ROM from ECU using K-Line", true, true);
                 result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
             }
             else
             {
-                LOG_I("Connecting to Subaru ECU Hitachi K-Line bootloader, please wait...", true, true);
+                emit LOG_I("Connecting to Subaru ECU Hitachi K-Line bootloader, please wait...", true, true);
 
                 result = connect_bootloader_subaru_ecu_hitachi_kline();
 
                 if (result == STATUS_SUCCESS)
                 {
                     emit external_logger("Writing ROM, please wait...");
-                    LOG_I("Writing ROM to ECU Subaru Hitachi using K-Line", true, true);
+                    emit LOG_I("Writing ROM to ECU Subaru Hitachi using K-Line", true, true);
                     //result = write_mem_subaru_denso_can_02_32bit(test_write);
                     result = write_mem(test_write);
                 }
@@ -111,12 +111,12 @@ void FlashEcuSubaruHitachiM32rKline::run()
             }
             break;
         case QMessageBox::Cancel:
-            LOG_D("Operation canceled", true, true);
+            emit LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            LOG_D("Unknown operation selected!", true, true);
+            emit LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
     }
@@ -155,7 +155,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
     if (flash_method == "sub_ecu_hitachi_m32r_kline_recovery")
     {
-        LOG_I("Testing with recovery mode", true, true);
+        emit LOG_I("Testing with recovery mode", true, true);
 
         emit LOG_I("Initializing K-Line communications", true, true);
         serial->change_port_speed("4800");
@@ -783,7 +783,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         {
             if ((uint8_t)received.at(4) != 0x76)
             {
-                LOG_I("Write data failed!", true, true);
+                emit LOG_I("Write data failed!", true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
