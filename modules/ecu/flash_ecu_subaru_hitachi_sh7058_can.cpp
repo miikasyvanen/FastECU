@@ -934,7 +934,7 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
 //        delay(50);
 //        received = serial->read_serial_data(270, 200);
         received = serial->read_serial_data(20, 5000);
-        emit LOG_D("Received msg: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0xE0)
         {
             emit LOG_I("Page data request failed!", true, true);
@@ -1133,27 +1133,26 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
 
-    bool connected = false;
     int try_count = 0;
-    while (try_count < 6 && connected == false)
+    while (try_count < 6)
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        delay(200);
-        received = serial->read_serial_data(20, 200);
-        if (received != "")
+        received = serial->read_serial_data(20, serial_read_long_timeout);
+        if (received.length() > 4)
         {
-            connected = true;
-            emit LOG_I(QString::number(try_count) + ": 0x34 0x04 response: " + parse_message_to_hex(received), true, true);
+            if ((uint8_t)received.at(4) == 0x74)
+            {
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                break;
+            }
         }
         try_count++;
-        //delay(try_timeout);
     }
     if (received == "" || (uint8_t)received.at(4) != 0x74)
         emit LOG_I("No or bad response received", true, true);
         //return STATUS_ERROR;
 
-    int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
@@ -1169,20 +1168,15 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
-
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         for (unsigned int i = 0; i < blocksize; i++)
         {
             output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
-            data_bytes_sent++;
         }
         data_len -= blocksize;
-//        delay(10);
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         received = serial->read_serial_data(20, 5000);
-//    received = serial->read_serial_data(20, 200);
-        emit LOG_D("Received msg: " + parse_message_to_hex(received), true, true);
-//        delay(50);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0xF6)
         {
             emit LOG_I("Write data failed!", true, true);
@@ -1197,9 +1191,8 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
 
     set_progressbar_value(100);
 
-    emit LOG_I("Closing out flashing of this block...", true, true);
-    connected = false;
     try_count = 0;
+    emit LOG_I("Closing out flashing of this block...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1227,8 +1220,15 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
                 //return STATUS_ERROR;
             }
         }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
         try_count++;
     }
+    if (try_count == 20)
+        return STATUS_ERROR;
 
     delay(100);
 

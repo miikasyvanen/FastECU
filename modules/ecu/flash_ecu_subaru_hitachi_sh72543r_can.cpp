@@ -759,14 +759,12 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
-
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         for (int i = 0; i < blocksize; i++)
         {
             output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
         }
         serial->write_serial_data_echo_check(output);
-        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(10);
 
         received = serial->read_serial_data(200, serial_read_timeout);
@@ -779,7 +777,6 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
         msg = QString("Kernel write addr: 0x%1 length: 0x%2, %3 B/s %4 s remain").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
 
-        //remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
 
@@ -836,8 +833,15 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
                 //return STATUS_ERROR;
             }
         }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
         try_count++;
     }
+    if (try_count == 20)
+        return STATUS_ERROR;
 
     delay(100);
 

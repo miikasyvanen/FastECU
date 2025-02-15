@@ -848,10 +848,8 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
         set_progressbar_value(pleft);
     }
 
-    emit LOG_I("Closing out Flashing of this block...", true, true);
-
-    bool connected = false;
     int try_count = 0;
+    emit LOG_I("Closing out Flashing of this block...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -859,31 +857,40 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
     output.append((uint8_t)0xE1);
     output.append((uint8_t)0x37);
 
-    while (try_count < 6 && connected == false)
+    while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(20, serial_read_timeout);
-        if (received != "")
+        received = serial->read_serial_data(20, serial_read_long_timeout);
+        if (received.length() > 4)
         {
-            connected = true;
-            emit LOG_I(QString::number(try_count) + ": 0x37 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << try_count << ": 0x37 response:" << parse_message_to_hex(received);
+            if ((uint8_t)received.at(4) == 0x77)
+            {
+                emit LOG_I("Flashing of block closed", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                break;
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                //return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         try_count++;
-        //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x77)
-        emit LOG_I("No or bad response received", true, true);
-        //return STATUS_ERROR;
+    if (try_count == 20)
+        return STATUS_ERROR;
 
     delay(100);
 
-    emit LOG_I("Verifying checksum...", true, true);
-    qDebug() << "Verifying checksum...";
-
-    connected = false;
     try_count = 0;
+    emit LOG_I("Verifying checksum...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -894,33 +901,34 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block_subaru_tcu_hitachi_can(const uin
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
 
-    while (try_count < 6 && connected == false)
+    while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
-        //delay(50);
-        delay(200);
-        received = serial->read_serial_data(20, serial_read_timeout);
-        if (received != "")
+        received = serial->read_serial_data(20, serial_read_long_timeout);
+        if (received.length() > 6)
         {
-            connected = true;
-            emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << try_count << ": 0x31 response:" << parse_message_to_hex(received);
+            if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x02 && (uint8_t)received.at(6) == 0x02)
+            {
+                emit LOG_I("Checksum verified...", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                return STATUS_SUCCESS;
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                //return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         try_count++;
-        //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02)
-        emit LOG_I("No or bad response received", true, true);
-        //return STATUS_ERROR;
-
-    emit LOG_I("Checksum verified...", true, true);
-    qDebug() << "Checksum verified...";
-
-    set_progressbar_value(100);
-
-    return STATUS_SUCCESS;
+    return STATUS_ERROR;
 }
 
 /*
@@ -1137,12 +1145,6 @@ QByteArray FlashTcuSubaruHitachiM32rCan::subaru_tcu_hitachi_calculate_32bit_payl
     return encrypted;
 }
 
-
-
-
-
-
-
 /*
  * Parse QByteArray to readable form
  *
@@ -1158,36 +1160,6 @@ QString FlashTcuSubaruHitachiM32rCan::parse_message_to_hex(QByteArray received)
     }
 
     return msg;
-}
-
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashTcuSubaruHitachiM32rCan::emit LOG_I(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void FlashTcuSubaruHitachiM32rCan::set_progressbar_value(int value)
