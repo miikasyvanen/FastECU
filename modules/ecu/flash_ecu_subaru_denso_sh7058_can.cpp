@@ -329,7 +329,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         {
             QByteArray response = received;
             response.remove(0, 8);
-            response.remove(5, response.length()-6);
+            response.remove(5, response.length()-5);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             QString ecuid;
             for (int i = 0; i < 5; i++)
@@ -735,7 +735,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
     uint16_t blockno = 0;
     uint16_t maxblocks = 0;
 
-    start_address = kernel_start_addr;//flashdevices[mcu_type_index].kblocks->start;
+    start_address = kernel_start_addr;
     emit LOG_D("Start address to upload kernel: 0x" + QString::number(start_address, 16), true, true);
 
     if (!serial->is_serial_port_open())
@@ -778,6 +778,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
     set_progressbar_value(0);
 
     emit LOG_I("Initialize kernel upload", true, true);
+    output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
@@ -795,7 +796,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, 10);
+    received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x74 && (uint8_t)received.at(5) == 0x20)
@@ -817,18 +818,6 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
     }
 
     emit LOG_I("Uploading kernel, please wait...", true, true);
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0xB6);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append(128, (uint8_t)0x00);
-
-    int data_bytes_sent = 0;
     for (blockno = 0; blockno <= maxblocks; blockno++)
     {
         if (kill_process)
@@ -850,7 +839,6 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
             for (uint32_t i = 0; i < data_len; i++)
             {
                 output.append(pl_encr.at(i + blockno * 128));
-                data_bytes_sent++;
             }
         }
         else
@@ -858,18 +846,16 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
             for (int i = 0; i < 128; i++)
             {
                 output.append(pl_encr.at(i + blockno * 128));
-                data_bytes_sent++;
             }
             data_len -= 128;
         }
 
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(5, receive_timeout);
+        received = serial->read_serial_data(5, serial_read_timeout);
 
         float pleft = (float)blockno / (float)maxblocks * 100;
         set_progressbar_value(pleft);
     }
-    emit LOG_D("Data bytes sent: 0x" + QString::number(data_bytes_sent), true, true);
 
     emit LOG_I("Kernel uploaded, starting...", true, true);
 
@@ -883,7 +869,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, 10);
+    received = serial->read_serial_data(20, serial_read_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) == 0x77)
@@ -1044,7 +1030,7 @@ int FlashEcuSubaruDensoSH7058Can::read_mem(uint32_t start_addr, uint32_t length)
         serial->write_serial_data_echo_check(output);
         //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         //delay(10);
-        received = serial->read_serial_data(pagesize + 5, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(pagesize + 5, serial_read_timeout);
         //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         if (received.length() > 8)

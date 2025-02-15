@@ -195,10 +195,9 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
 
     serial->change_port_speed("4800");
-    //serial->set_add_iso14230_header(false);
     delay(100);
 
-    emit LOG_I("Initializing K-Line communications", true, true);
+    emit LOG_I("Requesting ECU ID", true, true);
     output.clear();
     output.append((uint8_t)0xBF);
     output = add_ssm_header(output, tester_id, target_id, false);

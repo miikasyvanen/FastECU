@@ -217,7 +217,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
         {
             QByteArray response = received;
             response.remove(0, 8);
-            response.remove(5, response.length()-6);
+            response.remove(5, response.length()-5);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             QString ecuid;
             for (int i = 0; i < 5; i++)

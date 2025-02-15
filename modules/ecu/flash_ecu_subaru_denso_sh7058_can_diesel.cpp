@@ -252,7 +252,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         {
             QByteArray response = received;
             response.remove(0, 8);
-            response.remove(5, response.length()-6);
+            response.remove(5, response.length()-5);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             QString ecuid;
             for (int i = 0; i < 5; i++)
@@ -890,7 +890,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::read_mem(uint32_t start_addr, uint32_t l
         serial->write_serial_data_echo_check(output);
         //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         //delay(10);
-        received = serial->read_serial_data(pagesize + 5, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(pagesize + 5, serial_read_timeout);
         //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         if (received.length() > 8)

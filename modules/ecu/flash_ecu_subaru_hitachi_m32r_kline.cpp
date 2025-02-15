@@ -286,7 +286,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
 
     serial->change_port_speed("4800");
 
-    emit LOG_I("Initializing K-Line communications", true, true);
+    emit LOG_I("Requesting ECU ID", true, true);
     output.clear();
     output.append((uint8_t)0xBF);
     output = add_ssm_header(output, tester_id, target_id, false);
@@ -503,31 +503,53 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     serial->change_port_speed("38400");
     received = send_sid_bf_ssm_init();
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
-    if (received != "" && received.length() > 12)
+    if (received.length() > 4)
     {
-        kernel_alive = true;
-        received.remove(0, 8);
-        received.remove(5, received.length() - 5);
-
-        for (int i = 0; i < received.length(); i++)
+        if ((uint8_t)received.at(4) != 0xFF)
         {
-            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
         }
-        emit LOG_I("Connected, ECU ID: " + msg, true, true);
-        ecuid = msg;
     }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+
+    kernel_alive = true;
+    received.remove(0, 8);
+    received.remove(5, received.length() - 5);
+
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+    }
+    emit LOG_I("Connected, ECU ID: " + msg, true, true);
+    ecuid = msg;
 
     if(!kernel_alive)
     {
         // SSM init
         serial->change_port_speed("4800");
         received = send_sid_bf_ssm_init();
-        if (received == "" && (uint8_t)received.at(4) != 0xff)
+        if (received.length() > 4)
+        {
+            if ((uint8_t)received.at(4) != 0xFF)
+            {
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
-
-        if (received.length() < 13)
-            return STATUS_ERROR;
+        }
 
         received.remove(0, 8);
         received.remove(5, received.length() - 5);
