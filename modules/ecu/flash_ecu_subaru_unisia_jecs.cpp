@@ -44,8 +44,7 @@ void FlashEcuSubaruUnisiaJecs::run()
         return;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -54,8 +53,7 @@ void FlashEcuSubaruUnisiaJecs::run()
 
     if (cmd_type == "read")
     {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
+        emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
     else if (cmd_type == "write")
     {
@@ -74,15 +72,11 @@ void FlashEcuSubaruUnisiaJecs::run()
             }
         }
         QByteArray msg;
-        qDebug() << "Checksums:";
-        send_log_window_message("Checksums:", true, true);
+        emit LOG_I("Checksums:", true, true);
         msg = QString("SUM: 0x%1 | 0x%2").arg((chk_sum & 0xff), 2, 16, QLatin1Char(' ')).arg((chk_sum_rom & 0xff), 2, 16, QLatin1Char(' ')).toUtf8();
-        qDebug() << msg;
-        send_log_window_message(msg, true, true);
+        emit LOG_I(msg, true, true);
         msg = QString("XOR: 0x%1 | 0x%2").arg((chk_xor & 0xff), 2, 16, QLatin1Char(' ')).arg((chk_xor_rom & 0xff), 2, 16, QLatin1Char(' ')).toUtf8();
-        qDebug() << msg;
-        send_log_window_message(msg, true, true);
-
+        emit LOG_I(msg, true, true);
 
         return;
     }
@@ -108,8 +102,8 @@ void FlashEcuSubaruUnisiaJecs::run()
             if (cmd_type == "read")
             {
                 emit external_logger("Reading ROM, please wait...");
-                send_log_window_message("Reading ROM from Subaru Unisia Jecs using SSM cable", true, true);
-                result = read_mem_subaru_unisia_jecs(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
+                emit LOG_I("Reading ROM from Subaru Unisia Jecs using SSM cable", true, true);
+                result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
             }
             if (result == STATUS_SUCCESS)
             {
@@ -122,12 +116,12 @@ void FlashEcuSubaruUnisiaJecs::run()
             }
             break;
         case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
+            LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
+            LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
         }
@@ -151,7 +145,7 @@ void FlashEcuSubaruUnisiaJecs::closeEvent(QCloseEvent *bar)
  *
  * @return success
  */
-int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -171,7 +165,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
 
-    qDebug() << "Set ECU to read mode";
+    LOG_I("Set ECU to read mode", true, true);
 
     output.append((uint8_t)0x78);
     output.append((uint8_t)0x12);
@@ -192,8 +186,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
     mapdata.fill('\x00', start_addr + length);
 
     received.clear();
-    qDebug() << "Start reading, please wait...";
-    send_log_window_message("Start reading, please wait...", true, true);
+    emit LOG_I("Start reading, please wait...", true, true);
     while (willget)
     {
         if (kill_process)
@@ -210,8 +203,6 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
         if (numblocks > NP10_MAXBLKS)
             numblocks = NP10_MAXBLKS;
 
-        uint32_t curblock = (addr / 32);
-
         uint32_t pagesize = numblocks * 32;
 
         pleft = (float)(addr - start_addr) / (float)length * 100.0f;
@@ -223,7 +214,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
         output.append((uint8_t)(addr & 0xFF));
         output.append((uint8_t)(0x00 & 0xFF));
 
-        qDebug() << "Write data:" << parse_message_to_hex(output);
+        LOG_D("Write data: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data(output);
         delay(45);
 
@@ -233,7 +224,6 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
 
         received.clear();
         dieTime = QTime::currentTime().addMSecs(500);
-        //qDebug() << "Received:" << parse_message_to_hex(received) << received.length();
         while (!byte_received)
         {
             if (kill_process)
@@ -247,17 +237,14 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
             }
 
             received.append(serial->read_serial_data(100, 5));
-            //qDebug() << "Received:" << parse_message_to_hex(received) << received.length();
             while (received.length() >= 3)
             {
                 if (received.at(0) == output.at(1) && received.at(1) == output.at(2))// && received.at(3) == output.at(1) && received.at(4) == output.at(2))
                 {
                     byte_received = true;
                     bytes_synced = true;
-                    //qDebug() << "Add data to mapdata:" << parse_message_to_hex(received) << received.length();
-                    received.remove(0,2);
+                    received.remove(0, 2);
                     mapdata.replace(addr, 1, received);
-                    //qDebug() << "Add data to mapdata:" << parse_message_to_hex(received) << received.length();
                     received.remove(0, 1);
                 }
                 else
@@ -275,7 +262,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
         }
         received_flush = serial->read_serial_data(100, 5);
 
-        cplen = 1; //this is the actual # of valid bytes in buf[]
+        cplen = 1;
 
         chrono = timer.elapsed();
 
@@ -289,19 +276,18 @@ int FlashEcuSubaruUnisiaJecs::read_mem_subaru_unisia_jecs(uint32_t start_addr, u
         tleft = (willget / curspeed) % 9999;
         tleft++;
 
-        //qDebug() << numblocks << cplen << chrono << curspeed << tleft;
         timer.start();
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
         msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        send_log_window_message(msg, true, true);
+        emit LOG_I(msg, true, true);
         delay(1);
 
         addr++;
         willget--;
     }
-    send_log_window_message("Reading finished.", true, true);
+    emit LOG_I("Reading finished.", true, true);
     qDebug() << "Timeouts:" << timeout;
     qDebug() << "Mapdata length:" << mapdata.length();
     ecuCalDef->FullRomData = mapdata;
@@ -327,35 +313,6 @@ QString FlashEcuSubaruUnisiaJecs::parse_message_to_hex(QByteArray received)
     }
 
     return msg;
-}
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashEcuSubaruUnisiaJecs::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void FlashEcuSubaruUnisiaJecs::set_progressbar_value(int value)
