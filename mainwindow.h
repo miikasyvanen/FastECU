@@ -55,6 +55,7 @@
 #include <modules/ecu/flash_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh7058_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh7058_can_diesel.h>
+#include <modules/ecu/flash_ecu_subaru_denso_sh72543_can_diesel.h>
 
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs.h>
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.h>

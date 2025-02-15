@@ -1136,6 +1136,11 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             FlashEcuSubaruDensoSH705xKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
             connect_signals_and_run_module(&flash_module);
         }
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh72543_can_diesel"))
+        {
+            FlashEcuSubaruDensoSH72543CanDiesel flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7058_can_diesel"))
         {
             FlashEcuSubaruDensoSH7058CanDiesel flash_module(serial, ecuCalDef[rom_number], cmd_type, this);

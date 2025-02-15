@@ -1,6 +1,6 @@
-#include "flash_ecu_subaru_denso_sh7058_can_diesel.h"
+#include "flash_ecu_subaru_denso_sh72543_can_diesel.h"
 
-FlashEcuSubaruDensoSH7058CanDiesel::FlashEcuSubaruDensoSH7058CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
+FlashEcuSubaruDensoSH72543CanDiesel::FlashEcuSubaruDensoSH72543CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
@@ -21,7 +21,7 @@ FlashEcuSubaruDensoSH7058CanDiesel::FlashEcuSubaruDensoSH7058CanDiesel(SerialPor
     this->serial = serial;
 }
 
-void FlashEcuSubaruDensoSH7058CanDiesel::run()
+void FlashEcuSubaruDensoSH72543CanDiesel::run()
 {
     this->show();
 
@@ -87,62 +87,62 @@ void FlashEcuSubaruDensoSH7058CanDiesel::run()
 
     switch (ret)
     {
-        case QMessageBox::Ok:
-            emit LOG_I("Connecting to Subaru 07+ Diesel 32-bit CAN bootloader, please wait...", true, true);
-            result = connect_bootloader();
+    case QMessageBox::Ok:
+        emit LOG_I("Connecting to Subaru 07+ Diesel 32-bit CAN bootloader, please wait...", true, true);
+        result = connect_bootloader();
 
-            if (result == STATUS_SUCCESS && !kernel_alive)
+        if (result == STATUS_SUCCESS && !kernel_alive)
+        {
+            emit external_logger("Preparing, please wait...");
+            emit LOG_I("Initializing Subaru 07+ Diesel 32-bit CAN kernel upload, please wait...", true, true);
+            result = upload_kernel(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+        }
+        if (result == STATUS_SUCCESS)
+        {
+            if (cmd_type == "read")
             {
-                emit external_logger("Preparing, please wait...");
-                emit LOG_I("Initializing Subaru 07+ Diesel 32-bit CAN kernel upload, please wait...", true, true);
-                result = upload_kernel(kernel, ecuCalDef->KernelStartAddr.toUInt(&ok, 16));
+                emit external_logger("Reading ROM, please wait...");
+                emit LOG_I("Reading ROM from Subaru 07+ Diesel 32-bit using CAN", true, true);
+                result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
             }
-            if (result == STATUS_SUCCESS)
+            else if (cmd_type == "test_write" || cmd_type == "write")
             {
-                if (cmd_type == "read")
-                {
-                    emit external_logger("Reading ROM, please wait...");
-                    emit LOG_I("Reading ROM from Subaru 07+ Diesel 32-bit using CAN", true, true);
-                    result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
-                }
-                else if (cmd_type == "test_write" || cmd_type == "write")
-                {
-                    emit external_logger("Writing ROM, please wait...");
-                    emit LOG_I("Writing ROM to Subaru 07+ Diesel 32-bit using CAN", true, true);
-                    result = write_mem(test_write);
-                }
+                emit external_logger("Writing ROM, please wait...");
+                emit LOG_I("Writing ROM to Subaru 07+ Diesel 32-bit using CAN", true, true);
+                result = write_mem(test_write);
             }
-            emit external_logger("Finished");
+        }
+        emit external_logger("Finished");
 
-            if (result == STATUS_SUCCESS)
-            {
-                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
-                this->close();
-            }
-            else
-            {
-                QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
-            }
-
-            break;
-        case QMessageBox::Cancel:
-            emit LOG_D("Operation canceled", true, true);
+        if (result == STATUS_SUCCESS)
+        {
+            QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
             this->close();
-            break;
-        default:
-            QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            emit LOG_D("Unknown operation selected!", true, true);
-            this->close();
-            break;
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("ECU Operation"), "ECU operation failed, press OK to exit and try again");
+        }
+
+        break;
+    case QMessageBox::Cancel:
+        emit LOG_D("Operation canceled", true, true);
+        this->close();
+        break;
+    default:
+        QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
+        emit LOG_D("Unknown operation selected!", true, true);
+        this->close();
+        break;
     }
 }
 
-FlashEcuSubaruDensoSH7058CanDiesel::~FlashEcuSubaruDensoSH7058CanDiesel()
+FlashEcuSubaruDensoSH72543CanDiesel::~FlashEcuSubaruDensoSH72543CanDiesel()
 {
     delete ui;
 }
 
-void FlashEcuSubaruDensoSH7058CanDiesel::closeEvent(QCloseEvent *event)
+void FlashEcuSubaruDensoSH72543CanDiesel::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
 }
@@ -152,7 +152,7 @@ void FlashEcuSubaruDensoSH7058CanDiesel::closeEvent(QCloseEvent *event)
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
+int FlashEcuSubaruDensoSH72543CanDiesel::connect_bootloader()
 {
     QByteArray output;
     QByteArray received;
@@ -566,7 +566,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t kernel_start_addr)
+int FlashEcuSubaruDensoSH72543CanDiesel::upload_kernel(QString kernel, uint32_t kernel_start_addr)
 {
     QFile file(kernel);
 
@@ -823,7 +823,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::read_mem(uint32_t start_addr, uint32_t length)
+int FlashEcuSubaruDensoSH72543CanDiesel::read_mem(uint32_t start_addr, uint32_t length)
 {
     QElapsedTimer timer;
     QByteArray output;
@@ -963,7 +963,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::read_mem(uint32_t start_addr, uint32_t l
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::write_mem(bool test_write)
+int FlashEcuSubaruDensoSH72543CanDiesel::write_mem(bool test_write)
 {
     QByteArray filedata;
 
@@ -1077,7 +1077,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::write_mem(bool test_write)
  *
  * @return
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::get_changed_blocks(const uint8_t *src, int *modified)
+int FlashEcuSubaruDensoSH72543CanDiesel::get_changed_blocks(const uint8_t *src, int *modified)
 {
     unsigned blockno;
     QByteArray msg;
@@ -1110,7 +1110,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::get_changed_blocks(const uint8_t *src, i
  *
  * @return
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
+int FlashEcuSubaruDensoSH72543CanDiesel::check_romcrc(const uint8_t *src, uint32_t start, uint32_t len, int *modified)
 {
     QByteArray output;
     QByteArray received;
@@ -1189,7 +1189,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc(const uint8_t *src, uint32_
     return 0;
 }
 
-unsigned int FlashEcuSubaruDensoSH7058CanDiesel::crc32(const unsigned char *buf, unsigned int len)
+unsigned int FlashEcuSubaruDensoSH72543CanDiesel::crc32(const unsigned char *buf, unsigned int len)
 {
     unsigned int crc = 0xFFFFFFFF;
 
@@ -1204,7 +1204,7 @@ unsigned int FlashEcuSubaruDensoSH7058CanDiesel::crc32(const unsigned char *buf,
     return crc ^ 0xFFFFFFFF;
 }
 
-void FlashEcuSubaruDensoSH7058CanDiesel::init_crc32_tab( void )
+void FlashEcuSubaruDensoSH72543CanDiesel::init_crc32_tab( void )
 {
     uint32_t i, j;
     uint32_t crc, c;
@@ -1226,7 +1226,7 @@ void FlashEcuSubaruDensoSH7058CanDiesel::init_crc32_tab( void )
     crc_tab32_init = 1;
 }
 
-int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
+int FlashEcuSubaruDensoSH72543CanDiesel::init_flash_write()
 {
     QByteArray output;
     QByteArray received;
@@ -1374,7 +1374,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
     uint32_t block_start;
     uint32_t block_len;
@@ -1457,7 +1457,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block(const uint8_t *newdata, co
  *
  * @return success
  */
-int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t start, uint32_t len)
+int FlashEcuSubaruDensoSH72543CanDiesel::flash_block(const uint8_t *src, uint32_t start, uint32_t len)
 {
     QByteArray output;
     QByteArray received;
@@ -1680,7 +1680,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
  *
  * @return
  */
-uint8_t FlashEcuSubaruDensoSH7058CanDiesel::cks_add8(QByteArray chksum_data, unsigned len)
+uint8_t FlashEcuSubaruDensoSH72543CanDiesel::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
     uint8_t data[chksum_data.length()];
@@ -1700,7 +1700,7 @@ uint8_t FlashEcuSubaruDensoSH7058CanDiesel::cks_add8(QByteArray chksum_data, uns
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::generate_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::generate_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1728,7 +1728,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::generate_seed_key(QByteArray requ
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::generate_ecutek_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::generate_ecutek_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1754,7 +1754,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::generate_ecutek_seed_key(QByteArr
 /************************************
  * COBB'd Denso CAN ECUs seed key
  ***********************************/
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::generate_cobb_seed_key(QByteArray requested_seed)
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::generate_cobb_seed_key(QByteArray requested_seed)
 {
     QByteArray key;
 
@@ -1782,7 +1782,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::generate_cobb_seed_key(QByteArray
  *
  * @return seed key (4 bytes)
  */
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray key;
 
@@ -1832,7 +1832,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::calculate_seed_key(QByteArray req
  *
  * @return encrypted data
  */
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::encrypt_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::encrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray encrypted;
 
@@ -1852,7 +1852,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::encrypt_payload(QByteArray buf, u
     return encrypted;
 }
 
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::decrypt_payload(QByteArray buf, uint32_t len)
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::decrypt_payload(QByteArray buf, uint32_t len)
 {
     QByteArray decrypt;
 
@@ -1872,7 +1872,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::decrypt_payload(QByteArray buf, u
     return decrypt;
 }
 
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation)
 {
     QByteArray encrypted;
     uint32_t datatoencrypt32, index;
@@ -1921,7 +1921,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::calculate_payload(QByteArray buf,
  *
  * @return kernel id
  */
-QByteArray FlashEcuSubaruDensoSH7058CanDiesel::request_kernel_id()
+QByteArray FlashEcuSubaruDensoSH72543CanDiesel::request_kernel_id()
 {
     QByteArray output;
     QByteArray received;
@@ -1961,7 +1961,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::request_kernel_id()
  *
  * @return 8-bit checksum
  */
-uint8_t FlashEcuSubaruDensoSH7058CanDiesel::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t FlashEcuSubaruDensoSH72543CanDiesel::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -1979,7 +1979,7 @@ uint8_t FlashEcuSubaruDensoSH7058CanDiesel::calculate_checksum(QByteArray output
  *
  * @return parsed message
  */
-QString FlashEcuSubaruDensoSH7058CanDiesel::parse_message_to_hex(QByteArray received)
+QString FlashEcuSubaruDensoSH72543CanDiesel::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -1991,7 +1991,7 @@ QString FlashEcuSubaruDensoSH7058CanDiesel::parse_message_to_hex(QByteArray rece
     return msg;
 }
 
-void FlashEcuSubaruDensoSH7058CanDiesel::set_progressbar_value(int value)
+void FlashEcuSubaruDensoSH72543CanDiesel::set_progressbar_value(int value)
 {
     bool valueChanged = true;
     if (ui->progressbar)
@@ -2004,7 +2004,7 @@ void FlashEcuSubaruDensoSH7058CanDiesel::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void FlashEcuSubaruDensoSH7058CanDiesel::delay(int timeout)
+void FlashEcuSubaruDensoSH72543CanDiesel::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)

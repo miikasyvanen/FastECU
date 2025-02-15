@@ -1,5 +1,5 @@
-#ifndef FLASH_ECU_SUBARU_DENSO_SH7058_CAN_DIESEL_H
-#define FLASH_ECU_SUBARU_DENSO_SH7058_CAN_DIESEL_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH72543_CAN_DIESEL_H
+#define FLASH_ECU_SUBARU_DENSO_SH72543_CAN_DIESEL_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -20,17 +20,17 @@
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
-    class EcuOperationsWindow;
+class EcuOperationsWindow;
 }
 QT_END_NAMESPACE
 
-class FlashEcuSubaruDensoSH7058CanDiesel : public QDialog
+class FlashEcuSubaruDensoSH72543CanDiesel : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuSubaruDensoSH7058CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashEcuSubaruDensoSH7058CanDiesel();
+    explicit FlashEcuSubaruDensoSH72543CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH72543CanDiesel();
 
     void run();
 
@@ -47,10 +47,10 @@ private:
     FileActions fileActions;
     QString cmd_type;
 
-    #define STATUS_SUCCESS	0x00
-    #define STATUS_ERROR	0x01
+#define STATUS_SUCCESS	0x00
+#define STATUS_ERROR	0x01
 
-    #define CRC32   0x5AA5A55A
+#define CRC32   0x5AA5A55A
     bool crc_tab32_init = 0;
     uint32_t crc_tab32[256];
 
@@ -122,4 +122,4 @@ private:
 
 };
 
-#endif // FLASH_ECU_SUBARU_DENSO_SH7058_CAN_DIESEL_H
+#endif // FLASH_ECU_SUBARU_DENSO_SH72543_CAN_DIESEL_H
