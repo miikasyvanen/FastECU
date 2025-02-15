@@ -188,8 +188,8 @@ int FlashTcuSubaruHitachiM32rKline::connect_bootloader_subaru_tcu_hitachi_kline(
     //if (received == "" || (uint8_t)received.at(4) != 0xC3)
     //    return STATUS_ERROR;
 
-    send_log_window_message("Request timing parameters ok", true, true);
-    qDebug() << "Request timing parameters ok";
+    send_log_window_message("Requesting timing parameters ok", true, true);
+    qDebug() << "Requesting timing parameters ok";
 
     // Request seed
     received = send_subaru_tcu_sid_27_request_seed();

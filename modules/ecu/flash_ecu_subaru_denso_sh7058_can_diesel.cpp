@@ -442,6 +442,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
+    emit LOG_I("Requesting seed", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1928,7 +1929,7 @@ QByteArray FlashEcuSubaruDensoSH7058CanDiesel::request_kernel_id()
 
     request_denso_kernel_id = true;
 
-    //emit LOG_I("Request kernel ID", true, true);
+    //emit LOG_I("Requesting kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);

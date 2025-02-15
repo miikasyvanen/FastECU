@@ -1524,10 +1524,10 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
     output.append((uint8_t)0x00);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Request kernel id sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_D("Requesting kernel id sent: " + parse_message_to_hex(output), true, true);
     delay(100);
     received = serial->read_serial_data(100, serial_read_short_timeout);
-    emit LOG_D("Request kernel id received: " + parse_message_to_hex(received), true, true);
+    emit LOG_D("Requesting kernel id received: " + parse_message_to_hex(received), true, true);
 
     if (received.length() > 7)
         received.remove(0, 9);
@@ -1537,7 +1537,7 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
     while (received.length())
     {
         received = serial->read_serial_data(10, serial_read_short_timeout);
-        emit LOG_D("Request kernel id received:" + parse_message_to_hex(received), true, true);
+        emit LOG_D("Requesting kernel id received:" + parse_message_to_hex(received), true, true);
         if (received.length() > 7)
             received.remove(0, 9);
         kernelid.append(received);

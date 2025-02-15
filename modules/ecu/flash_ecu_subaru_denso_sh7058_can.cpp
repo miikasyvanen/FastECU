@@ -519,6 +519,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
+    emit LOG_I("Requesting seed", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -691,7 +692,7 @@ uint32_t FlashEcuSubaruDensoSH7058Can::read_ram_location(uint32_t loc)
 */
     if (received.length() > 8)
     {
-        if ((uint8_t)received.at(4) != 0xe8)
+        if ((uint8_t)received.at(4) != 0xE8)
         {
             emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
@@ -2139,7 +2140,7 @@ QByteArray FlashEcuSubaruDensoSH7058Can::request_kernel_id()
     request_denso_kernel_id = true;
 
     datalen = 0;
-    //emit LOG_I("Request kernel ID", true, true);
+    //emit LOG_I("Requesting kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);

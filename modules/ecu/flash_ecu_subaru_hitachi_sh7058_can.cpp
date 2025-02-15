@@ -1197,9 +1197,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
 
     set_progressbar_value(100);
 
-//    return STATUS_SUCCESS;
-
-    emit LOG_I("Closing out Flashing of this block...", true, true);
+    emit LOG_I("Closing out flashing of this block...", true, true);
     connected = false;
     try_count = 0;
     output.clear();
@@ -1209,29 +1207,33 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0x37);
 
-    while (try_count < 20 && connected == false)
+    while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        //delay(50);
-        delay(200);
-        received = serial->read_serial_data(20, 200);
-        if (received != "")
+        received = serial->read_serial_data(20, serial_read_long_timeout);
+        if (received.length() > 4)
         {
-            connected = true;
-            emit LOG_I(QString::number(try_count) + ": 0x37 response: " + parse_message_to_hex(received), true, true);
+            if ((uint8_t)received.at(4) == 0x77)
+            {
+                emit LOG_I("Flashing of block closed", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                break;
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                //return STATUS_ERROR;
+            }
         }
         try_count++;
-        //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x77)
-        emit LOG_I("No or bad response received", true, true);
-        //return STATUS_ERROR;
 
     delay(100);
 
+    try_count = 0;
     emit LOG_I("Verifying checksum...", true, true);
-
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1243,31 +1245,34 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
 
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    delay(200);
-    received = serial->read_serial_data(20, 200);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-    delay(200);
-
-    if ((uint8_t)received.at(4) != 0x71)
+    while (try_count < 20)
     {
-        received = serial->read_serial_data(20, 200);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        delay(200);
-        received = serial->read_serial_data(20, 200);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        delay(200);
+        serial->write_serial_data_echo_check(output);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        received = serial->read_serial_data(20, serial_read_long_timeout);
+        if (received.length() > 6)
+        {
+            if ((uint8_t)received.at(4) == 0x71)
+            {
+                emit LOG_I("Checksum verified...", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                return STATUS_SUCCESS;
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                //return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
+        try_count++;
     }
-
-//    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-//        emit LOG_I("No or bad response received", true, true);
-        //return STATUS_ERROR;
-
-    emit LOG_I("Checksum verified...", true, true);
-
-    return STATUS_SUCCESS;
-
+    return STATUS_ERROR;
 }
 
 /*
@@ -1316,7 +1321,7 @@ int FlashEcuSubaruHitachiSH7058Can::erase_subaru_ecu_hitachi_can()
 
     while (try_count < 20 && connected == false)
     {
-        received = serial->read_serial_data(20, 500);
+        received = serial->read_serial_data(20, serial_read_long_timeout);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
@@ -1325,29 +1330,21 @@ int FlashEcuSubaruHitachiSH7058Can::erase_subaru_ecu_hitachi_can()
             }
             else if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
             {
+                emit LOG_I("", false, true);
+                emit LOG_I("Flash erased! Starting flash write, do not power off!", true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 connected = true;
-                emit LOG_I("", false, true);
+                return STATUS_SUCCESS;
             }
         }
         else
         {
             emit LOG_I(".", false, false);
         }
-        delay(500);
         try_count++;
     }
-    if (!connected)
-    {
-        emit LOG_I("Flash area erase failed: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
-    }
-
-    emit LOG_I("Flash erased! Starting flash write, do not power off!", true, true);
-
-    QMessageBox::information(this, tr("ECU was erased?"), "Press OK to start flash download");
-
-    return STATUS_SUCCESS;
+    emit LOG_I("Flash area erase failed: " + parse_message_to_hex(received), true, true);
+    return STATUS_ERROR;
 }
 
 /*

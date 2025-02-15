@@ -820,33 +820,29 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        delay(200);
-        received = serial->read_serial_data(20, serial_read_timeout);
-        if (received != "")
-            break;
-        try_count++;
-    }
-    if (received.length() > 4)
-    {
-        if ((uint8_t)received.at(4) != 0x77)
+        received = serial->read_serial_data(20, serial_read_long_timeout);
+        if (received.length() > 4)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-            return STATUS_ERROR;
+            if ((uint8_t)received.at(4) == 0x77)
+            {
+                emit LOG_I("Flashing of block closed", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                break;
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                //return STATUS_ERROR;
+            }
         }
-    }
-    else
-    {
-        emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
+        try_count++;
     }
 
     delay(100);
 
-    emit LOG_I("Verifying checksum...", true, true);
-
     try_count = 0;
+    emit LOG_I("Verifying checksum...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -862,32 +858,30 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        delay(50);
-        received = serial->read_serial_data(20, serial_read_timeout);
-        if (received != "")
-            break;
+        received = serial->read_serial_data(20, serial_read_long_timeout);
+        if (received.length() > 6)
+        {
+            if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
+            {
+                emit LOG_I("Checksum verified...", true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                return STATUS_SUCCESS;
+            }
+            else
+            {
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                //return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        }
         try_count++;
     }
-    if (received.length() > 6)
-    {
-        if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-        {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-            return STATUS_ERROR;
-        }
-    }
-    else
-    {
-        emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
-    }
-
-    emit LOG_I("Checksum verified...", true, true);
-
-    return STATUS_SUCCESS;
-
+    return STATUS_ERROR;
 }
 
 /*

@@ -629,7 +629,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     QByteArray received;
     QByteArray msg;
 
-    emit LOG_I("Request baudrate change to 4800", true, true);
+    emit LOG_I("Requesting baudrate change to 4800", true, true);
     output.clear();
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);
@@ -650,7 +650,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     QByteArray received;
     QByteArray msg;
 
-    emit LOG_I("Request baudrate change to 38400", true, true);
+    emit LOG_I("Requesting baudrate change to 38400", true, true);
     output.clear();
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);

@@ -1646,7 +1646,7 @@ QByteArray FlashEcuSubaruDensoSH705xDensoCan::request_kernel_id()
     request_denso_kernel_id = true;
 
     datalen = 0;
-    emit LOG_I("Request kernel ID", true, true);
+    emit LOG_I("Requesting kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);

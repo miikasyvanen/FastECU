@@ -256,7 +256,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     if (cmd_type == "read")
         ecuCalDef->RomId = ecuid;
 
-    emit LOG_I("Request to start communication", true, true);
+    emit LOG_I("Requesting to start communication", true, true);
     received = send_sid_81_start_communication();
     if (received == "" || (uint8_t)received.at(4) != 0xC1)
     {
@@ -266,7 +266,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     }
     emit LOG_I("Start communication ok", true, true);
 
-    emit LOG_I("Request timings params", true, true);
+    emit LOG_I("Requesting timings params", true, true);
     received = send_sid_83_request_timings();
     if (received == "" || (uint8_t)received.at(4) != 0xC3)
     {
@@ -276,7 +276,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     }
     emit LOG_I("Timing parameters ok", true, true);
 
-    emit LOG_I("Request seed", true, true);
+    emit LOG_I("Requesting seed", true, true);
     received = send_sid_27_request_seed();
     if (received == "" || (uint8_t)received.at(4) != 0x67)
     {
@@ -391,7 +391,7 @@ int EepromEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kern
     if (serial->change_port_speed("15625"))
         return STATUS_ERROR;
 
-    emit LOG_I("Request kernel upload'", true, true);
+    emit LOG_I("Requesting kernel upload'", true, true);
     received = send_sid_34_request_upload(start_address, len);
     if (received == "" || (uint8_t)received.at(4) != 0x74)
         return STATUS_ERROR;

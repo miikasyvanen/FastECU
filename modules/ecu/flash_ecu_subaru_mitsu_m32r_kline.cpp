@@ -177,8 +177,8 @@ int FlashEcuSubaruMitsuM32rKline::connect_bootloader()
     //if (received == "" || (uint8_t)received.at(4) != 0xC3)
     //    return STATUS_ERROR;
 
-//    emit LOG_I("Request timing parameters ok", true, true);
-//    qDebug() << "Request timing parameters ok";
+//    emit LOG_I("Requesting timing parameters ok", true, true);
+//    qDebug() << "Requesting timing parameters ok";
 
     // Request seed
     received = send_sid_27_request_seed();
