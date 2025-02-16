@@ -204,9 +204,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     }
 
     emit LOG_I("Checking if kernel is already running...", true, true);
-
     emit LOG_I("Requesting kernel ID", true, true);
-
     received.clear();
     received = request_kernel_id();
     if (received.length() > 8)
@@ -220,6 +218,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         {
             received.remove(0, 9);
             emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -273,7 +272,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         serial->open_serial_port();
     }
 
-    emit LOG_I("Initializing connection...", true, true);
+    emit LOG_I("Initialising connection...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);

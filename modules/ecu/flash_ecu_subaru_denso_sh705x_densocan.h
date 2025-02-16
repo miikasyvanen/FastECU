@@ -100,17 +100,6 @@ private:
     void init_crc32_tab( void );
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
 
-    QByteArray send_sid_bf_ssm_init();
-    QByteArray send_sid_81_start_communication();
-    QByteArray send_sid_83_request_timings();
-    QByteArray send_sid_27_request_seed();
-    QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
-    QByteArray send_sid_10_start_diagnostic();
-    QByteArray send_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
-    QByteArray send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    QByteArray send_sid_31_start_routine();
-
-    QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
     QByteArray encrypt_payload(QByteArray buf, uint32_t len);
