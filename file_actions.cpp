@@ -113,7 +113,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
             emit LOG_D("Sorted dir by date: " + configDirList.at(i).absoluteFilePath() + " " + configDirList.at(i).lastModified().toString(), true, true);
         }
         // Copy latest version directory path
-        if (configDirList.length() > 1)
+        if (configDirList.length())
             latest_config_dir = configDirList.at(0).absoluteFilePath();
         //else
         //    latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
@@ -133,6 +133,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
     if (!QDir(configValues->config_files_directory).exists()){
         QDir().mkdir(configValues->config_files_directory);
         // Copy fastecu.cfg from latest previous config
+        LOG_D("Copy " + latest_config_dir + "/config/fastecu.cfg --> " + configValues->config_files_directory + "fastecu.cfg", true, true);
         QFile configFile(latest_config_dir + "/config/fastecu.cfg");
         configFile.copy(configValues->config_files_directory + "fastecu.cfg");
     }

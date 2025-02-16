@@ -93,6 +93,11 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
 
     emit enable_log_write_to_file(true);
 
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_D, syslogger, &SystemLogger::log_messages);
+
     fileActions->check_config_dirs(configValues);
 
     configValues = fileActions->read_config_file(configValues);
