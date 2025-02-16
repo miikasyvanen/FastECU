@@ -547,7 +547,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     seed.append(received.at(6));
     seed.append(received.at(7));
     seed.append(received.at(8));
-    seed.append(received.at(6));
+    seed.append(received.at(9));
 
     if (flash_method.endsWith("_ecutek_racerom_alt"))
         seed_key = generate_ecutek_seed_key(seed);

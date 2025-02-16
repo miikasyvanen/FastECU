@@ -842,7 +842,7 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
 
         if (is_can_connection)
         {
-            for (unsigned long i = 4; i < rxmsg.DataSize; i++)
+            for (unsigned long i = 0; i < rxmsg.DataSize; i++)
                 received.append((uint8_t)rxmsg.Data[i]);
         }
         else
