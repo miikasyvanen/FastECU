@@ -99,7 +99,14 @@ const struct flashblock fblocks_SH72543d[] = {
     };
 
 const struct ramblock rblocks_SH72543d[] = {
-    {0xFFF80000,    0xFFF9FFFF},
+    {0xFFF80000,    0x00004000},
+    {0xFFF84000,    0x00004000},
+    {0xFFF88000,    0x00004000},
+    {0xFFF8C000,    0x00004000},
+    {0xFFF90000,    0x00004000},
+    {0xFFF94000,    0x00004000},
+    {0xFFF98000,    0x00004000},
+    {0xFFF9C000,    0x00004000},
     };
 
 const struct kernelblock kblocks_SH72543d[] = {

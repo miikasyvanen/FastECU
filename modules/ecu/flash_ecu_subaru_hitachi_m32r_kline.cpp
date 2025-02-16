@@ -37,7 +37,7 @@ void FlashEcuSubaruHitachiM32rKline::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    emit LOG_D("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -298,7 +298,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     {
         if ((uint8_t)received.at(4) != 0xFF)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -332,7 +332,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     {
         if ((uint8_t)received.at(4) != 0xC1)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -358,7 +358,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     {
         if ((uint8_t)received.at(4) != 0xC3)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -384,7 +384,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -424,7 +424,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -451,7 +451,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     {
         if ((uint8_t)received.at(4) != 0x50)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -507,7 +507,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     {
         if ((uint8_t)received.at(4) != 0xFF)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -539,7 +539,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         {
             if ((uint8_t)received.at(4) != 0xFF)
             {
-                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }

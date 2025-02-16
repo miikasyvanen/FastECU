@@ -39,7 +39,7 @@ void FlashTcuCvtSubaruMitsuMH8111Can::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -178,7 +178,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -213,7 +213,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -245,7 +245,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -271,7 +271,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -310,7 +310,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -343,7 +343,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -380,7 +380,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02 || (uint8_t)received.at(7) != 0x03)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -450,7 +450,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::read_mem(uint32_t start_addr, uint32_t leng
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -503,7 +503,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::read_mem(uint32_t start_addr, uint32_t leng
         {
             if ((uint8_t)received.at(4) != 0xF7)
             {
-                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -817,7 +817,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
             }
             else
             {
-                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 //return STATUS_ERROR;
             }
@@ -862,7 +862,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
             }
             else
             {
-                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 //return STATUS_ERROR;
             }
@@ -922,7 +922,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::erase_mem()
         {
             if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
             {
-                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 //return STATUS_ERROR;
             }

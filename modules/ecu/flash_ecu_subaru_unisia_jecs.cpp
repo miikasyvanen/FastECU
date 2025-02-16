@@ -44,7 +44,7 @@ void FlashEcuSubaruUnisiaJecs::run()
         return;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;

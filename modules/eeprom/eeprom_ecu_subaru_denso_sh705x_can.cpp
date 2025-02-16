@@ -41,7 +41,7 @@ void EepromEcuSubaruDensoSH705xCan::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -216,7 +216,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_ID | 0x40))
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
@@ -304,7 +304,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -343,7 +343,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -376,7 +376,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -411,7 +411,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -448,7 +448,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -481,7 +481,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -511,7 +511,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -547,7 +547,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -606,7 +606,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -650,7 +650,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -713,7 +713,7 @@ uint32_t EepromEcuSubaruDensoSH705xCan::read_ram_location(uint32_t loc)
     {
         if ((uint8_t)received.at(4) != 0xe8)
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 4)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -824,7 +824,7 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -912,7 +912,7 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -949,7 +949,7 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel
         }
         else
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 8)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -969,7 +969,7 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_ID | 0x40))
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.remove(0, 9)), true, true);
+            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1504,11 +1504,13 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
 {
     QByteArray output;
     QByteArray received;
-    QByteArray msg;
     QByteArray kernelid;
+    uint32_t datalen = 0;
 
     request_denso_kernel_id = true;
 
+    datalen = 0;
+    //emit LOG_I("Requesting kernel ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1516,33 +1518,19 @@ QByteArray EepromEcuSubaruDensoSH705xCan::request_kernel_id()
     output.append((uint8_t)0xE0);
     output.append((uint8_t)((SUB_KERNEL_START_COMM >> 8) & 0xFF));
     output.append((uint8_t)(SUB_KERNEL_START_COMM & 0xFF));
-    output.append((uint8_t)0x00 & 0xFF);
-    output.append((uint8_t)0x01 & 0xFF);
+    output.append((uint8_t)((datalen + 1) >> 8) & 0xFF);
+    output.append((uint8_t)(datalen + 1) & 0xFF);
     output.append((uint8_t)(SUB_KERNEL_ID & 0xFF));
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Requesting kernel id sent: " + parse_message_to_hex(output), true, true);
-    delay(100);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
-    emit LOG_D("Requesting kernel id received: " + parse_message_to_hex(received), true, true);
-
-    if (received.length() > 7)
-        received.remove(0, 9);
-    emit LOG_D("Initial request kernel id received and length:" + parse_message_to_hex(received) + " " + received.length(), true, true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    delay(200);
+    received = serial->read_serial_data(100, serial_read_long_timeout);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
-
-    while (received.length())
-    {
-        received = serial->read_serial_data(10, serial_read_short_timeout);
-        emit LOG_D("Requesting kernel id received:" + parse_message_to_hex(received), true, true);
-        if (received.length() > 7)
-            received.remove(0, 9);
-        kernelid.append(received);
-        delay(100);
-    }
 
     request_denso_kernel_id = false;
 
