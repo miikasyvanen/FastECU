@@ -68,6 +68,9 @@ struct flashdev_t {
 //extern const struct flashdev_t flashdevices[];
 
 const struct flashblock fblocks_SH72543d[] = {
+    {0x00000000,    0x00008000},
+    {0x00008000,    0x001F8000},
+/*
     {0x00000000,    0x00002000},
     {0x00002000,    0x00002000},
     {0x00004000,    0x00002000},
@@ -96,6 +99,7 @@ const struct flashblock fblocks_SH72543d[] = {
     {0x001A0000,    0x00020000},
     {0x001C0000,    0x00020000},
     {0x001E0000,    0x00020000},
+*/
     };
 
 const struct ramblock rblocks_SH72543d[] = {
