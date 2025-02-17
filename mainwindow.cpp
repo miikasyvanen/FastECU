@@ -1228,7 +1228,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             connect_signals_and_run_module(&flash_module);
         }
         /*
-        * Unisia Jecs ECU Boot Mode
+        * Unisia Jecs ECU Bootmode
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_20_bootmode"))
         {
@@ -1278,6 +1278,14 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Hitachi ECU Boot Mode
         */
 
+        /*
+        * Hitachi ECU JTAG
+        */
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_m32r_jtag"))
+        {
+            FlashEcuSubaruHitachiM32rJtag flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Hitachi ECU
         */

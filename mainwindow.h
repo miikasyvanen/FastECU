@@ -49,6 +49,16 @@
 #include <serial_port/serial_port_actions.h>
 
 // Flash modules
+// BDM
+#include <modules/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
+
+// Bootmode
+#include <modules/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>
+
+// OBD
+#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_kline.h>
+#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_can.h>
+
 #include <modules/ecu/flash_ecu_subaru_denso_mc68hc16y5_02.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh7055_02.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh705x_densocan.h>
@@ -56,17 +66,10 @@
 #include <modules/ecu/flash_ecu_subaru_denso_sh7058_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh7058_can_diesel.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh72543_can_diesel.h>
-
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs.h>
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_can.h>
-#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.h>
-#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_can.h>
-#include <modules/tcu/flash_tcu_cvt_subaru_hitachi_m32r_can.h>
-#include <modules/tcu/flash_tcu_subaru_denso_sh705x_can.h>
-#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8104_can.h>
-#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8111_can.h>
 #include <modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h>
@@ -74,11 +77,15 @@
 #include <modules/ecu/flash_ecu_subaru_denso_1n83m_4m_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_1n83m_1_5m_can.h>
 
-#include <modules/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
-#include <modules/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>
+#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.h>
+#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_can.h>
+#include <modules/tcu/flash_tcu_cvt_subaru_hitachi_m32r_can.h>
+#include <modules/tcu/flash_tcu_subaru_denso_sh705x_can.h>
+#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8104_can.h>
+#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8111_can.h>
 
-#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_kline.h>
-#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_can.h>
+// JTAG
+#include <modules/jtag/flash_ecu_subaru_hitachi_m32r_jtag.h>
 
 #include <systemlogger.h>
 
