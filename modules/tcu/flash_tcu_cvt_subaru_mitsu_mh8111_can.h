@@ -46,7 +46,6 @@ signals:
 
 private:
     FileActions::EcuCalDefStructure *ecuCalDef;
-    FileActions fileActions;
     QString cmd_type;
 
     #define STATUS_SUCCESS							0x00

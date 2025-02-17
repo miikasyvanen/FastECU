@@ -214,7 +214,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     {
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID | 0x40))
         {
-            emit LOG_E("Wrong response from ECU: " + fileActions.parse_nrc_message(received.mid(8, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(8, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
@@ -241,7 +241,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     received = send_sid_bf_ssm_init();
     if (received == "" || (uint8_t)received.at(4) != 0xFF)
     {
-        QString nrc = fileActions.parse_nrc_message(received.mid(4, received.length()-1));
+        QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
     }
@@ -260,7 +260,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     received = send_sid_81_start_communication();
     if (received == "" || (uint8_t)received.at(4) != 0xC1)
     {
-        QString nrc = fileActions.parse_nrc_message(received.mid(4, received.length()-1));
+        QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
     }
@@ -270,7 +270,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     received = send_sid_83_request_timings();
     if (received == "" || (uint8_t)received.at(4) != 0xC3)
     {
-        QString nrc = fileActions.parse_nrc_message(received.mid(4, received.length()-1));
+        QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
     }
@@ -280,7 +280,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     received = send_sid_27_request_seed();
     if (received == "" || (uint8_t)received.at(4) != 0x67)
     {
-        QString nrc = fileActions.parse_nrc_message(received.mid(4, received.length()-1));
+        QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
     }
@@ -306,7 +306,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     received = send_sid_27_send_seed_key(seed_key);
     if (received == "" || (uint8_t)received.at(4) != 0x67)
     {
-        QString nrc = fileActions.parse_nrc_message(received.mid(4, received.length()-1));
+        QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
     }
@@ -316,7 +316,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     received = send_sid_10_start_diagnostic();
     if (received == "" || (uint8_t)received.at(4) != 0x50)
     {
-        QString nrc = fileActions.parse_nrc_message(received.mid(4, received.length()-1));
+        QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
         return STATUS_ERROR;
     }

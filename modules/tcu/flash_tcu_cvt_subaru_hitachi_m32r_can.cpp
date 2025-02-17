@@ -173,7 +173,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02 || (uint8_t)received.at(7) != 0x03)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
         else
@@ -220,7 +220,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -255,7 +255,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
         }
         else
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -284,7 +284,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x03)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -311,7 +311,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         }
     }
@@ -337,7 +337,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -378,7 +378,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -411,7 +411,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x02)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -447,7 +447,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02 || (uint8_t)received.at(7) != 0x03)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -610,7 +610,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t leng
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -670,7 +670,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t leng
         {
             if ((uint8_t)received.at(4) != 0xF7)
             {
-                emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
                 emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
@@ -743,7 +743,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t leng
     {
         if ((uint8_t)received.at(4) == 0x77)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -920,7 +920,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     {
         if ((uint8_t)received.at(4) != 0x74)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -981,7 +981,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     {
         if ((uint8_t)received.at(4) != 0x77)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1016,7 +1016,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
@@ -1077,7 +1077,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::erase_mem()
     {
         if ((uint8_t)received.at(4) != 0x31 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x01)
         {
-            emit LOG_E("Wrong response from TCU: " + fileActions.parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }

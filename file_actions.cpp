@@ -1,5 +1,67 @@
 #include "file_actions.h"
 
+const QHash<int, QString> FileActions::neg_rsp_codes {
+    {0x10, "General reject"},
+    {0x11, "Service not supported"},
+    {0x12, "Subfunction not supported"},
+    {0x13, "Incorrect message length or invalid format"},
+    {0x14, "Response too long"},
+    {0x21, "Busy, repeat request"},
+    {0x22, "Conditions not correct"},
+    {0x24, "Request sequence error"},
+    {0x25, "No response from subnet component"},
+    {0x26, "Failure prevents execution of requested action"},
+    {0x31, "Request out of range"},
+    {0x33, "Security access denied"},
+    {0x34, "Authentication failed"},
+    {0x35, "Invalid key"},
+    {0x36, "Exceeded number of attempts"},
+    {0x37, "Required time delay not expired"},
+    {0x38, "Secure data transmission required"},
+    {0x39, "Secure data transmission not allowed"},
+    {0x3A, "Secure data verification failed"},
+    {0x50, "Certificate validation failed, invalid time period"},
+    {0x51, "Certificate validation failed, invalid signature"},
+    {0x52, "Certificate validation failed, invalid chain of trust"},
+    {0x53, "Certificate validation failed, invalid type"},
+    {0x54, "Certificate validation failed, invalid format"},
+    {0x55, "Certificate validation failed, invalid content"},
+    {0x56, "Certificate validation failed, invalid scope"},
+    {0x57, "Certificate validation failed, invalid certificate"},
+    {0x58, "Ownership verification failed"},
+    {0x59, "Challenge calculation failed"},
+    {0x5A, "Setting access right failed"},
+    {0x5B, "Session key creation/derivation failed"},
+    {0x5C, "Configuration data usage failed"},
+    {0x5D, "Deauthentication failed"},
+    {0x70, "Upload download not accepted"},
+    {0x71, "Transfer data suspended"},
+    {0x72, "General programming failure"},
+    {0x73, "Wrong block sequence number"},
+    {0x78, "Request correctly received, response pending"},
+    {0x7E, "Subfunction not supported in active session"},
+    {0x7F, "Service not supported in active session"},
+    {0x81, "RPM too high"},
+    {0x82, "RPM too low"},
+    {0x83, "Engine is running"},
+    {0x84, "Engine is not running"},
+    {0x85, "Engine run time too low"},
+    {0x86, "Temperature too high"},
+    {0x87, "Temperature too low"},
+    {0x88, "Vehicle speed too high"},
+    {0x89, "Vehicle speed too low"},
+    {0x8A, "Throttle/pedal too high"},
+    {0x8B, "Throttle/pedal too low"},
+    {0x8C, "Transmission range not in neutral"},
+    {0x8D, "Transmission range not in gear"},
+    {0x8F, "Brake switch not closed"},
+    {0x90, "Shifter lever not in park"},
+    {0x91, "Torque converter clutch locked"},
+    {0x92, "Voltage too high"},
+    {0x93, "Voltage too low"},
+    {0x94, "Resource temporary unavailable"}
+};
+
 FileActions::FileActions(QWidget *parent)
     : QWidget(parent)
 {
@@ -2901,16 +2963,12 @@ double FileActions::calculate_value_from_expression(QStringList expression)
 
 QString FileActions::parse_nrc_message(QByteArray nrc)
 {
-    bool ok = false;
+    QString ret = "Unknown error code";
 
     if (nrc.length() > 2 && (uint8_t)nrc.at(0) == 0x7f)
     {
-        for (int i = 0; i < neg_rsp_codes.length(); i++)
-        {
-            if (neg_rsp_codes.at(i).toUInt(&ok, 16) == (uint8_t)nrc.at(2))
-                return neg_rsp_codes.at(i+1);
-        }
+        ret = neg_rsp_codes.value( (uint8_t)nrc.at(2), ret);
     }
 
-    return "Unknown error code";
+    return ret;
 }
