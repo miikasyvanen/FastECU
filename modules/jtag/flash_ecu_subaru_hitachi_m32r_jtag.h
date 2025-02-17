@@ -49,6 +49,22 @@ private:
 #define STATUS_SUCCESS							0x00
 #define STATUS_ERROR							0x01
 
+    QString IDCODE = "02";
+    QString USERCODE = "03";
+    QString MDM_SYSTEM = "08";
+    QString MDM_CONTROL = "09";
+    QString MDM_SETUP = "0a";
+    QString MTM_CONTROL = "0f";
+    QString MON_CODE = "10";
+    QString MON_DATA = "11";
+    QString MON_PARAM = "12";
+    QString MON_ACCESS = "13";
+    QString DMA_RADDR = "18";
+    QString DMA_RDATA = "19";
+    QString DMA_RTYPE = "1a";
+    QString DMA_ACCESS = "1b";
+    QString RTDENB = "20";
+
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
@@ -68,6 +84,9 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint16_t jtag_timeout = 5;
+    uint16_t jtag_loopcount_max = 2000;
+
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
@@ -84,6 +103,19 @@ private:
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);
     void delay(int timeout);
+
+    void hard_reset_jtag();
+    void read_idcode();
+    void read_usercode();
+    void set_rtdenb();
+    void read_tool_rom_code();
+
+
+
+    void write_jtag_ir(QString desc, QString code);
+    QByteArray read_jtag_dr(QString desc);
+    QByteArray write_jtag_dr(QString desc, QString data);
+    QByteArray read_response();
 
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
