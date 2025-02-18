@@ -308,8 +308,6 @@ int FlashEcuSubaruMitsuM32rKline::read_mem(uint32_t start_addr, uint32_t length)
     length = 0x78000;    // hack for testing
     pagesize = 0x80;
 
-    emit LOG_I("Commencing ECU ROM read", true, true);
-
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
