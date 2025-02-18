@@ -65,6 +65,7 @@ private:
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
@@ -86,8 +87,8 @@ private:
     int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     QByteArray send_sid_bf_ssm_init();
-    QByteArray send_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
-    QByteArray send_sid_b8_byte_read(uint32_t dataaddr);
+    QByteArray send_sid_a0_block_read(uint32_t addr, uint32_t datalen);
+    QByteArray send_sid_b8_byte_read(uint32_t addr);
     QByteArray send_sid_81_start_communication();
     QByteArray send_sid_83_request_timings();
     QByteArray send_sid_27_request_seed();
