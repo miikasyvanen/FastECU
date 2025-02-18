@@ -190,12 +190,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
 
     delay(100);
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
-
-    emit LOG_I("Checking if Kernel already uploaded, requesting kernel ID", true, true);
     serial->change_port_speed("62500");
 
-    emit LOG_I("Requesting kernel ID...", true, true);
-
+    emit LOG_I("Checking if Kernel already running...", true, true);
+    emit LOG_I("Requesting kernel ID", true, true);
     received = request_kernel_id();
     if (received.length() > 4)
     {
@@ -205,6 +203,15 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
+        else
+        {
+            received.remove(0, 5);
+            received.remove(received.length() - 1, 1);
+            emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
     }
     else
     {
@@ -212,15 +219,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-
-    received.remove(0, 5);
-    received.remove(received.length() - 1, 1);
-    emit LOG_I("Kernel ID: " + received, true, true);
-    emit LOG_D("Kernel ID: " + parse_message_to_hex(received), true, true);
-    delay(100);
-    kernel_alive = true;
-
-    return STATUS_SUCCESS;
 }
 
 int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t kernel_start_addr)
@@ -334,6 +332,15 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
         }
+        else
+        {
+            received.remove(0, 5);
+            received.remove(received.length() - 1, 1);
+            emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
+        }
     }
     else
     {
@@ -341,15 +348,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-
-    received.remove(0, 5);
-    received.remove(received.length() - 1, 1);
-    emit LOG_I("Kernel ID: " + received, true, true);
-    emit LOG_D("Kernel ID: " + parse_message_to_hex(received), true, true);
-    delay(100);
-    kernel_alive = true;
-
-    return STATUS_SUCCESS;
 }
 
 /*******************************************************

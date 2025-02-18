@@ -174,9 +174,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     }
 
     emit LOG_I("Checking if kernel is already running...", true, true);
-
     emit LOG_I("Requesting kernel ID", true, true);
-
     received.clear();
     received = request_kernel_id();
     if (received.length() > 8)
@@ -190,6 +188,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         {
             received.remove(0, 9);
             emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -200,7 +199,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
+    emit LOG_I("No response from kernel, initialising ECU...", true, true);
 
     emit LOG_I("Initializing connection...", true, true);
 
@@ -804,6 +803,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
         {
             received.remove(0, 9);
             emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -814,8 +814,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-
-    return STATUS_ERROR;
 }
 
 /*

@@ -174,7 +174,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
         return STATUS_ERROR;
     }
 
-    emit LOG_I("Checking if OBK is still running...", true, true);
+    emit LOG_I("Checking if OBK is already running...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);

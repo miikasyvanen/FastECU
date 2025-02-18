@@ -162,8 +162,8 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    emit LOG_I("Checking if kernel is already running...", true, true);
-
+    emit LOG_I("Checking if Kernel already running...", true, true);
+    emit LOG_I("Requesting kernel ID", true, true);
     received.clear();
     received = request_kernel_id();
     if (received.length() > 8)
@@ -177,6 +177,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::connect_bootloader()
         {
             received.remove(0, 9);
             emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -523,7 +524,6 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel(QString kernel, uint32_t ke
     serial->open_serial_port();
 
     emit LOG_I("Requesting kernel ID", true, true);
-
     received.clear();
     received = request_kernel_id();
     if (received.length() > 8)
@@ -538,6 +538,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel(QString kernel, uint32_t ke
         {
             received.remove(0, 9);
             emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -548,8 +549,6 @@ int FlashEcuSubaruDensoSH705xDensoCan::upload_kernel(QString kernel, uint32_t ke
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-
-    return STATUS_ERROR;
 }
 
 /*

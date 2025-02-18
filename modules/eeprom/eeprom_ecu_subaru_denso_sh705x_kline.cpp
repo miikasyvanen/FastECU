@@ -231,7 +231,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
+    emit LOG_I("No response from kernel, initialising ECU...", true, true);
 
     serial->change_port_speed("4800");
     //serial->set_add_iso14230_header(false);
@@ -450,7 +450,7 @@ int EepromEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kern
                 received.remove(0, 5);
                 received.remove(received.length() - 1, 1);
                 emit LOG_I("Kernel ID: " + received, true, true);
-                emit LOG_D("Kernel ID: " + parse_message_to_hex(received), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 delay(100);
                 kernel_alive = true;
                 return STATUS_SUCCESS;

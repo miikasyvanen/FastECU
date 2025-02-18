@@ -847,7 +847,7 @@ int FlashTcuSubaruDensoSH705xCan::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
+    emit LOG_I("No response from kernel, initialising ECU...", true, true);
 
     emit LOG_I("Requesting ECU ID", true, true);
     output.clear();

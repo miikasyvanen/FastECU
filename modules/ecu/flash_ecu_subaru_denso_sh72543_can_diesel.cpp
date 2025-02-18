@@ -168,10 +168,12 @@ int FlashEcuSubaruDensoSH72543CanDiesel::connect_bootloader()
     {
         if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x5f)
         {
-            emit LOG_I("OBK is active!: " + parse_message_to_hex(received), true, true);
+            emit LOG_I("OBK is active!", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             return STATUS_SUCCESS;
         }
     }
+    emit LOG_I("OBK not active, initialising ECU...", true, true);
 
     emit LOG_I("Requesting ECU ID", true, true);
     output.clear();
@@ -882,8 +884,8 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
     output.append((uint8_t)0x80);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x13);
-    output.append((uint8_t)0x7F);
+    output.append((uint8_t)0x1F);
+    output.append((uint8_t)0x80);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
@@ -917,8 +919,8 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
     output.append((uint8_t)0x80);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    output.append((uint8_t)0x13);
-    output.append((uint8_t)0x7F);
+    output.append((uint8_t)0x1F);
+    output.append((uint8_t)0x80);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
@@ -978,11 +980,11 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
         output[6] = (uint8_t)((addr >> 16) & 0xFF);
         output[7] = (uint8_t)((addr >> 8) & 0xFF);
         output[8] = (uint8_t)(addr & 0xFF);
-        //emit LOG_I("Send msg: " + parse_message_to_hex(output), true, true);
+        //emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
 
         received = serial->read_serial_data(270, 2000);
-        //emit LOG_I("Received msg: " + parse_message_to_hex(received), true, true);
+        //emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
         if (received.length() > 4)
         {
@@ -1080,11 +1082,11 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
     QByteArray padBytes;
     padBytes.fill((uint8_t)0xFF, 0x8000);
     mapdata = mapdata.insert(0, padBytes);
-
+/*
     QByteArray endBytes;
     endBytes.fill((uint8_t)0xFF, 0x100);
-    mapdata = mapdata.insert(0x13FF00, endBytes);
-
+    mapdata = mapdata.append(endBytes);
+*/
     ecuCalDef->FullRomData = mapdata;
     set_progressbar_value(100);
 

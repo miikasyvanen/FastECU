@@ -99,7 +99,14 @@ private:
     void init_crc32_tab( void );
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
 
-    QByteArray send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
+    QByteArray send_sid_bf_ssm_init();
+    QByteArray send_sid_81_start_communication();
+    QByteArray send_sid_83_request_timings();
+    QByteArray send_sid_27_request_seed();
+    QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
+    QByteArray send_sid_10_start_diagnostic();
+    QByteArray send_sid_34_request_upload(uint32_t addr, uint32_t len);
+    QByteArray send_sid_36_transferdata(uint32_t addr, QByteArray buf, uint32_t len);
 
     QByteArray generate_seed_key(QByteArray seed);
     QByteArray generate_ecutek_seed_key(QByteArray requested_seed);

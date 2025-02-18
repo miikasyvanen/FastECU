@@ -229,7 +229,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
+    emit LOG_I("No response from kernel, initialising ECU...", true, true);
 
     if (flash_method.endsWith("_ecutek_racerom_alt"))
     {
@@ -918,6 +918,7 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
         {
             received.remove(0, 9);
             emit LOG_I("Kernel ID: " + received, true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -928,8 +929,6 @@ int FlashEcuSubaruDensoSH7058Can::upload_kernel(QString kernel, uint32_t kernel_
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
     }
-
-    return STATUS_ERROR;
 }
 
 /*

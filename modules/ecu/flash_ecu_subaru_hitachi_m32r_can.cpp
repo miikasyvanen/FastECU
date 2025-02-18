@@ -143,7 +143,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    emit LOG_I("Checking if OBK is still running...", true, true);
+    emit LOG_I("Checking if OBK is already running...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -159,14 +159,12 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     {
         if ((uint8_t)received.at(4) == 0x7F && (uint8_t)received.at(5) == 0xB7 && (uint8_t)received.at(6) == 0x13)
         {
-            emit LOG_I("OBK active, don't continue bootloader access...", true, true);
+            emit LOG_I("OBK is active!", true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
     }
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-
     emit LOG_I("OBK not active, initialising ECU...", true, true);
 
     emit LOG_I("Requesting ECU ID", true, true);

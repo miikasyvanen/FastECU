@@ -591,15 +591,19 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
             }
             if (serial->bytesAvailable())
             {
+                while (received.length() < 4 && QTime::currentTime() < dieTime)
+                {
+                    if (serial->bytesAvailable())
+                        received.append(serial->read(1));
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+                }
+                if (received.length() < 4)
+                    return received;
+
                 if (is_iso14230_connection)
                 {
                     qDebug() << "Read with ISO14230";
-                    while (received.length() < 4 && QTime::currentTime() < dieTime)
-                    {
-                        if (serial->bytesAvailable())
-                            received.append(serial->read(1));
-                        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-                    }
+
                     if (received.at(0) & 0x3f)
                     {
                         msglen = (received.at(0) & 0x3f); // Byte in index 3 is payload, no +1 for checksum
@@ -609,12 +613,6 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                 }
                 else if (!is_iso14230_connection)
                 {
-                    while (received.length() < 4 && QTime::currentTime() < dieTime)
-                    {
-                        if (serial->bytesAvailable())
-                            received.append(serial->read(1));
-                        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-                    }
                     if (received.startsWith("\xbe\xef"))
                         msglen = ((uint8_t)received.at(2) << 8) + (uint8_t)received.at(3) + 1; // +1 for checksum
                     if (received.startsWith("\x80\xf0"))
@@ -626,12 +624,14 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
                         req_bytes.append(serial->readAll());
                     QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
                 }
-                received.append(req_bytes);
+                if ((uint32_t)req_bytes.length() < msglen)
+                    return received.append(req_bytes);
+                //received.append(req_bytes);
             }
         }
-        return received;
+        return received.append(req_bytes);
     }
-    return received;
+    return received.append(req_bytes);
 }
 
 QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)

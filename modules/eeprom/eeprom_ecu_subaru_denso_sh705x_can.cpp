@@ -233,7 +233,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     }
 
-    emit LOG_I("No response from kernel, continue bootloader initialization...", true, true);
+    emit LOG_I("No response from kernel, initialising ECU...", true, true);
 
     if (flash_method.endsWith("_ecutek_racerom_alt"))
     {

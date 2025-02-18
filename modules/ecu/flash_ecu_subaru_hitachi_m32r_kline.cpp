@@ -86,15 +86,14 @@ void FlashEcuSubaruHitachiM32rKline::run()
             }
             else
             {
-                emit LOG_I("Connecting to Subaru ECU Hitachi K-Line bootloader, please wait...", true, true);
+                emit LOG_I("Connecting to ECU K-Line bootloader, please wait...", true, true);
 
                 result = connect_bootloader_subaru_ecu_hitachi_kline();
 
                 if (result == STATUS_SUCCESS)
                 {
                     emit external_logger("Writing ROM, please wait...");
-                    emit LOG_I("Writing ROM to ECU Subaru Hitachi using K-Line", true, true);
-                    //result = write_mem_subaru_denso_can_02_32bit(test_write);
+                    emit LOG_I("Writing ROM to ECU using K-Line", true, true);
                     result = write_mem(test_write);
                 }
             }
@@ -253,7 +252,7 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     }
 
     serial->change_port_speed("15625");
-    emit LOG_I("Checking if OBK is running", true, true);
+    emit LOG_I("Checking if OBK is already running", true, true);
     output.clear();
     output.append((uint8_t)0x34);
     output.append((uint8_t)0x00);
@@ -263,26 +262,24 @@ int FlashEcuSubaruHitachiM32rKline::connect_bootloader_subaru_ecu_hitachi_kline(
     output.append((uint8_t)0x08);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(100, serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
-    // 26 24 92
-    if ((uint8_t)received.at(4) == 0x74 && (uint8_t)received.at(5) == 0x84)
+    if (received.length() > 5)
     {
-        kernel_alive = true;
-        received.remove(0, 8);
-        received.remove(5, received.length() - 5);
-
-        for (int i = 0; i < received.length(); i++)
+        if ((uint8_t)received.at(4) == 0x74 && (uint8_t)received.at(5) == 0x84)
         {
-            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_I("OBK is active!", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            kernel_alive = true;
+            return STATUS_SUCCESS;
         }
-        emit LOG_I("Connected to OBK, ECU ID: " + msg, true, true);
-        return STATUS_SUCCESS;
     }
+    emit LOG_I("OBK not active, initialising ECU...", true, true);
 
     serial->change_port_speed("4800");
 
@@ -486,11 +483,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     QString ecuid;
 
     uint32_t pagesize = 0;
-    uint32_t end_addr = 0;
-    uint32_t datalen = 0;
     uint32_t cplen = 0;
-
-    uint8_t chk_sum = 0;
 
     if (!serial->is_serial_port_open())
     {
@@ -502,33 +495,29 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     emit LOG_I("Checking if ECU in read mode", true, true);
     serial->change_port_speed("38400");
     received = send_sid_bf_ssm_init();
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0xFF)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-            return STATUS_ERROR;
+        }
+        else
+        {
+            kernel_alive = true;
+            received.remove(0, 8);
+            received.remove(5, received.length() - 5);
+            for (int i = 0; i < received.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            ecuid = msg;
+            emit LOG_I("ECU ID = " + ecuid, true, true);
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
-        return STATUS_ERROR;
     }
-
-    kernel_alive = true;
-    received.remove(0, 8);
-    received.remove(5, received.length() - 5);
-
-    for (int i = 0; i < received.length(); i++)
-    {
-        msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-    }
-    emit LOG_I("Connected, ECU ID: " + msg, true, true);
-    ecuid = msg;
 
     if(!kernel_alive)
     {
@@ -553,11 +542,8 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
 
         received.remove(0, 8);
         received.remove(5, received.length() - 5);
-
         for (int i = 0; i < received.length(); i++)
-        {
             msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
-        }
         ecuid = msg;
         emit LOG_I("ECU ID = " + ecuid, true, true);
 
@@ -577,14 +563,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     ecuCalDef->RomId = ecuid + "_";
 
     start_addr += 0x00100000;
-    datalen = 6;
     pagesize = 0x80;
-    if (start_addr == 0 && length == 0)
-    {
-        start_addr = 0;
-        length = 0x040000;
-    }
-    end_addr = start_addr + length;
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
@@ -613,7 +592,6 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
 
         uint32_t numblocks = 1;
         unsigned curspeed = 0, tleft;
-        uint32_t curblock = (addr / pagesize);
         float pleft = 0;
         unsigned long chrono;
 
@@ -632,15 +610,26 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
 
-        if (received.startsWith("\x80\xf0"))
+        if (received.length() > 4)
         {
-            received.remove(0, 5);
-            received.remove(received.length() - 1, 1);
-            mapdata.append(received);
+            if ((uint8_t)received.at(4) != 0xE0)
+            {
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                return STATUS_ERROR;
+            }
+            else
+            {
+                received.remove(0, 5);
+                received.remove(received.length() - 1, 1);
+                mapdata.append(received);
+            }
         }
         else
         {
-            LOG_E("ERROR IN DATA RECEIVE! " + parse_message_to_hex(received), true, true);
+            emit LOG_E("No valid response from ECU", true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
         }
 
         cplen = (numblocks * pagesize);

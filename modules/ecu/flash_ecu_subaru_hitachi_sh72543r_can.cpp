@@ -148,8 +148,7 @@ int FlashEcuSubaruHitachiSH72543rCan::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    emit LOG_I("Checking if OBK is still running...", true, true);
-
+    emit LOG_I("Checking if OBK is already running...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
