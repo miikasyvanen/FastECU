@@ -59,10 +59,10 @@ void FlashEcuSubaruMitsuM32rKline::run()
 
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
-    serial->set_is_iso14230_connection(true);
+    serial->set_is_iso14230_connection(false);
+    serial->set_add_iso14230_header(false);
     serial->open_serial_port();
     serial->change_port_speed("4800");
-    serial->set_add_iso14230_header(false);
     tester_id = 0xF0;
     target_id = 0x10;
 
