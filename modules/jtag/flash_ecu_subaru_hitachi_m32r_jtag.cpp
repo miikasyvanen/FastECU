@@ -63,6 +63,8 @@ void FlashEcuSubaruHitachiM32rJtag::run()
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
     serial->set_serial_port_baudrate("4800");
+    tester_id = 0xF0;
+    target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
 
@@ -129,10 +131,10 @@ int FlashEcuSubaruHitachiM32rJtag::init_jtag()
 {
     hard_reset_jtag();
     read_idcode();
-    read_usercode();
+    //read_usercode();
     //set_rtdenb();
 
-    read_tool_rom_code();
+    //read_tool_rom_code();
 
     return STATUS_SUCCESS;
 }
@@ -154,31 +156,95 @@ int FlashEcuSubaruHitachiM32rJtag::write_mem(bool test_write)
 void FlashEcuSubaruHitachiM32rJtag::hard_reset_jtag()
 {
     QByteArray output;
-    QString msg;
+    QByteArray received;
 
     emit LOG_D("Hard reset JTAG", true, true);
-
-    msg.clear();
-    msg.append("80"); // Hard reset (TRST)
-    msg.append("0D"); // Additional CR
-    output = msg.toUtf8();
+    output.clear();
+    output.append((uint8_t)0x80);
+    output = add_header(output);
     serial->write_serial_data(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(10);
+    received = serial->read_serial_data(1, serial_read_short_timeout);
+    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 }
 
-void FlashEcuSubaruHitachiM32rJtag::read_idcode()
+int FlashEcuSubaruHitachiM32rJtag::read_idcode()
 {
-    emit LOG_I("IDCODE:", true, true);
-    write_jtag_ir("IDCODE", IDCODE);
-    read_jtag_dr("ID CODE");
+    QByteArray output;
+    QByteArray received;
+
+    emit LOG_D("Read ID code", true, true);
+    output.clear();
+    output.append((uint8_t)SUB_KERNEL_ID & 0xFF);
+    output = add_header(output);
+    serial->write_serial_data(output);
+    emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+    delay(10);
+    received = serial->read_serial_data(1, serial_read_short_timeout);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID | 0x40) || (uint8_t)received.at(8) != 0x31)
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+    emit LOG_I("Device ID request ok", true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(1, serial_read_short_timeout);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID | 0x40))
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
+    QByteArray response = received.mid(5, 4);
+    uint32_t dev_id;
+    QString version = 0;
+    QString part_number = 0;
+    QString manufacturer_id = 0;
+
+    dev_id = (uint8_t)response.at(0) << 24;
+    dev_id += (uint8_t)response.at(1) << 16;
+    dev_id += (uint8_t)response.at(2) << 8;
+    dev_id += (uint8_t)response.at(3);
+    version = QString::number((dev_id & 0xf0000000) >> 28, 16);
+    part_number = QString::number((dev_id & 0x0ffff000) >> 12, 16);
+    manufacturer_id = QString::number((dev_id & 0x00000ffe) >> 1, 16);
+    emit LOG_I("Device ID: 0x" + QString::number(dev_id, 16), true, true);
+    emit LOG_I("Version: 0x" + version, true, true);
+    emit LOG_I("Part number: 0x" + part_number, true, true);
+    emit LOG_I("Manufacturer ID: 0x" + manufacturer_id, true, true);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
+    return STATUS_SUCCESS;
 }
 
-void FlashEcuSubaruHitachiM32rJtag::read_usercode()
+int FlashEcuSubaruHitachiM32rJtag::read_usercode()
 {
     emit LOG_I("USERCODE:", true, true);
+
     write_jtag_ir("USERCODE", USERCODE);
     read_jtag_dr("USERCODE");
+
+    return STATUS_SUCCESS;
 }
 
 void FlashEcuSubaruHitachiM32rJtag::set_rtdenb()
@@ -275,7 +341,6 @@ void FlashEcuSubaruHitachiM32rJtag::write_jtag_ir(QString desc, QString code)
     emit LOG_D("Write instruction opcode " + desc + " to shift-ir", true, true);
 
     msg.clear();
-    //msg.append("80"); // Hard reset (TRST)
     msg.append("4b051f"); // Reset TAP state machine
     msg.append("4b0303"); // Move to Shift-IR
     msg.append("3b04"); // Set instruction (first 5 bits)
@@ -392,6 +457,43 @@ QByteArray FlashEcuSubaruHitachiM32rJtag::read_response()
 
 
 
+/*
+ * Add SSM header to message
+ *
+ * @return parsed message
+ */
+QByteArray FlashEcuSubaruHitachiM32rJtag::add_header(QByteArray output)
+{
+    QByteArray received;
+    QByteArray msg;
+
+    uint8_t length = output.length();
+
+    output.insert(0, (uint8_t)0xbe);
+    output.insert(1, (uint8_t)0xef);
+    output.insert(2, length << 8);
+    output.insert(3, length);
+
+    output.append(calculate_checksum(output));
+
+    //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    return output;
+}
+
+/*
+ * Calculate SSM checksum to message
+ *
+ * @return 8-bit checksum
+ */
+uint8_t FlashEcuSubaruHitachiM32rJtag::calculate_checksum(QByteArray output)
+{
+    uint8_t checksum = 0;
+
+    for (uint16_t i = 0; i < output.length(); i++)
+        checksum += (uint8_t)output.at(i);
+
+    return checksum;
+}
 
 /*
  * Parse QByteArray to readable form

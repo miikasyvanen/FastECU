@@ -49,6 +49,8 @@ private:
 #define STATUS_SUCCESS							0x00
 #define STATUS_ERROR							0x01
 
+    uint8_t id_code = 0x02;
+
     QString IDCODE = "02";
     QString USERCODE = "03";
     QString MDM_SYSTEM = "08";
@@ -76,6 +78,9 @@ private:
     uint8_t comm_try_timeout = 50;
     uint8_t comm_try_count = 4;
 
+    uint8_t tester_id;
+    uint8_t target_id;
+
     uint16_t receive_timeout = 500;
     uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
@@ -100,22 +105,23 @@ private:
     int read_mem(uint32_t start_addr, uint32_t length);
     int write_mem(bool test_write);
 
-    QString parse_message_to_hex(QByteArray received);
-    void set_progressbar_value(int value);
-    void delay(int timeout);
-
     void hard_reset_jtag();
-    void read_idcode();
-    void read_usercode();
+    int read_idcode();
+    int read_usercode();
     void set_rtdenb();
     void read_tool_rom_code();
-
-
 
     void write_jtag_ir(QString desc, QString code);
     QByteArray read_jtag_dr(QString desc);
     QByteArray write_jtag_dr(QString desc, QString data);
     QByteArray read_response();
+
+    QByteArray add_header(QByteArray output);
+    uint8_t calculate_checksum(QByteArray output);
+
+    QString parse_message_to_hex(QByteArray received);
+    void set_progressbar_value(int value);
+    void delay(int timeout);
 
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
