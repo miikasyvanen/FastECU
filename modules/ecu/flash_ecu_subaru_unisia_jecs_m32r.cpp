@@ -87,7 +87,10 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
 
             if (result == STATUS_SUCCESS)
             {
-                QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
+                if (!serial->get_use_openport2_adapter())
+                    QMessageBox::information(this, tr("Programming voltage"), "Remove VPP voltage from ECU and press OK to exit");
+                else
+                    QMessageBox::information(this, tr("ECU Operation"), "ECU operation was succesful, press OK to exit");
                 this->close();
             }
             else
