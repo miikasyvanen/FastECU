@@ -891,20 +891,22 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(serial_read_short_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
     }
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -926,20 +928,22 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(serial_read_short_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
     }
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     emit LOG_I("Start reading ROM, please wait...", true, true);
 
@@ -980,11 +984,11 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
         output[6] = (uint8_t)((addr >> 16) & 0xFF);
         output[7] = (uint8_t)((addr >> 8) & 0xFF);
         output[8] = (uint8_t)(addr & 0xFF);
-        //emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
 
         received = serial->read_serial_data(2000);
-        //emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        emit LOG_D("Response: " + parse_message_to_hex(received.mid(0, 5)), true, true);
 
         if (received.length() > 4)
         {
