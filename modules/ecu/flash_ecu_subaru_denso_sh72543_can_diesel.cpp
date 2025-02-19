@@ -83,7 +83,7 @@ void FlashEcuSubaruDensoSH72543CanDiesel::run()
     switch (ret)
     {
     case QMessageBox::Ok:
-        emit LOG_I("Connecting to ECU Denso SH72531 CAN bootloader, please wait...", true, true);
+        emit LOG_I("Connecting to ECU Denso SH72543 Diesel CAN bootloader, please wait...", true, true);
         result = connect_bootloader();
 
         if (result == STATUS_SUCCESS)
@@ -91,13 +91,13 @@ void FlashEcuSubaruDensoSH72543CanDiesel::run()
             if (cmd_type == "read")
             {
                 emit external_logger("Reading ROM, please wait...");
-                emit LOG_I("Reading ROM from ECU, Denso SH72531 using CAN", true, true);
+                emit LOG_I("Reading ROM from ECU, Denso SH72543 Diesel using CAN", true, true);
                 result = read_memory(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
             }
             else if (cmd_type == "test_write" || cmd_type == "write")
             {
                 emit external_logger("Writing ROM, please wait...");
-                emit LOG_I("Writing ROM to ECU, Denso SH72531 using CAN", true, true);
+                emit LOG_I("Writing ROM to ECU, Denso SH72543 Diesel using CAN", true, true);
                 result = write_memory(test_write);
             }
         }
@@ -862,7 +862,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
 
     start_addr = 0x8000;
 
-    length = 0x001F8000;    // hack for testing
+    length = 0x001F7F00;    // hack for testing
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
@@ -1082,11 +1082,11 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
     QByteArray padBytes;
     padBytes.fill((uint8_t)0xFF, 0x8000);
     mapdata = mapdata.insert(0, padBytes);
-/*
+
     QByteArray endBytes;
     endBytes.fill((uint8_t)0xFF, 0x100);
     mapdata = mapdata.append(endBytes);
-*/
+
     ecuCalDef->FullRomData = mapdata;
     set_progressbar_value(100);
 

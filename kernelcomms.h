@@ -36,7 +36,21 @@
 #define SUB_KERNEL_COMMIT_FLASH_BUFFER      0x24
 #define SUB_KERNEL_BLANK_PAGE               0x25
 
-#define SUB_KERNEL_INIT                     0x81
+/*************************************
+ * JTAG commands
+ * **********************************/
+#define SUB_KERNEL_SUB_CMD_READ             0x00
+#define SUB_KERNEL_SUB_CMD_WRITE            0x01
+
+#define SUB_KERNEL_USERCODE                 0x30
+#define SUB_KERNEL_MON_CODE                 0x10
+#define SUB_KERNEL_MON_DATA                 0x11
+#define SUB_KERNEL_MON_PARAM                0x12
+#define SUB_KERNEL_MON_ACCESS               0x13
+
+#define SUB_KERNEL_JTAG_IR_ACK              0x31
+
+
 
 /*************************************
  * NisProg based kernels CAN commands

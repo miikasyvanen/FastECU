@@ -23,39 +23,6 @@ void EcuOperations::closeEvent(QCloseEvent *bar)
 }
 
 /*******************************************************
- *
- *  Denso ECU operations, modded NisProg kernels
- *
- ******************************************************/
-/*******************************************************
- *  Request kernel init
- ******************************************************/
-QByteArray EcuOperations::request_kernel_init()
-{
-    QByteArray output;
-    QByteArray received;
-
-    if (mcu_type_string == "68HC16Y5")
-    {
-        emit LOG_I("No kernel init option in 16-bit denso yet", true, true);
-    }
-    if (mcu_type_string == "SH7055" || mcu_type_string == "SH7058")
-    {
-        request_denso_kernel_init = true;
-
-        output.clear();
-        output.append(SUB_KERNEL_INIT);
-        received = serial->write_serial_data_echo_check(output);
-        delay(500);
-        received = serial->read_serial_data(100, serial_read_short_timeout);
-
-        request_denso_kernel_init = false;
-    }
-
-    return received;
-}
-
-/*******************************************************
  *  Request kernel id
  ******************************************************/
 QByteArray EcuOperations::request_kernel_id()

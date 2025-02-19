@@ -593,7 +593,7 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t 
             {
                 while (received.length() < 4 && QTime::currentTime() < dieTime)
                 {
-                    if (serial->bytesAvailable())
+                    while (serial->bytesAvailable() && received.length() < 4)
                         received.append(serial->read(1));
                     QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
                 }
