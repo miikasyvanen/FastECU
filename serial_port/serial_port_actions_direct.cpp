@@ -651,6 +651,10 @@ QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
             write_j2534_data(output);
             return 0;
         }
+
+        while (serial->bytesAvailable())
+            received.append(serial->readAll());
+
         for (int i = 0; i < output.length(); i++)
         {
             msg[0] = output.at(i);
@@ -681,6 +685,10 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
             write_j2534_data(output);
             return STATUS_SUCCESS;
         }
+
+        while (serial->bytesAvailable())
+            received.append(serial->readAll());
+
         for (int i = 0; i < output.length(); i++)
         {
             msg[0] = output.at(i);
