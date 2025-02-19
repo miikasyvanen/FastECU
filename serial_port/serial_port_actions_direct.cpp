@@ -700,7 +700,7 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         }
         if (received.length() < output.length())
-            emit LOG_E("Write serial data echo read failed!", true, true);
+            emit LOG_D("Write serial data echo read failed!", true, true);
 
         return received;
     }
