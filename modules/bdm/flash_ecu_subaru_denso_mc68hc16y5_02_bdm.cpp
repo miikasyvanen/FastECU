@@ -154,7 +154,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t
     timer.start();
 
     // Clear receive buffer
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     set_progressbar_value(0);
 
     while (willget)
@@ -196,7 +196,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t
         uint32_t loopcount = 0;
         while ((uint32_t)received.length() != pagesize && loopcount < 50)
         {
-            received = serial->read_serial_data(pagesize, serial_read_short_timeout);
+            received = serial->read_serial_data(serial_read_short_timeout);
             qDebug() << ".";
             loopcount++;
             delay(100);
@@ -255,7 +255,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     unsigned blockno;
 
     // Clear receive buffer
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     set_progressbar_value(0);
 
     flashbytescount = 0;
@@ -295,15 +295,15 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     output.append(msg);
     received = serial->write_serial_data(output);
     qDebug() << "Sent:" << output << parse_message_to_hex(output);
-    received = serial->read_serial_data(cmd_wr_response.length(), serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     qDebug() << "Received:" << received << parse_message_to_hex(received);
     if (received.length() < cmd_wr_response.length() || received != cmd_wr_response)
     {
-        received.append(serial->read_serial_data(200, serial_read_long_timeout));
+        received.append(serial->read_serial_data(serial_read_long_timeout));
         qDebug() << "ERROR! Received:" << received << parse_message_to_hex(received);
         return STATUS_ERROR;
     }
-    received = serial->read_serial_data(100, serial_read_long_timeout);
+    received = serial->read_serial_data(serial_read_long_timeout);
     qDebug() << "Received:" << parse_message_to_hex(received);
 
     output.clear();
@@ -313,16 +313,16 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     output.append((uint8_t)0x0C);
     received = serial->write_serial_data(output);
     qDebug() << "Sent:" << output << parse_message_to_hex(output);
-    received = serial->read_serial_data(wr_response.length(), serial_read_long_timeout);
+    received = serial->read_serial_data(serial_read_long_timeout);
     qDebug() << "Received:" << received << parse_message_to_hex(received);
     if (received.length() < wr_response.length() || received != wr_response)
     {
-        received.append(serial->read_serial_data(200, serial_read_long_timeout));
+        received.append(serial->read_serial_data(serial_read_long_timeout));
         qDebug() << "ERROR! Received:" << received << parse_message_to_hex(received);
         //delay(20);
         return STATUS_ERROR;
     }
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     qDebug() << "Received:" << parse_message_to_hex(received);
 
     qDebug() << "Set program counter and stack pointer";
@@ -330,10 +330,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     output.clear();
     output.append(msg);
     received = serial->write_serial_data(output);
-    received = serial->read_serial_data(200, serial_read_long_timeout);
+    received = serial->read_serial_data(serial_read_long_timeout);
     qDebug() << "Received:" << received << parse_message_to_hex(received);
 
-    received = serial->read_serial_data(200, serial_read_long_timeout);
+    received = serial->read_serial_data(serial_read_long_timeout);
     qDebug() << "Received:" << received << parse_message_to_hex(received);
 /*
     msg = QString("rdmem 0x20000 0x600 hex").toUtf8();
@@ -351,7 +351,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     output.clear();
     output.append(msg);
     received = serial->write_serial_data(output);
-    received = serial->read_serial_data(200, serial_read_long_timeout);
+    received = serial->read_serial_data(serial_read_long_timeout);
     qDebug() << "Received:" << received << parse_message_to_hex(received);
 
 /*
@@ -417,12 +417,12 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, co
     output.append(msg);
     received = serial->write_serial_data(output);
     qDebug() << "Sent:" << output << parse_message_to_hex(output);
-    received = serial->read_serial_data(cmd_wr_response.length(), serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     qDebug() << "Received:" << received << parse_message_to_hex(received);
 
     if (received.length() < cmd_wr_response.length() || received != cmd_wr_response)
     {
-        received.append(serial->read_serial_data(100, serial_read_long_timeout));
+        received.append(serial->read_serial_data(serial_read_long_timeout));
         qDebug() << "ERROR! Received:" << received << parse_message_to_hex(received);
         return STATUS_ERROR;
     }
@@ -443,13 +443,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, co
         //delay(20);
         qDebug() << "Sent:" << parse_message_to_hex(output);
 
-        received = serial->read_serial_data(wr_response.length(), serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_long_timeout);
         qDebug() << "Received:" << received << parse_message_to_hex(received);
         //delay(20);
 
         if (received.length() < wr_response.length() || received != wr_response)
         {
-            received.append(serial->read_serial_data(100, serial_read_long_timeout));
+            received.append(serial->read_serial_data(serial_read_long_timeout));
             qDebug() << "ERROR! Received:" << received << parse_message_to_hex(received);
             //delay(20);
             return STATUS_ERROR;
@@ -485,7 +485,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, co
         set_progressbar_value(pleft);
     }
     emit LOG_I("Block write complete.", true, true);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     set_progressbar_value(100);
 
     return STATUS_SUCCESS;

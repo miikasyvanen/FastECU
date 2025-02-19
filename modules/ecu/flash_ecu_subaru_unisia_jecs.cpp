@@ -173,7 +173,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
     delay(500);
-    received_flush = serial->read_serial_data(100, 1000);
+    received_flush = serial->read_serial_data(1000);
 
     timer.start();
     set_progressbar_value(0);
@@ -236,7 +236,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
                 serial->write_serial_data(output);
             }
 
-            received.append(serial->read_serial_data(100, 5));
+            received.append(serial->read_serial_data(5));
             while (received.length() >= 3)
             {
                 if (received.at(0) == output.at(1) && received.at(1) == output.at(2))// && received.at(3) == output.at(1) && received.at(4) == output.at(2))
@@ -260,7 +260,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
                 bytes_synced = false;
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         }
-        received_flush = serial->read_serial_data(100, 5);
+        received_flush = serial->read_serial_data(5);
 
         cplen = 1;
 

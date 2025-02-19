@@ -130,7 +130,7 @@ public:
 
     bool reset_connection(void);
 
-    QByteArray read_serial_data(uint32_t datalen, uint16_t timeout);
+    QByteArray read_serial_data(uint16_t timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);
 

@@ -965,7 +965,7 @@ int MainWindow::can_listener()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
-        received = serial->read_serial_data(100, 500);
+        received = serial->read_serial_data(receive_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         id++;

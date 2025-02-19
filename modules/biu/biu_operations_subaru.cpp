@@ -265,7 +265,7 @@ void BiuOperationsSubaru::send_biu_msg()
 
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
 
-    received = serial->read_serial_data(100, serial_read_long_timeout);
+    received = serial->read_serial_data(serial_read_long_timeout);
 
     /*
     received.clear();

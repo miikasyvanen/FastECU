@@ -254,7 +254,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
     QString ecuid = msg;
     emit LOG_I("Init Success: ECU ID = " + ecuid, true, true);
     if (cmd_type == "read")
-        ecuCalDef->RomId = ecuid;
+        ecuCalDef->RomId = ecuid + "_";
 
     emit LOG_I("Requesting to start communication", true, true);
     received = send_sid_81_start_communication();
@@ -540,7 +540,7 @@ int EepromEcuSubaruDensoSH705xKline::read_mem(uint32_t start_addr, uint32_t leng
             if (kill_process)
                 return STATUS_ERROR;
             delay(100);
-            received = serial->read_serial_data(pagesize / numblocks, serial_read_timeout);
+            received = serial->read_serial_data(serial_read_timeout);
             if (received.length()) {
                 pagedata.append(received);
             }
@@ -644,7 +644,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_bf_ssm_init()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -664,7 +664,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_81_start_communication()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -685,7 +685,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_83_request_timings()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -706,7 +706,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_27_request_seed()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -728,7 +728,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_27_send_seed_key(QByteArray
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -750,7 +750,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_10_start_diagnostic()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -777,7 +777,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_34_request_upload(uint32_t 
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -838,7 +838,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t da
 
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(6, serial_read_timeout);
+        received = serial->read_serial_data(serial_read_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 4)
         {
@@ -875,7 +875,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::send_sid_31_start_routine()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1116,7 +1116,7 @@ QByteArray EepromEcuSubaruDensoSH705xKline::request_kernel_id()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(100, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
 

@@ -185,7 +185,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 6)
     {
         if ((uint8_t)received.at(4) == 0x7F && (uint8_t)received.at(5) == 0xB7 && (uint8_t)received.at(6) == 0x13)
@@ -210,7 +210,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0xEA)
@@ -249,7 +249,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
@@ -282,7 +282,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
@@ -317,7 +317,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x06)
@@ -360,7 +360,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
  if ((uint8_t)received.at(5) != 0xA0 && (uint8_t)received.at(5) != 0x20)
@@ -383,7 +383,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -397,7 +397,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -410,7 +410,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -424,7 +424,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -438,7 +438,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -452,7 +452,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -466,7 +466,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -480,7 +480,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -495,7 +495,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     emit LOG_I("Starting seed request...", true, true);
 
@@ -509,7 +509,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
     {
@@ -541,7 +541,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
     {
@@ -566,7 +566,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -583,7 +583,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -600,7 +600,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -620,7 +620,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
 //    delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     output.clear();
@@ -634,7 +634,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     emit LOG_I("Checking if jump successful and kernel alive...", true, true);
@@ -651,7 +651,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x74 && (uint8_t)received.at(5) != 0x20 && (uint8_t)received.at(6) != 0x01 && (uint8_t)received.at(7) != 0x04)
     {
@@ -682,7 +682,7 @@ else
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
@@ -699,7 +699,7 @@ else
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
     {
@@ -726,7 +726,7 @@ else
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
     {
@@ -749,7 +749,7 @@ else
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
     {
@@ -774,7 +774,7 @@ else
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x74 && (uint8_t)received.at(5) != 0x20 && (uint8_t)received.at(6) != 0x01 && (uint8_t)received.at(7) != 0x04)
     {
@@ -932,8 +932,8 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
         emit LOG_D("Send msg: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
 //        delay(50);
-//        received = serial->read_serial_data(270, 200);
-        received = serial->read_serial_data(20, 5000);
+//        received = serial->read_serial_data(200);
+        received = serial->read_serial_data(5000);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0xE0)
         {
@@ -1138,7 +1138,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(20, serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_long_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) == 0x74)
@@ -1174,7 +1174,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
         }
         data_len -= blocksize;
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(20, 5000);
+        received = serial->read_serial_data(5000);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0xF6)
         {
@@ -1202,7 +1202,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(20, serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_long_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) == 0x77)
@@ -1247,7 +1247,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     {
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(20, serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_long_timeout);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) == 0x71)
@@ -1314,12 +1314,12 @@ int FlashEcuSubaruHitachiSH7058Can::erase_subaru_ecu_hitachi_can()
 //    delay(9000);
     serial->write_serial_data_echo_check(output);
 
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     while (try_count < 20 && connected == false)
     {
-        received = serial->read_serial_data(20, serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_long_timeout);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
@@ -1368,7 +1368,7 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_sid_bf_ssm_init()
         emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
         delay(200);
-        received = serial->read_serial_data(100, receive_timeout);
+        received = serial->read_serial_data(receive_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         loop_cnt++;
     }
@@ -1391,7 +1391,7 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_81_start_communicatio
     output.append((uint8_t)0x81);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1413,7 +1413,7 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_83_request_timings()
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1436,7 +1436,7 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_10_start_diagnostic()
     output.append((uint8_t)0x02);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
-    received = serial->read_serial_data(7, receive_timeout);
+    received = serial->read_serial_data(receive_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -1458,7 +1458,7 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_b8_change_baudrate_38
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(50);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(receive_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;

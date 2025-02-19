@@ -1571,7 +1571,7 @@ int MainWindow::simulate_obd()
     {
         received.clear();
         output.clear();
-        received = serial->read_serial_data(16, 100);
+        received = serial->read_serial_data(100);
         if (received != "")
         {
             qDebug() << "Received:" << parse_message_to_hex(received);

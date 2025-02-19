@@ -162,7 +162,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(6, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
 
     if (received.length() > 5)
     {
@@ -188,7 +188,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0xEA)
@@ -227,7 +227,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
@@ -260,7 +260,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
@@ -295,7 +295,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x06)
@@ -334,7 +334,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x01)
@@ -362,7 +362,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x62 || (uint8_t)received.at(5) != 0x10)
@@ -394,7 +394,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x01)
@@ -421,7 +421,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -434,7 +434,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -447,7 +447,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -460,7 +460,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -473,7 +473,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -486,7 +486,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -499,7 +499,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -512,7 +512,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -525,7 +525,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -539,7 +539,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         output.clear();
@@ -552,7 +552,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
@@ -592,7 +592,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x62)
@@ -622,7 +622,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x63)
@@ -651,7 +651,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(4) != 0x62 || (uint8_t)received.at(5) != 0x10)
@@ -681,7 +681,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(50);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         bool init_ready = false;
         while (!init_ready && try_count < 10)
         {
@@ -693,7 +693,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
             if (!init_ready)
             {
                 delay(100);
-                received = serial->read_serial_data(20, serial_read_short_timeout);
+                received = serial->read_serial_data(serial_read_short_timeout);
             }
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             try_count++;
@@ -713,7 +713,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 5)
         {
@@ -743,7 +743,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 5)
         {
@@ -786,7 +786,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 5)
         {
@@ -818,7 +818,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         delay(50);
         bool init_ready = false;
@@ -832,7 +832,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::connect_bootloader()
             if (!init_ready)
             {
                 delay(100);
-                received = serial->read_serial_data(20, serial_read_short_timeout);
+                received = serial->read_serial_data(serial_read_short_timeout);
             }
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             try_count++;
@@ -891,7 +891,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::read_memory(uint32_t start_addr, uint32_t 
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
@@ -929,7 +929,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::read_memory(uint32_t start_addr, uint32_t 
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
@@ -986,7 +986,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::read_memory(uint32_t start_addr, uint32_t 
         //emit LOG_I("Send msg: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
 
-        received = serial->read_serial_data(270, 2000);
+        received = serial->read_serial_data(2000);
         //emit LOG_I("Received msg: " + parse_message_to_hex(received), true, true);
 
         if (received.length() > 4)
@@ -1063,7 +1063,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::read_memory(uint32_t start_addr, uint32_t 
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
-        received = serial->read_serial_data(20, 500);
+        received = serial->read_serial_data(receive_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0x77)
@@ -1245,7 +1245,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::reflash_block(const uint8_t *newdata, cons
         data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(5, receive_timeout);
+        received = serial->read_serial_data(receive_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         if (received.length() > 4)
@@ -1287,7 +1287,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::reflash_block(const uint8_t *newdata, cons
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0x77)
@@ -1321,7 +1321,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::reflash_block(const uint8_t *newdata, cons
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(1000);
-    received = serial->read_serial_data(20, 500);
+    received = serial->read_serial_data(receive_timeout);
     emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
     if (received.length() != 7)
     {
@@ -1340,7 +1340,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::reflash_block(const uint8_t *newdata, cons
         else
         {
             delay(200);
-            received = serial->read_serial_data(20, 500);
+            received = serial->read_serial_data(receive_timeout);
             emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
 
             if (received.length() > 6)
@@ -1407,7 +1407,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::erase_memory()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(20, 500);
+    received = serial->read_serial_data(receive_timeout);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
@@ -1446,7 +1446,7 @@ int FlashEcuSubaruDenso1N83M_1_5MCan::erase_memory()
     try_count = 0;
     while (try_count < 20)
     {
-        received = serial->read_serial_data(20, 500);
+        received = serial->read_serial_data(receive_timeout);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)

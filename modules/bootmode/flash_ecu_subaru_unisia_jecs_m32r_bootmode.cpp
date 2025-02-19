@@ -222,7 +222,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
             return STATUS_ERROR;
     }
 
-    ecuCalDef->RomId = ecuid;
+    ecuCalDef->RomId = ecuid + "_";
 
     start_addr += 0x00100000;
     pagesize = 0x80;
@@ -270,7 +270,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
         //chk_sum = calculate_checksum(output, false);
         //output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(serial_read_extra_long_timeout);
 
         if (received.startsWith("\x80\xf0"))
         {
@@ -360,7 +360,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
     set_progressbar_value(100);
 
     delay(500);
-    received = serial->read_serial_data(100, 200);
+    received = serial->read_serial_data(serial_read_short_timeout);
     received.clear();
 
 
@@ -422,7 +422,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
             if (kill_process)
                 return 0;
 
-            received.append(serial->read_serial_data(10, 10));
+            received.append(serial->read_serial_data(10));
             emit LOG_I(".", false, false);
             if (received.length() > 6)
             {
@@ -460,7 +460,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         if (kill_process)
             return 0;
 
-        received.append(serial->read_serial_data(10, 10));
+        received.append(serial->read_serial_data(10));
         emit LOG_I(".", false, false);
         if (received.length() > 6)
         {
@@ -527,7 +527,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         received.clear();
         if (output.at(5) == 0x61)
         {
-            received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+            received = serial->read_serial_data(serial_read_extra_long_timeout);
             if (received.length() > 6)
             {
                 if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
@@ -605,7 +605,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_sid_bf_ssm_init()
     output.append((uint8_t)0xBF);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(250);
-    received = serial->read_serial_data(100, receive_timeout);
+    received = serial->read_serial_data(receive_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     while (received == "" && loop_cnt < comm_try_count)
     {
@@ -615,7 +615,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_sid_bf_ssm_init()
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
         emit LOG_I("SSM init", true, true);
         delay(comm_try_timeout);
-        received = serial->read_serial_data(100, receive_timeout);
+        received = serial->read_serial_data(receive_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         loop_cnt++;
     }
@@ -638,7 +638,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     output.append((uint8_t)0x15);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(200);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(receive_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -659,7 +659,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     output.append((uint8_t)0x75);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(200);
-    received = serial->read_serial_data(8, receive_timeout);
+    received = serial->read_serial_data(receive_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;

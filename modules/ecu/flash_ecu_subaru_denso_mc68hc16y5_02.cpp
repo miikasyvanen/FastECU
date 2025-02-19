@@ -163,7 +163,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(output.length(), serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     /******************************
@@ -302,7 +302,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
 
     emit LOG_I("Start sending kernel... please wait...", true, true);
     serial->write_serial_data_echo_check(output);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     msg.clear();
     for (int i = 0; i < received.length(); i++)
     {
@@ -426,7 +426,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
         delay(10);
-        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(serial_read_extra_long_timeout);
 
         if (received.length() > 5)
         {
@@ -674,11 +674,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     //delay(200);
-    received = serial->read_serial_data(10, serial_read_extra_long_timeout);
+    received = serial->read_serial_data(serial_read_extra_long_timeout);
     int try_count = 0;
     while (received.length() < 10 && try_count < 20)
     {
-        received.append(serial->read_serial_data(10, serial_read_extra_short_timeout));
+        received.append(serial->read_serial_data(serial_read_extra_short_timeout));
         try_count++;
         delay(100);
     }
@@ -715,13 +715,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
         msg.append(QString("\tNO").toUtf8());
         emit LOG_I(msg, false, true);
         *modified = 1;
-        serial->read_serial_data(100, serial_read_short_timeout);
+        serial->read_serial_data(serial_read_short_timeout);
         return 0;
     }
     msg.append(QString("\tYES").toUtf8());
     emit LOG_I(msg, false, true);
     *modified = 0;
-    serial->read_serial_data(100, serial_read_short_timeout);
+    serial->read_serial_data(serial_read_short_timeout);
     return 0;
 }
 
@@ -784,7 +784,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(10, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
@@ -819,7 +819,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(10, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 9)
     {
@@ -860,7 +860,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(8, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 5)
     {
@@ -930,7 +930,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, cons
     received = serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     //delay(50);
-    received = serial->read_serial_data(8, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
@@ -1005,7 +1005,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         received = serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(500);
-        received = serial->read_serial_data(8, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(serial_read_extra_long_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 5)
         {
@@ -1055,7 +1055,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         serial->write_serial_data_echo_check(output);
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         //delay(50);
-        received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(serial_read_extra_long_timeout);
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_WRITE_FLASH_BUFFER | 0x40))
@@ -1139,7 +1139,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
             received = serial->write_serial_data_echo_check(output);
             emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
             delay(200);
-            received = serial->read_serial_data(6, serial_read_extra_long_timeout);
+            received = serial->read_serial_data(serial_read_extra_long_timeout);
             emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
             if (received.length() > 5)
             {
@@ -1161,7 +1161,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         }
     }
 
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
 
     return STATUS_SUCCESS;
 }
@@ -1192,7 +1192,7 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(100, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     kernelid = received;
 

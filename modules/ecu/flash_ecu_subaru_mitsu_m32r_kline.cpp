@@ -173,7 +173,7 @@ int FlashEcuSubaruMitsuM32rKline::connect_bootloader()
     QString ecuid = msg;
     emit LOG_I("ECU ID: " + ecuid, true, true);
     if (cmd_type == "read")
-        ecuCalDef->RomId = ecuid;
+        ecuCalDef->RomId = ecuid + "_";
 
     emit LOG_I("Requesting to start communication", true, true);
     received = send_sid_81_start_communication();
@@ -516,7 +516,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
 
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received == "" || (uint8_t)received.at(4) != 0x74)
@@ -538,7 +538,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     if (received == "" || (uint8_t)received.at(4) != 0x71)
@@ -571,8 +571,8 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
 //        emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 //        delay(5);
-//        received = serial->read_serial_data(20, 200);
-        received = serial->read_serial_data(20, receive_timeout);
+//        received = serial->read_serial_data(200);
+        received = serial->read_serial_data(receive_timeout);
 
 //        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
@@ -599,7 +599,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
 
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
         if (received != "")
         {
 //            connected = true;
@@ -635,7 +635,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_b8_byte_read(uint32_t addr)
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(7, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received.mid(0, 5)), true, true);
 
     return received;
@@ -662,7 +662,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_a0_block_read(uint32_t addr, u
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(7, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received.mid(0, 5)), true, true);
 
     return received;
@@ -683,7 +683,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_bf_ssm_init()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(10, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -704,7 +704,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_81_start_communication()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(10, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -726,7 +726,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_83_request_timings()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(10, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -748,7 +748,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_27_request_seed()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(10, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -771,7 +771,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_27_send_seed_key(QByteArray se
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(10, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;
@@ -794,7 +794,7 @@ QByteArray FlashEcuSubaruMitsuM32rKline::send_sid_10_start_diagnostic()
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-    received = serial->read_serial_data(10, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     return received;

@@ -167,7 +167,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
@@ -202,7 +202,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0xEA)
@@ -241,7 +241,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
@@ -279,7 +279,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x03)
@@ -306,7 +306,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
@@ -332,7 +332,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
@@ -373,7 +373,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     delay(50);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
@@ -405,7 +405,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 5)
     {
@@ -441,7 +441,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
@@ -604,7 +604,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t leng
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 7)
     {
@@ -664,7 +664,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t leng
         emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
         LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(270, serial_read_timeout);
+        received = serial->read_serial_data(serial_read_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
         if (received.length() > 4)
         {
@@ -738,7 +738,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t leng
     serial->write_serial_data_echo_check(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(270, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) == 0x77)
@@ -915,7 +915,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     serial->write_serial_data_echo_check(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x74)
@@ -957,7 +957,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
         data_len -= 128;
 
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(5, serial_read_timeout);
+        received = serial->read_serial_data(serial_read_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
@@ -976,7 +976,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     serial->write_serial_data_echo_check(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x77)
@@ -1011,7 +1011,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     serial->write_serial_data_echo_check(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02)
@@ -1071,7 +1071,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::erase_mem()
     emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(1000);
-    received = serial->read_serial_data(20, serial_read_timeout);
+    received = serial->read_serial_data(serial_read_timeout);
     emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
     if (received.length() > 6)
     {

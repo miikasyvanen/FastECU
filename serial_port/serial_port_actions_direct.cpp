@@ -134,7 +134,7 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
         accurate_delay(23.8);
         // Send init data
         received = write_serial_data_echo_check(output);
-        received = read_serial_data(1, 10);
+        received = read_serial_data(10);
         //emit LOG_D("Fast init response: " + parse_message_to_hex(received), true, true);
         delay(100);
     }
@@ -569,7 +569,7 @@ void SerialPortActionsDirect::close_j2534_serial_port()
 #endif
 }
 
-QByteArray SerialPortActionsDirect::read_serial_data(uint32_t datalen, uint16_t timeout)
+QByteArray SerialPortActionsDirect::read_serial_data(uint16_t timeout)
 {
     QByteArray received;
     QByteArray req_bytes;
@@ -692,13 +692,15 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
         QTime dieTime = QTime::currentTime().addMSecs(echo_check_timout);
         while (received.length() < output.length() && (QTime::currentTime() < dieTime))
         {
-            if (serial->bytesAvailable())
+            while (serial->bytesAvailable() && received.length() < output.length())
             {
                 dieTime = QTime::currentTime().addMSecs(echo_check_timout);
                 received.append(serial->read(1));
             }
             QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         }
+        if (received.length() < output.length())
+            emit LOG_E("Write serial data echo read failed!", true, true);
 
         return received;
     }

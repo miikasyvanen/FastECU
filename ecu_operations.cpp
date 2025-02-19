@@ -51,7 +51,7 @@ QByteArray EcuOperations::request_kernel_id()
         received = serial->write_serial_data_echo_check(output);
         delay(200);
         received.clear();
-        received = serial->read_serial_data(100, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         kernelid = received;
 
         request_denso_kernel_id = false;
@@ -75,7 +75,7 @@ QByteArray EcuOperations::request_kernel_id()
 
         received = serial->write_serial_data_echo_check(output);
         delay(100);
-        received = serial->read_serial_data(100, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
 
         received.remove(0, 1);
         if (serial->get_is_can_connection() || serial->get_is_iso15765_connection())
@@ -84,7 +84,7 @@ QByteArray EcuOperations::request_kernel_id()
 
         while (received != "")
         {
-            received = serial->read_serial_data(1, serial_read_short_timeout);
+            received = serial->read_serial_data(serial_read_short_timeout);
             received.remove(0, 1);
             if (serial->get_is_can_connection() || serial->get_is_iso15765_connection())
                 received.remove(0, 1);
@@ -177,7 +177,7 @@ int EcuOperations::read_mem_16bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
         delay(10);
-        received = serial->read_serial_data(pagesize + 6, serial_read_timeout);
+        received = serial->read_serial_data(serial_read_timeout);
 
         if (received.startsWith("\xbe\xef"))
         {
@@ -288,13 +288,13 @@ int EcuOperations::read_mem_32bit_kline(FileActions::EcuCalDefStructure *ecuCalD
         //delay(10);
         // Receive map data, check and remove header // ADJUST THIS LATER //
         //received.clear();
-        received = serial->read_serial_data(numblocks * (32 + 3), serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         qDebug() << "Read received:" << parse_message_to_hex(received);
         if (!received.length())
         {
             delay(500);
             received = serial->write_serial_data_echo_check(output);
-            received = serial->read_serial_data(numblocks * (32 + 3), serial_read_short_timeout);
+            received = serial->read_serial_data(serial_read_short_timeout);
             qDebug() << "Read received:" << parse_message_to_hex(received);
             if (!received.length())
                 return STATUS_ERROR;
@@ -420,7 +420,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
         serial->write_serial_data_echo_check(output);
         //qDebug() << "0xD8 message sent to kernel initiate dump";
         //delay(100);
-        received = serial->read_serial_data(1, 10);
+        received = serial->read_serial_data(10);
         //qDebug() << "Response to 0xD8 (dump mem) message:" << parse_message_to_hex(received);
 
         if ((uint8_t)received.at(0) != SUB_DENSOCAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_DUMP_ROM)
@@ -435,7 +435,7 @@ int EcuOperations::read_mem_32bit_can(FileActions::EcuCalDefStructure *ecuCalDef
 
         while ((uint32_t)pagedata.length() < pagesize && timeout < 1000)
         {
-            received = serial->read_serial_data(1, 50);
+            received = serial->read_serial_data(50);
             pagedata.append(received, 8);
             timeout++;
             //qDebug() << parse_message_to_hex(received);
@@ -991,9 +991,9 @@ int EcuOperations::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, 
             //qDebug() << hex << chunk_cnt << output.length() << start << pagesize << parse_message_to_hex(output);
 
             delay(50);
-            received = serial->read_serial_data(50, serial_read_long_timeout);
+            received = serial->read_serial_data(serial_read_long_timeout);
             delay(50);
-            received = serial->read_serial_data(50, serial_read_long_timeout);
+            received = serial->read_serial_data(serial_read_long_timeout);
 
             imgcrc = crc32(src + start, pagesize);
             //romcrc = byte_to_int32(received);
@@ -1018,11 +1018,11 @@ int EcuOperations::check_romcrc_16bit_kline(const uint8_t *src, uint32_t start, 
 
     emit LOG_I("\tYES", false, true);
     *modified = 0;
-    serial->read_serial_data(100, serial_read_short_timeout);
+    serial->read_serial_data(serial_read_short_timeout);
     return 0;
 
 badexit:
-    serial->read_serial_data(100, serial_read_short_timeout);
+    serial->read_serial_data(serial_read_short_timeout);
     return -1;
 }
 
@@ -1066,14 +1066,14 @@ int EcuOperations::check_romcrc_32bit_kline(const uint8_t *src, uint32_t start, 
         //responses :	01 <SID_CONF+0x40> <cks> for good CRC
         //				03 7F <SID_CONF> <SID_CONF_CKS1_BADCKS> <cks> for bad CRC
         // anything else is an error that causes abort
-        received = serial->read_serial_data(3, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
 
         if (received.at(1) == (char)(SID_CONF + 0x40))
         {
             continue;
         }
 
-        received.append(serial->read_serial_data(2, serial_read_short_timeout));
+        received.append(serial->read_serial_data(serial_read_short_timeout));
         emit LOG_I("\tNO", false, true);
 
         if (received.at(2) != (char)(SID_CONF) && received.at(3) != (char)(SID_CONF_CKS_BADCKS))
@@ -1091,11 +1091,11 @@ int EcuOperations::check_romcrc_32bit_kline(const uint8_t *src, uint32_t start, 
 
     emit LOG_I("\tYES", false, true);
     *modified = 0;
-    serial->read_serial_data(100, serial_read_short_timeout);
+    serial->read_serial_data(serial_read_short_timeout);
     return 0;
 
 badexit:
-    serial->read_serial_data(100, serial_read_short_timeout);
+    serial->read_serial_data(serial_read_short_timeout);
     return -1;
 }
 
@@ -1147,7 +1147,7 @@ int EcuOperations::check_romcrc_32bit_can(const uint8_t *src, uint32_t start_add
 
         received = serial->write_serial_data_echo_check(output);
         //delay(100);
-        received = serial->read_serial_data(1, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         //received.remove(0, 4);
         //qDebug() << "Received:" << parse_message_to_hex(received);
 
@@ -1173,11 +1173,11 @@ int EcuOperations::check_romcrc_32bit_can(const uint8_t *src, uint32_t start_add
 
     emit LOG_I("\tYES", false, true);
     *modified = 0;
-    serial->read_serial_data(100, serial_read_short_timeout);
+    serial->read_serial_data(serial_read_short_timeout);
     return 0;
 
 badexit:
-    serial->read_serial_data(100, serial_read_short_timeout);
+    serial->read_serial_data(serial_read_short_timeout);
     return -1;
 }
 
@@ -1230,7 +1230,7 @@ int EcuOperations::npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t s
 
         received = serial->write_serial_data_echo_check(output);
 
-        received = serial->read_serial_data(3, serial_read_medium_timeout);
+        received = serial->read_serial_data(serial_read_medium_timeout);
         if (received.length() <= 1) {
             emit LOG_I("npk_raw_flashblock: no response @ " + QString::number((unsigned) start), true, true);
             return -1;
@@ -1247,7 +1247,7 @@ int EcuOperations::npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t s
 
             int needed = 1 + (uint8_t)received.at(0) - received.length();
             if (needed > 0) {
-                received.append(serial->read_serial_data(needed, serial_read_medium_timeout));
+                received.append(serial->read_serial_data(serial_read_medium_timeout));
             }
             emit LOG_I("npk_raw_flashblock: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -1286,7 +1286,7 @@ int EcuOperations::npk_raw_flashblock_16bit_kline(const uint8_t *src, uint32_t s
 
     emit LOG_I("npk_raw_flashblock: write complete.", true, true);
 
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
 
     return 0;
 }
@@ -1340,7 +1340,7 @@ int EcuOperations::npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t s
 
         received = serial->write_serial_data_echo_check(output);
 
-        received = serial->read_serial_data(3, serial_read_medium_timeout);
+        received = serial->read_serial_data(serial_read_medium_timeout);
         if (received.length() <= 1) {
             emit LOG_I("npk_raw_flashblock: no response @ " + QString::number((unsigned) start), true, true);
             return -1;
@@ -1357,7 +1357,7 @@ int EcuOperations::npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t s
 
             int needed = 1 + (uint8_t)received.at(0) - received.length();
             if (needed > 0) {
-                received.append(serial->read_serial_data(needed, serial_read_medium_timeout));
+                received.append(serial->read_serial_data(serial_read_medium_timeout));
             }
             emit LOG_I("npk_raw_flashblock: " + parse_message_to_hex(received), true, true);
             return STATUS_ERROR;
@@ -1396,7 +1396,7 @@ int EcuOperations::npk_raw_flashblock_32bit_kline(const uint8_t *src, uint32_t s
 
     emit LOG_I("npk_raw_flashblock: write complete.", true, true);
 
-    received = serial->read_serial_data(100, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
 
     return 0;
 }
@@ -1472,7 +1472,7 @@ int EcuOperations::npk_raw_flashblock_32bit_can(const uint8_t *src, uint32_t sta
         ////delay(50);
 
         // check for flash success or not
-        received = serial->read_serial_data(3, serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_long_timeout);
         //qDebug() << parse_message_to_hex(received);
         if((uint8_t)received.at(0) != SUB_DENSOCAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FL_WB)
         {
@@ -1552,7 +1552,7 @@ int EcuOperations::reflash_block_16bit_kline(const uint8_t *newdata, const struc
     received = serial->write_serial_data_echo_check(output);
 
     //received.clear();
-    received = serial->read_serial_data(8, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (!received.length())
     {
         emit LOG_I("no 'RequestDownload' response", true, true);
@@ -1565,7 +1565,7 @@ int EcuOperations::reflash_block_16bit_kline(const uint8_t *newdata, const struc
         output.clear();
         output.append(SID_CONF_LASTERR);
         received = serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(8, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_I("SID_FLREQ failed with errcode", true, true);//;
         emit LOG_I("SID_CONF_LASTERR: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
@@ -1581,7 +1581,7 @@ int EcuOperations::reflash_block_16bit_kline(const uint8_t *newdata, const struc
         received = serial->write_serial_data_echo_check(output);
 
         //received.clear();
-        received = serial->read_serial_data(3, serial_read_medium_timeout);
+        received = serial->read_serial_data(serial_read_medium_timeout);
         if (!received.length())
         {
             emit LOG_I("no 'unprotect' response", true, true);
@@ -1603,18 +1603,18 @@ int EcuOperations::reflash_block_16bit_kline(const uint8_t *newdata, const struc
     output.append(SIDFL_EB);
     output.append(blockno);
     received = serial->write_serial_data_echo_check(output);
-    //received = serial->read_serial_data(1, serial_read_short_timeout);
+    //received = serial->read_serial_data(serial_read_short_timeout);
 
     emit LOG_I("Erase block: " + QString::number(blockno), true, true);
 
     received.clear();
     //delay(2000);
-    //received = serial->read_serial_data(3, serial_read_short_timeout);
+    //received = serial->read_serial_data(serial_read_short_timeout);
 
     QTime dieTime = QTime::currentTime().addMSecs(serial_read_extra_long_timeout);
     while ((uint32_t)received.length() < 3 && (QTime::currentTime() < dieTime))
     {
-        received = serial->read_serial_data(3, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         delay(100);
     }
@@ -1678,7 +1678,7 @@ int EcuOperations::reflash_block_32bit_kline(const uint8_t *newdata, const struc
     received = serial->write_serial_data_echo_check(output);
 
     //received.clear();
-    received = serial->read_serial_data(8, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (!received.length())
     {
         emit LOG_I("no 'RequestDownload' response", true, true);
@@ -1691,7 +1691,7 @@ int EcuOperations::reflash_block_32bit_kline(const uint8_t *newdata, const struc
         output.clear();
         output.append(SID_CONF_LASTERR);
         received = serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(8, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         emit LOG_I("SID_FLREQ failed with errcode", true, true);//;
         emit LOG_I("SID_CONF_LASTERR: " + parse_message_to_hex(received), true, true);
         return STATUS_ERROR;
@@ -1707,7 +1707,7 @@ int EcuOperations::reflash_block_32bit_kline(const uint8_t *newdata, const struc
         received = serial->write_serial_data_echo_check(output);
 
         //received.clear();
-        received = serial->read_serial_data(3, serial_read_medium_timeout);
+        received = serial->read_serial_data(serial_read_medium_timeout);
         if (!received.length())
         {
             emit LOG_I("no 'unprotect' response", true, true);
@@ -1729,18 +1729,18 @@ int EcuOperations::reflash_block_32bit_kline(const uint8_t *newdata, const struc
     output.append(SIDFL_EB);
     output.append(blockno);
     received = serial->write_serial_data_echo_check(output);
-    //received = serial->read_serial_data(1, serial_read_short_timeout);
+    //received = serial->read_serial_data(serial_read_short_timeout);
 
     emit LOG_I("Erase block: " + QString::number(blockno), true, true);
 
     received.clear();
     //delay(2000);
-    //received = serial->read_serial_data(3, serial_read_short_timeout);
+    //received = serial->read_serial_data(serial_read_short_timeout);
 
     QTime dieTime = QTime::currentTime().addMSecs(serial_read_extra_long_timeout);
     while ((uint32_t)received.length() < 3 && (QTime::currentTime() < dieTime))
     {
-        received = serial->read_serial_data(3, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         delay(100);
     }
@@ -1818,7 +1818,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     qDebug() << parse_message_to_hex(output);
     qDebug() << "0xE0 message sent to kernel to initialize erasing / flashing microcodes";
     delay(200);
-    received = serial->read_serial_data(3, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     qDebug() << parse_message_to_hex(received);
 
     if((uint8_t)received.at(0) != SUB_DENSOCAN_START_COMM || ((uint8_t)received.at(1) & 0xF8) != SID_CAN_FLASH)
@@ -1847,7 +1847,7 @@ int EcuOperations::reflash_block_32bit_can(const uint8_t *newdata, const struct 
     QTime dieTime = QTime::currentTime().addMSecs(serial_read_extra_long_timeout);
     while ((uint32_t)received.length() < 3 && (QTime::currentTime() < dieTime))
     {
-        received = serial->read_serial_data(3, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
         delay(100);
     }
@@ -1944,7 +1944,7 @@ int EcuOperations::read_mem_uj20_30_40_70_kline(FileActions::EcuCalDefStructure 
         //chk_sum = calculate_checksum(output, false);
         //output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(serial_read_extra_long_timeout);
 
         //qDebug() << "Received map data:" << parse_message_to_hex(received);
         if (received.startsWith("\x80\xf0"))

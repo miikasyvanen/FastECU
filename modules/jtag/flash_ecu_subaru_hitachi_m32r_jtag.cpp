@@ -166,7 +166,7 @@ void FlashEcuSubaruHitachiM32rJtag::hard_reset_jtag()
     serial->write_serial_data(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(10);
-    received = serial->read_serial_data(1, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 }
 
@@ -182,7 +182,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_idcode()
     serial->write_serial_data(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(10);
-    received = serial->read_serial_data(1, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID | 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
@@ -234,7 +234,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_usercode()
     serial->write_serial_data(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(10);
-    received = serial->read_serial_data(1, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_USERCODE | 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
@@ -297,7 +297,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_tool_rom_code()
             serial->write_serial_data(output);
             emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
             delay(10);
-            received = serial->read_serial_data(1, serial_read_short_timeout);
+            received = serial->read_serial_data(serial_read_short_timeout);
             if (received.length() > 4)
             {
                 if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_MON_CODE | 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
@@ -329,7 +329,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_tool_rom_code()
     serial->write_serial_data(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(10);
-    received = serial->read_serial_data(1, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_MON_CODE | 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
@@ -359,7 +359,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_tool_rom_code()
     serial->write_serial_data(output);
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(10);
-    received = serial->read_serial_data(1, serial_read_short_timeout);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_MON_ACCESS | 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
@@ -387,7 +387,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_tool_rom_code()
         serial->write_serial_data(output);
         emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
         delay(10);
-        received = serial->read_serial_data(1, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_MON_DATA | 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
@@ -598,7 +598,7 @@ QByteArray FlashEcuSubaruHitachiM32rJtag::read_response()
     received.clear();
     do
     {
-        received = serial->read_serial_data(1, serial_read_short_timeout);
+        received = serial->read_serial_data(serial_read_short_timeout);
         if (!received.length())
             break;
         if (received.length())

@@ -861,12 +861,12 @@ bool SerialPortActions::reset_connection()
     return r;
 }
 
-QByteArray SerialPortActions::read_serial_data(uint32_t datalen, uint16_t timeout)
+QByteArray SerialPortActions::read_serial_data(uint16_t timeout)
 {
     if (isDirectConnection())
-        return serial_direct->read_serial_data(datalen, timeout);
+        return serial_direct->read_serial_data(timeout);
     else
-        return qtrohelper::slot_sync(serial_remote->read_serial_data(datalen, timeout));
+        return qtrohelper::slot_sync(serial_remote->read_serial_data(timeout));
 }
 
 QByteArray SerialPortActions::write_serial_data(QByteArray output)
