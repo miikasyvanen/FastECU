@@ -45,7 +45,7 @@ public:
     bool serialPortAvailable = false;
     bool setRequestToSend = true;
     bool setDataTerminalReady = true;
-    bool serialPortBusy = true;
+    bool signalToReadBattVoltage = false;
 
     bool add_iso14230_header = false;
     bool is_iso14230_connection = false;
@@ -54,6 +54,8 @@ public:
     bool is_29_bit_id = false;
 
     bool use_openport2_adapter = false;
+
+    unsigned int vBatt = 0;
 
     int requestToSendEnabled = 0;
     int requestToSendDisabled = 1;

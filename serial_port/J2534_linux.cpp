@@ -988,7 +988,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         output.append(str.toUtf8());
         write_serial_data(output);
         emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
-        received = read_serial_data(20, 100);
+        received = read_serial_data(14, 100);
         emit LOG_D("Response: " + parseMessageToHex(received), true, true);
         QString response = QString(received).split(" ").at(QString(received).split(" ").length()-1);
         response = response.split("\r\n").at(0);

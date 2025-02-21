@@ -107,11 +107,10 @@ private:
     void set_progressbar_value(int value);
     void delay(int timeout);
 
+    //QTimer *vBattTimer;
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
 
-private slots:
-    void read_batt_voltage();
 
 };
 

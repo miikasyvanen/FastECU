@@ -2,6 +2,7 @@
 #define SERIAL_PORT_ACTIONS_H
 
 #include <QObject>
+#include <QLabel>
 #include "serial_port_actions_direct.h"
 #include "rep_serial_port_actions_replica.h"
 #include "websocketiodevice.h"
@@ -144,7 +145,11 @@ public:
     QString open_serial_port(void);
 
     QString parse_message_to_hex(QByteArray received);
-    unsigned long read_batt_voltage();
+
+    bool set_to_read_vbatt = false;
+    bool set_to_comm_on = false;
+    unsigned long vBatt = 0;
+    void set_signal_to_read_vbatt();
 
 public slots:
     void websocket_connected(void);
@@ -171,6 +176,7 @@ private:
 
 private slots:
     void serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+    void read_vbatt();
 
 };
 

@@ -944,9 +944,11 @@ unsigned long SerialPortActionsDirect::read_batt_voltage()
         //emit LOG_D("Batt: " + QString::number(vBatt.Value / 1000.0) + " V", true, true);
 
         return vBatt.Value;
+
     }
     else
-        emit LOG_D("Adapter does not support reading voltage", true, true);
+        return STATUS_SUCCESS;
+    //    emit LOG_D("Adapter does not support reading voltage", true, true);
 
     return STATUS_SUCCESS;
 }

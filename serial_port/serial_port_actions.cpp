@@ -1,4 +1,5 @@
 #include "serial_port_actions.h"
+#include "qdialog.h"
 #include "qtrohelper.hpp"
 
 SerialPortActions::SerialPortActions(QString peerAddress,
@@ -27,6 +28,11 @@ SerialPortActions::SerialPortActions(QString peerAddress,
     }
     else
         startRemote();
+
+    QTimer *vBattTimer = new QTimer(this);
+    vBattTimer->setInterval(1000);
+    connect(vBattTimer, SIGNAL(timeout()), this, SLOT(read_vbatt()));
+    vBattTimer->start();
 
 }
 
@@ -868,18 +874,28 @@ QByteArray SerialPortActions::read_serial_data(uint16_t timeout)
     {
         response = serial_direct->read_serial_data(timeout);
         emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
+
+        if (set_to_read_vbatt)
+        {
+            vBatt = serial_direct->read_batt_voltage();
+            set_to_read_vbatt = false;
+        }
+
+        set_to_comm_on = false;
         return response;
     }
     else
     {
         response = qtrohelper::slot_sync(serial_remote->read_serial_data(timeout));
         emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
+        set_to_read_vbatt = false;
         return response;
     }
 }
 
 QByteArray SerialPortActions::write_serial_data(QByteArray output)
 {
+    set_to_comm_on = true;
     emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0,20)), true, true);
 
     if (isDirectConnection())
@@ -890,6 +906,7 @@ QByteArray SerialPortActions::write_serial_data(QByteArray output)
 
 QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
 {
+    set_to_comm_on = true;
     emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0,20)), true, true);
 
     if (isDirectConnection())
@@ -946,14 +963,26 @@ QString SerialPortActions::open_serial_port()
         return qtrohelper::slot_sync(serial_remote->open_serial_port());
 }
 
-unsigned long SerialPortActions::read_batt_voltage()
+void SerialPortActions::read_vbatt()
 {
-    if (isDirectConnection())
-        return serial_direct->read_batt_voltage();
-    //else
-    //    return qtrohelper::slot_sync(serial_remote->read_batt_voltage());
+    if (!set_to_comm_on && !set_to_read_vbatt)
+        vBatt = serial_direct->read_batt_voltage();
+    else
+        set_to_read_vbatt = true;
 
-    return 0;
+    QDialog *ecuOperationsWindow = parent()->findChild<QDialog*>("EcuOperationsWindow");
+    if (ecuOperationsWindow)
+    {
+        //emit LOG_D("Found ecuOperationsWindow", true, true);
+        QLabel *vBattLabel = ecuOperationsWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            //emit LOG_D("Found ecuOperationsWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            //emit LOG_D(vBattText, true, true);
+        }
+    }
 }
 
 QString SerialPortActions::parse_message_to_hex(QByteArray received)

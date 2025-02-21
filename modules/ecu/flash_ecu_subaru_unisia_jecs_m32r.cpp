@@ -60,11 +60,6 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
     serial->change_port_speed("4800");
     serial->open_serial_port();
 
-    QTimer *vBattTimer = new QTimer(this);
-    vBattTimer->setInterval(1000);
-    connect(vBattTimer, SIGNAL(timeout()), this, SLOT(read_batt_voltage()));
-    //vBattTimer->start();
-
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
                                    QMessageBox::Ok | QMessageBox::Cancel,
@@ -73,6 +68,7 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
     switch (ret)
     {
         case QMessageBox::Ok:
+            //vBattTimer->stop();
 
             if (cmd_type == "read")
             {
@@ -129,17 +125,19 @@ FlashEcuSubaruUnisiaJecsM32r::~FlashEcuSubaruUnisiaJecsM32r()
 
 void FlashEcuSubaruUnisiaJecsM32r::closeEvent(QCloseEvent *event)
 {
+    //vBattTimer->stop();
     kill_process = true;
 }
-
+/*
 void FlashEcuSubaruUnisiaJecsM32r::read_batt_voltage()
 {
-    unsigned int vBatt = serial->read_batt_voltage();
-    QString vBattText = QString::number(vBatt/1000.0) + " V";
+    serial->signal_to_read_vbatt = true;
+    //unsigned int vBatt = serial->read_batt_voltage();
+    QString vBattText = QString("Battery: %1").arg(serial->vBatt/1000.0, 0, 'f', 3) + " V";
+    ui->vBattLabel->setText(vBattText);
     emit LOG_D(vBattText, true, true);
-    //ui->vBattLabel->setText(vBattText);
 }
-
+*/
 /*
  * Read memory from Subaru Unisia Jecs UJ20/30/40/70 K-Line 32bit ECUs
  *
