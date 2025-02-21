@@ -165,7 +165,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
 
     #define NP10_MAXBLKS    32   //# of blocks to request per loop. Too high might flood us
 
-    LOG_I("Set ECU to read mode", true, true);
+    emit  LOG_I("Set ECU to read mode", true, true);
 
     output.append((uint8_t)0x78);
     output.append((uint8_t)0x12);
@@ -214,7 +214,7 @@ int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
         output.append((uint8_t)(addr & 0xFF));
         output.append((uint8_t)(0x00 & 0xFF));
 
-        LOG_D("Write data: " + parse_message_to_hex(output), true, true);
+        emit LOG_D("Write data: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data(output);
         delay(45);
 

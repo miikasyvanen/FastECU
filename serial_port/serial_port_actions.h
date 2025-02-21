@@ -143,6 +143,8 @@ public:
     QStringList check_serial_ports(void);
     QString open_serial_port(void);
 
+    unsigned long read_batt_voltage();
+
 public slots:
     void websocket_connected(void);
     void waitForSource(void);

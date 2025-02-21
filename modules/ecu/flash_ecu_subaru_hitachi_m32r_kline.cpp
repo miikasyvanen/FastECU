@@ -780,9 +780,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
 
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
-    maxblocks = pl_len / 128;
-    //end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
-    //uint32_t data_len = end_addr - start_address;
+    maxblocks = pl_len / blocksize;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
@@ -790,8 +788,6 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     emit LOG_I(msg, true, true);
 
     emit LOG_I("Setting flash start & length...", true, true);
-
-//    delay(200);
 
     output.clear();
     output.append((uint8_t)0x34);
@@ -826,12 +822,10 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFF);
     output.append((uint8_t)0xFF);
-
-    serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
     emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
     delay(200);
-    //received = serial->read_serial_data(200);
-    //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     emit LOG_I("", true, false);
     received.clear();
@@ -844,6 +838,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
             if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x02)
             {
                 emit LOG_I("", false, true);
+                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
                 emit LOG_I("Flash erase in progress, please wait...", true, true);
                 break;
             }
@@ -866,6 +861,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         return STATUS_ERROR;
     }
     emit LOG_I("", true, false);
+    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
     delay(500);
 
@@ -877,24 +873,21 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         if (kill_process)
             return 0;
 
-        blockaddr = start_address + blockctr * 128;
+        blockaddr = start_address + blockctr * blocksize;
         output.clear();
         output.append((uint8_t)0x36);
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
-
-        for (int i = 0; i < 128; i++)
+        for (int i = 0; i < blocksize; i++)
         {
-            output[i + 4] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
-            //data_bytes_sent++;
+            output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
         }
-        //data_len -= 128;
+        output = add_ssm_header(output, tester_id, target_id, false);
+        serial->write_serial_data_echo_check(output);
+        emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0, 8)), true, true);
 
-        serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
-        //emit LOG_D("Sent: " + parse_message_to_hex(add_ssm_header(output, tester_id, target_id, false)), true, true);
-
-        received = serial->read_serial_data(200);
+        received = serial->read_serial_data(serial_read_timeout);
         emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
 
         if (received.length() > 4)

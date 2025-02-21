@@ -932,3 +932,13 @@ QString SerialPortActions::open_serial_port()
     else
         return qtrohelper::slot_sync(serial_remote->open_serial_port());
 }
+
+unsigned long SerialPortActions::read_batt_voltage()
+{
+    if (isDirectConnection())
+        return serial_direct->read_batt_voltage();
+    //else
+    //    return qtrohelper::slot_sync(serial_remote->read_batt_voltage());
+
+    return 0;
+}

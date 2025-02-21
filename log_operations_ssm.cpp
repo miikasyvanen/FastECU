@@ -30,21 +30,6 @@ void MainWindow::canbus_listener()
 
 bool MainWindow::ecu_init()
 {
-/*
-    QString car_model;
-
-    //qDebug() << "ECU init";
-    QByteArray output;
-    uint8_t chksum = 0;
-    output.clear();
-    output.append((uint8_t)0x81);
-    output.append((uint8_t)0x40);
-    output.append((uint8_t)0xf0);
-    output.append((uint8_t)0x81);
-    for (int i = 0; i < output.length(); i++)
-        chksum += (uint8_t)output.at(i);
-    output.append(chksum & 0xFF);
-*/
     if (serial->is_serial_port_open())
     {
         if (!ecu_init_complete)

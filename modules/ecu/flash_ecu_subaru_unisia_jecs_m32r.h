@@ -110,6 +110,9 @@ private:
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
 
+private slots:
+    void read_batt_voltage();
+
 };
 
 #endif // FLASH_ECU_SUBARU_UNISIA_JECS_M32R_H

@@ -569,6 +569,21 @@ void SerialPortActionsDirect::close_j2534_serial_port()
 #endif
 }
 
+QByteArray SerialPortActionsDirect::set_error()
+{
+    QByteArray received;
+
+    received.append((uint8_t)0x80);
+    received.append((uint8_t)0xf0);
+    received.append((uint8_t)0x10);
+    received.append((uint8_t)0x03);
+    received.append((uint8_t)0x7f);
+    received.append((uint8_t)0x00);
+    received.append((uint8_t)0x13);
+
+    return received;
+}
+
 QByteArray SerialPortActionsDirect::read_serial_data(uint16_t timeout)
 {
     QByteArray received;
@@ -582,93 +597,81 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint16_t timeout)
             received = read_j2534_data(timeout);
             return received;
         }
-        else
+
+        //emit LOG_D("Check if bytes available", true, true);
+        received.clear();
+        QTime dieTime = QTime::currentTime().addMSecs(timeout);
+        while (!serial->bytesAvailable() && QTime::currentTime() < dieTime)
         {
-            QTime dieTime = QTime::currentTime().addMSecs(timeout);
-            while (!serial->bytesAvailable() && QTime::currentTime() < dieTime)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        }
+        if (serial->bytesAvailable())
+        {
+            QByteArray error_bytes;
+            while (received.length() < 4 && QTime::currentTime() < dieTime)
             {
+                while (serial->bytesAvailable() && received.length() < 4)
+                    received.append(serial->read(1));
+                if (!is_iso14230_connection)
+                {
+                    //emit LOG_D("Check for valid header", true, true);
+                    error_bytes.clear();
+                    while (received.length() > 2 && ((uint8_t)received.at(0) != 0x80 || (uint8_t)received.at(1) != 0xf0 || (uint8_t)received.at(2) != 0x10))
+                    {
+                        error_bytes.append(received.mid(0, 1));
+                        received.remove(0, 1);
+                    }
+                    //emit LOG_D("Error bytes length: " + QString::number(error_bytes.length()) + " : " + parse_message_to_hex(error_bytes), true, true);
+                }
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
             }
-            if (serial->bytesAvailable())
+            //emit LOG_D("1. Response (header): " + parse_message_to_hex(received), true, true);
+            if (is_iso14230_connection)
             {
-                while (received.length() < 4 && QTime::currentTime() < dieTime)
-                {
-                    while (serial->bytesAvailable() && received.length() < 4)
-                        received.append(serial->read(1));
-                    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-                }
-                if (received.length() < 4)
-                    return received;
+                //emit LOG_D("Read with ISO14230", true, true);
 
-                if (is_iso14230_connection)
+                if (received.at(0) & 0x3f)
                 {
-                    qDebug() << "Read with ISO14230";
-
-                    if (received.at(0) & 0x3f)
-                    {
-                        msglen = (received.at(0) & 0x3f); // Byte in index 3 is payload, no +1 for checksum
-                    }
-                    else
-                        msglen = received.at(3) + 1; // +1 for checksum
+                    msglen = (received.at(0) & 0x3f); // Byte in index 3 is payload, no +1 for checksum
                 }
-                else if (!is_iso14230_connection)
-                {
-                    if (received.startsWith("\xbe\xef"))
-                        msglen = ((uint8_t)received.at(2) << 8) + (uint8_t)received.at(3) + 1; // +1 for checksum
-                    if (received.startsWith("\x80\xf0"))
-                        msglen = (uint8_t)received.at(3) + 1; // +1 for checksum
-                }
-                while ((uint32_t)req_bytes.length() < msglen && QTime::currentTime() < dieTime)
-                {
-                    while (serial->bytesAvailable() && (uint32_t)req_bytes.length() < msglen)
-                        req_bytes.append(serial->read(1));
-                    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-                }
-                if ((uint32_t)req_bytes.length() < msglen)
-                    return received.append(req_bytes);
-                //received.append(req_bytes);
+                else
+                    msglen = received.at(3) + 1; // +1 for checksum
             }
+            else if (!is_iso14230_connection)
+            {
+                if (received.startsWith("\xbe\xef"))
+                    msglen = ((uint8_t)received.at(2) << 8) + (uint8_t)received.at(3) + 1; // +1 for checksum
+                if (received.startsWith("\x80\xf0"))
+                    msglen = (uint8_t)received.at(3) + 1; // +1 for checksum
+            }
+            while ((uint32_t)req_bytes.length() < msglen && QTime::currentTime() < dieTime)
+            {
+                while (serial->bytesAvailable() && (uint32_t)req_bytes.length() < msglen)
+                    req_bytes.append(serial->read(1));
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+            }
+            //emit LOG_D("2. Response (payload): " + parse_message_to_hex(req_bytes), true, true);
         }
-        return received.append(req_bytes);
-    }
-    return received.append(req_bytes);
-}
-
-QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
-{
-    QByteArray received;
-    QByteArray msg;
-
-    msg.append((uint8_t)0x00);
-
-    if (is_serial_port_open())
-    {
-        if (add_iso14230_header)
-            output = add_packet_header(output);
-
-        if (use_openport2_adapter)
+        if (!received.length())
         {
-            write_j2534_data(output);
-            return 0;
+            //emit LOG_D("No message received!", true, true);
         }
-
-        while (serial->bytesAvailable())
-            received.append(serial->readAll());
-
-        for (int i = 0; i < output.length(); i++)
+        else if (received.length() < 4 || (received.length() && (uint32_t)req_bytes.length() < msglen))
         {
-            msg[0] = output.at(i);
-            serial->write(msg, 1);
+            received.insert(0, set_error());
+            received.append(req_bytes);
+            //emit LOG_D("Message too short: " + parse_message_to_hex(received), true, true);
+            return received;
         }
-        //emit LOG_D("Data sent: " + parse_message_to_hex(output);
+        received.append(req_bytes);
+        //emit LOG_D("3. Response (full): " + parse_message_to_hex(received), true, true);
 
         return received;
     }
-
     return received;
 }
 
-QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray output)
+QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
 {
     QByteArray received;
     QByteArray msg;
@@ -693,6 +696,39 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
         {
             msg[0] = output.at(i);
             serial->write(msg, 1);
+        }
+        received.clear();
+        return STATUS_SUCCESS;
+    }
+    return STATUS_SUCCESS;
+}
+
+QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray output)
+{
+    QByteArray received;
+    QByteArray msg;
+
+    msg.append((uint8_t)0x00);
+
+    if (is_serial_port_open())
+    {
+        if (add_iso14230_header)
+            output = add_packet_header(output);
+
+        if (use_openport2_adapter)
+        {
+            write_j2534_data(output);
+            return STATUS_SUCCESS;
+        }
+
+        while (serial->bytesAvailable())
+            received.append(serial->readAll());
+
+        received.clear();
+        for (int i = 0; i < output.length(); i++)
+        {
+            msg[0] = output.at(i);
+            serial->write(msg, 1);
             // Add serial echo read during transmit to speed up a little
             if (serial->bytesAvailable())
                 received.append(serial->read(1));
@@ -710,10 +746,10 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
         if (received.length() < output.length())
             emit LOG_D("Write serial data echo read failed!", true, true);
 
-        return received;
+        received.clear();
+        return STATUS_SUCCESS;
     }
-
-    return received;
+    return STATUS_SUCCESS;
 }
 
 QByteArray SerialPortActionsDirect::add_packet_header(QByteArray output)
@@ -840,15 +876,13 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
 
     rxmsg.DataSize = 0;
     numRxMsg = 1;
-    // j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
-    // 0 means no error, all other values mean error
+
     if(j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout))
         goto exit;
-    //emit LOG_D(numRxMsg << "messages, rx status " + rxmsg.RxStatus;
+
     if (numRxMsg)
     {
-        //emit LOG_D(numRxMsg << "messages, rx status " + rxmsg.RxStatus;
-        dump_msg(&rxmsg);
+        //dump_msg(&rxmsg);
 
         if (is_can_connection)
         {
@@ -857,27 +891,21 @@ QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
         }
         else
         {
-            //emit LOG_D("RX MSG status: " + rxmsg.RxStatus;
             if (rxmsg.RxStatus & TX_DONE){
-                //emit LOG_D("TX_DONE_MSG, read actual message";
                 rxmsg.DataSize = 0;
                 rxmsg.Data[0] = 0x00;
                 j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
-                //emit LOG_D("New RX MSG status: " + rxmsg.RxStatus;
             }
             if (rxmsg.RxStatus & START_OF_MESSAGE){
-                //emit LOG_D("START_OF_MESSAGE, read actual message";
                 j2534->PassThruReadMsgs(chanID, &rxmsg, &numRxMsg, timeout);
             }
             if (rxmsg.RxStatus & RX_MSG_END_IND){
-                //emit LOG_D("END_OF_MESSAGE " + rxmsg.Data;
             }
             for (unsigned long i = 0; i < rxmsg.DataSize; i++)
                 received.append((uint8_t)rxmsg.Data[i]);
         }
     }
-    //emit LOG_D("RECEIVED: " + parse_message_to_hex(received);
-    exit:
+exit:
     return received;
 }
 
@@ -902,11 +930,31 @@ int SerialPortActionsDirect::set_j2534_ioctl(unsigned long parameter, int value)
     return STATUS_SUCCESS;
 }
 
+unsigned long SerialPortActionsDirect::read_batt_voltage()
+{
+    if (use_openport2_adapter)
+    {
+        SCONFIG vBatt;
+
+        if (j2534->PassThruIoctl(chanID,READ_VBATT,NULL,&vBatt))
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+        //emit LOG_D("Batt: " + QString::number(vBatt.Value / 1000.0) + " V", true, true);
+
+        return vBatt.Value;
+    }
+    else
+        emit LOG_D("Adapter does not support reading voltage", true, true);
+
+    return STATUS_SUCCESS;
+}
+
 void SerialPortActionsDirect::dump_msg(PASSTHRU_MSG* msg)
 {
     QByteArray datamsg;
 
-    //emit LOG_D("Dump msg";
     if (msg->RxStatus & START_OF_MESSAGE)
         return; // skip
 

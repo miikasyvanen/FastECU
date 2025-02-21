@@ -668,17 +668,17 @@ long J2534::PassThruReadVersion(char *pApiVersion,char *pDllVersion,char *pFirmw
     //strncpy(pFirmwareVersion, fw_version, strlen(fw_version));
 
     output = "\r\n\r\nati\r\n";
-    //emit LOG_D("Send data:" << output;
+    emit LOG_D("Sent:" + parseMessageToHex(output), true, true);
     write_serial_data(output);
     delay(50);
     received = read_serial_data(50, 100);
+    emit LOG_D("Response:" + parseMessageToHex(received), true, true);
     QString response = QString::fromUtf8(received);
     QStringList fw_ver = response.split("ari ");
     fw_ver = fw_ver.at(fw_ver.length()-1).split("\r\n");
     std::string fw_ver_str = fw_ver.at(0).toUtf8().data();
     char *str = fw_ver.at(0).toUtf8().data();
     strncpy(pFirmwareVersion, str, strlen(str));
-    //emit LOG_D("Read version received:" << fw_ver.at(0);
 
     return result;
 }
@@ -971,24 +971,29 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
             output.clear();
             QString str = "ats" + QString::number(ChannelID) + " " + QString::number(cfgitem->Parameter) + " " + QString::number(cfgitem->Value) + "\r\n";
             output.append(str.toUtf8());
-            //emit LOG_D("Send data:" << output;
             write_serial_data(output);
+            emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
             received = read_serial_data(100, 50);
-            //emit LOG_D("Received:" << received;
+            emit LOG_D("Response: " + parseMessageToHex(received), true, true);
             //r = usb_send_expect(data, strlen(data), MAX_LEN, 2000, NULL);
         }
 
     }
     if (IoctlID == READ_VBATT)
     {
-        long* vBatt = (long*)pOutput;
+        SCONFIG* vBatt = (SCONFIG*)pOutput;
         long pin = 16;
         output.clear();
         QString str = "atr " + QString::number((int)pin) + "\r\n";
+        output.append(str.toUtf8());
         write_serial_data(output);
-        delay(50);
-        received = read_serial_data(100, 50);
-        emit LOG_D("Pin 16 voltage = " + received + " " + parseMessageToHex(received), true, true);
+        emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
+        received = read_serial_data(20, 100);
+        emit LOG_D("Response: " + parseMessageToHex(received), true, true);
+        QString response = QString(received).split(" ").at(QString(received).split(" ").length()-1);
+        response = response.split("\r\n").at(0);
+        emit LOG_D("Pin 16 voltage: " + response + " mV", true, true);
+        vBatt->Value = response.toULong();
     }
 
     if (IoctlID == FAST_INIT)

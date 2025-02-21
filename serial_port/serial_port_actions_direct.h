@@ -45,6 +45,7 @@ public:
     bool serialPortAvailable = false;
     bool setRequestToSend = true;
     bool setDataTerminalReady = true;
+    bool serialPortBusy = true;
 
     bool add_iso14230_header = false;
     bool is_iso14230_connection = false;
@@ -112,6 +113,7 @@ public:
 
     void reset_connection();
 
+    QByteArray set_error();
     QByteArray read_serial_data(uint16_t timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);
@@ -124,6 +126,8 @@ public:
 
     QStringList check_serial_ports();
     QString open_serial_port();
+
+    unsigned long read_batt_voltage();
 
 private:
 #ifndef ARRAYSIZE
@@ -155,6 +159,7 @@ private:
     int set_j2534_iso9141();
     int set_j2534_iso9141_filters();
     int set_j2534_iso9141_timings();
+
     unsigned long msgID = 0;
 
     enum rx_msg_type {

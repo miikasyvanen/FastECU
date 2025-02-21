@@ -60,6 +60,11 @@ void FlashEcuSubaruUnisiaJecsM32r::run()
     serial->change_port_speed("4800");
     serial->open_serial_port();
 
+    QTimer *vBattTimer = new QTimer(this);
+    vBattTimer->setInterval(1000);
+    connect(vBattTimer, SIGNAL(timeout()), this, SLOT(read_batt_voltage()));
+    //vBattTimer->start();
+
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
                                    QMessageBox::Ok | QMessageBox::Cancel,
@@ -125,6 +130,14 @@ FlashEcuSubaruUnisiaJecsM32r::~FlashEcuSubaruUnisiaJecsM32r()
 void FlashEcuSubaruUnisiaJecsM32r::closeEvent(QCloseEvent *event)
 {
     kill_process = true;
+}
+
+void FlashEcuSubaruUnisiaJecsM32r::read_batt_voltage()
+{
+    unsigned int vBatt = serial->read_batt_voltage();
+    QString vBattText = QString::number(vBatt/1000.0) + " V";
+    emit LOG_D(vBattText, true, true);
+    //ui->vBattLabel->setText(vBattText);
 }
 
 /*
@@ -465,6 +478,9 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     received.clear();
     for (int i = 0; i < 20; i++)
     {
+        if (kill_process)
+            return 0;
+
         received.append(serial->read_serial_data(serial_read_medium_timeout));
         emit LOG_I(".", false, false);
         if (received.length() > 6)
@@ -498,6 +514,9 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     received.clear();
     for (int i = 0; i < 40; i++)
     {
+        if (kill_process)
+            return 0;
+
         received.append(serial->read_serial_data(serial_read_medium_timeout));
         emit LOG_I(".", false, false);
         if (received.length() > 6)
@@ -538,6 +557,9 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
 
     for (int i = 0; i < blocks; i++)
     {
+        if (kill_process)
+            return 0;
+
         output.clear();
         output.append((uint8_t)0xAF);
         if (i < (blocks - 1))
@@ -558,7 +580,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         received.clear();
         if (output.at(5) == 0x61)
         {
-            received.append(serial->read_serial_data(serial_read_extra_long_timeout));
+            received = serial->read_serial_data(serial_read_extra_long_timeout);
             if (received.length() > 6)
             {
                 if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x52)
@@ -614,11 +636,6 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
 
     return STATUS_SUCCESS;
 }
-
-
-
-
-
 
 /*
  * ECU init

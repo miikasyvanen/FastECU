@@ -247,7 +247,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         // Open serial port
         serial->open_serial_port();
 
-        // AE5Z500V
+        // AE5Z500V - JF1VA2V62L9812353
         ram_value = read_ram_location(0xffff1ed8);
         emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
         seed_alter = ram_value;

@@ -503,6 +503,9 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     emit LOG_D("Uploading " + QString::number(blocks) + " blocks", true, true);
     for (int i = 0; i < blocks; i++)
     {
+        if (kill_process)
+            return 0;
+
         output.clear();
         output.append((uint8_t)0x80);
         output.append((uint8_t)0x10);
