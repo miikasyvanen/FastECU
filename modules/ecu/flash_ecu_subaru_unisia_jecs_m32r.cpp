@@ -172,7 +172,7 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
         if ((uint8_t)received.at(4) != 0xFF)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
         }
         else
         {
@@ -192,7 +192,7 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
     }
 
     emit LOG_I("Read mode not active, initialising ECU...", true, true);
@@ -208,14 +208,14 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
             if ((uint8_t)received.at(4) != 0xFF)
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
             return STATUS_ERROR;
         }
 
@@ -235,14 +235,14 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
             if ((uint8_t)received.at(4) != 0xF8)
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
             return STATUS_ERROR;
         }
 
@@ -256,14 +256,14 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
             if ((uint8_t)received.at(4) != 0xFF)
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
             return STATUS_ERROR;
         }
     }
@@ -310,25 +310,23 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
         output[9] = (uint8_t)(pagesize - 1) & 0xFF;
         output.remove(10, 1);
         output.append(calculate_checksum(output, false));
-        received = serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0, 11)), true, true);
+        serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(serial_read_extra_long_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0xE0)
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
             return STATUS_ERROR;
         }
-        emit LOG_D("Response: " + parse_message_to_hex(received.mid(0, 5)), true, true);
 
         received.remove(0, 5);
         received.remove(received.length() - 1, 1);
@@ -392,14 +390,14 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     output.append((uint8_t)0xAF);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0xEF)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
         }
         else
             kernel_alive = true;
@@ -407,9 +405,9 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
     }
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
 
     if (!kernel_alive)
     {
@@ -421,14 +419,14 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
             if ((uint8_t)received.at(4) != 0xFF)
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
             return STATUS_ERROR;
         }
 
@@ -449,7 +447,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
             if ((uint8_t)received.at(4) != 0xEF)
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
             }
             else
                 kernel_alive = true;
@@ -457,7 +455,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
         }
 
         emit LOG_D("Changing baudrate to 19200", true, true);
@@ -575,7 +573,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         }
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
-        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        //
 
         received.clear();
         if (output.at(5) == 0x61)
@@ -585,7 +583,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
             {
                 if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xef && (uint8_t)received.at(5) == 0x52)
                 {
-                    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
                 }
                 else
                 {
@@ -651,9 +649,9 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_bf_ssm_init()
     output.append((uint8_t)0xBF);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
 
     return received;
 }
@@ -671,9 +669,9 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_b8_change_baudrate_4800()
     output.append((uint8_t)0x15);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
 
     return received;
 }
@@ -691,9 +689,9 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_b8_change_baudrate_38400()
     output.append((uint8_t)0x75);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
 
     return received;
 }
@@ -718,9 +716,9 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_af_enter_flash_mode(QByteArray
     output.append((uint8_t)rom_size & 0xFF); // ROM size
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
 
     return received;
 }
@@ -735,9 +733,9 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::send_sid_af_erase_memory_block()
     output.append((uint8_t)0x31);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+
     //received = serial->read_serial_data(serial_read_timeout);
-    //emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    //
 
     return received;
 }
@@ -758,7 +756,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32r::add_ssm_header(QByteArray output, uint8
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    //
     return output;
 }
 

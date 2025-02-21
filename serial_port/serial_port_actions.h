@@ -143,6 +143,7 @@ public:
     QStringList check_serial_ports(void);
     QString open_serial_port(void);
 
+    QString parse_message_to_hex(QByteArray received);
     unsigned long read_batt_voltage();
 
 public slots:

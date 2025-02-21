@@ -158,7 +158,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     output.append((uint8_t)0xAA);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
@@ -168,7 +168,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
             QByteArray response = received;
             response.remove(0, 8);
             response.remove(5, response.length()-5);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             QString ecuid;
             for (int i = 0; i < 5; i++)
                 ecuid.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
@@ -179,13 +179,13 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         else
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
     }
 
     emit LOG_I("Requesting CAL ID...", true, true);
@@ -197,7 +197,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     output.append((uint8_t)0x09);
     output.append((uint8_t)0x04);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
@@ -206,7 +206,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         {
             QByteArray response = received;
             response.remove(0, 7);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             emit LOG_I("CAL ID: " + response, true, true);
             if (cmd_type == "read")
                 ecuCalDef->RomId.insert(0, QString(response) + "_");
@@ -214,13 +214,13 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         else
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
     }
 
     emit LOG_I("Initializing bootloader...", true, true);
@@ -234,25 +234,25 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x43);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) == 0x50 && (uint8_t)received.at(5) == 0x43)
         {
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
         else
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
     }
 
     emit LOG_I("Requesting seed", true, true);
@@ -264,7 +264,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
@@ -272,19 +272,19 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
     emit LOG_I("Seed request ok", true, true);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     seed.append(received.at(6));
     seed.append(received.at(7));
@@ -303,7 +303,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     output.append((uint8_t)0x02);
     output.append(seed_key);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
@@ -311,19 +311,19 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
     emit LOG_I("Seed key ok", true, true);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     emit LOG_I("Jumping to onboad kernel...", true, true);
     qDebug() << "Jumping to onboad kernel...";
@@ -336,7 +336,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x42);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
@@ -344,18 +344,18 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Jump to kernel ok", true, true);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     emit LOG_I("Checking if jump successful and kernel alive...", true, true);
     output.clear();
@@ -373,7 +373,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 5)
@@ -381,19 +381,19 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02 || (uint8_t)received.at(7) != 0x03)
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
     emit LOG_I("Kernel verified to be running", true, true);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     kernel_alive = true;
     return STATUS_SUCCESS;
 }
@@ -451,18 +451,18 @@ int FlashTcuCvtSubaruMitsuMH8111Can::read_mem(uint32_t start_addr, uint32_t leng
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
         {
             emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     emit LOG_I("Start reading ROM, please wait...", true, true);
 
     // send 0xB7 command to kernel to dump from ROM
@@ -504,14 +504,14 @@ int FlashTcuCvtSubaruMitsuMH8111Can::read_mem(uint32_t start_addr, uint32_t leng
             if ((uint8_t)received.at(4) != 0xF7)
             {
                 emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
 
@@ -742,13 +742,13 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
     while (try_count < 6)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        
         received = serial->read_serial_data(serial_read_long_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) == 0x74)
             {
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 break;
             }
         }
@@ -785,7 +785,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
         serial->write_serial_data_echo_check(output);
         emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
         received = serial->read_serial_data(receive_timeout);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
         set_progressbar_value(pleft);
@@ -805,27 +805,27 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        
         received = serial->read_serial_data(serial_read_long_timeout);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) == 0x77)
             {
                 emit LOG_I("Flashing of block closed", true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 break;
             }
             else
             {
                 emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 //return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
         try_count++;
     }
@@ -850,27 +850,27 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        
         received = serial->read_serial_data(serial_read_long_timeout);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
             {
                 emit LOG_I("Checksum verified...", true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 return STATUS_SUCCESS;
             }
             else
             {
                 emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 //return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
         try_count++;
     }
@@ -913,7 +913,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::erase_mem()
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(100);
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     int try_count = 0;
     while (try_count < 20)
     {
@@ -923,14 +923,14 @@ int FlashTcuCvtSubaruMitsuMH8111Can::erase_mem()
             if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
             {
                 emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 //return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
         try_count++;
     }
@@ -938,7 +938,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::erase_mem()
         return STATUS_ERROR;
 
     emit LOG_I("Erased! Starting Writing! Do Not Power Off!", true, true);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return STATUS_SUCCESS;
 }

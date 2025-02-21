@@ -263,8 +263,6 @@ void BiuOperationsSubaru::send_biu_msg()
     else
         serial->write_serial_data_echo_check(output);
 
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-
     received = serial->read_serial_data(serial_read_long_timeout);
 
     /*
@@ -474,7 +472,7 @@ void BiuOperationsSubaru::send_biu_msg()
     }
     */
 
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+
     parse_biu_message(received);
 
     if (connection_state == CONNECTED) keep_alive_timer->start();

@@ -863,14 +863,25 @@ bool SerialPortActions::reset_connection()
 
 QByteArray SerialPortActions::read_serial_data(uint16_t timeout)
 {
+    QByteArray response;
     if (isDirectConnection())
-        return serial_direct->read_serial_data(timeout);
+    {
+        response = serial_direct->read_serial_data(timeout);
+        emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
+        return response;
+    }
     else
-        return qtrohelper::slot_sync(serial_remote->read_serial_data(timeout));
+    {
+        response = qtrohelper::slot_sync(serial_remote->read_serial_data(timeout));
+        emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
+        return response;
+    }
 }
 
 QByteArray SerialPortActions::write_serial_data(QByteArray output)
 {
+    emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0,20)), true, true);
+
     if (isDirectConnection())
         return serial_direct->write_serial_data(output);
     else
@@ -879,6 +890,8 @@ QByteArray SerialPortActions::write_serial_data(QByteArray output)
 
 QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
 {
+    emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0,20)), true, true);
+
     if (isDirectConnection())
         return serial_direct->write_serial_data_echo_check(output);
     else
@@ -941,4 +954,16 @@ unsigned long SerialPortActions::read_batt_voltage()
     //    return qtrohelper::slot_sync(serial_remote->read_batt_voltage());
 
     return 0;
+}
+
+QString SerialPortActions::parse_message_to_hex(QByteArray received)
+{
+    QString msg;
+
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
+    }
+
+    return msg;
 }

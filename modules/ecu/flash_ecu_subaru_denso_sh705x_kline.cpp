@@ -173,14 +173,14 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID | 0x40))
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(8, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
         }
         else
         {
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
             emit LOG_I("Kernel ID: " + received, true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -188,7 +188,7 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
     }
 
     emit LOG_I("No response from kernel, initialising ECU...", true, true);
@@ -203,14 +203,14 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         if ((uint8_t)received.at(4) != 0xFF)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
@@ -231,14 +231,14 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         if ((uint8_t)received.at(4) != 0xC1)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Start communication ok", true, true);
@@ -250,14 +250,14 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         if ((uint8_t)received.at(4) != 0xC3)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Timing parameters ok", true, true);
@@ -269,14 +269,14 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Seed request ok", true, true);
@@ -304,14 +304,14 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Seed key ok", true, true);
@@ -323,14 +323,14 @@ int FlashEcuSubaruDensoSH705xKline::connect_bootloader()
         if ((uint8_t)received.at(4) != 0x50)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Succesfully set to programming session", true, true);
@@ -408,18 +408,18 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
         if ((uint8_t)received.at(4) != 0x74)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Kernel upload request ok", true, true);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     //pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
     pl_encr = encrypt_payload(pl_encr, pl_len);
@@ -431,14 +431,14 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
         if ((uint8_t)received.at(4) != 0x76)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Kernel uploaded", true, true);
@@ -450,17 +450,17 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
         if ((uint8_t)received.at(4) != 0x74)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     cks_bypass.append((uint8_t)0x00);
     cks_bypass.append((uint8_t)0x00);
@@ -475,14 +475,14 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
         if ((uint8_t)received.at(4) != 0x76)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_D("Checksum bypass ok", true, true);
@@ -496,25 +496,25 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
     output.append((uint8_t)0x01);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_extra_long_timeout);
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x71)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
     emit LOG_I("Kernel started, initializing...", true, true);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     delay(100);
     serial->change_port_speed("62500");
@@ -527,7 +527,7 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID | 0x40))
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(8, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
         else
@@ -535,7 +535,7 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
             emit LOG_I("Kernel ID: " + received, true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -543,7 +543,7 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 }
@@ -607,13 +607,7 @@ int FlashEcuSubaruDensoSH705xKline::read_mem(uint32_t start_addr, uint32_t lengt
         chksum = calculate_checksum(output, false);
         output.append((uint8_t)chksum & 0xFF);
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        //delay(10);
         received = serial->read_serial_data(serial_read_extra_long_timeout);
-        QByteArray response = received;
-        response.remove(5, response.length()-1);
-        emit LOG_D("Response: " + parse_message_to_hex(response), true, true);
-
         if (received.length() > 5)
         {
             if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_READ_AREA | 0x40))
@@ -625,14 +619,14 @@ int FlashEcuSubaruDensoSH705xKline::read_mem(uint32_t start_addr, uint32_t lengt
             else
             {
                 emit LOG_E("Wrong response from ECU", true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
 
@@ -860,10 +854,10 @@ int FlashEcuSubaruDensoSH705xKline::check_romcrc(const uint8_t *src, uint32_t ad
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received.clear();
     received = serial->read_serial_data(serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_CRC | 0x40))
@@ -874,7 +868,7 @@ int FlashEcuSubaruDensoSH705xKline::check_romcrc(const uint8_t *src, uint32_t ad
         {
             emit LOG_E("", false, true);
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
@@ -882,7 +876,7 @@ int FlashEcuSubaruDensoSH705xKline::check_romcrc(const uint8_t *src, uint32_t ad
     {
         emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
@@ -966,9 +960,9 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_medium_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     if (received.length() > 9)
     {
         if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_GET_MAX_MSG_SIZE | 0x40))
@@ -982,7 +976,7 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
         {
             emit LOG_E("", false, true);
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
@@ -990,7 +984,7 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
     {
         emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
@@ -1005,9 +999,9 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_medium_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     if (received.length() > 9)
     {
         if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_GET_MAX_BLK_SIZE | 0x40))
@@ -1021,7 +1015,7 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
         {
             emit LOG_E("", false, true);
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
@@ -1029,7 +1023,7 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
     {
         emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
@@ -1055,9 +1049,9 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_medium_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_CMD | 0x40))
@@ -1067,14 +1061,14 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
         else
         {
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
@@ -1128,9 +1122,9 @@ int FlashEcuSubaruDensoSH705xKline::reflash_block(const uint8_t *newdata, const 
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_medium_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     if (received.length() > 9)
     {
         if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_PROG_VOLT | 0x40))
@@ -1142,7 +1136,7 @@ int FlashEcuSubaruDensoSH705xKline::reflash_block(const uint8_t *newdata, const 
         {
             emit LOG_E("", false, true);
             emit LOG_E("Wrong response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
@@ -1150,7 +1144,7 @@ int FlashEcuSubaruDensoSH705xKline::reflash_block(const uint8_t *newdata, const 
     {
         emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
@@ -1211,17 +1205,17 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
     chksum = calculate_checksum(output, false);
     output.append((uint8_t)chksum & 0xFF);
     received = serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     //delay(500);
     received = serial->read_serial_data(serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_BLANK_PAGE | 0x40))
         {
             emit LOG_E("", false, true);
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(8, received.length()-1)), true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
     }
@@ -1229,7 +1223,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
     {
         emit LOG_E("", false, true);
         emit LOG_E("No valid response from ECU", true, true);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
@@ -1261,7 +1255,7 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
         chksum = calculate_checksum(output, false);
         output.append((uint8_t)chksum & 0xFF);
         serial->write_serial_data_echo_check(output);
-        //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+        //
         //delay(50);
         received = serial->read_serial_data(serial_read_extra_long_timeout);
         if (received.length() > 5)
@@ -1273,14 +1267,14 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
             else
             {
                 emit LOG_E("Wrong response from ECU", true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return STATUS_ERROR;
         }
 
@@ -1355,10 +1349,10 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
             chksum = calculate_checksum(output, false);
             output.append((uint8_t)chksum & 0xFF);
             received = serial->write_serial_data_echo_check(output);
-            emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+            
             //delay(200);
             received = serial->read_serial_data(serial_read_extra_long_timeout);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             if (received.length() > 5)
             {
                 if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_CMD + 0x40))
@@ -1367,14 +1361,14 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
                 else
                 {
                     emit LOG_E("Wrong response from ECU", true, true);
-                    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
                 emit LOG_E("No valid response from ECU", true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 return STATUS_ERROR;
             }
             flashblockstart += flashblocksize;
@@ -1422,9 +1416,9 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_bf_ssm_init()
     output.append((uint8_t)0xBF);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return received;
 }
@@ -1443,9 +1437,9 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_81_start_communication()
     output.append((uint8_t)0x81);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return received;
 }
@@ -1465,9 +1459,9 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_83_request_timings()
     output.append((uint8_t)0x00);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return received;
 }
@@ -1487,9 +1481,9 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_27_request_seed()
     output.append((uint8_t)0x01);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return received;
 }
@@ -1510,9 +1504,9 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_27_send_seed_key(QByteArray 
     output.append(seed_key);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return received;
 }
@@ -1533,9 +1527,9 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_10_start_diagnostic()
     output.append((uint8_t)0x02);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return received;
 }
@@ -1556,9 +1550,9 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_34_request_upload(uint32_t a
     output.append((uint8_t)len & 0xFF);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     received = serial->read_serial_data(serial_read_extra_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
 
     return received;
 }
@@ -1617,22 +1611,21 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t add
 
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output.remove(8, output.length()-9)), true, true);
         received = serial->read_serial_data(serial_read_timeout);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0x76)
             {
                 emit LOG_E("Write data failed!", true, true);
-                emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+                
                 return received;
             }
         }
         else
         {
             emit LOG_E("Write data failed!", true, true);
-            emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+            
             return received;
         }
         float pleft = (float)blockno / (float)maxblocks * 100;
@@ -1877,10 +1870,10 @@ QByteArray FlashEcuSubaruDensoSH705xKline::request_kernel_id()
     output.append((uint8_t)chksum & 0xFF);
 
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(200);
     received = serial->read_serial_data(serial_read_long_timeout);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    
     kernelid = received;
 
     request_denso_kernel_id = false;
@@ -1904,7 +1897,7 @@ QByteArray FlashEcuSubaruDensoSH705xKline::add_ssm_header(QByteArray output, uin
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    //emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    //
     return output;
 }
 
