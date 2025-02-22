@@ -99,27 +99,15 @@ inline QStringList qvariant_to_scalar<QStringList>(QVariant v)
 template <template <typename> typename QRemoteObjectPendingReply, typename RET_TYPE>
 RET_TYPE slot_sync(QRemoteObjectPendingReply<RET_TYPE> SLOT)
 {
-    bool error;
-    int retry_count = 0;
     QVariant r;
-    do {
-        QScopedPointer<QRemoteObjectPendingCallWatcher>
-            watcher{new QRemoteObjectPendingCallWatcher(SLOT)};
-        QObject::connect(watcher.data(), &QRemoteObjectPendingCallWatcher::finished,
-                         watcher.data(), [&](QRemoteObjectPendingCallWatcher* watch)
-                         {
-                             r = watch->returnValue();
-                         }, Qt::DirectConnection);
-        watcher->waitForFinished();
-        error = watcher->error();
-        if (error)
+    QScopedPointer<QRemoteObjectPendingCallWatcher>
+        watcher{new QRemoteObjectPendingCallWatcher(SLOT)};
+    QObject::connect(watcher.data(), &QRemoteObjectPendingCallWatcher::finished,
+        watcher.data(), [&](QRemoteObjectPendingCallWatcher* watch)
         {
-            qDebug() << "Remote call finished with error, retrying...";
-            retry_count++;
-        }
-    } while (error);
-    if (retry_count > 0)
-        qDebug() << "Call successfuly finished after" << retry_count << "attempts";
+            r = watch->returnValue();
+        }, Qt::DirectConnection);
+    watcher->waitForFinished();
     return qvariant_to_scalar<RET_TYPE>(r);
 }
 
