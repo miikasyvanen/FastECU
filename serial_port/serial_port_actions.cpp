@@ -67,7 +67,7 @@ void SerialPortActions::startOverNetwok(void)
     node.setHeartbeatInterval(heartbeatInterval);
     QObject::connect(webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
                      this, [=](QAbstractSocket::SocketError error)
-                     { qDebug() << this->metaObject()->className() << "startOverNetwok QWebSocket error:" << error; });
+                     { emit LOG_D(QString(this->metaObject()->className()) + " startOverNetwok QWebSocket error: " + error, true, true); });
     //WebSocket over SSL
     QUrl url("wss://"+peerAddress);
     url.setPath(wssPath);
@@ -115,7 +115,7 @@ void SerialPortActions::waitForSource(void)
     {
         delay(100);
         sendAutoDiscoveryMessage();
-        qDebug() << "SerialPortActions: Waiting for remote peer...";
+        emit LOG_D("SerialPortActions: Waiting for remote peer...", true, true);
     }
 }
 
@@ -130,9 +130,9 @@ void SerialPortActions::serialRemoteStateChanged(QRemoteObjectReplica::State sta
 {
     emit stateChanged(state, oldState);
     if (state == QRemoteObjectReplica::Valid)
-        qDebug() << "SerialPortActions remote connection established";
+        emit LOG_D("SerialPortActions remote connection established", true, true);
     else if (oldState == QRemoteObjectReplica::Valid)
-        qDebug() << "SerialPortActions remote connection lost";
+        emit LOG_D("SerialPortActions remote connection lost", true, true);
 }
 
 bool SerialPortActions::get_serialPortAvailable(void)
