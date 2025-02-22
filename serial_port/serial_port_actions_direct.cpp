@@ -100,6 +100,10 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
 
         InputMsg.ProtocolID = ISO14230;
         InputMsg.TxFlags = 0;
+
+        if (add_iso14230_header)
+            output = add_packet_header(output);
+
         for (int i = 0; i < output.length(); i++)
         {
             InputMsg.Data[i] = output.at(i);
@@ -757,7 +761,7 @@ QByteArray SerialPortActionsDirect::add_packet_header(QByteArray output)
     uint8_t chk_sum = 0;
     uint8_t msglength = output.length();
 
-    //emit LOG_D("Adding iso14230 header to message";
+    //emit LOG_D("Adding iso14230 header to message", true, true);
 
     output.insert(0, iso14230_startbyte);
     output.insert(1, iso14230_target_id);
@@ -771,6 +775,8 @@ QByteArray SerialPortActionsDirect::add_packet_header(QByteArray output)
         chk_sum = chk_sum + output.at(i);
 
     output.append(chk_sum);
+
+    LOG_D("Generated iso14230 message: " + parse_message_to_hex(output), true, true);
 
     return output;
 }

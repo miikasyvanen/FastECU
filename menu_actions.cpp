@@ -60,6 +60,11 @@ void MainWindow::menu_action_triggered(QString action)
         change_gauge_values();
 
     // TESTING MENU
+    if (action == "read_dtcs")
+        read_dtcs();
+    if (action == "clear_dtcs")
+        clear_dtcs();
+
     if (action == "haltech_ic7")
         toggle_haltech_ic7_display();
     if (action == "simulate_obd")
@@ -1020,6 +1025,55 @@ void MainWindow::toggle_can_listener()
     }
     if (can_listener_on)
         can_listener();
+}
+
+QByteArray MainWindow::read_dtcs()
+{
+    // Read DTC's J2534 msg 61 74 74 34 20 34 20 30 20 34 30 30 30 30 30 20 38 0D 0A C1 33 F1 03
+    QByteArray output;
+    QByteArray received;
+
+    emit LOG_D("Start DTC read sequence", true, true);
+    ecuid.clear();
+    ecu_init_complete = false;
+    serial->reset_connection();
+    serial->set_is_iso14230_connection(false);
+    serial->set_add_iso14230_header(true);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(false);
+    serial->set_is_29_bit_id(false);
+    serial->set_serial_port_parity(QSerialPort::NoParity);
+    serial->set_serial_port_baudrate("10400");
+    serial->set_iso14230_startbyte(0xC0);
+    serial->set_iso14230_target_id(0x33);
+    serial->set_iso14230_tester_id(0xF1);
+    emit LOG_D("Open serial port", true, true);
+    open_serial_port();
+
+    //serial->set_to_comm_on = true;
+    emit LOG_D("Fast init to ECU", true, true);
+    output.clear();
+    output.append((uint8_t)0x81);
+    serial->fast_init(output);
+    emit LOG_D("Get response of fast init", true, true);
+    received = serial->read_serial_data(serial_read_timeout);
+
+    //serial->set_to_comm_on = true;
+    emit LOG_D("Send request to read DTC's", true, true);
+    output.clear();
+    output.append((uint8_t)0x03);
+    serial->write_serial_data_echo_check(output);
+    emit LOG_D("Get response to read DTC's", true, true);
+    received = serial->read_serial_data(serial_read_timeout);
+
+    serial->reset_connection();
+
+    return received;
+}
+
+QByteArray MainWindow::clear_dtcs()
+{
+
 }
 
 void MainWindow::show_preferences_window()

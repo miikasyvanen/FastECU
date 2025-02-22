@@ -46,6 +46,7 @@ private:
     uint16_t serial_read_medium_timeout = 400;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
+    uint16_t serial_read_timeout = 2000;
 
     enum BiuCommands {
         NO_COMMAND = 0x00,

@@ -330,6 +330,8 @@ private:
     void set_realtime_state(bool state);
     void toggle_realtime();
     void toggle_log_to_file();
+    QByteArray read_dtcs();
+    QByteArray clear_dtcs();
     void set_maptablewidget_items();
     QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian);
     void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, float map_value);

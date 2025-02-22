@@ -1009,7 +1009,9 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
             output.append(msg->Data[i]);
         }
         write_serial_data(output);
-        received = read_serial_data(100, 50);
+        emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
+        //received = read_serial_data(100, serial_read_timeout);
+        //emit LOG_D("Response: " + parseMessageToHex(received), true, true);
     }
 
     if (input_as_sa)

@@ -113,7 +113,6 @@ void SerialPortActions::waitForSource(void)
     //Wait for replication
     while (!serial_remote->waitForSource(10000))
     {
-        delay(100);
         sendAutoDiscoveryMessage();
         emit LOG_D("SerialPortActions: Waiting for remote peer...", true, true);
     }
@@ -836,6 +835,7 @@ int SerialPortActions::change_port_speed(QString portSpeed)
 
 int SerialPortActions::fast_init(QByteArray output)
 {
+    set_to_comm_on = true;
     if (isDirectConnection())
         return serial_direct->fast_init(output);
     else
