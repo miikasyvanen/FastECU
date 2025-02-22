@@ -129,7 +129,7 @@ public:
     QStringList check_serial_ports();
     QString open_serial_port();
 
-    unsigned long read_batt_voltage();
+    unsigned long read_vbatt();
 
 private:
 #ifndef ARRAYSIZE

@@ -149,7 +149,6 @@ public:
     bool set_to_read_vbatt = false;
     bool set_to_comm_on = false;
     unsigned long vBatt = 0;
-    void set_signal_to_read_vbatt();
 
 public slots:
     void websocket_connected(void);
@@ -173,10 +172,11 @@ private:
     void startOverNetwok(void);
     void startLocal(void);
     void sendAutoDiscoveryMessage();
+    void delay(int timeout);
 
 private slots:
     void serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
-    void read_vbatt();
+    unsigned long read_vbatt();
 
 };
 

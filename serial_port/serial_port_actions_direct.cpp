@@ -930,7 +930,7 @@ int SerialPortActionsDirect::set_j2534_ioctl(unsigned long parameter, int value)
     return STATUS_SUCCESS;
 }
 
-unsigned long SerialPortActionsDirect::read_batt_voltage()
+unsigned long SerialPortActionsDirect::read_vbatt()
 {
     if (use_openport2_adapter)
     {
@@ -941,14 +941,16 @@ unsigned long SerialPortActionsDirect::read_batt_voltage()
             reportJ2534Error();
             return STATUS_ERROR;
         }
-        //emit LOG_D("Batt: " + QString::number(vBatt.Value / 1000.0) + " V", true, true);
+        emit LOG_D("Batt: " + QString::number(vBatt.Value / 1000.0) + " V", true, true);
 
         return vBatt.Value;
 
     }
     else
+    {
+        emit LOG_D("Adapter does not support reading voltage", true, true);
         return STATUS_SUCCESS;
-    //    emit LOG_D("Adapter does not support reading voltage", true, true);
+    }
 
     return STATUS_SUCCESS;
 }

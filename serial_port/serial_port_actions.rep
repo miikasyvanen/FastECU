@@ -100,4 +100,5 @@ SLOT(int send_periodic_j2534_data(QByteArray output, int timeout))
 SLOT(int stop_periodic_j2534_data())
 SLOT(QStringList check_serial_ports())
 SLOT(QString open_serial_port())
+SLOT(unsigned long read_vbatt())
 }
