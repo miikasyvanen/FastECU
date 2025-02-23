@@ -981,7 +981,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
     }
     if (IoctlID == READ_VBATT)
     {
-        SCONFIG* vBatt = (SCONFIG*)pOutput;
+        unsigned long *vBatt = (unsigned long*)pOutput;
         long pin = 16;
         output.clear();
         QString str = "atr " + QString::number((int)pin) + "\r\n";
@@ -993,7 +993,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         QString response = QString(received).split(" ").at(QString(received).split(" ").length()-1);
         response = response.split("\r\n").at(0);
         emit LOG_D("Pin 16 voltage: " + response + " mV", true, true);
-        vBatt->Value = response.toULong();
+        *vBatt = response.toULong();
     }
 
     if (IoctlID == FAST_INIT)
