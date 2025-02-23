@@ -146,8 +146,8 @@ public:
 
     QString parse_message_to_hex(QByteArray received);
 
-    bool set_to_read_vbatt = false;
-    bool set_to_comm_on = false;
+    //bool set_read_vbatt = false;
+    //bool set_comm_busy = false;
     unsigned long vBatt = 0;
 
 public slots:

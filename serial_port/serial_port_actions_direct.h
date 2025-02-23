@@ -55,6 +55,8 @@ public:
 
     bool use_openport2_adapter = false;
 
+    bool set_read_vbatt = false;
+    bool set_comm_busy = false;
     unsigned int vBatt = 0;
 
     int requestToSendEnabled = 0;
