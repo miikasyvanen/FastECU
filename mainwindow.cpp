@@ -2236,15 +2236,7 @@ void MainWindow::external_logger_set_progressbar_value(int value)
     if (remote_utility->isValid())
         remote_utility->set_progressbar_value(value);
 }
-/*
-void MainWindow::logger(QString message, bool timestamp, bool linefeed)
-{
 
-    QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
-
-    write_syslog_to_file = true;
-}
-*/
 void MainWindow::send_message_to_log_window(QString msg)
 {
     // EcuOperationsWindow

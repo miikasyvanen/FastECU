@@ -124,6 +124,7 @@ public:
 
     bool is_serial_port_open(void);
     int change_port_speed(QString portSpeed);
+    int slow_init();
     int fast_init(QByteArray output);
     int set_lec_lines(int lec1, int lec2);
     int pulse_lec_1_line(int timeout);
@@ -146,8 +147,8 @@ public:
 
     QString parse_message_to_hex(QByteArray received);
 
-    bool set_to_read_vbatt = false;
-    bool set_to_comm_on = false;
+    //bool set_read_vbatt = false;
+    //bool set_comm_busy = false;
     unsigned long vBatt = 0;
 
 public slots:

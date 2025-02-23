@@ -888,9 +888,7 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    
-    delay(200);
-    received = serial->read_serial_data(200);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x05)
@@ -925,9 +923,7 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     output.append((uint8_t)0x7F);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    
-    delay(200);
-    received = serial->read_serial_data(200);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
@@ -987,7 +983,7 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
         //emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
 
-        received = serial->read_serial_data(2000);
+        received = serial->read_serial_data(serial_read_timeout);
         //emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
 
         if (received.length() > 4)

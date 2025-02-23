@@ -472,11 +472,16 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     uint16_t blockctr;
     uint32_t blockaddr;
 
+    uint32_t start = fdt->fblocks[blockno].start;
+    uint32_t byteindex = fdt->fblocks[blockno].start;
+    uint8_t blocksize = 0x80;
+    unsigned long chrono;
+    unsigned curspeed, tleft;
+    QElapsedTimer timer;
+
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-//    QByteArray buf;
-//    uint8_t chk_sum = 0;
 
     set_progressbar_value(0);
 
@@ -487,8 +492,8 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
 
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
-    maxblocks = pl_len / 128;
-    end_addr = (start_address + (maxblocks * 128)) & 0xFFFFFFFF;
+    maxblocks = pl_len / blocksize;
+    end_addr = (start_address + (maxblocks * blocksize)) & 0xFFFFFFFF;
     uint32_t data_len = end_addr - start_address;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
@@ -497,7 +502,6 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     emit LOG_I(msg, true, true);
 
     emit LOG_I("Setting flash start & length...", true, true);
-    qDebug() << "Setting flash start & length...";
 
     serial->change_port_speed("15625");
 
@@ -512,12 +516,20 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     output.append((uint8_t)0x00);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-    delay(200);
-    received = serial->read_serial_data(200);
-
-
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
-    return STATUS_ERROR;
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x74)
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        return STATUS_ERROR;
+    }
 
 //    QMessageBox::information(this, tr("Init was OK?"), "Press OK to continue");
 
@@ -532,43 +544,88 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     output.append((uint8_t)0xFF);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 4)
+    {
+        if ((uint8_t)received.at(4) != 0x71)
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
 
-    delay(200);
-    received = serial->read_serial_data(200);
+            return STATUS_ERROR;
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
 
+        return STATUS_ERROR;
+    }
 
-    if (received == "" || (uint8_t)received.at(4) != 0x71)
-    return STATUS_ERROR;
-
-//End Of erase...
     emit LOG_I("Starting ROM Flashing...", true, true);
-
-    int data_bytes_sent = 0;
+    timer.start();
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
             return 0;
 
-        blockaddr = start_address + blockctr * 128;
+        blockaddr = start_address + blockctr * blocksize;
         output.clear();
         output.append((uint8_t)0x36);
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
 
-        for (int i = 0; i < 128; i++)
+        for (uint32_t i = 0; i < blocksize; i++)
         {
-//            output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
             output[i + 4] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
-            data_bytes_sent++;
         }
-        data_len -= 128;
+        data_len -= blocksize;
 
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(receive_timeout);
+/*
+        if (received.length() > 4)
+        {
+            if ((uint8_t)received.at(4) != 0x76)
+            {
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
 
-//
+                return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+
+            return STATUS_ERROR;
+        }
+*/
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0'));
+        QString block_len = QString("%1").arg(blocksize,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Kernel write addr: 0x%1 length: 0x%2, %3 B/s %4 s remain").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        emit LOG_I(msg, true, true);
+
+        //remain -= blocksize;
+        start += blocksize;
+        byteindex += blocksize;
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (!chrono) {
+            chrono += 1;
+        }
+        curspeed = blocksize * (1000.0f / chrono);  //avg B/s
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = ((float)flashbytescount - byteindex) / curspeed;  //s
+        if (tleft > 9999) {
+            tleft = 9999;
+        }
+        tleft++;
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
         set_progressbar_value(pleft);
@@ -590,17 +647,22 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     output.append((uint8_t)0x02);
     output = add_ssm_header(output, tester_id, target_id, false);
     serial->write_serial_data_echo_check(output);
-
-    delay(200);
-    received = serial->read_serial_data(200);
-        if (received != "")
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 6)
+    {
+        if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
         {
-            emit LOG_I(": 0x31 response: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+
+            return STATUS_ERROR;
         }
-    
-    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-        emit LOG_I("No or bad response received", true, true);
-        //return STATUS_ERROR;
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+
+        return STATUS_ERROR;
+    }
 
     emit LOG_I("Checksum verified...", true, true);
 

@@ -85,6 +85,34 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
     return STATUS_ERROR;
 }
 
+int SerialPortActionsDirect::slow_init()
+{
+    if (use_openport2_adapter)
+    {
+        unsigned long result;
+        PASSTHRU_MSG InputMsg;
+        PASSTHRU_MSG OutputMsg;
+
+        memset(&InputMsg, 0, sizeof(InputMsg));
+        memset(&OutputMsg, 0, sizeof(OutputMsg));
+
+        InputMsg.ProtocolID = ISO14230;
+        InputMsg.TxFlags = 0;
+
+        /* Set timeout to 350ms before init */
+        accurate_delay(350);
+
+        result = j2534->PassThruIoctl(chanID, FIVE_BAUD_INIT, &InputMsg, &OutputMsg);
+        if (result)
+        {
+            reportJ2534Error();
+            return STATUS_ERROR;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
 int SerialPortActionsDirect::fast_init(QByteArray output)
 {
     QByteArray received;
@@ -118,10 +146,6 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
         {
             reportJ2534Error();
             return STATUS_ERROR;
-        }
-        else
-        {
-
         }
     }
     else

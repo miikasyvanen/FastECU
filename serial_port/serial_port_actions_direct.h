@@ -55,6 +55,8 @@ public:
 
     bool use_openport2_adapter = false;
 
+    bool set_read_vbatt = false;
+    bool set_comm_busy = false;
     unsigned int vBatt = 0;
 
     int requestToSendEnabled = 0;
@@ -108,6 +110,7 @@ public:
 
     bool is_serial_port_open();
     int change_port_speed(QString portSpeed);
+    int slow_init();
     int fast_init(QByteArray output);
     int set_lec_lines(int lec1, int lec2);
     int pulse_lec_1_line(int timeout);

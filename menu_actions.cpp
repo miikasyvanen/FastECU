@@ -60,10 +60,8 @@ void MainWindow::menu_action_triggered(QString action)
         change_gauge_values();
 
     // TESTING MENU
-    if (action == "read_dtcs")
-        read_dtcs();
-    if (action == "clear_dtcs")
-        clear_dtcs();
+    if (action == "dtc_window")
+        show_dtc_window();
 
     if (action == "haltech_ic7")
         toggle_haltech_ic7_display();
@@ -1027,53 +1025,27 @@ void MainWindow::toggle_can_listener()
         can_listener();
 }
 
-QByteArray MainWindow::read_dtcs()
+void MainWindow::show_dtc_window()
 {
-    // Read DTC's J2534 msg 61 74 74 34 20 34 20 30 20 34 30 30 30 30 30 20 38 0D 0A C1 33 F1 03
-    QByteArray output;
-    QByteArray received;
-
-    emit LOG_D("Start DTC read sequence", true, true);
+    serial->reset_connection();
     ecuid.clear();
     ecu_init_complete = false;
-    serial->reset_connection();
-    serial->set_is_iso14230_connection(false);
-    serial->set_add_iso14230_header(true);
-    serial->set_is_can_connection(false);
-    serial->set_is_iso15765_connection(false);
-    serial->set_is_29_bit_id(false);
-    serial->set_serial_port_parity(QSerialPort::NoParity);
-    serial->set_serial_port_baudrate("10400");
-    serial->set_iso14230_startbyte(0xC0);
-    serial->set_iso14230_target_id(0x33);
-    serial->set_iso14230_tester_id(0xF1);
-    emit LOG_D("Open serial port", true, true);
-    open_serial_port();
 
-    //serial->set_to_comm_on = true;
-    emit LOG_D("Fast init to ECU", true, true);
-    output.clear();
-    output.append((uint8_t)0x81);
-    serial->fast_init(output);
-    emit LOG_D("Get response of fast init", true, true);
-    received = serial->read_serial_data(serial_read_timeout);
+    QStringList spl;
+    spl.append(serial_ports.at(serial_port_list->currentIndex()));
+    serial->set_serial_port_list(spl);
 
-    //serial->set_to_comm_on = true;
-    emit LOG_D("Send request to read DTC's", true, true);
-    output.clear();
-    output.append((uint8_t)0x03);
-    serial->write_serial_data_echo_check(output);
-    emit LOG_D("Get response to read DTC's", true, true);
-    received = serial->read_serial_data(serial_read_timeout);
+    emit LOG_D("Starting DTC operations", true, true);
 
-    serial->reset_connection();
+    DtcOperations dtcOperations(serial, this);
+    QObject::connect(&dtcOperations, &DtcOperations::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&dtcOperations, &DtcOperations::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&dtcOperations, &DtcOperations::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&dtcOperations, &DtcOperations::LOG_D, syslogger, &SystemLogger::log_messages);
 
-    return received;
-}
+    dtcOperations.exec();
 
-QByteArray MainWindow::clear_dtcs()
-{
-
+    emit LOG_D("DTC operations stopped", true, true);
 }
 
 void MainWindow::show_preferences_window()
@@ -1086,8 +1058,6 @@ void MainWindow::show_preferences_window()
 
 void MainWindow::show_subaru_biu_window()
 {
-    //serial_poll_timer->stop();
-    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     serial->reset_connection();
@@ -1107,11 +1077,9 @@ void MainWindow::show_subaru_biu_window()
 
     biuOperationsSubaru.exec();
 
-    qDebug() << "BIU stopped";
+    emit LOG_D("BIU stopped", true, true);
 
     serial->set_add_iso14230_header(false);
-    //serial_poll_timer->start();
-    //ssm_init_poll_timer->start();
 }
 
 void MainWindow::show_terminal_window()

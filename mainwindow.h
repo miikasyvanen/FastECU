@@ -47,6 +47,7 @@
 #include <logbox.h>
 #include <settings.h>
 #include <serial_port/serial_port_actions.h>
+#include <dtc_operations.h>
 
 // Flash modules
 // BDM
@@ -330,8 +331,6 @@ private:
     void set_realtime_state(bool state);
     void toggle_realtime();
     void toggle_log_to_file();
-    QByteArray read_dtcs();
-    QByteArray clear_dtcs();
     void set_maptablewidget_items();
     QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian);
     void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, float map_value);
@@ -344,6 +343,7 @@ private:
     void toggle_simulate_obd();
     void toggle_can_listener();
     int simulate_obd();
+    void show_dtc_window();
     void show_subaru_biu_window();
     void show_terminal_window();
     void show_subaru_get_key_window();

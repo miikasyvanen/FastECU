@@ -15,7 +15,7 @@
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
 #include <serial_port_actions.h>
-#include <ui_ecu_operations.h>
+#include <ui_dtc_operations.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -29,7 +29,7 @@ class DtcOperations : public QDialog
     Q_OBJECT
 
 public:
-    explicit DtcOperations(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    explicit DtcOperations(SerialPortActions *serial, QWidget *parent = nullptr);
     ~DtcOperations();
 
     void run();
@@ -68,6 +68,8 @@ private:
     void closeEvent(QCloseEvent *event);
 
     int init_obd();
+
+
 
     QByteArray add_header(QByteArray output);
     uint8_t calculate_checksum(QByteArray output);
