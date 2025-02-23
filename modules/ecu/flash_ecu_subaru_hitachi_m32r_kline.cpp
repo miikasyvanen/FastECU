@@ -865,7 +865,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
 
     emit LOG_I("Flash erased, starting ROM write...", true, true);
 
-    //int data_bytes_sent = 0;
+    timer.start();
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
@@ -902,7 +902,6 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
         msg = QString("Kernel write addr: 0x%1 length: 0x%2, %3 B/s %4 s remain").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
 
-        //remain -= blocksize;
         start += blocksize;
         byteindex += blocksize;
 

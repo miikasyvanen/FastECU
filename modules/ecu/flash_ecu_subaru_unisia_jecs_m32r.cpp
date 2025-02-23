@@ -550,7 +550,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     QElapsedTimer timer;
 
     emit LOG_I("Uploading file " + flashdata_filename + " to flash, please wait...", true, true);
-
+    timer.start();
     for (int i = 0; i < blocks; i++)
     {
         if (kill_process)
