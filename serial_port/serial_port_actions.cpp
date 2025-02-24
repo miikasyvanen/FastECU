@@ -834,6 +834,19 @@ int SerialPortActions::change_port_speed(QString portSpeed)
     return result;
 }
 
+int SerialPortActions::set_j2534_ioctl(unsigned long parameter, int value)
+{
+    bool result = STATUS_SUCCESS;
+    this->set_comm_busy(true);
+
+    if (isDirectConnection())
+        result = serial_direct->set_j2534_ioctl(parameter, value);
+    else
+        result = qtrohelper::slot_sync(serial_remote->set_j2534_ioctl(parameter, value));
+
+    return result;
+}
+
 int SerialPortActions::five_baud_init(QByteArray output)
 {
     bool result = STATUS_SUCCESS;
@@ -1074,51 +1087,8 @@ unsigned long SerialPortActions::read_vbatt()
             set_read_vbatt(true);
         //emit LOG_D("Remote vBatt: " + QString::number(vBatt), true, true);
     }
-<<<<<<< HEAD
 
-    QDialog *ecuOperationsWindow = parent()->findChild<QDialog*>("EcuOperationsWindow");
-    if (ecuOperationsWindow)
-    {
-        //emit LOG_D("Found ecuOperationsWindow", true, true);
-        QLabel *vBattLabel = ecuOperationsWindow->findChild<QLabel*>("vBattLabel");
-        if (vBattLabel)
-        {
-            //emit LOG_D("Found ecuOperationsWindow->vBattLabel", true, true);
-            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
-            vBattLabel->setText(vBattText);
-            //emit LOG_D(vBattText, true, true);
-        }
-    }
-    QDialog *biuOperationsSubaruWindow = parent()->findChild<QDialog*>("BiuOperationsSubaruWindow");
-    if (biuOperationsSubaruWindow)
-    {
-        //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
-        QLabel *vBattLabel = biuOperationsSubaruWindow->findChild<QLabel*>("vBattLabel");
-        if (vBattLabel)
-        {
-            //emit LOG_D("Found biuOperationsSubaruWindow->vBattLabel", true, true);
-            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
-            vBattLabel->setText(vBattText);
-            //emit LOG_D(vBattText, true, true);
-        }
-    }
-    QDialog *dtcOperationsWindow = parent()->findChild<QDialog*>("DtcOperationsWindow");
-    if (dtcOperationsWindow)
-    {
-        //emit LOG_D("Found dtcOperationsWindow", true, true);
-        QLabel *vBattLabel = dtcOperationsWindow->findChild<QLabel*>("vBattLabel");
-        if (vBattLabel)
-        {
-            //emit LOG_D("Found dtcOperationsWindow->vBattLabel", true, true);
-            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
-            vBattLabel->setText(vBattText);
-            //emit LOG_D(vBattText, true, true);
-        }
-    }
-    return STATUS_SUCCESS;
-=======
     return vBatt;
->>>>>>> refs/heads/development-battery-voltage-display
 }
 
 QString SerialPortActions::parse_message_to_hex(QByteArray received)

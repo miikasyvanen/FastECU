@@ -65,8 +65,8 @@ int DtcOperations::init_obd()
     output.clear();
     output.append((uint8_t)0x33);
     result = serial->five_baud_init(output);
-    //received = serial->read_serial_data(serial_read_timeout);
-    //emit LOG_I("Result: " + QString::number(result), true, true);
+    received = serial->read_serial_data(serial_read_timeout);
+    emit LOG_I("Result: " + QString::number(result), true, true);
 /*
     if (result == STATUS_SUCCESS)
     {

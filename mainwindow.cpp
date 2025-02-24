@@ -2304,4 +2304,30 @@ void MainWindow::update_vbatt()
             emit LOG_D(vBattText, true, true);
         }
     }
+    QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
+    if (biuOperationsSubaruWindow)
+    {
+        //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+        QLabel *vBattLabel = biuOperationsSubaruWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            //emit LOG_D("Found biuOperationsSubaruWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            //emit LOG_D(vBattText, true, true);
+        }
+    }
+    QDialog *dtcOperationsWindow = this->findChild<QDialog*>("DtcOperationsWindow");
+    if (dtcOperationsWindow)
+    {
+        //emit LOG_D("Found dtcOperationsWindow", true, true);
+        QLabel *vBattLabel = dtcOperationsWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            //emit LOG_D("Found dtcOperationsWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            //emit LOG_D(vBattText, true, true);
+        }
+    }
 }

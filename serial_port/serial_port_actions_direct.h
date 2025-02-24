@@ -131,6 +131,7 @@ public:
     QString open_serial_port();
 
     unsigned long read_vbatt();
+    int set_j2534_ioctl(unsigned long parameter, int value);
 
 private:
 #ifndef ARRAYSIZE
@@ -152,7 +153,6 @@ private:
     long PassThruGetLastError(char *pErrorDescription);
     long PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const void *pInput, void *pOutput);
 
-    int set_j2534_ioctl(unsigned long parameter, int value);
     int init_j2534_connection();
     int set_j2534_can();
     int unset_j2534_can();
