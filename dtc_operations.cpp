@@ -45,6 +45,7 @@ void DtcOperations::run()
     serial->set_can_destination_address(0x7e8);
     serial->set_iso15765_source_address(0x7e0);
     serial->set_iso15765_destination_address(0x7e8);
+    serial->set_serial_port_baudrate("10400");
     // Open serial port
     serial->open_serial_port();
 
@@ -65,21 +66,21 @@ int DtcOperations::init_obd()
     output.clear();
     output.append((uint8_t)0x33);
     result = serial->five_baud_init(output);
-    received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_I("Result: " + QString::number(result), true, true);
-/*
-    if (result == STATUS_SUCCESS)
-    {
-        delay(1000);
+    received = serial->read_serial_data(serial_read_extra_short_timeout);
+    serial->set_comm_busy(true);
+    emit LOG_I("5 baud init result: " + QString::number(result), true, true);
+
+    //if (result == STATUS_SUCCESS)
+    //{
         emit LOG_I("Send init response", true, true);
         output.clear();
-        output.append((uint8_t)~0x08);
+        output.append((uint8_t)(0x08^0xff));
         serial->write_serial_data_echo_check(output);
         emit LOG_I("Request response", true, true);
         received = serial->read_serial_data(serial_read_timeout);
 
-    }
-*/
+    //}
+
     return STATUS_SUCCESS;
 }
 
