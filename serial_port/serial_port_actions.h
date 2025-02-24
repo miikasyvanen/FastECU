@@ -156,10 +156,6 @@ public:
 
     unsigned long read_vbatt();
 
-    bool is_read_vbatt = false;
-    bool is_comm_busy = false;
-    unsigned long vBatt = 0;
-
 public slots:
     void websocket_connected(void);
     void waitForSource(void);
@@ -183,6 +179,10 @@ private:
     void startLocal(void);
     void sendAutoDiscoveryMessage();
     void delay(int timeout);
+
+    QAtomicInteger<bool> is_read_vbatt = false;
+    QAtomicInteger<bool> is_comm_busy = false;
+    unsigned long vBatt = 0;
 
 private slots:
     void serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
