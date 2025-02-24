@@ -305,6 +305,12 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     connect(remote_utility, &RemoteUtility::stateChanged,
             this, &MainWindow::network_state_changed, Qt::DirectConnection);
 
+    // Set timer to read vbatt value
+    QTimer *vBattTimer = new QTimer(this);
+    vBattTimer->setInterval(1000);
+    connect(vBattTimer, SIGNAL(timeout()), this, SLOT(update_vbatt()));
+    vBattTimer->start();
+
     setSplashScreenProgress("Setting up toolbar...", 10);
     toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
     toolbar_item_size.setHeight(configValues->toolbar_iconsize.toInt());
@@ -2275,6 +2281,27 @@ void MainWindow::send_message_to_log_window(QString msg)
             textEdit->insertPlainText(msg);
             textEdit->ensureCursorVisible();
             //emit LOG_D(textEdit, true, true);
+        }
+    }
+}
+
+void MainWindow::update_vbatt()
+{
+    unsigned long vBatt = 0;
+
+    vBatt = serial->read_vbatt();
+
+    QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
+    if (ecuOperationsWindow)
+    {
+        //emit LOG_D("Found ecuOperationsWindow", true, true);
+        QLabel *vBattLabel = ecuOperationsWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            //emit LOG_D("Found ecuOperationsWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            emit LOG_D(vBattText, true, true);
         }
     }
 }

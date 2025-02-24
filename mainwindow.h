@@ -417,6 +417,8 @@ private slots:
     void change_log_digital_value(int index);
     void change_log_switch_value(int index);
 
+    void update_vbatt();
+
 signals:
     void check_serial_port();
     void send_serial_data(QByteArray output);
