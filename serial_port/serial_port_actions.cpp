@@ -62,7 +62,7 @@ void SerialPortActions::startOverNetwok(void)
     node.setHeartbeatInterval(heartbeatInterval);
     QObject::connect(webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
                      this, [=](QAbstractSocket::SocketError error)
-                     { emit LOG_D(QString(this->metaObject()->className()) + " startOverNetwok QWebSocket error: " + error, true, true); });
+                     { emit LOG_D(QString(this->metaObject()->className()) + " startOverNetwok QWebSocket error: " + QMetaEnum::fromType<QAbstractSocket::SocketError>().valueToKey(error), true, true); });
     //WebSocket over SSL
     QUrl url("wss://"+peerAddress);
     url.setPath(wssPath);
