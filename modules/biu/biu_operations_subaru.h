@@ -431,9 +431,6 @@ private slots:
     void prepare_biu_msg();
     void send_biu_msg();
 
-
-signals:
-
 };
 
 #endif // BIUOPERATIONSSUBARU_H

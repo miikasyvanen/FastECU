@@ -75,7 +75,6 @@ private:
     uint8_t calculate_checksum(QByteArray output);
 
     QString parse_message_to_hex(QByteArray received);
-    void set_progressbar_value(int value);
     void delay(int timeout);
 
     SerialPortActions *serial;

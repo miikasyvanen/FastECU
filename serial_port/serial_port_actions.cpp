@@ -839,13 +839,13 @@ int SerialPortActions::change_port_speed(QString portSpeed)
     return result;
 }
 
-int SerialPortActions::slow_init()
+int SerialPortActions::five_baud_init(QByteArray output)
 {
     bool result = STATUS_SUCCESS;
     serial_direct->set_comm_busy = true;
 
     if (isDirectConnection())
-        result = serial_direct->slow_init();
+        result = serial_direct->five_baud_init(output);
     else
         result = qtrohelper::slot_sync(serial_remote->slow_init());
 
@@ -1077,19 +1077,19 @@ unsigned long SerialPortActions::read_vbatt()
     if (biuOperationsSubaruWindow)
     {
         //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
-        QLabel *vBattLabel = ecuOperationsWindow->findChild<QLabel*>("vBattLabel");
+        QLabel *vBattLabel = biuOperationsSubaruWindow->findChild<QLabel*>("vBattLabel");
         if (vBattLabel)
         {
-            //emit LOG_D("Found biuOperationsWindow->vBattLabel", true, true);
+            //emit LOG_D("Found biuOperationsSubaruWindow->vBattLabel", true, true);
             QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
             vBattLabel->setText(vBattText);
             //emit LOG_D(vBattText, true, true);
         }
     }
     QDialog *dtcOperationsWindow = parent()->findChild<QDialog*>("DtcOperationsWindow");
-    if (biuOperationsSubaruWindow)
+    if (dtcOperationsWindow)
     {
-        //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+        //emit LOG_D("Found dtcOperationsWindow", true, true);
         QLabel *vBattLabel = dtcOperationsWindow->findChild<QLabel*>("vBattLabel");
         if (vBattLabel)
         {

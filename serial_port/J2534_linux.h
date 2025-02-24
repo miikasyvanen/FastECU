@@ -79,6 +79,8 @@ private:
     QSerialPort *serial = new QSerialPort();
     unsigned long periodic_msg_id;
 
+    bool msg_ack = false;
+
     enum rx_msg_type {
         NORM_MSG,
         TX_DONE_MSG = 0x10,

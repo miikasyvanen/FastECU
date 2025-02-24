@@ -159,11 +159,11 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
     QByteArray received;
     QByteArray check_result = "ar";
     QString name = (char*)pName;
-    unsigned long devID = (unsigned long)pDeviceID;
+    unsigned long *devID = (unsigned long*)pDeviceID;
     long result = ERR_NOT_SUPPORTED;
 
     pDeviceID = 0;
-    emit LOG_D("Open J2534 device " + name + " with ID: " + QString::number(devID), true, true);
+    emit LOG_D("Open J2534 device " + name + " with ID: " + QString::number(*devID), true, true);
 
     output = "ata\r\n";
     emit LOG_D("Send data: " + parseMessageToHex(output), true, true);
@@ -280,11 +280,12 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
         //emit LOG_D("Message header" << received.at(0) << received.at(1) << received.at(2);
         if (received.at(0) == 0x61 && received.at(1) == 0x72)
         {
-            if (received.at(2) == 0x6f)
+            if (received.at(2) == 'o')
             {
                 read_serial_data(2, Timeout);
                 //msg_type_string = "ACK";
                 received.clear();
+                msg_ack = true;
             }
             else if (received.at(2) == 'e')
             {
@@ -604,11 +605,6 @@ long J2534::PassThruStartMsgFilter(unsigned long ChannelID, unsigned long Filter
     output.clear();
     QString str = "atf" + QString::number(ChannelID) + " " + QString::number(FilterType) + " " + QString::number(pMaskMsg->TxFlags) + " " + QString::number(pMaskMsg->DataSize);
     output.append(str.toUtf8());
-    //if (pPatternMsg->DataSize > 0)
-        //output.append(" " + QString::number(pPatternMsg->DataSize));
-    //if (pFlowControlMsg != NULL)
-        //if (pFlowControlMsg->DataSize > 0)
-            //output.append(" " + QString::number(pFlowControlMsg->DataSize));
     output.append("\r\n");
 
     for (unsigned long  i = 0; i < pMaskMsg->DataSize; i++)
@@ -996,6 +992,20 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         *vBatt = response.toULong();
     }
 
+    if (IoctlID == FIVE_BAUD_INIT)
+    {
+        SBYTE_ARRAY *msg = (SBYTE_ARRAY*)pInput;
+
+        output.clear();
+        QString str = "atw" + QString::number(ChannelID) + " " + QString::number(msg->BytePtr[0]) + " 0\r\n";
+        output.append(str.toUtf8());
+        write_serial_data(output);
+        emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
+        delay(2000);
+        received = read_serial_data(10, serial_read_timeout);
+        emit LOG_D("Response: " + QString(received) + " | " + parseMessageToHex(received), true, true);
+    }
+
     if (IoctlID == FAST_INIT)
     {
         PASSTHRU_MSG *msg = (PASSTHRU_MSG*)pInput;
@@ -1005,13 +1015,10 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         output.append(str.toUtf8());
         for (i = 0; i < msg->DataSize; i++)
         {
-            //emit LOG_D("Value: " + QString(msg->Data[i]), true, true);
             output.append(msg->Data[i]);
         }
         write_serial_data(output);
         emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
-        //received = read_serial_data(100, serial_read_timeout);
-        //emit LOG_D("Response: " + parseMessageToHex(received), true, true);
     }
 
     if (input_as_sa)

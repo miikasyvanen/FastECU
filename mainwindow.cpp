@@ -2252,19 +2252,29 @@ void MainWindow::send_message_to_log_window(QString msg)
             textEdit->ensureCursorVisible();
         }
     }
-    else
+    QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
+    if (biuOperationsSubaruWindow)
     {
-        QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
-        if (biuOperationsSubaruWindow)
+        //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+        QTextEdit *textEdit = biuOperationsSubaruWindow->findChild<QTextEdit*>("text_edit");
+        if (textEdit)
         {
-            //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
-            QTextEdit *textEdit = biuOperationsSubaruWindow->findChild<QTextEdit*>("text_edit");
-            if (textEdit)
-            {
-                //emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
-                textEdit->insertPlainText(msg);
-                textEdit->ensureCursorVisible();
-            }
+            //emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
+            textEdit->insertPlainText(msg);
+            textEdit->ensureCursorVisible();
+        }
+    }
+    QDialog *dtcOperationsWindow = parent()->findChild<QDialog*>("DtcOperationsWindow");
+    if (dtcOperationsWindow)
+    {
+        emit LOG_D("Found dtcOperationsWindow", true, true);
+        QTextEdit *textEdit = dtcOperationsWindow->findChild<QTextEdit*>("text_edit");
+        if (textEdit)
+        {
+            emit LOG_D("Found dtcOperationsWindow->textEdit", true, true);
+            textEdit->insertPlainText(msg);
+            textEdit->ensureCursorVisible();
+            //emit LOG_D(textEdit, true, true);
         }
     }
 }

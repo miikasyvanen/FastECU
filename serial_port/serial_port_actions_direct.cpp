@@ -85,30 +85,46 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
     return STATUS_ERROR;
 }
 
-int SerialPortActionsDirect::slow_init()
+int SerialPortActionsDirect::five_baud_init(QByteArray output)
 {
     if (use_openport2_adapter)
     {
         unsigned long result;
-        PASSTHRU_MSG InputMsg;
-        PASSTHRU_MSG OutputMsg;
+        SBYTE_ARRAY InputMsg;
+        SBYTE_ARRAY OutputMsg;
+
+        //set_j2534_ioctl(FIVE_BAUD_MOD, 2);
+        unsigned char BytePtr[8];
 
         memset(&InputMsg, 0, sizeof(InputMsg));
         memset(&OutputMsg, 0, sizeof(OutputMsg));
 
-        InputMsg.ProtocolID = ISO14230;
-        InputMsg.TxFlags = 0;
+        InputMsg.NumOfBytes = 1;
+        InputMsg.BytePtr = BytePtr;
+        OutputMsg.NumOfBytes = 0;
+        OutputMsg.BytePtr = BytePtr;
+
+        for (int i = 0; i < output.length(); i++)
+        {
+            BytePtr[i] = (uint8_t)output.at(i);
+        }
 
         /* Set timeout to 350ms before init */
-        accurate_delay(350);
+        //accurate_delay(350);
 
+        LOG_D("Start five baud init", true, true);
         result = j2534->PassThruIoctl(chanID, FIVE_BAUD_INIT, &InputMsg, &OutputMsg);
         if (result)
         {
+            LOG_D("Buffer lengths - input: " + QString::number(InputMsg.NumOfBytes) + " and output: " + QString::number(OutputMsg.NumOfBytes), true, true);
             reportJ2534Error();
             return STATUS_ERROR;
         }
+
+        LOG_D("Buffer lengths - input: " + QString::number(InputMsg.NumOfBytes) + " and output: " + QString::number(OutputMsg.NumOfBytes), true, true);
     }
+    // 350ms delay to serial work again
+    //delay(350);
 
     return STATUS_SUCCESS;
 }
@@ -134,7 +150,7 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
 
         for (int i = 0; i < output.length(); i++)
         {
-            InputMsg.Data[i] = output.at(i);
+            InputMsg.Data[i] = (uint8_t)output.at(i);
         }
         InputMsg.DataSize = output.length();
 
@@ -161,7 +177,7 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
         // Set timeout to 25ms to generate 25ms high pulse before init data is sent
         accurate_delay(23.8);
         // Send init data
-        received = write_serial_data_echo_check(output);
+        write_serial_data_echo_check(output);
         received = read_serial_data(10);
         //emit LOG_D("Fast init response: " + parse_message_to_hex(received), true, true);
         delay(100);
@@ -1052,6 +1068,7 @@ int SerialPortActionsDirect::init_j2534_connection()
         emit LOG_D("INIT: J2534 DLL loaded.", true, true);
     }
 
+    devID++;
     // Open J2534 connection
     if (j2534->PassThruOpen(NULL, &devID))
     {
@@ -1063,7 +1080,9 @@ int SerialPortActionsDirect::init_j2534_connection()
     }
     else
     {
-        //emit LOG_D("INIT: J2534 opened, devID " + devID;
+#if defined Q_OS_UNIX
+        emit LOG_D("INIT: J2534 opened with devID: " + QString::number(devID), true, true);
+#endif
     }
 
     // Get J2534 adapter and driver version numbers

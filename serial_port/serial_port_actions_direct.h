@@ -110,7 +110,7 @@ public:
 
     bool is_serial_port_open();
     int change_port_speed(QString portSpeed);
-    int slow_init();
+    int five_baud_init(QByteArray output);
     int fast_init(QByteArray output);
     int set_lec_lines(int lec1, int lec2);
     int pulse_lec_1_line(int timeout);
@@ -185,7 +185,7 @@ private:
     QSerialPort *serial;
 
     unsigned int baudrate = 4800;
-    unsigned long devID;
+    unsigned long devID = 0;
     unsigned long chanID;
     unsigned long flags;
     unsigned int parity = NO_PARITY;
