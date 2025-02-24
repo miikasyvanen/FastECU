@@ -57,6 +57,11 @@ public:
     int  get_dataTerminalDisabled();
     bool set_dataTerminalDisabled(int value);
 
+    bool get_is_comm_busy();
+    void set_comm_busy(bool value);
+    bool get_read_vbatt();
+    void set_read_vbatt(bool value);
+
     uint8_t get_iso14230_startbyte();
     bool    set_iso14230_startbyte(uint8_t value);
     uint8_t get_iso14230_tester_id();
@@ -146,8 +151,10 @@ public:
 
     QString parse_message_to_hex(QByteArray received);
 
-    //bool set_read_vbatt = false;
-    //bool set_comm_busy = false;
+    unsigned long read_vbatt();
+
+    bool is_read_vbatt = false;
+    bool is_comm_busy = false;
     unsigned long vBatt = 0;
 
 public slots:
@@ -176,7 +183,6 @@ private:
 
 private slots:
     void serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
-    unsigned long read_vbatt();
 
 };
 
