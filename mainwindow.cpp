@@ -2292,14 +2292,14 @@ void MainWindow::update_vbatt()
     QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
     if (ecuOperationsWindow)
     {
-        emit LOG_D("Found ecuOperationsWindow", true, true);
+        //emit LOG_D("Found ecuOperationsWindow", true, true);
         QLabel *vBattLabel = ecuOperationsWindow->findChild<QLabel*>("vBattLabel");
         if (vBattLabel)
         {
-            emit LOG_D("Found ecuOperationsWindow->vBattLabel", true, true);
+            //emit LOG_D("Found ecuOperationsWindow->vBattLabel", true, true);
             QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
             vBattLabel->setText(vBattText);
-            //emit LOG_D(vBattText, true, true);
+            emit LOG_D(vBattText, true, true);
         }
     }
 }

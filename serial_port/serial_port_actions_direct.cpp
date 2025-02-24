@@ -941,14 +941,14 @@ unsigned long SerialPortActionsDirect::read_vbatt()
             reportJ2534Error();
             return STATUS_ERROR;
         }
-        emit LOG_D("Batt: " + QString::number(vBatt / 1000.0) + " V", true, true);
+        //emit LOG_D("Batt: " + QString::number(vBatt / 1000.0) + " V", true, true);
 
         return vBatt;
 
     }
     else
     {
-        emit LOG_D("Adapter does not support reading voltage", true, true);
+        //emit LOG_D("Adapter does not support reading voltage", true, true);
         return STATUS_SUCCESS;
     }
 

@@ -1060,7 +1060,7 @@ unsigned long SerialPortActions::read_vbatt()
         }
         else
             set_read_vbatt(true);
-        emit LOG_D("Remote vBatt: " + QString::number(vBatt), true, true);
+        //emit LOG_D("Remote vBatt: " + QString::number(vBatt), true, true);
     }
     return vBatt;
 }
