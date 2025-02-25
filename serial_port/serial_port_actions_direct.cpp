@@ -85,16 +85,17 @@ int SerialPortActionsDirect::change_port_speed(QString portSpeed)
     return STATUS_ERROR;
 }
 
-int SerialPortActionsDirect::five_baud_init(QByteArray output)
+QByteArray SerialPortActionsDirect::five_baud_init(QByteArray output)
 {
+    QByteArray response;
+
     if (use_openport2_adapter)
     {
         unsigned long result;
         SBYTE_ARRAY InputMsg;
         SBYTE_ARRAY OutputMsg;
 
-        //set_j2534_ioctl(FIVE_BAUD_MOD, 2);
-        unsigned char BytePtr[8];
+        unsigned char BytePtr[20];
 
         memset(&InputMsg, 0, sizeof(InputMsg));
         memset(&OutputMsg, 0, sizeof(OutputMsg));
@@ -105,28 +106,19 @@ int SerialPortActionsDirect::five_baud_init(QByteArray output)
         OutputMsg.BytePtr = BytePtr;
 
         for (int i = 0; i < output.length(); i++)
-        {
             BytePtr[i] = (uint8_t)output.at(i);
-        }
 
-        /* Set timeout to 350ms before init */
-        //accurate_delay(350);
-
-        LOG_D("Start five baud init", true, true);
         result = j2534->PassThruIoctl(chanID, FIVE_BAUD_INIT, &InputMsg, &OutputMsg);
         if (result)
         {
-            LOG_D("Buffer lengths - input: " + QString::number(InputMsg.NumOfBytes) + " and output: " + QString::number(OutputMsg.NumOfBytes), true, true);
             reportJ2534Error();
-            return STATUS_ERROR;
+            return response;
         }
-
-        LOG_D("Buffer lengths - input: " + QString::number(InputMsg.NumOfBytes) + " and output: " + QString::number(OutputMsg.NumOfBytes), true, true);
+        for (unsigned long i = 0; i < OutputMsg.NumOfBytes; i++)
+            response.append(OutputMsg.BytePtr[i]);
     }
-    // 350ms delay to serial work again
-    //delay(350);
 
-    return STATUS_SUCCESS;
+    return response;
 }
 
 int SerialPortActionsDirect::fast_init(QByteArray output)
@@ -1381,8 +1373,8 @@ int SerialPortActionsDirect::set_j2534_iso9141_timings()
     {
         // Set timeouts etc.
         SCONFIG_LIST scl;
-        SCONFIG scp[6] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0}};
-        scl.NumOfParams = 6;
+        SCONFIG scp[10] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0},{W4,0}};
+        scl.NumOfParams = 7;
         scp[0].Value = 0;
         scp[1].Value = 1;
         scp[2].Value = 0;
@@ -1393,6 +1385,7 @@ int SerialPortActionsDirect::set_j2534_iso9141_timings()
         else if (serial_port_parity == QSerialPort::EvenParity)
             scp[4].Value = EVEN_PARITY;
         scp[5].Value = 25;
+        scp[9].Value = 40;
         scl.ConfigPtr = scp;
         if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
         {

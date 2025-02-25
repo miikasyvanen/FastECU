@@ -847,17 +847,18 @@ int SerialPortActions::set_j2534_ioctl(unsigned long parameter, int value)
     return result;
 }
 
-int SerialPortActions::five_baud_init(QByteArray output)
+QByteArray SerialPortActions::five_baud_init(QByteArray output)
 {
+    QByteArray response;
     bool result = STATUS_SUCCESS;
     this->set_comm_busy(true);
 
     if (isDirectConnection())
-        result = serial_direct->five_baud_init(output);
+        response = serial_direct->five_baud_init(output);
     else
-        result = qtrohelper::slot_sync(serial_remote->five_baud_init(output));
+        response = qtrohelper::slot_sync(serial_remote->five_baud_init(output));
 
-    return result;
+    return response;
 }
 
 int SerialPortActions::fast_init(QByteArray output)

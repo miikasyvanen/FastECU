@@ -65,21 +65,26 @@ int DtcOperations::init_obd()
 
     output.clear();
     output.append((uint8_t)0x33);
-    result = serial->five_baud_init(output);
-    received = serial->read_serial_data(serial_read_extra_short_timeout);
+    received = serial->five_baud_init(output);
+    //received = serial->read_serial_data(serial_read_extra_short_timeout);
     serial->set_comm_busy(true);
-    emit LOG_I("5 baud init result: " + QString::number(result), true, true);
+    emit LOG_I("5 baud init response: " + parse_message_to_hex(received), true, true);
+    //serial->set_j2534_ioctl(W3, (uint8_t)received.at(5));
+    serial->set_j2534_ioctl(P1_MAX, 35);
+    serial->set_j2534_ioctl(P4_MIN, 5);
 
-    //if (result == STATUS_SUCCESS)
-    //{
-        emit LOG_I("Send init response", true, true);
-        output.clear();
-        output.append((uint8_t)(0x08^0xff));
-        serial->write_serial_data_echo_check(output);
-        emit LOG_I("Request response", true, true);
-        received = serial->read_serial_data(serial_read_timeout);
-
-    //}
+    delay(500);
+    output.clear();
+    output.append((uint8_t)0x68);
+    output.append((uint8_t)0x6A);
+    output.append((uint8_t)0xF1);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x02);
+    //output.append((uint8_t)0x0D);
+    output.append(calculate_checksum(output, false));
+    serial->write_serial_data_echo_check(output);
+    received = serial->read_serial_data(serial_read_timeout);
+    emit LOG_I("DTC: " + parse_message_to_hex(received), true, true);
 
     return STATUS_SUCCESS;
 }
@@ -88,6 +93,24 @@ int DtcOperations::init_obd()
 
 
 
+
+/*
+ * Calculate SSM checksum to message
+ *
+ * @return 8-bit checksum
+ */
+uint8_t DtcOperations::calculate_checksum(QByteArray output, bool dec_0x100)
+{
+    uint8_t checksum = 0;
+
+    for (uint16_t i = 0; i < output.length(); i++)
+        checksum += (uint8_t)output.at(i);
+
+    if (dec_0x100)
+        checksum = (uint8_t) (0x100 - checksum);
+
+    return checksum;
+}
 
 /*
  * Parse QByteArray to readable form
