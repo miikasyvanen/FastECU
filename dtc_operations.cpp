@@ -58,6 +58,7 @@ int DtcOperations::init_obd()
 
     QByteArray output;
     QByteArray received;
+    QByteArray VIN;
     int result = STATUS_SUCCESS;
 
     // FIVE_BAUD_INIT
@@ -71,7 +72,7 @@ int DtcOperations::init_obd()
     emit LOG_I("5 baud init response: " + parse_message_to_hex(received), true, true);
     //serial->set_j2534_ioctl(W3, (uint8_t)received.at(5));
     serial->set_j2534_ioctl(P1_MAX, 35);
-    serial->set_j2534_ioctl(P4_MIN, 5);
+    //serial->set_j2534_ioctl(P4_MIN, 5);
 
     delay(500);
     output.clear();
@@ -83,8 +84,17 @@ int DtcOperations::init_obd()
     //output.append((uint8_t)0x0D);
     output.append(calculate_checksum(output, false));
     serial->write_serial_data_echo_check(output);
-    received = serial->read_serial_data(serial_read_timeout);
-    emit LOG_I("DTC: " + parse_message_to_hex(received), true, true);
+    while (1)
+    {
+        serial->set_comm_busy(true);
+        received = serial->read_serial_data(serial_read_timeout);
+        if (received.at(3) != 0x49)
+            break;
+        received.remove(0, 6);
+        received.remove(received.length()-1, 1);
+        VIN.append(received);
+    }
+    emit LOG_I("VIN: " + parse_message_to_hex(VIN), true, true);
 
     return STATUS_SUCCESS;
 }
