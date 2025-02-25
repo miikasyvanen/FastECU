@@ -63,6 +63,7 @@ private:
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
@@ -78,34 +79,26 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int connect_bootloader_subaru_tcu_hitachi_kline();
-    int read_a0_rom_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
-    int read_a0_ram_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
-    int read_b8_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
-    int read_b0_subaru_tcu_hitachi_kline(uint32_t start_addr, uint32_t length);
+    int connect_bootloader();
+    int read_a0_rom(uint32_t start_addr, uint32_t length);
+    int read_a0_ram(uint32_t start_addr, uint32_t length);
+    int read_b8(uint32_t start_addr, uint32_t length);
+    int read_b0(uint32_t start_addr, uint32_t length);
 
-    QByteArray subaru_tcu_hitachi_encrypt_32bit_payload();
+    QByteArray encrypt_payload();
 
-    QByteArray send_subaru_tcu_sid_bf_ssm_init();
-    QByteArray send_subaru_tcu_sid_81_start_communication();
-    QByteArray send_subaru_tcu_sid_83_request_timings();
-    QByteArray send_subaru_tcu_sid_27_request_seed();
-    QByteArray send_subaru_tcu_sid_27_send_seed_key(QByteArray seed_key);
-    QByteArray send_subaru_tcu_sid_10_start_diagnostic();
-    QByteArray send_subaru_tcu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
-    QByteArray send_subaru_tcu_sid_b8_byte_read(uint32_t dataaddr);
-    QByteArray send_subaru_tcu_sid_b0_block_write(uint32_t dataaddr, uint32_t datalen);
+    QByteArray send_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
+    QByteArray send_sid_b8_byte_read(uint32_t dataaddr);
+    QByteArray send_sid_b0_block_write(uint32_t dataaddr, uint32_t datalen);
 
-    QByteArray subaru_tcu_generate_kline_seed_key(QByteArray seed);
-    QByteArray subaru_tcu_hitachi_generate_can_seed_key(QByteArray requested_seed);
-    QByteArray subaru_tcu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray generate_kline_seed_key(QByteArray seed);
+    QByteArray generate_can_seed_key(QByteArray requested_seed);
+    QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    //int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

@@ -10,7 +10,7 @@ void MainWindow::kline_listener()
 
     while (haltech_ic7_display_on)
     {
-        received = serial->read_serial_data(100, 500);
+        received = serial->read_serial_data(receive_timeout);
         //qDebug() << parse_message_to_hex(received);
         //delay(5);
     }
@@ -22,7 +22,7 @@ void MainWindow::canbus_listener()
 
     while (haltech_ic7_display_on)
     {
-        received = serial->read_serial_data(100, 500);
+        received = serial->read_serial_data(receive_timeout);
         //qDebug() << parse_message_to_hex(received);
         //delay(5);
     }
@@ -30,21 +30,6 @@ void MainWindow::canbus_listener()
 
 bool MainWindow::ecu_init()
 {
-/*
-    QString car_model;
-
-    //qDebug() << "ECU init";
-    QByteArray output;
-    uint8_t chksum = 0;
-    output.clear();
-    output.append((uint8_t)0x81);
-    output.append((uint8_t)0x40);
-    output.append((uint8_t)0xf0);
-    output.append((uint8_t)0x81);
-    for (int i = 0; i < output.length(); i++)
-        chksum += (uint8_t)output.at(i);
-    output.append(chksum & 0xFF);
-*/
     if (serial->is_serial_port_open())
     {
         if (!ecu_init_complete)
@@ -95,7 +80,7 @@ void MainWindow::ssm_init()
     //delay(1000);
     for (int i = 0; i < 10; i++)
     {
-        received.append(serial->read_serial_data(100, 500));
+        received.append(serial->read_serial_data(500));
     }
     qDebug() << "Received:" << parse_message_to_hex(received);
     //if (received.length() > 0)
@@ -117,11 +102,11 @@ void MainWindow::ssm_init()
     //delay(2000);
     for (int i = 0; i < 2; i++)
     {
-        received.append(serial->read_serial_data(100, 500));
+        received.append(serial->read_serial_data(500));
     }
     qDebug() << "Received:" << parse_message_to_hex(received);
     //qDebug() << "Checking response...";
-    //received = serial->read_serial_data(100, 500);
+    //received = serial->read_serial_data(receive_timeout);
     received.clear();
     output.clear();
     output.append((uint8_t)0x12);
@@ -129,7 +114,7 @@ void MainWindow::ssm_init()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     serial->write_serial_data(output);
-    received.append(serial->read_serial_data(100, 500));
+    received.append(serial->read_serial_data(500));
 
     if (received.length() > 0)
     {
@@ -146,17 +131,17 @@ void MainWindow::ssm_init()
             else
                 set_status_bar_label(true, true, ecuid);
 
-            received = serial->read_serial_data(1, 100);
+            received = serial->read_serial_data(100);
             while(received.length() > 0)
             {
                 ecu_init_complete = true;
                 ecuid = parse_ecuid(received);
                 parse_log_value_list(received, "SSM");
 
-                received = serial->read_serial_data(1, 100);
+                received = serial->read_serial_data(100);
                 while(received.length() > 0)
                 {
-                    received = serial->read_serial_data(1, 100);
+                    received = serial->read_serial_data(100);
                 }
             }
         }
@@ -183,11 +168,11 @@ void MainWindow::ssm_kline_init()
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
         qDebug() << "K-Line SSM init sent";
         delay(200);
-        received = serial->read_serial_data(100, 200);
+        received = serial->read_serial_data(serial_read_short_timeout);
         qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
         while (received.length() < 4 && loopcount < 10)
         {
-            received.append(serial->read_serial_data(100, 50));
+            received.append(serial->read_serial_data(50));
             loopcount++;
         }
         if (received.length() < 4)
@@ -197,7 +182,7 @@ void MainWindow::ssm_kline_init()
         loopcount = 0;
         while (received.length() < (uint8_t)received.at(3) + 5 && loopcount < 10)
         {
-            received.append(serial->read_serial_data(100, 50));
+            received.append(serial->read_serial_data(50));
             loopcount++;
         }
         if (received.length() < (uint8_t)received.at(3) + 5)
@@ -219,7 +204,7 @@ void MainWindow::ssm_kline_init()
             return;
         }
         /*
-        received.append(serial->read_serial_data(10, 100));
+        received.append(serial->read_serial_data(100));
         while(received.length() > 0)
         {
             //qDebug() << "ECU ID:" << parse_ecuid(received);
@@ -228,10 +213,10 @@ void MainWindow::ssm_kline_init()
             ecuid = parse_ecuid(received);
             parse_log_value_list(received, "SSM");
 
-            received = serial->read_serial_data(1, 100);
+            received = serial->read_serial_data(100);
             while(received.length() > 0)
             {
-                received = serial->read_serial_data(1, 100);
+                received = serial->read_serial_data(100);
             }
         }
 */
@@ -258,7 +243,7 @@ void MainWindow::ssm_can_init()
     qDebug() << Q_FUNC_INFO << configValues->flash_protocol_selected_log_protocol;
 
     if (configValues->flash_protocol_selected_log_protocol == "CAN")
-        received = serial->read_serial_data(100, 500);
+        received = serial->read_serial_data(receive_timeout);
     else if (configValues->flash_protocol_selected_log_transport == "iso15765")
     {
         // Set serial port
@@ -283,7 +268,7 @@ void MainWindow::ssm_can_init()
         output.append((uint8_t)0xF1);
         output.append((uint8_t)0x82);
         serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(100, 100);
+        received = serial->read_serial_data(100);
         if (received.length() > 7 &&
             (uint8_t)received.at(4) == 0x62 &&
             (uint8_t)received.at(5) == 0xF1 &&
@@ -369,13 +354,13 @@ void MainWindow::read_log_serial_data()
         logparams_read_active = true;
         //qDebug() << "Read logger data from ECU";
         if (serial->get_use_openport2_adapter())
-            received = serial->read_serial_data(1, 100);
+            received = serial->read_serial_data(100);
         else
         {
             int loop_count = 0;
             while (received.length() < 3 && loop_count < 100)
             {
-                received.append(serial->read_serial_data(1, 10));
+                received.append(serial->read_serial_data(10));
                 loop_count++;
             }
             //qDebug() << "Header data" << parse_message_to_hex(received);
@@ -383,11 +368,11 @@ void MainWindow::read_log_serial_data()
             while (((uint8_t)received.at(0) != 0x80 || (uint8_t)received.at(1) != 0xf0 || (uint8_t)received.at(2) != 0x10) && loop_count < 200)
             {
                 received.remove(0, 1);
-                received.append(serial->read_serial_data(1, 50));
+                received.append(serial->read_serial_data(50));
                 loop_count++;
             }
-            received.append(serial->read_serial_data(1, 50));
-            received.append(serial->read_serial_data((uint8_t)received.at(3) + 1, 100));
+            received.append(serial->read_serial_data(50));
+            received.append(serial->read_serial_data(100));
         }
 
         if (received.length() > 6 && (uint8_t)received.at(4) == 0xe8)

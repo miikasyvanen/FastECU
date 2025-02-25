@@ -45,6 +45,7 @@ public:
     bool serialPortAvailable = false;
     bool setRequestToSend = true;
     bool setDataTerminalReady = true;
+    bool signalToReadBattVoltage = false;
 
     bool add_iso14230_header = false;
     bool is_iso14230_connection = false;
@@ -54,12 +55,21 @@ public:
 
     bool use_openport2_adapter = false;
 
+    unsigned int vBatt = 0;
+
     int requestToSendEnabled = 0;
     int requestToSendDisabled = 1;
     int dataTerminalEnabled = 0;
     int dataTerminalDisabled = 1;
 
-    int echo_check_timout = 5000;
+    uint16_t echo_check_timout = 5000;
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
+    uint16_t serial_read_extra_short_timeout = 50;
+    uint16_t serial_read_short_timeout = 200;
+    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_long_timeout = 800;
+    uint16_t serial_read_extra_long_timeout = 3000;
 
     uint8_t iso14230_startbyte = 0;
     uint8_t iso14230_tester_id = 0;
@@ -106,7 +116,8 @@ public:
 
     void reset_connection();
 
-    QByteArray read_serial_data(uint32_t datalen, uint16_t timeout);
+    QByteArray set_error();
+    QByteArray read_serial_data(uint16_t timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);
 
@@ -118,6 +129,8 @@ public:
 
     QStringList check_serial_ports();
     QString open_serial_port();
+
+    unsigned long read_vbatt();
 
 private:
 #ifndef ARRAYSIZE
@@ -149,6 +162,7 @@ private:
     int set_j2534_iso9141();
     int set_j2534_iso9141_filters();
     int set_j2534_iso9141_timings();
+
     unsigned long msgID = 0;
 
     enum rx_msg_type {
@@ -221,7 +235,7 @@ private slots:
 
     void close_serial_port();
     void handle_error(QSerialPort::SerialPortError error);
-    void accurate_delay(int timeout);
+    void accurate_delay(double timeout);
     void fast_delay(int timeout);
     void delay(int timeout);
 

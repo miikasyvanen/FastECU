@@ -48,13 +48,19 @@ private:
     QString flash_method;
     QString kernel;
 
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
+    uint16_t serial_read_extra_short_timeout = 50;
+    uint16_t serial_read_short_timeout = 200;
+    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_long_timeout = 800;
+    uint16_t serial_read_extra_long_timeout = 3000;
 
     void closeEvent(QCloseEvent *bar);
 
-    int read_mem_subaru_unisia_jecs(uint32_t start_addr, uint32_t length);
+    int read_mem(uint32_t start_addr, uint32_t length);
 
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

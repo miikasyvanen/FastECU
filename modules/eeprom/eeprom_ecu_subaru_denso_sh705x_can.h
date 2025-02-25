@@ -75,6 +75,12 @@ private:
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
+    uint32_t seed_alter = 0;
+    uint32_t xor_multi = 0x01000193;
+    uint8_t xor_byte_1 = 0;
+    uint8_t xor_byte_2 = 0;
+    uint32_t et_rr_seed = 0;
+
     QString mcu_type_string;
     QString flash_method;
     QString kernel;
@@ -115,11 +121,14 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
+
+    QByteArray calculate_ecutek_racerom_seed_key(uint32_t req_seed);//QByteArray requested_seed);
+    QByteArray generate_ecutek_racerom_can_seed_key(QByteArray requested_seed);
+    unsigned long long decrypt_racerom_seed(const unsigned long long base, const unsigned long long exponent, const unsigned long long modulus);
+    uint32_t read_ram_location(uint32_t loc);
 
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;

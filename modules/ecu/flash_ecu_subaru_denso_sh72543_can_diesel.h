@@ -1,36 +1,28 @@
-#ifndef FLASHECUUNISIAJECS0X27_H
-#define FLASHECUUNISIAJECS0X27_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH72543_CAN_H
+#define FLASH_ECU_SUBARU_DENSO_SH72543_CAN_H
 
-#include <QApplication>
-#include <QByteArray>
-#include <QCoreApplication>
-#include <QDebug>
-#include <QMainWindow>
-#include <QSerialPort>
-#include <QTime>
-#include <QTimer>
 #include <QWidget>
 
 #include <kernelcomms.h>
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
-#include <serial_port_actions.h>
+#include <serial_port/serial_port_actions.h>
 #include <ui_ecu_operations.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
-    class EcuOperationsWindow;
+class EcuOperationsWindow;
 }
 QT_END_NAMESPACE
 
-class FlashEcuSubaruHitachiM32rKlineRecovery : public QDialog
+class FlashEcuSubaruDensoSH72543CanDiesel : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashEcuSubaruHitachiM32rKlineRecovery(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashEcuSubaruHitachiM32rKlineRecovery();
+    explicit FlashEcuSubaruDensoSH72543CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH72543CanDiesel();
 
     void run();
 
@@ -46,8 +38,8 @@ private:
     FileActions::EcuCalDefStructure *ecuCalDef;
     QString cmd_type;
 
-    #define STATUS_SUCCESS							0x00
-    #define STATUS_ERROR							0x01
+#define STATUS_SUCCESS	0x00
+#define STATUS_ERROR	0x01
 
     bool kill_process = false;
     bool kernel_alive = false;
@@ -62,10 +54,8 @@ private:
     uint8_t tester_id;
     uint8_t target_id;
 
-    uint8_t comm_try_timeout = 50;
-    uint8_t comm_try_count = 4;
-
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
@@ -82,32 +72,19 @@ private:
     void closeEvent(QCloseEvent *event);
 
     int connect_bootloader();
-    int read_mem(uint32_t start_addr, uint32_t length);
-    int write_mem(bool test_write);
+    int read_memory(uint32_t start_addr, uint32_t length);
+    int write_memory(bool test_write);
     int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int erase_memory();
 
-    QByteArray send_sid_bf_ssm_init();
-    QByteArray send_sid_b8_change_baudrate_38400();
-    QByteArray send_sid_81_start_communication();
-    QByteArray send_sid_83_request_timings();
-    QByteArray send_sid_27_request_seed();
-    QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
-    QByteArray send_sid_10_start_diagnostic();
-    QByteArray send_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
-    QByteArray send_sid_b8_byte_read(uint32_t dataaddr);
-    QByteArray send_sid_b0_block_write(uint32_t dataaddr, uint32_t datalen);
-
-    QByteArray generate_seed_key(QByteArray seed);
+    QByteArray generate_can_seed_key(QByteArray requested_seed);
     QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
-
     QByteArray encrypt_payload(QByteArray buf, uint32_t len);
     QByteArray decrypt_payload(QByteArray buf, uint32_t len);
     QByteArray calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
-    QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    //int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);
     void delay(int timeout);
@@ -115,9 +92,7 @@ private:
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
 
-private slots:
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
 
 };
 
-#endif // FLASHECUUNISIAJECS0X27_H
+#endif // FLASH_ECU_SUBARU_DENSO_SH72543_CAN_H

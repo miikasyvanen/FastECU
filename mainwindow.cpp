@@ -71,11 +71,11 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     syslog_thread->start();
 
 #if defined Q_OS_UNIX
-    LOG_D("Running on Linux Desktop ", true, false);
+    emit LOG_D("Running on Linux Desktop ", true, false);
     //serialPort = serialPortLinux;
     serial_port_prefix = "/dev/";
 #elif defined Q_OS_WIN32
-    LOG_D("Running on Windows Desktop ", true, false);
+    emit LOG_D("Running on Windows Desktop ", true, false);
     //serialPort = serialPortWindows;
     serial_port_prefix = "";
 #endif
@@ -92,6 +92,11 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     QObject::connect(fileActions, &FileActions::LOG_D, syslogger, &SystemLogger::log_messages);
 
     emit enable_log_write_to_file(true);
+
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(calibrationTreeWidget, &CalibrationTreeWidget::LOG_D, syslogger, &SystemLogger::log_messages);
 
     fileActions->check_config_dirs(configValues);
 
@@ -299,6 +304,12 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
             this, &MainWindow::network_state_changed, Qt::DirectConnection);
     connect(remote_utility, &RemoteUtility::stateChanged,
             this, &MainWindow::network_state_changed, Qt::DirectConnection);
+
+    // Set timer to read vbatt value
+    QTimer *vBattTimer = new QTimer(this);
+    vBattTimer->setInterval(1000);
+    connect(vBattTimer, SIGNAL(timeout()), this, SLOT(update_vbatt()));
+    vBattTimer->start();
 
     setSplashScreenProgress("Setting up toolbar...", 10);
     toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
@@ -958,10 +969,8 @@ int MainWindow::can_listener()
     while (can_listener_on)
     {
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
         delay(200);
-        received = serial->read_serial_data(100, 500);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        received = serial->read_serial_data(receive_timeout);
 
         id++;
         if (id > 0xE8)
@@ -1136,6 +1145,11 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             FlashEcuSubaruDensoSH705xKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
             connect_signals_and_run_module(&flash_module);
         }
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh72543_can_diesel"))
+        {
+            FlashEcuSubaruDensoSH72543CanDiesel flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_denso_sh7058_can_diesel"))
         {
             FlashEcuSubaruDensoSH7058CanDiesel flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
@@ -1218,7 +1232,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             connect_signals_and_run_module(&flash_module);
         }
         /*
-        * Unisia Jecs ECU Boot Mode
+        * Unisia Jecs ECU Bootmode
         */
         else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_unisia_jecs_20_bootmode"))
         {
@@ -1268,6 +1282,14 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         * Hitachi ECU Boot Mode
         */
 
+        /*
+        * Hitachi ECU JTAG
+        */
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_ecu_hitachi_m32r_jtag"))
+        {
+            FlashEcuSubaruHitachiM32rJtag flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Hitachi ECU
         */
@@ -1343,7 +1365,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
 
                 if (ecuCalDef[ecuCalDefIndex]->RomId.length())
-                    ecuCalDef[ecuCalDefIndex]->FileName = ecuCalDef[ecuCalDefIndex]->RomId + "-" + dateTimeString + ".bin";
+                    ecuCalDef[ecuCalDefIndex]->FileName = ecuCalDef[ecuCalDefIndex]->RomId + dateTimeString + ".bin";
+                else
+                    ecuCalDef[ecuCalDefIndex]->FileName = "read_image_" + dateTimeString + ".bin";
 
                 //emit LOG_D("Checking definitions, please wait...";
                 fileActions->open_subaru_rom_file(ecuCalDef[ecuCalDefIndex], ecuCalDef[ecuCalDefIndex]->FileName);
@@ -2233,13 +2257,49 @@ void MainWindow::send_message_to_log_window(QString msg)
     QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
     if (ecuOperationsWindow)
     {
-        //emit LOG_D("Found ecuOperationsWindow";
+        //emit LOG_D("Found ecuOperationsWindow", true, true);
         QTextEdit *textEdit = ecuOperationsWindow->findChild<QTextEdit*>("text_edit");
         if (textEdit)
         {
-            //emit LOG_D("Found ecuOperationsWindow->textEdit";
+            //emit LOG_D("Found ecuOperationsWindow->textEdit", true, true);
             textEdit->insertPlainText(msg);
             textEdit->ensureCursorVisible();
+        }
+    }
+    else
+    {
+        QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
+        if (biuOperationsSubaruWindow)
+        {
+            //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+            QTextEdit *textEdit = biuOperationsSubaruWindow->findChild<QTextEdit*>("text_edit");
+            if (textEdit)
+            {
+                //emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
+                textEdit->insertPlainText(msg);
+                textEdit->ensureCursorVisible();
+            }
+        }
+    }
+}
+
+void MainWindow::update_vbatt()
+{
+    unsigned long vBatt = 0;
+
+    vBatt = serial->read_vbatt();
+
+    QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
+    if (ecuOperationsWindow)
+    {
+        //emit LOG_D("Found ecuOperationsWindow", true, true);
+        QLabel *vBattLabel = ecuOperationsWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            //emit LOG_D("Found ecuOperationsWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            emit LOG_D(vBattText, true, true);
         }
     }
 }

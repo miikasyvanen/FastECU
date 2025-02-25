@@ -1,5 +1,67 @@
 #include "file_actions.h"
 
+const QHash<int, QString> FileActions::neg_rsp_codes {
+    {0x10, "General reject"},
+    {0x11, "Service not supported"},
+    {0x12, "Subfunction not supported"},
+    {0x13, "Incorrect message length or invalid format"},
+    {0x14, "Response too long"},
+    {0x21, "Busy, repeat request"},
+    {0x22, "Conditions not correct"},
+    {0x24, "Request sequence error"},
+    {0x25, "No response from subnet component"},
+    {0x26, "Failure prevents execution of requested action"},
+    {0x31, "Request out of range"},
+    {0x33, "Security access denied"},
+    {0x34, "Authentication failed"},
+    {0x35, "Invalid key"},
+    {0x36, "Exceeded number of attempts"},
+    {0x37, "Required time delay not expired"},
+    {0x38, "Secure data transmission required"},
+    {0x39, "Secure data transmission not allowed"},
+    {0x3A, "Secure data verification failed"},
+    {0x50, "Certificate validation failed, invalid time period"},
+    {0x51, "Certificate validation failed, invalid signature"},
+    {0x52, "Certificate validation failed, invalid chain of trust"},
+    {0x53, "Certificate validation failed, invalid type"},
+    {0x54, "Certificate validation failed, invalid format"},
+    {0x55, "Certificate validation failed, invalid content"},
+    {0x56, "Certificate validation failed, invalid scope"},
+    {0x57, "Certificate validation failed, invalid certificate"},
+    {0x58, "Ownership verification failed"},
+    {0x59, "Challenge calculation failed"},
+    {0x5A, "Setting access right failed"},
+    {0x5B, "Session key creation/derivation failed"},
+    {0x5C, "Configuration data usage failed"},
+    {0x5D, "Deauthentication failed"},
+    {0x70, "Upload download not accepted"},
+    {0x71, "Transfer data suspended"},
+    {0x72, "General programming failure"},
+    {0x73, "Wrong block sequence number"},
+    {0x78, "Request correctly received, response pending"},
+    {0x7E, "Subfunction not supported in active session"},
+    {0x7F, "Service not supported in active session"},
+    {0x81, "RPM too high"},
+    {0x82, "RPM too low"},
+    {0x83, "Engine is running"},
+    {0x84, "Engine is not running"},
+    {0x85, "Engine run time too low"},
+    {0x86, "Temperature too high"},
+    {0x87, "Temperature too low"},
+    {0x88, "Vehicle speed too high"},
+    {0x89, "Vehicle speed too low"},
+    {0x8A, "Throttle/pedal too high"},
+    {0x8B, "Throttle/pedal too low"},
+    {0x8C, "Transmission range not in neutral"},
+    {0x8D, "Transmission range not in gear"},
+    {0x8F, "Brake switch not closed"},
+    {0x90, "Shifter lever not in park"},
+    {0x91, "Torque converter clutch locked"},
+    {0x92, "Voltage too high"},
+    {0x93, "Voltage too low"},
+    {0x94, "Resource temporary unavailable"}
+};
+
 FileActions::FileActions(QWidget *parent)
     : QWidget(parent)
 {
@@ -113,7 +175,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
             emit LOG_D("Sorted dir by date: " + configDirList.at(i).absoluteFilePath() + " " + configDirList.at(i).lastModified().toString(), true, true);
         }
         // Copy latest version directory path
-        if (configDirList.length() > 1)
+        if (configDirList.length())
             latest_config_dir = configDirList.at(0).absoluteFilePath();
         //else
         //    latest_config_dir = configDirList.at(configDirList.length() - 1).absoluteFilePath();
@@ -133,6 +195,7 @@ FileActions::ConfigValuesStructure *FileActions::check_config_dirs(ConfigValuesS
     if (!QDir(configValues->config_files_directory).exists()){
         QDir().mkdir(configValues->config_files_directory);
         // Copy fastecu.cfg from latest previous config
+        LOG_D("Copy " + latest_config_dir + "/config/fastecu.cfg --> " + configValues->config_files_directory + "fastecu.cfg", true, true);
         QFile configFile(latest_config_dir + "/config/fastecu.cfg");
         configFile.copy(configValues->config_files_directory + "fastecu.cfg");
     }
@@ -2127,7 +2190,11 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "read.bin");
 
         if (filename == "")
-            filename = "read.bin";
+        {
+            QDateTime dateTime = dateTime.currentDateTime();
+            QString dateTimeString = dateTime.toString("yyyy-MM-dd_hh'h'mm'm'ss's'");
+            filename = "read_image_" + dateTimeString + ".bin";
+        }
 
         QFile file(filename);
         QFileInfo fileInfo(file.fileName());
@@ -2335,6 +2402,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
             ecuCalDef->MapData.replace(i, mapData);
+            //emit LOG_D("Mapdata " + ecuCalDef->MapData.at(i), true, true);
         }
         else
         {
@@ -2376,7 +2444,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
                     }
                     //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
-                    //    emit LOG_D("MapData value " + value, true, true);
+                        //emit LOG_D("MapData value " + QString::number(value), true, true);
                 }
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
             }
@@ -2892,4 +2960,16 @@ double FileActions::calculate_value_from_expression(QStringList expression)
     if (isnan(value))
         value = 0;
     return value;
+}
+
+QString FileActions::parse_nrc_message(QByteArray nrc)
+{
+    QString ret = "Unknown error code";
+
+    if (nrc.length() > 2 && (uint8_t)nrc.at(0) == 0x7f)
+    {
+        ret = neg_rsp_codes.value( (uint8_t)nrc.at(2), ret);
+    }
+
+    return ret;
 }

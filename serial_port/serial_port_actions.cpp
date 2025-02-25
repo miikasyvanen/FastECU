@@ -1,4 +1,5 @@
 #include "serial_port_actions.h"
+#include "qdialog.h"
 #include "qtrohelper.hpp"
 
 SerialPortActions::SerialPortActions(QString peerAddress,
@@ -17,6 +18,7 @@ SerialPortActions::SerialPortActions(QString peerAddress,
     , serial_remote(nullptr)
     , heartbeatInterval(0)
 {
+
     if (isDirectConnection())
     {
         serial_direct = new SerialPortActionsDirect(this);
@@ -60,7 +62,7 @@ void SerialPortActions::startOverNetwok(void)
     node.setHeartbeatInterval(heartbeatInterval);
     QObject::connect(webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
                      this, [=](QAbstractSocket::SocketError error)
-                     { qDebug() << this->metaObject()->className() << "startOverNetwok QWebSocket error:" << error; });
+                     { emit LOG_D(QString(this->metaObject()->className()) + " startOverNetwok QWebSocket error: " + QMetaEnum::fromType<QAbstractSocket::SocketError>().valueToKey(error), true, true); });
     //WebSocket over SSL
     QUrl url("wss://"+peerAddress);
     url.setPath(wssPath);
@@ -106,18 +108,26 @@ void SerialPortActions::waitForSource(void)
     //Wait for replication
     while (!serial_remote->waitForSource(10000))
     {
+        delay(100);
         sendAutoDiscoveryMessage();
-        qDebug() << "SerialPortActions: Waiting for remote peer...";
+        emit LOG_D("SerialPortActions: Waiting for remote peer...", true, true);
     }
+}
+
+void SerialPortActions::delay(int timeout)
+{
+    QTime dieTime = QTime::currentTime().addMSecs(timeout);
+    while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
 }
 
 void SerialPortActions::serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState)
 {
     emit stateChanged(state, oldState);
     if (state == QRemoteObjectReplica::Valid)
-        qDebug() << "SerialPortActions remote connection established";
+        emit LOG_D("SerialPortActions remote connection established", true, true);
     else if (oldState == QRemoteObjectReplica::Valid)
-        qDebug() << "SerialPortActions remote connection lost";
+        emit LOG_D("SerialPortActions remote connection lost", true, true);
 }
 
 bool SerialPortActions::get_serialPortAvailable(void)
@@ -633,6 +643,7 @@ QString SerialPortActions::get_serial_port_baudrate(void)
 }
 bool SerialPortActions::set_serial_port_baudrate(QString value)
 {
+    emit LOG_D("Setting serialport baudrate in SerialPortActions", true, true);
     bool r = true;
     if (isDirectConnection())
         serial_direct->serial_port_baudrate = value;
@@ -812,42 +823,91 @@ bool SerialPortActions::is_serial_port_open()
 
 int SerialPortActions::change_port_speed(QString portSpeed)
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->change_port_speed(portSpeed);
+        result = serial_direct->change_port_speed(portSpeed);
     else
-        return qtrohelper::slot_sync(serial_remote->change_port_speed(portSpeed));
+        result = qtrohelper::slot_sync(serial_remote->change_port_speed(portSpeed));
+
+    set_comm_busy(false);
+    return result;
 }
 
 int SerialPortActions::fast_init(QByteArray output)
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->fast_init(output);
+        result = serial_direct->fast_init(output);
     else
-        return qtrohelper::slot_sync(serial_remote->fast_init(output));
+        result = qtrohelper::slot_sync(serial_remote->fast_init(output));
+
+    return result;
 }
 
 int SerialPortActions::set_lec_lines(int lec1, int lec2)
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->set_lec_lines(lec1, lec2);
+        result = serial_direct->set_lec_lines(lec1, lec2);
     else
-        return qtrohelper::slot_sync(serial_remote->set_lec_lines(lec1, lec2));
+        result = qtrohelper::slot_sync(serial_remote->set_lec_lines(lec1, lec2));
+
+    set_comm_busy(false);
+    return result;
 }
 
 int SerialPortActions::pulse_lec_1_line(int timeout)
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->pulse_lec_1_line(timeout);
+        result = serial_direct->pulse_lec_1_line(timeout);
     else
-        return qtrohelper::slot_sync(serial_remote->pulse_lec_1_line(timeout));
+        result = qtrohelper::slot_sync(serial_remote->pulse_lec_1_line(timeout));
+
+    set_comm_busy(false);
+    return result;
 }
 
 int SerialPortActions::pulse_lec_2_line(int timeout)
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->pulse_lec_2_line(timeout);
+        result = serial_direct->pulse_lec_2_line(timeout);
     else
-        return qtrohelper::slot_sync(serial_remote->pulse_lec_2_line(timeout));
+        result = qtrohelper::slot_sync(serial_remote->pulse_lec_2_line(timeout));
+
+    set_comm_busy(false);
+    return result;
+}
+
+bool SerialPortActions::get_is_comm_busy()
+{
+    return is_comm_busy;
+}
+
+void SerialPortActions::set_comm_busy(bool value)
+{
+    is_comm_busy = value;
+}
+
+bool SerialPortActions::get_read_vbatt()
+{
+    return is_read_vbatt;
+}
+
+void SerialPortActions::set_read_vbatt(bool value)
+{
+    is_read_vbatt = value;
 }
 
 bool SerialPortActions::reset_connection()
@@ -860,16 +920,40 @@ bool SerialPortActions::reset_connection()
     return r;
 }
 
-QByteArray SerialPortActions::read_serial_data(uint32_t datalen, uint16_t timeout)
+QByteArray SerialPortActions::read_serial_data(uint16_t timeout)
 {
+    QByteArray response;
     if (isDirectConnection())
-        return serial_direct->read_serial_data(datalen, timeout);
+    {
+        response = serial_direct->read_serial_data(timeout);
+        emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
+        if (get_read_vbatt())
+        {
+            vBatt = serial_direct->read_vbatt();
+            set_read_vbatt(false);
+        }
+        set_comm_busy(false);
+        return response;
+    }
     else
-        return qtrohelper::slot_sync(serial_remote->read_serial_data(datalen, timeout));
+    {
+        response = qtrohelper::slot_sync(serial_remote->read_serial_data(timeout));
+        emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
+        if (get_read_vbatt())
+        {
+            vBatt = qtrohelper::slot_sync(serial_remote->read_vbatt());
+            set_read_vbatt(false);
+        }
+        set_comm_busy(false);
+        return response;
+    }
 }
 
 QByteArray SerialPortActions::write_serial_data(QByteArray output)
 {
+    set_comm_busy(true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0,20)), true, true);
+
     if (isDirectConnection())
         return serial_direct->write_serial_data(output);
     else
@@ -878,6 +962,9 @@ QByteArray SerialPortActions::write_serial_data(QByteArray output)
 
 QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
 {
+    set_comm_busy(true);
+    emit LOG_D("Sent: " + parse_message_to_hex(output.mid(0,20)), true, true);
+
     if (isDirectConnection())
         return serial_direct->write_serial_data_echo_check(output);
     else
@@ -886,34 +973,58 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
 
 int SerialPortActions::clear_rx_buffer()
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->clear_rx_buffer();
+        result = serial_direct->clear_rx_buffer();
     else
-        return qtrohelper::slot_sync(serial_remote->clear_rx_buffer());
+        result = qtrohelper::slot_sync(serial_remote->clear_rx_buffer());
+
+    set_comm_busy(false);
+    return result;
 }
 
 int SerialPortActions::clear_tx_buffer()
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->clear_tx_buffer();
+        result = serial_direct->clear_tx_buffer();
     else
-        return qtrohelper::slot_sync(serial_remote->clear_tx_buffer());
+        result = qtrohelper::slot_sync(serial_remote->clear_tx_buffer());
+
+    set_comm_busy(false);
+    return result;
 }
 
 int SerialPortActions::send_periodic_j2534_data(QByteArray output, int timeout)
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->send_periodic_j2534_data(output, timeout);
+        result = serial_direct->send_periodic_j2534_data(output, timeout);
     else
-        return qtrohelper::slot_sync(serial_remote->send_periodic_j2534_data(output, timeout));
+        result = qtrohelper::slot_sync(serial_remote->send_periodic_j2534_data(output, timeout));
+
+    set_comm_busy(false);
+    return result;
 }
 
 int SerialPortActions::stop_periodic_j2534_data()
 {
+    bool result = STATUS_SUCCESS;
+    set_comm_busy(true);
+
     if (isDirectConnection())
-        return serial_direct->stop_periodic_j2534_data();
+        result = serial_direct->stop_periodic_j2534_data();
     else
-        return qtrohelper::slot_sync(serial_remote->stop_periodic_j2534_data());
+        result = qtrohelper::slot_sync(serial_remote->stop_periodic_j2534_data());
+
+    set_comm_busy(false);
+    return result;
 }
 
 QStringList SerialPortActions::check_serial_ports()
@@ -930,4 +1041,38 @@ QString SerialPortActions::open_serial_port()
         return serial_direct->open_serial_port();
     else
         return qtrohelper::slot_sync(serial_remote->open_serial_port());
+}
+
+unsigned long SerialPortActions::read_vbatt()
+{
+    if (isDirectConnection())
+    {
+        if (!get_is_comm_busy() && !get_read_vbatt())
+            vBatt = serial_direct->read_vbatt();
+        else
+            set_read_vbatt(true);
+    }
+    else
+    {
+        if (!get_is_comm_busy() && !get_read_vbatt())
+        {
+            vBatt = qtrohelper::slot_sync(serial_remote->read_vbatt());
+        }
+        else
+            set_read_vbatt(true);
+        //emit LOG_D("Remote vBatt: " + QString::number(vBatt), true, true);
+    }
+    return vBatt;
+}
+
+QString SerialPortActions::parse_message_to_hex(QByteArray received)
+{
+    QString msg;
+
+    for (int i = 0; i < received.length(); i++)
+    {
+        msg.append(QString("%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
+    }
+
+    return msg;
 }

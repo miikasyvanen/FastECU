@@ -81,9 +81,9 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int connect_bootloader_subaru_denso_kline_04_32bit();
-    int upload_kernel_subaru_denso_kline_04_32bit(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_kline_32bit(uint32_t start_addr, uint32_t length);
+    int connect_bootloader();
+    int upload_kernel(QString kernel, uint32_t kernel_start_addr);
+    int read_mem(uint32_t start_addr, uint32_t length);
 
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
@@ -100,11 +100,10 @@ private:
     QByteArray send_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
     QByteArray send_sid_31_start_routine();
 
-    QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
-    QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
+    QByteArray generate_seed_key(QByteArray seed);
+    QByteArray generate_ecutek_seed_key(QByteArray requested_seed);
     QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
-    QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
     QByteArray encrypt_payload(QByteArray buf, uint32_t len);
@@ -114,9 +113,7 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

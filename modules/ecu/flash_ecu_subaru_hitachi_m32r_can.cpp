@@ -36,8 +36,7 @@ void FlashEcuSubaruHitachiM32rCan::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    //send_log_window_message("MCU type: " + mcu_name + " and index: " + mcu_type_index, true, true);
-    qDebug() << "MCU type:" << mcu_name << mcu_type_string << "and index:" << mcu_type_index;
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
     flash_method = ecuCalDef->FlashMethod;
 
@@ -45,13 +44,11 @@ void FlashEcuSubaruHitachiM32rCan::run()
 
     if (cmd_type == "read")
     {
-        send_log_window_message("Read memory with flashmethod '" + flash_method + "'", true, true);
-        //qDebug() << "Read memory with flashmethod" << flash_method;
+        emit LOG_I("Read memory with flashmethod '" + flash_method + "'", true, true);
     }
     else if (cmd_type == "write")
     {
-        send_log_window_message("Write memory with flashmethod '" + flash_method + "'", true, true);
-        //qDebug() << "Write memory with flashmethod" << flash_method;
+        emit LOG_I("Write memory with flashmethod '" + flash_method + "'", true, true);
     }
 
     // Set serial port
@@ -74,7 +71,7 @@ void FlashEcuSubaruHitachiM32rCan::run()
     switch (ret)
     {
         case QMessageBox::Ok:
-            send_log_window_message("Connecting to Subaru ECU 512Kb Hitachi CAN bootloader, please wait...", true, true);
+            emit LOG_I("Connecting to Subaru ECU 512Kb Hitachi CAN bootloader, please wait...", true, true);
             result = connect_bootloader();
 
             if (result == STATUS_SUCCESS)
@@ -82,13 +79,13 @@ void FlashEcuSubaruHitachiM32rCan::run()
                 if (cmd_type == "read")
                 {
                     emit external_logger("Reading ROM, please wait...");
-                    send_log_window_message("Reading ROM from ECU Subaru using CAN", true, true);
+                    emit LOG_I("Reading ROM from ECU Subaru using CAN", true, true);
                     result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
                 else if (cmd_type == "test_write" || cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
-                    send_log_window_message("Writing ROM to Subaru Hitachi WA12212970WWW using CAN", true, true);
+                    emit LOG_I("Writing ROM to Subaru Hitachi WA12212970WWW using CAN", true, true);
                     result = write_mem(test_write);
                 }
             }
@@ -105,12 +102,12 @@ void FlashEcuSubaruHitachiM32rCan::run()
             }
             break;
         case QMessageBox::Cancel:
-            qDebug() << "Operation canceled";
+            emit LOG_D("Operation canceled", true, true);
             this->close();
             break;
         default:
             QMessageBox::warning(this, tr("Connecting to ECU"), "Unknown operation selected!");
-            qDebug() << "Unknown operation selected!";
+            emit LOG_D("Unknown operation selected!", true, true);
             this->close();
             break;
     }
@@ -142,12 +139,11 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
 
     if (!serial->is_serial_port_open())
     {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        emit LOG_I("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
-    send_log_window_message("Checking if OBK is still running...", true, true);
-    qDebug() << "Checking if OBK is still running...";
+    emit LOG_I("Checking if OBK is already running...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -156,29 +152,94 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0xB7);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    
     delay(50);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
+    received = serial->read_serial_data(serial_read_short_timeout);
     if (received.length() > 6)
     {
         if ((uint8_t)received.at(4) == 0x7F && (uint8_t)received.at(5) == 0xB7 && (uint8_t)received.at(6) == 0x13)
         {
-            send_log_window_message("OBK active, don't continue bootloader access...", true, true);
-            qDebug() << "OBK active, don't continue bootloader access...";
+            emit LOG_I("OBK is active!", true, true);
+            
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
     }
+    emit LOG_I("OBK not active, initialising ECU...", true, true);
 
-    send_log_window_message("OBK not active, initialising ECU...", true, true);
-    qDebug() << "OBK not active, initialising ECU...";
+    emit LOG_I("Requesting ECU ID", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0xAA);
 
-    send_log_window_message("Requesting ECU ID...", true, true);
-    qDebug() << "Requesting ECU ID...";
+    serial->write_serial_data_echo_check(output);
+    
+    delay(50);
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) == 0xEA)
+        {
+            QByteArray response = received;
+            response.remove(0, 8);
+            response.remove(5, response.length()-5);
+            
+            QString ecuid;
+            for (int i = 0; i < 5; i++)
+                ecuid.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_I("ECU ID: " + ecuid, true, true);
+            if (cmd_type == "read")
+                ecuCalDef->RomId = ecuid + "_";
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        
+    }
 
+    emit LOG_I("Requesting VIN", true, true);
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x07);
+    output.append((uint8_t)0xE0);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x02);
+    serial->write_serial_data_echo_check(output);
+    
+    delay(50);
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 5)
+    {
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x02)
+        {
+            QByteArray response = received;
+            response.remove(0, 7);
+            
+            emit LOG_I("VIN: " + response, true, true);
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
+        }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        
+    }
+
+    emit LOG_I("Requesting CAL ID...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -187,81 +248,70 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     output.append((uint8_t)0x09);
     output.append((uint8_t)0x04);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    
     delay(50);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
-    if (received.length() > 14)
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) != 0x49 || (uint8_t)received.at(5) != 0x04)
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x04)
         {
-            send_log_window_message("Bad response from ECU", true, true);
-            qDebug() << "Bad response from ECU";
-            return STATUS_ERROR;
+            QByteArray response = received;
+            response.remove(0, 7);
+            
+            emit LOG_I("CAL ID: " + response, true, true);
+            if (cmd_type == "read")
+                ecuCalDef->RomId.insert(0, QString(response) + "_");
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
         }
     }
     else
     {
-        send_log_window_message("Bad response from ECU", true, true);
-        qDebug() << "Bad response from ECU";
-        return STATUS_ERROR;
+        emit LOG_E("No valid response from ECU", true, true);
+        
     }
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
 
-    response = received;
-    response.remove(0, 7);
-    response.remove(8, received.length() - 1);
-    QString ecuid = QString::fromUtf8(response);
-    send_log_window_message("Init Success: ECU ID = " + ecuid, true, true);
-
-    send_log_window_message("Requesting CAL ID...", true, true);
-    qDebug() << "Requesting CAL ID...";
-
+    emit LOG_I("Requesting CVN", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output.append((uint8_t)0xAA);
+    output.append((uint8_t)0x09);
+    output.append((uint8_t)0x06);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
-    delay(500);
-    received = serial->read_serial_data(100, serial_read_short_timeout);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
-    if (received.length() > 12)
+    
+    delay(50);
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(4) != 0xEA)
+        if ((uint8_t)received.at(4) == 0x49 && (uint8_t)received.at(5) == 0x06)
         {
-            send_log_window_message("Bad response from ECU", true, true);
-            qDebug() << "Bad response from ECU";
-            return STATUS_ERROR;
+            QByteArray response = received;
+            response.remove(0, 7);
+            QString msg;
+            msg.clear();
+            for (int i = 0; i < response.length(); i++)
+                msg.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
+            
+            emit LOG_I("CVN: " + msg, true, true);
+        }
+        else
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
         }
     }
     else
     {
-        send_log_window_message("Bad response from ECU", true, true);
-        qDebug() << "Bad response from ECU";
-        return STATUS_ERROR;
+        emit LOG_E("No valid response from ECU", true, true);
+        
     }
 
-    response.clear();
-    response.append(received);
-    response.remove(0, 8);
-    response.remove(5, received.length() - 1);
-
-    QString calid;// = QString::fromUtf8(response);
-    for (int i = 0; i < response.length(); i++)
-        calid.append(QString("%1").arg((uint8_t)response.at(i),2,16,QLatin1Char('0')).toUpper());
-    send_log_window_message("Init Success: CAL ID = " + calid, true, true);
-    qDebug() << "Init Success: CAL ID = " + calid;
-
-    send_log_window_message("Initializing bootloader...", true, true);
-    qDebug() << "Initializing bootloader...";
+    emit LOG_I("Initializing bootloader...", true, true);
 
     //On car session hack
     output.clear();
@@ -275,18 +325,16 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0xD7);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    
     delay(50);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
+    received = serial->read_serial_data(200);
+    
 
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(5) != 0xA0 && (uint8_t)received.at(6) != 0x20)
         {
-            send_log_window_message("In Car Programming, Accessing...", true, true);
+            emit LOG_I("In Car Programming, Accessing...", true, true);
             delay(800);
 
             output.clear();
@@ -300,12 +348,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x01);
             output.append((uint8_t)0x3B);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -315,12 +361,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x10);
             output.append((uint8_t)0x03);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -329,12 +373,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0xE1);
             output.append((uint8_t)0x04);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -344,12 +386,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x10);
             output.append((uint8_t)0x03);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -359,12 +399,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x85);
             output.append((uint8_t)0x02);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -374,12 +412,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x85);
             output.append((uint8_t)0x02);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -389,12 +425,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x85);
             output.append((uint8_t)0x02);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -404,12 +438,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x85);
             output.append((uint8_t)0x02);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -420,15 +452,12 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x03);
             output.append((uint8_t)0x01);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
-            send_log_window_message("Sending seed request...", true, true);
-            qDebug() << "Sending seed request...";
+            emit LOG_I("Sending seed request...", true, true);
             output.clear();
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
@@ -437,29 +466,26 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x27);
             output.append((uint8_t)0x01);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 5)
             {
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
                 {
-                    send_log_window_message("Bad response to seed request", true, true);
-                    qDebug() << "Bad response to seed request";
+                    emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Bad response to seed request", true, true);
-                qDebug() << "Bad response to seed request";
+                emit LOG_E("No valid response from ECU", true, true);
+                
                 return STATUS_ERROR;
             }
-            send_log_window_message("Seed request ok", true, true);
-            qDebug() << "Seed request ok";
+            emit LOG_I("Seed request ok", true, true);
 
             seed.clear();
             seed.append(received.at(6));
@@ -475,8 +501,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             msg = parse_message_to_hex(seed_key);
             emit LOG_I("Calculated seed key: " + msg, true, true);
 
-            send_log_window_message("Sending seed key to ECU", true, true);
-            qDebug() << "Sending seed key...";
+            emit LOG_I("Sending seed key to ECU", true, true);
             output.clear();
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
@@ -486,29 +511,26 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x02);
             output.append(seed_key);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 5)
             {
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
                 {
-                    send_log_window_message("Failed! Possible wrong seed key!", true, true);
-                    qDebug() << "Failed! Possible wrong seed key!";
+                    emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Failed! Possible wrong seed key!", true, true);
-                qDebug() << "Failed! Possible wrong seed key!";
+                emit LOG_E("No valid response from ECU", true, true);
+                
                 return STATUS_ERROR;
             }
-            send_log_window_message("Seed key ok", true, true);
-            qDebug() << "Seed key ok";
+            emit LOG_I("Seed key ok", true, true);
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -521,12 +543,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x00);
             output.append((uint8_t)0xD5);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -539,12 +559,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x01);
             output.append((uint8_t)0x3B);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -557,12 +575,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x1C);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -578,12 +594,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x0F);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -593,15 +607,12 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x10);
             output.append((uint8_t)0x02);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(50);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
 
-            send_log_window_message("Checking if jump successful and kernel alive...", true, true);
-            qDebug() << "Checking if jump successful and kernel alive...";
+            emit LOG_I("Checking if jump successful and kernel alive...", true, true);
             output.clear();
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
@@ -617,31 +628,29 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 7)
             {
                 if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
                 {
-                    send_log_window_message("Kernel not verified to be running!", true, true);
-                    qDebug() << "Kernel not verified to be running!";
+                    emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Kernel not verified to be running!", true, true);
-                qDebug() << "Kernel not verified to be running!";
+                emit LOG_E("No valid response from ECU", true, true);
+                
                 return STATUS_ERROR;
             }
         }
         else
         {
-            send_log_window_message("Bench Programming, Accessing...", true, true);
+            emit LOG_I("Bench Programming, Accessing...", true, true);
             delay(800);
 
             output.clear();
@@ -652,30 +661,27 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x10);
             output.append((uint8_t)0x43);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 5)
             {
                 if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
                 {
-                    send_log_window_message("Failed to initialise bootloader!", true, true);
-                    qDebug() << "Failed to initialise bootloader!";
+                    emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Failed to initialise bootloader!", true, true);
-                qDebug() << "Failed to initialise bootloader!";
+                emit LOG_E("No valid response from ECU", true, true);
+                
                 return STATUS_ERROR;
             }
 
-            send_log_window_message("Starting seed request...", true, true);
-            qDebug() << "Starting seed request...";
+            emit LOG_I("Starting seed request...", true, true);
 
             output.clear();
             output.append((uint8_t)0x00);
@@ -685,29 +691,26 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x27);
             output.append((uint8_t)0x01);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 5)
             {
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
                 {
-                    send_log_window_message("Bad response to seed request!", true, true);
-                    qDebug() << "Bad response to seed request!";
+                    emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Bad response to seed request!", true, true);
-                qDebug() << "Bad response to seed request!";
+                emit LOG_E("No valid response from ECU", true, true);
+                
                 return STATUS_ERROR;
             }
-            send_log_window_message("Seed request ok", true, true);
-            qDebug() << "Seed request ok";
+            emit LOG_I("Seed request ok", true, true);
 
             seed.clear();
             seed.append(received.at(6));
@@ -733,32 +736,28 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x02);
             output.append(seed_key);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 5)
             {
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
                 {
-                    send_log_window_message("Failed! Possible wrong seed key!", true, true);
-                    qDebug() << "Failed! Possible wrong seed key!";
+                    emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Failed! Possible wrong seed key!", true, true);
-                qDebug() << "Failed! Possible wrong seed key!";
+                emit LOG_E("No valid response from ECU", true, true);
+                
                 return STATUS_ERROR;
             }
-            send_log_window_message("Seed key ok", true, true);
-            qDebug() << "Seed key ok";
+            emit LOG_I("Seed key ok", true, true);
 
-            send_log_window_message("Jumping to onboad kernel...", true, true);
-            qDebug() << "Jumping to onboad kernel...";
+            emit LOG_I("Jumping to onboad kernel...", true, true);
             output.clear();
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
@@ -767,32 +766,28 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x10);
             output.append((uint8_t)0x42);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 5)
             {
                 if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
                 {
-                    send_log_window_message("Bad response to jumping to onboard kernel", true, true);
-                    qDebug() << "Bad response to jumping to onboard kernel";
+                    emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Bad response to jumping to onboard kernel", true, true);
-                qDebug() << "Bad response to jumping to onboard kernel";
+                emit LOG_E("No valid response from ECU", true, true);
+                
                 return STATUS_ERROR;
             }
-            send_log_window_message("Jump to kernel ok", true, true);
-            qDebug() << "Jump to kernel ok";
+            emit LOG_I("Jump to kernel ok", true, true);
 
-            send_log_window_message("Checking if jump successful and kernel alive...", true, true);
-            qDebug() << "Checking if jump successful and kernel alive...";
+            emit LOG_I("Checking if jump successful and kernel alive...", true, true);
             output.clear();
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
@@ -808,30 +803,25 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             output.append((uint8_t)0x00);
             output.append((uint8_t)0x00);
             serial->write_serial_data_echo_check(output);
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
+            
             delay(200);
-            received = serial->read_serial_data(20, 200);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(200);
+            
             if (received.length() > 7)
             {
                 if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
                 {
-                    send_log_window_message("Kernel not verified to be running!", true, true);
-                    qDebug() << "Kernel not verified to be running!";
+                    emit LOG_I("Kernel not verified to be running!", true, true);
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Kernel not verified to be running!", true, true);
-                qDebug() << "Kernel not verified to be running!";
+                emit LOG_I("Kernel not verified to be running!", true, true);
                 return STATUS_ERROR;
             }
         }
-        send_log_window_message("ECU inittialised, continue...", true, true);
-        qDebug() << "ECU inittialised, continue...";
+        emit LOG_I("ECU inittialised, continue...", true, true);
 
         kernel_alive = true;
         return STATUS_SUCCESS;
@@ -865,8 +855,7 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
     uint32_t len_done = 0;  //total data written to file
 
-    send_log_window_message("Settting dump start & length...", true, true);
-    qDebug() << "Settting dump start & length...";
+    emit LOG_I("Settting dump start & length...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -883,24 +872,25 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    
     delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
+    received = serial->read_serial_data(200);
+    
     if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
         {
-            send_log_window_message("Bad response to setting dump start & length", true, true);
-
-            //return STATUS_ERROR;
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
         }
     }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        
+    }
 
-    send_log_window_message("Start reading ROM, please wait...", true, true);
-    qDebug() << "Start reading ROM, please wait...";
+    emit LOG_I("Start reading ROM, please wait...", true, true);
 
     // send 0xB7 command to kernel to dump from ROM
     output.clear();
@@ -936,22 +926,22 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         output[6] = (uint8_t)((addr >> 8) & 0xFF);
         output[7] = (uint8_t)(addr & 0xFF);
         serial->write_serial_data_echo_check(output);
-        emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
-        received = serial->read_serial_data(20, serial_read_short_timeout);
-        emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+        
+        received = serial->read_serial_data(serial_read_short_timeout);
+        
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0xF7)
             {
-                send_log_window_message("Page data request failed!" + parse_message_to_hex(received), true, true);
-                qDebug() << "Page data request failed!" + parse_message_to_hex(received);
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                
                 return STATUS_ERROR;
             }
         }
         else
         {
-            send_log_window_message("Page data request failed!" + parse_message_to_hex(received), true, true);
-            qDebug() << "Page data request failed!" + parse_message_to_hex(received);
+            emit LOG_E("No valid response from ECU", true, true);
+            
             return STATUS_ERROR;
         }
         pagedata.clear();
@@ -979,7 +969,7 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        msg = QString("Kernel read addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
         //delay(1);
 
@@ -996,15 +986,12 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         willget -= (numblocks * pagesize);
     }
 
-    send_log_window_message("ROM read complete", true, true);
-    qDebug() << "ROM read complete";
+    emit LOG_I("ROM read complete", true, true);
 
     QString mapdata_size = QString("0x%1").arg(mapdata.length(),8,16,QLatin1Char('0')).toUpper();
-    send_log_window_message("Mapdata size: " + mapdata_size, true, true);
-    qDebug() << "Mapdata size: " + mapdata_size;
+    emit LOG_I("Mapdata size: " + mapdata_size, true, true);
 
-    send_log_window_message("Sending stop command...", true, true);
-    qDebug() << "Sending stop command...";
+    emit LOG_I("Sending stop command...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -1013,18 +1000,24 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     output.append((uint8_t)0xE0);
     output.append((uint8_t)0x37);
     serial->write_serial_data_echo_check(output);
-    emit LOG_D("Sent: " + parse_message_to_hex(output), true, true);
+    
     delay(200);
-    received = serial->read_serial_data(20, 200);
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(200);
+    
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x77)
         {
-            send_log_window_message("ROM read stop request failed!", true, true);
-            qDebug() << "ROM read stop request failed!";
-            //return STATUS_ERROR;
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
+            return STATUS_ERROR;
         }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        
+        return STATUS_ERROR;
     }
 
     //mapdata = decrypt_payload(mapdata, mapdata.length());
@@ -1064,21 +1057,21 @@ int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
     }
 
     bcnt = 0;
-    send_log_window_message("Blocks to flash: ", true, false);
+    emit LOG_I("Blocks to flash: ", true, false);
     for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++) {
         if (block_modified[blockno]) {
-            send_log_window_message(QString::number(blockno) + ", ", false, false);
+            emit LOG_I(QString::number(blockno) + ", ", false, false);
             bcnt += 1;
         }
     }
-    send_log_window_message(" (total: " + QString::number(bcnt) + ")", false, true);
+    emit LOG_I(" (total: " + QString::number(bcnt) + ")", false, true);
 
     if (bcnt)
     {
-        send_log_window_message("--- Erasing ECU flash memory ---", true, true);
+        emit LOG_I("--- Erasing ECU flash memory ---", true, true);
         if (erase_memory())
         {
-            send_log_window_message("--- Erasing did not complete successfully ---", true, true);
+            emit LOG_I("--- Erasing did not complete successfully ---", true, true);
             return STATUS_ERROR;
         }
 
@@ -1093,20 +1086,20 @@ int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
             }
         }
 
-        send_log_window_message("--- Start writing ROM file to ECU flash memory ---", true, true);
+        emit LOG_I("--- Start writing ROM file to ECU flash memory ---", true, true);
         for (blockno = 0; blockno < flashdevices[mcu_type_index].numblocks; blockno++)  // hack so that only 1 flash loop done for the entire ROM above 0x8000
         {
             if (block_modified[blockno])
             {
                 if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
                 {
-                    send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
+                    emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
                 }
                 else
                 {
                     flashbytesindex += flashdevices[mcu_type_index].fblocks[blockno].len;
-                    send_log_window_message("Block " + QString::number(blockno) + " reflash complete.", true, true);
+                    emit LOG_I("Block " + QString::number(blockno) + " reflash complete.", true, true);
                 }
             }
         }
@@ -1114,7 +1107,7 @@ int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
     }
     else
     {
-        send_log_window_message("*** No blocks require flash! ***", true, true);
+        emit LOG_I("*** No blocks require flash! ***", true, true);
     }
 
     return STATUS_SUCCESS;
@@ -1177,19 +1170,24 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    
     delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
+    received = serial->read_serial_data(200);
+    
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x74)
         {
-            send_log_window_message("No or bad response received", true, true);
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
             return STATUS_ERROR;
         }
+    }
+    else
+    {
+        emit LOG_E("No valid response from ECU", true, true);
+        
+        return STATUS_ERROR;
     }
 
     int data_bytes_sent = 0;
@@ -1208,9 +1206,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         output.append((uint8_t)(blockaddr >> 16) & 0xFF);
         output.append((uint8_t)(blockaddr >> 8) & 0xFF);
         output.append((uint8_t)blockaddr & 0xFF);
-
-
-        //        qDebug() << "Data header:" << parse_message_to_hex(output);
+        
         for (int i = 0; i < 256; i++)
         {
             output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
@@ -1219,19 +1215,22 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
-        //send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
-        //delay(200);
-        received = serial->read_serial_data(20, receive_timeout);
-        //send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-        qDebug() << "Response:" << parse_message_to_hex(received);
+        received = serial->read_serial_data(receive_timeout);
+        
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0xF6)
             {
-                send_log_window_message("Write data failed!", true, true);
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                
                 return STATUS_ERROR;
             }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            
+            return STATUS_ERROR;
         }
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
@@ -1241,8 +1240,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
 
     set_progressbar_value(100);
 
-    send_log_window_message("Closing out Flashing of this block...", true, true);
-    qDebug() << "Closing out Flashing of this block...";
+    emit LOG_I("Closing out Flashing of this block...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1255,22 +1253,20 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     while (try_count < 6 && connected == false)
     {
         serial->write_serial_data_echo_check(output);
-        send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-        qDebug() << "Sent:" << parse_message_to_hex(output);
+        
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(200);
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0x77)
             {
-                send_log_window_message("." + parse_message_to_hex(received), false, false);
+                emit LOG_I("." + parse_message_to_hex(received), false, false);
             }
             else if ((uint8_t)received.at(4) == 0x77)
             {
                 connected = true;
-                send_log_window_message("", false, true);
-                send_log_window_message("Closed succesfully: " + parse_message_to_hex(received), true, true);
-                qDebug() << "Closed succesfully: " + parse_message_to_hex(received);
+                emit LOG_I("", false, true);
+                emit LOG_I("Closed succesfully: " + parse_message_to_hex(received), true, true);
             }
         }
         try_count++;
@@ -1278,8 +1274,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
 
     delay(100);
 
-    send_log_window_message("Verifying checksum...", true, true);
-    qDebug() << "Verifying checksum...";
+    emit LOG_I("Verifying checksum...", true, true);
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1291,54 +1286,49 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    
     delay(1000);
-    received = serial->read_serial_data(20, 500);
-    send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(500);
+    emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
     if (received.length() != 7)
     {
-        send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-        qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
-        send_log_window_message("Checksum not verified", true, true);
-        qDebug() << "Checksum not verified";
+        emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+        
+        emit LOG_E("Checksum not verified", true, true);
         return STATUS_ERROR;
     }
     else
     {
         if ((uint8_t)received.at(4) != 0x7F || (uint8_t)received.at(5) != 0x31 || (uint8_t)received.at(6) != 0x78)
         {
-            send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
-            send_log_window_message("Checksum not verified", true, true);
-            qDebug() << "Checksum not verified";
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            
+            emit LOG_E("Checksum not verified", true, true);
             return STATUS_ERROR;
         }
         else
         {
             delay(200);
-            received = serial->read_serial_data(20, 500);
-            send_log_window_message(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-            qDebug() << QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received);
+            received = serial->read_serial_data(500);
+            //emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
 
             if (received.length() > 6)
             {
                 if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
                 {
-                    send_log_window_message("ROM checksum error: " + parse_message_to_hex(received), true, true);
-                    qDebug() << "ROM checksum error: " + parse_message_to_hex(received);
+                    emit LOG_E("ROM checksum error", true, true);
+                    
                     return STATUS_ERROR;
                 }
             }
             else
             {
-                send_log_window_message("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-                qDebug() << "Wrong response from ECU: " + parse_message_to_hex(received);
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                
                 return STATUS_ERROR;
             }
         }
-        send_log_window_message("Checksum verified", true, true);
-        qDebug() << "Checksum verified";
+        emit LOG_I("Checksum verified", true, true);
     }
 
     return STATUS_SUCCESS;
@@ -1359,12 +1349,11 @@ int FlashEcuSubaruHitachiM32rCan::erase_memory()
 
     if (!serial->is_serial_port_open())
     {
-        send_log_window_message("ERROR: Serial port is not open.", true, true);
+        emit LOG_I("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
-    send_log_window_message("Erasing ECU ROM...", true, true);
-    //    qDebug() << "Erasing ECU ROM...";
+    emit LOG_I("Erasing ECU ROM...", true, true);
 
     output.clear();
     output.append((uint8_t)0x00);
@@ -1380,43 +1369,41 @@ int FlashEcuSubaruHitachiM32rCan::erase_memory()
     output.append((uint8_t)0xff);
     output.append((uint8_t)0xff);
     serial->write_serial_data_echo_check(output);
-    send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-    qDebug() << "Sent:" << parse_message_to_hex(output);
+    
     delay(200);
-    received = serial->read_serial_data(20, 200);
-    send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-    qDebug() << "Response:" << parse_message_to_hex(received);
+    received = serial->read_serial_data(200);
+    
     while (try_count < 20 && connected == false)
     {
-        received = serial->read_serial_data(20, 500);
+        received = serial->read_serial_data(500);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
             {
-                send_log_window_message(".", false, false);
+                emit LOG_I(".", false, false);
             }
             else if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
             {
                 connected = true;
-                send_log_window_message("", false, true);
+                emit LOG_I("", false, true);
+                
             }
         }
         else
         {
-            send_log_window_message(".", false, false);
+            emit LOG_I(".", false, false);
         }
         delay(500);
         try_count++;
     }
     if (!connected)
     {
-        send_log_window_message("Flash area erase failed: " + parse_message_to_hex(received), true, true);
-        qDebug() << "Flash area erase failed: " + parse_message_to_hex(received);
+        emit LOG_E("Flash area erase failed: " + parse_message_to_hex(received), true, true);
+        
         return STATUS_ERROR;
     }
 
-    send_log_window_message("Flash erased! Starting flash write, do not power off!", true, true);
-    qDebug() << "Flash erased! Starting flash write, do not power off!";
+    emit LOG_I("Flash erased! Starting flash write, do not power off!", true, true);
 
     return STATUS_SUCCESS;
 }
@@ -1605,36 +1592,6 @@ QString FlashEcuSubaruHitachiM32rCan::parse_message_to_hex(QByteArray received)
     }
 
     return msg;
-}
-
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashEcuSubaruHitachiM32rCan::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void FlashEcuSubaruHitachiM32rCan::set_progressbar_value(int value)

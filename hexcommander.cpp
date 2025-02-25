@@ -129,7 +129,7 @@ void HexCommander::sendToInterface()
         if (!file.open(QIODevice::ReadOnly ))
         {
             QMessageBox::warning(this, tr("Data terminal"), "Unable to open datastream file '" + file.fileName() + "' for reading");
-            send_log_window_message("Unable to open datastream file '" + file.fileName() + "' for reading", true, true);
+            emit LOG_I("Unable to open datastream file '" + file.fileName() + "' for reading", true, true);
             qDebug() << "Unable to open datastream file '" + file.fileName() + "' for reading";
             return;
         }
@@ -210,13 +210,8 @@ void HexCommander::sendToInterface()
                 }
             }
             serial->write_serial_data_echo_check(output);
-
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
             delay(rspDelay);
-            received = serial->read_serial_data(100, serial_read_short_timeout);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(serial_read_short_timeout);
         }
         serial->reset_connection();
     }
@@ -297,12 +292,8 @@ void HexCommander::sendToInterface()
             }
             serial->write_serial_data_echo_check(output);
 
-            send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
-            qDebug() << "Sent:" << parse_message_to_hex(output);
             delay(rspDelay);
-            received = serial->read_serial_data(100, serial_read_short_timeout);
-            send_log_window_message("Response: " + parse_message_to_hex(received), true, true);
-            qDebug() << "Response:" << parse_message_to_hex(received);
+            received = serial->read_serial_data(serial_read_short_timeout);
         }
         serial->reset_connection();
     }
@@ -365,35 +356,6 @@ QString HexCommander::parse_message_to_hex(QByteArray received)
     }
 
     return msg;
-}
-
-/*
- * Output text to log window
- *
- * @return
- */
-int HexCommander::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void HexCommander::delay(int timeout)

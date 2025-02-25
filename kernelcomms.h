@@ -37,6 +37,45 @@
 #define SUB_KERNEL_BLANK_PAGE               0x25
 
 /*************************************
+ * JTAG commands
+ * **********************************/
+// Commands
+#define SUB_KERNEL_READ_USERCODE            0x30
+#define SUB_KERNEL_JTAG_COMMAND             0x40
+
+// JTAG instruction registers
+#define SUB_KERNEL_IR_EXTEST                0x00
+#define SUB_KERNEL_IR_SAMPLE                0x01
+#define SUB_KERNEL_IR_IDCODE                0x02
+#define SUB_KERNEL_IR_BYPASS                0x3F
+
+// Registers
+#define SUB_KERNEL_IDCODE                   0x02
+#define SUB_KERNEL_USERCODE                 0x03
+#define SUB_KERNEL_MDM_SYSTEM               0x08
+#define SUB_KERNEL_MDM_CONTROL              0x09
+#define SUB_KERNEL_MDM_SETUP                0x0A
+#define SUB_KERNEL_MTM_CONTROL              0x0F
+#define SUB_KERNEL_MON_CODE                 0x10
+#define SUB_KERNEL_MON_DATA                 0x11
+#define SUB_KERNEL_MON_PARAM                0x12
+#define SUB_KERNEL_MON_ACCESS               0x13
+#define SUB_KERNEL_DMA_RADDR                0x18
+#define SUB_KERNEL_DMA_RDATA                0x19
+#define SUB_KERNEL_DMA_RTYPE                0x1A
+#define SUB_KERNEL_DMA_ACCESS               0x1B
+#define SUB_KERNEL_RTDENB                   0x20
+
+// Subcommands
+#define SUB_KERNEL_SUB_CMD_READ             0x00
+#define SUB_KERNEL_SUB_CMD_WRITE            0x01
+
+// IR ok response
+#define SUB_KERNEL_JTAG_IR_ACK              0x31
+
+
+
+/*************************************
  * NisProg based kernels CAN commands
  * **********************************/
 #define SUB_DENSOCAN_START_COMM             0x7A
@@ -120,7 +159,6 @@
 
 #define SID_FLREQ                   0x34	/* RequestDownload */
 #define SID_STARTCOMM               0x81    /* startCommunication */
-#define SID_KERNEL_INIT             0x81    /* kernel init, same as startcomm */
 
 #define SID_RESET                   0x11	/* restart ECU */
 

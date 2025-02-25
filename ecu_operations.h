@@ -15,6 +15,12 @@ class EcuOperations : public QWidget
 {
     Q_OBJECT
 
+signals:
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
+
 public:
     explicit EcuOperations(QWidget *ui, SerialPortActions *serial, QString mcu_type_string, int mcu_type_index);
     ~EcuOperations();
@@ -54,11 +60,14 @@ private:
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
+
 
 
     SerialPortActions *serial;
@@ -79,7 +88,6 @@ private:
     int reflash_block_32bit_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool practice);
 
     QString parse_message_to_hex(QByteArray received);
-    void send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
 
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);

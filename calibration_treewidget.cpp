@@ -44,7 +44,7 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationFilesTree(int ecuCalDefIndex
 
 QTreeWidget *CalibrationTreeWidget::buildCalibrationDataTree(QTreeWidget *dataTreeWidget, FileActions::EcuCalDefStructure *ecuCalDef)
 {
-    bool treeChildCreated = false;
+    bool treeCategoryCreated = false;
 
     /**************************
      * Create data tree
@@ -71,6 +71,7 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationDataTree(QTreeWidget *dataTr
 
         for (int i = 0; i < ecuCalDef->RomInfo.length(); i++)
         {
+            emit LOG_D("Set " + ecuCalDef->RomInfoStrings.at(i) + ": " + ecuCalDef->RomInfo.at(i), true, true);
             QTreeWidgetItem * item = new QTreeWidgetItem();
             item->setText(0, ecuCalDef->RomInfoStrings.at(i) + ": " + ecuCalDef->RomInfo.at(i));
             calDataTree->topLevelItem(0)->addChild(item);
@@ -79,27 +80,32 @@ QTreeWidget *CalibrationTreeWidget::buildCalibrationDataTree(QTreeWidget *dataTr
 
     for (int j = 0; j < ecuCalDef->NameList.count(); j++)
     {
+        //emit LOG_D("Check map: " + ecuCalDef->NameList[j] + " in category: " + ecuCalDef->CategoryList[j], true, true);
         if (ecuCalDef->CategoryList[j] != "" && ecuCalDef->CategoryList[j] != " ")
         {
-            if (ecuCalDef->NameList[j] != "")
+            //emit LOG_D("Map category: " + ecuCalDef->CategoryList[j], true, true);
+            if (ecuCalDef->NameList[j] != "" && ecuCalDef->NameList[j] != " ")
             {
-                treeChildCreated = false;
+                //emit LOG_D("Map: " + ecuCalDef->NameList[j], true, true);
+                treeCategoryCreated = false;
                 for (int i = 0; i < calDataTree->topLevelItemCount(); i++){
                     if (calDataTree->topLevelItem(i)->text(0) == ecuCalDef->CategoryList[j]){
-                        treeChildCreated = true;
+                        treeCategoryCreated = true;
                     }
                 }
-                if (!treeChildCreated)
+                if (!treeCategoryCreated)
                 {
+                    //emit emit LOG_D("Create category: " + ecuCalDef->CategoryList[j], true, true);
                     QTreeWidgetItem * topLevelDataTreeItem = new QTreeWidgetItem();
                     topLevelDataTreeItem->setText(0, ecuCalDef->CategoryList[j]);
                     calDataTree->addTopLevelItem(topLevelDataTreeItem);
-                    treeChildCreated = false;
+                    //treeChildCreated = false;
                     if (ecuCalDef->CategoryExpandedList.at(j) == "1")
                         topLevelDataTreeItem->setExpanded(true);
                 }
                 for (int i = 0; i < calDataTree->topLevelItemCount(); i++){
                     if (calDataTree->topLevelItem(i)->text(0) == ecuCalDef->CategoryList[j]){
+                        //emit LOG_D("Add map: " + ecuCalDef->NameList[j] + " to category: " + ecuCalDef->CategoryList[j], true, true);
                         QTreeWidgetItem * item = new QTreeWidgetItem();
                         if (ecuCalDef->TypeList[j] == "1D" || ecuCalDef->TypeList[j] == "Selectable" || (ecuCalDef->YSizeList.at(j).toInt() == 1 && ecuCalDef->XSizeList.at(j).toInt() == 1))
                             item->setIcon(0, QIcon(":/icons/1D-64.png"));

@@ -49,24 +49,27 @@
 #include <serial_port/serial_port_actions.h>
 
 // Flash modules
+// BDM
+#include <modules/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
+
+// Bootmode
+#include <modules/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>
+
+// OBD
+#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_kline.h>
+#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_can.h>
+
 #include <modules/ecu/flash_ecu_subaru_denso_mc68hc16y5_02.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh7055_02.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh705x_densocan.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh705x_kline.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh7058_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh7058_can_diesel.h>
-
+#include <modules/ecu/flash_ecu_subaru_denso_sh72543_can_diesel.h>
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs.h>
 #include <modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.h>
-//#include <modules/ecu/flash_ecu_subaru_hitachi_m32r_kline_recovery.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_m32r_can.h>
-#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.h>
-#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_can.h>
-#include <modules/tcu/flash_tcu_cvt_subaru_hitachi_m32r_can.h>
-#include <modules/tcu/flash_tcu_subaru_denso_sh705x_can.h>
-#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8104_can.h>
-#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8111_can.h>
 #include <modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h>
@@ -74,16 +77,18 @@
 #include <modules/ecu/flash_ecu_subaru_denso_1n83m_4m_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_1n83m_1_5m_can.h>
 
-#include <modules/bdm/flash_ecu_subaru_denso_mc68hc16y5_02_bdm.h>
-#include <modules/bootmode/flash_ecu_subaru_unisia_jecs_m32r_bootmode.h>
+#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.h>
+#include <modules/tcu/flash_tcu_subaru_hitachi_m32r_can.h>
+#include <modules/tcu/flash_tcu_cvt_subaru_hitachi_m32r_can.h>
+#include <modules/tcu/flash_tcu_subaru_denso_sh705x_can.h>
+#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8104_can.h>
+#include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8111_can.h>
 
-#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_kline.h>
-#include <modules/eeprom/eeprom_ecu_subaru_denso_sh705x_can.h>
+// JTAG
+#include <modules/jtag/flash_ecu_subaru_hitachi_m32r_jtag.h>
 
 #include <systemlogger.h>
 
-#include <modules/ecu/flash_ecu_subaru_denso_sh7xxx_densocan.h>
-//
 #include <remote_utility/remote_utility.h>
 
 extern void log_error(const QString &message, bool timestamp, bool linefeed);
@@ -149,6 +154,14 @@ private:
     bool can_listener_on = false;
 
     int ecuCalDefIndex = 0;
+
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
+    uint16_t serial_read_extra_short_timeout = 50;
+    uint16_t serial_read_short_timeout = 200;
+    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_long_timeout = 800;
+    uint16_t serial_read_extra_long_timeout = 3000;
 
     int mapCellWidthSelectable = 240;
     int mapCellWidth1D = 96;
@@ -401,6 +414,8 @@ private slots:
     void change_log_gauge_value(int index);
     void change_log_digital_value(int index);
     void change_log_switch_value(int index);
+
+    void update_vbatt();
 
 signals:
     void check_serial_port();
