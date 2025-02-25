@@ -331,7 +331,6 @@ public:
         QStringList ScalingFineIncList;
         QStringList ScalingStorageTypeList;
         QStringList ScalingEndianList;
-        //QStringList ScalingBloblistList;
         QStringList ScalingSelectionsNameList;
         QStringList ScalingSelectionsValueList;
 

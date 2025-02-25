@@ -127,8 +127,11 @@ public:
     uint32_t get_iso15765_destination_address();
     bool     set_iso15765_destination_address(uint32_t value);
 
+    int set_j2534_ioctl(unsigned long parameter, int value);
+
     bool is_serial_port_open(void);
     int change_port_speed(QString portSpeed);
+    QByteArray five_baud_init(QByteArray output);
     int fast_init(QByteArray output);
     int set_lec_lines(int lec1, int lec2);
     int pulse_lec_1_line(int timeout);

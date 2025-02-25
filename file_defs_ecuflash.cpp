@@ -362,11 +362,15 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 {
                     if (sub_child.tagName() == "data"){
                         selection_name.append(sub_child.attribute("name"," ") + ",");
-                        selection_value.append(sub_child.attribute("value"," ") + ",");
+                        if (sub_child.attribute("value"," ") != " ")
+                            selection_value.append(sub_child.attribute("value"," ") + ",");
+                        else
+                            selection_value.append(sub_child.attribute("data"," ") + ",");
                     }
                     sub_child = sub_child.nextSibling().toElement();
                 }
             }
+            selection_value = selection_value.replace(" ", "");
             if (selection_name == "")
                 selection_name.append(" ");
             if (selection_value == "")

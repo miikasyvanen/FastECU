@@ -73,12 +73,14 @@ private:
     uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
-    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_medium_timeout = 500;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
     QSerialPort *serial = new QSerialPort();
     unsigned long periodic_msg_id;
+
+    bool msg_ack = false;
 
     enum rx_msg_type {
         NORM_MSG,
