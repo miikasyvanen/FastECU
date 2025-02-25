@@ -282,10 +282,8 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         selectableComboBox->setObjectName("selectableComboBox");
         for (int i = 0; i < selectionNameList.length() - 1; i++)
         {
-            if (selectionValueList.at(i) == mapDataCellText)
-            {
+            if (selectionValueList.at(i).toUpper() == mapDataCellText.toUpper())
                 currentIndex = i;
-            }
         }
         selectableComboBox->setCurrentIndex(currentIndex);
         ui->mapDataTableWidget->setCellWidget(0, 0, selectableComboBox);

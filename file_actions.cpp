@@ -2393,7 +2393,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         if (ecuCalDef->StorageTypeList.at(i) == "bloblist")
         {
             //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " is bloblist", true, true);
-            storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
+            //if (ecuCalDef->SelectionsValueList.at(i) != " ")
+                storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
+            //else
+            //    storagesize = ecuCalDef->SelectionsDataList.at(i).split(",").at(0).length() / 2;
             uint8_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16);
             for (int k = 0; k < storagesize; k++)
@@ -2401,6 +2404,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 dataByte = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                 mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
+            emit LOG_D("Selectable " + ecuCalDef->NameList.at(i) + " -> addr: 0x" + QString::number(byteAddress, 16) + " -> value: 0x" + mapData, true, true);
             ecuCalDef->MapData.replace(i, mapData);
             //emit LOG_D("Mapdata " + ecuCalDef->MapData.at(i), true, true);
         }

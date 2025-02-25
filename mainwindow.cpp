@@ -1590,8 +1590,8 @@ void MainWindow::selectable_combobox_item_changed(QString item)
                         storagesize = ecuCalDef[mapRomNumber]->SelectionsValueList.at(mapNumber).split(",").at(0).length() / 2;
                         for (int k = 0; k < storagesize; k++)
                         {
-                            dataByte = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).mid(0, 2).toUInt(&bStatus, 16);
-                            ecuCalDef[mapRomNumber]->FullRomData[byteAddress] = dataByte;
+                            dataByte = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).mid(k*2, 2).toUInt(&bStatus, 16);
+                            ecuCalDef[mapRomNumber]->FullRomData[byteAddress+k] = dataByte;
                         }
                     }
                 }
