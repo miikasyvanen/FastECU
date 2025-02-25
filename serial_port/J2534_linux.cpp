@@ -1016,11 +1016,10 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         received.clear();
         for (unsigned long i = 0; i < rxmsg.DataSize; i++)
             received.append(rxmsg.Data[i]);
-        //received = read_serial_data(14, 100);
         emit LOG_D("Response: " + parseMessageToHex(received), true, true);
         QString response = QString(received).split(" ").at(QString(received).split(" ").length()-1);
         response = response.split("\r\n").at(0);
-        emit LOG_D("Pin 16 voltage: " + response + " mV", true, true);
+        //emit LOG_D("Pin 16 voltage: " + response + " mV", true, true);
         *vBatt = response.toULong();
     }
 
@@ -1040,14 +1039,9 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         write_serial_data(output);
         emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
         memset(&rxmsg, 0, sizeof(rxmsg));
-        emit LOG_D("Read response", true, true);
         result = PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, serial_read_extra_long_timeout);
-        //if (!rxmsg.DataSize)
-        //    result = PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, serial_read_timeout);
         if (result)
             return result;
-        emit LOG_D("Response ok", true, true);
-
         received.clear();
         for (unsigned long i = 0; i < rxmsg.DataSize; i++)
         {
@@ -1055,7 +1049,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
             received.append(rxmsg.Data[i]);
         }
         response->NumOfBytes = rxmsg.DataSize;
-        emit LOG_D("J2534 response: " + received + " | " + parseMessageToHex(received), true, true);
+        emit LOG_D("Response: " + parseMessageToHex(received), true, true);
     }
 
     if (IoctlID == FAST_INIT)
@@ -1066,9 +1060,7 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         QString str = "aty" + QString::number(ChannelID) + " " + QString::number(msg->DataSize) + " 0\r\n";
         output.append(str.toUtf8());
         for (i = 0; i < msg->DataSize; i++)
-        {
             output.append(msg->Data[i]);
-        }
         write_serial_data(output);
         emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
     }
