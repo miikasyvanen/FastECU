@@ -1066,7 +1066,6 @@ int SerialPortActionsDirect::init_j2534_connection()
     // Create J2534 to device connections
     if (is_iso15765_connection)
     {
-        //set_j2534_can_filters();
         set_j2534_can();
         set_j2534_can_timings();
         set_j2534_can_filters();
@@ -1180,7 +1179,7 @@ int SerialPortActionsDirect::set_j2534_can_filters()
         emit LOG_D("Set CAN filters", true, true);
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
-        txmsg.TxFlags = ISO15765_FRAME_PAD;
+        txmsg.TxFlags = CAN_29BIT_ID;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
