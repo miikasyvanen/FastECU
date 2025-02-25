@@ -1107,7 +1107,6 @@ int SerialPortActionsDirect::init_j2534_connection()
     // Create J2534 to device connections
     if (is_iso15765_connection)
     {
-        //set_j2534_can_filters();
         set_j2534_can();
         set_j2534_can_timings();
         set_j2534_can_filters();
@@ -1188,11 +1187,13 @@ int SerialPortActionsDirect::unset_j2534_can()
 int SerialPortActionsDirect::set_j2534_can_timings()
 {
     // Set timeouts etc.
-    emit LOG_D("Set CAN/iso15765 timings", true, true);
+    if (is_can_connection)
+        emit LOG_D("Set CAN timings", true, true);
+    else if (is_iso15765_connection)
+        emit LOG_D("Set iso15765 timings", true, true);
     SCONFIG_LIST scl;
-    SCONFIG scp[] = {{PARITY,0}, {LOOPBACK, 0}};
+    SCONFIG scp[] = {{LOOPBACK, 0}};
     scl.NumOfParams = ARRAYSIZE(scp);
-    scp[0].Value = NO_PARITY;
     scl.ConfigPtr = scp;
     if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
     {
@@ -1221,7 +1222,7 @@ int SerialPortActionsDirect::set_j2534_can_filters()
         emit LOG_D("Set CAN filters", true, true);
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
-        txmsg.TxFlags = ISO15765_FRAME_PAD;
+        txmsg.TxFlags = CAN_29BIT_ID;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
@@ -1269,7 +1270,6 @@ int SerialPortActionsDirect::set_j2534_can_filters()
             reportJ2534Error();
             return STATUS_ERROR;
         }
-        emit LOG_D("msgId " + QString::number(msgId), true, true);
     }
     else
         return STATUS_ERROR;
