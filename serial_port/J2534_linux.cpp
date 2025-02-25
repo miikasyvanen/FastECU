@@ -981,6 +981,12 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
     }
     if (IoctlID == READ_VBATT)
     {
+        PASSTHRU_MSG rxmsg;
+        unsigned long numRxMsg;
+        QByteArray received;
+        rxmsg.DataSize = 0;
+        numRxMsg = 1;
+
         unsigned long *vBatt = (unsigned long*)pOutput;
         long pin = 16;
         output.clear();
@@ -988,11 +994,16 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         output.append(str.toUtf8());
         write_serial_data(output);
         emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
-        received = read_serial_data(14, 100);
+        result = PassThruReadMsgs(ChannelID, &rxmsg, &numRxMsg, serial_read_timeout);
+        if (result)
+            return result;
+        received.clear();
+        for (unsigned long i = 0; i < rxmsg.DataSize; i++)
+            received.append(rxmsg.Data[i]);
         emit LOG_D("Response: " + parseMessageToHex(received), true, true);
         QString response = QString(received).split(" ").at(QString(received).split(" ").length()-1);
         response = response.split("\r\n").at(0);
-        emit LOG_D("Pin 16 voltage: " + response + " mV", true, true);
+        //emit LOG_D("Pin 16 voltage: " + response + " mV", true, true);
         *vBatt = response.toULong();
     }
 
@@ -1004,12 +1015,9 @@ long J2534::PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const 
         QString str = "aty" + QString::number(ChannelID) + " " + QString::number(msg->DataSize) + " 0\r\n";
         output.append(str.toUtf8());
         for (i = 0; i < msg->DataSize; i++)
-        {
-            //emit LOG_D("Value: " + QString(msg->Data[i]), true, true);
             output.append(msg->Data[i]);
-        }
         write_serial_data(output);
-        received = read_serial_data(100, 50);
+        emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
     }
 
     if (input_as_sa)
