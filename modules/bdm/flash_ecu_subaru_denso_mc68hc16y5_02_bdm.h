@@ -76,7 +76,6 @@ private:
     int flash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno);
 
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

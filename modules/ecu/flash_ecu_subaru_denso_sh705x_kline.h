@@ -56,8 +56,8 @@ private:
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
-    bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
+    bool flash_write_init = false;
 
     int result;
     int mcu_type_index;
@@ -67,12 +67,15 @@ private:
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint32_t flashmessagesize = 0;
+    uint32_t flashblocksize = 0;
     uint32_t flashbytescount = 0;
     uint32_t flashbytesindex = 0;
 
@@ -82,46 +85,43 @@ private:
 
     void closeEvent(QCloseEvent *bar);
 
-    int connect_bootloader_subaru_denso_sh705x_kline();
-    int upload_kernel_subaru_denso_sh705x_kline(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_denso_sh705x_kline(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_denso_sh705x_kline(bool test_write);
-    int get_changed_blocks_denso_sh705x_kline(const uint8_t *src, int *modified);
-    int check_romcrc_denso_sh705x_kline(const uint8_t *src, uint32_t start, uint32_t len, int *modified);
-    int flash_block_denso_sh705x_kline(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_denso_sh705x_kline(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int connect_bootloader();
+    int upload_kernel(QString kernel, uint32_t kernel_start_addr);
+    int read_mem(uint32_t addr, uint32_t length);
+    int write_mem(bool test_write);
+    int get_changed_blocks(const uint8_t *src, int *modified);
+    int check_romcrc(const uint8_t *src, uint32_t addr, uint32_t len, int *modified);
+    int init_flash_write();
+    int flash_block(const uint8_t *src, uint32_t addr, uint32_t len);
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
     unsigned int crc32(const unsigned char *buf, unsigned int len);
     void init_crc32_tab( void );
     uint8_t cks_add8(QByteArray chksum_data, unsigned len);
 
-    QByteArray send_subaru_sid_bf_ssm_init();
-    QByteArray send_subaru_denso_sid_81_start_communication();
-    QByteArray send_subaru_denso_sid_83_request_timings();
-    QByteArray send_subaru_denso_sid_27_request_seed();
-    QByteArray send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key);
-    QByteArray send_subaru_denso_sid_10_start_diagnostic();
-    QByteArray send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
-    QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    QByteArray send_subaru_denso_sid_31_start_routine();
+    QByteArray send_sid_bf_ssm_init();
+    QByteArray send_sid_81_start_communication();
+    QByteArray send_sid_83_request_timings();
+    QByteArray send_sid_27_request_seed();
+    QByteArray send_sid_27_send_seed_key(QByteArray seed_key);
+    QByteArray send_sid_10_start_diagnostic();
+    QByteArray send_sid_34_request_upload(uint32_t addr, uint32_t len);
+    QByteArray send_sid_36_transferdata(uint32_t addr, QByteArray buf, uint32_t len);
 
-    QByteArray subaru_denso_generate_kline_seed_key(QByteArray seed);
-    QByteArray subaru_denso_generate_ecutek_kline_seed_key(QByteArray requested_seed);
-    QByteArray subaru_denso_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray generate_seed_key(QByteArray seed);
+    QByteArray generate_ecutek_seed_key(QByteArray requested_seed);
+    QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
-    QByteArray request_kernel_init();
     QByteArray request_kernel_id();
 
-    QByteArray subaru_denso_encrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_decrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_denso_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray encrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray decrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

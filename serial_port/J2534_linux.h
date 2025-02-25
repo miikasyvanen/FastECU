@@ -17,6 +17,12 @@ class J2534 : public QWidget
 {
     Q_OBJECT
 
+signals:
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
+
 public:
     explicit J2534();
     ~J2534();
@@ -62,6 +68,14 @@ private:
 
     QString opened_serial_port;
     QString serial_port_baudrate = "4800";
+
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
+    uint16_t serial_read_extra_short_timeout = 50;
+    uint16_t serial_read_short_timeout = 200;
+    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_long_timeout = 800;
+    uint16_t serial_read_extra_long_timeout = 3000;
 
     QSerialPort *serial = new QSerialPort();
     unsigned long periodic_msg_id;

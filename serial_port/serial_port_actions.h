@@ -2,6 +2,7 @@
 #define SERIAL_PORT_ACTIONS_H
 
 #include <QObject>
+#include <QLabel>
 #include "serial_port_actions_direct.h"
 #include "rep_serial_port_actions_replica.h"
 #include "websocketiodevice.h"
@@ -12,6 +13,10 @@ class SerialPortActions : public QObject
 
 signals:
     void stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
 
 public:
     explicit SerialPortActions(QString peerAddress="",
@@ -51,6 +56,11 @@ public:
     bool set_dataTerminalEnabled(int value);
     int  get_dataTerminalDisabled();
     bool set_dataTerminalDisabled(int value);
+
+    bool get_is_comm_busy();
+    void set_comm_busy(bool value);
+    bool get_read_vbatt();
+    void set_read_vbatt(bool value);
 
     uint8_t get_iso14230_startbyte();
     bool    set_iso14230_startbyte(uint8_t value);
@@ -126,7 +136,7 @@ public:
 
     bool reset_connection(void);
 
-    QByteArray read_serial_data(uint32_t datalen, uint16_t timeout);
+    QByteArray read_serial_data(uint16_t timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);
 
@@ -138,6 +148,10 @@ public:
 
     QStringList check_serial_ports(void);
     QString open_serial_port(void);
+
+    QString parse_message_to_hex(QByteArray received);
+
+    unsigned long read_vbatt();
 
 public slots:
     void websocket_connected(void);
@@ -161,9 +175,15 @@ private:
     void startOverNetwok(void);
     void startLocal(void);
     void sendAutoDiscoveryMessage();
+    void delay(int timeout);
+
+    QAtomicInteger<bool> is_read_vbatt = false;
+    QAtomicInteger<bool> is_comm_busy = false;
+    unsigned long vBatt = 0;
 
 private slots:
     void serialRemoteStateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+
 };
 
 #endif // SERIAL_PORT_ACTIONS_H

@@ -65,6 +65,7 @@ private:
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
@@ -80,48 +81,21 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    int connect_bootloader_subaru_tcu_hitachi_can();
-    //int upload_kernel_subaru_denso_can_02_32bit(QString kernel, uint32_t kernel_start_addr);
-    int read_mem_subaru_tcu_hitachi_can(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_tcu_hitachi_can(bool test_write);
-    //int get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified);
-    //int check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
-    //int flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_subaru_tcu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
-    int erase_subaru_tcu_hitachi_can();
+    int connect_bootloader();
+    int read_mem(uint32_t start_addr, uint32_t length);
+    int write_mem(bool test_write);
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int erase_mem();
 
-    //uint8_t cks_add8(QByteArray chksum_data, unsigned len);
-    //void init_crc16_tab(void);
-    //uint16_t crc16(const uint8_t *data, uint32_t siz);
+    QByteArray generate_seed_key(QByteArray requested_seed);
+    QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
+    QByteArray encrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray decrypt_payload(QByteArray buf, uint32_t len);
+    QByteArray calculate_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
 
-
-    //QByteArray send_subaru_tcu_sid_bf_ssm_init();
-    //QByteArray send_subaru_tcu_sid_a0_block_read(uint32_t dataaddr, uint32_t datalen);
-    //QByteArray send_subaru_denso_sid_81_start_communication();
-    //QByteArray send_subaru_denso_sid_83_request_timings();
-    //QByteArray send_subaru_denso_sid_27_request_seed();
-    //QByteArray send_subaru_denso_sid_27_send_seed_key(QByteArray seed_key);
-    //QByteArray send_subaru_denso_sid_10_start_diagnostic();
-    //QByteArray send_subaru_denso_sid_34_request_upload(uint32_t dataaddr, uint32_t datalen);
-    //QByteArray send_subaru_denso_sid_36_transferdata(uint32_t dataaddr, QByteArray buf, uint32_t len);
-    //QByteArray send_subaru_denso_sid_31_start_routine();
-
-
-    //QByteArray request_kernel_init();
-    //QByteArray request_kernel_id();
-
-    QByteArray subaru_tcu_hitachi_generate_can_seed_key(QByteArray requested_seed);
-    QByteArray subaru_tcu_hitachi_calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
-    QByteArray subaru_tcu_hitachi_encrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_tcu_hitachi_decrypt_32bit_payload(QByteArray buf, uint32_t len);
-    QByteArray subaru_tcu_hitachi_calculate_32bit_payload(QByteArray buf, uint32_t len, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
-
-    //QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    //int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

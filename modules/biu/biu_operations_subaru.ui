@@ -9,9 +9,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>824</width>
-    <height>697</height>
+    <width>820</width>
+    <height>677</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Ubuntu Mono</family>
+    <bold>false</bold>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Communication Interface with BIU</string>
@@ -43,6 +49,13 @@
          <width>800</width>
          <height>600</height>
         </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>DejaVu Sans Mono</family>
+         <pointsize>10</pointsize>
+         <bold>false</bold>
+        </font>
        </property>
       </widget>
      </item>

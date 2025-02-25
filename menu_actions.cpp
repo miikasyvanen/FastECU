@@ -1045,7 +1045,12 @@ void MainWindow::show_subaru_biu_window()
     serial->change_port_speed("10400");
     //serial->change_port_speed("4800");
 
-    BiuOperationsSubaru biuOperationsSubaru(serial);
+    BiuOperationsSubaru biuOperationsSubaru(serial, this);
+    QObject::connect(&biuOperationsSubaru, &BiuOperationsSubaru::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&biuOperationsSubaru, &BiuOperationsSubaru::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&biuOperationsSubaru, &BiuOperationsSubaru::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&biuOperationsSubaru, &BiuOperationsSubaru::LOG_D, syslogger, &SystemLogger::log_messages);
+
     biuOperationsSubaru.exec();
 
     qDebug() << "BIU stopped";
@@ -1566,7 +1571,7 @@ int MainWindow::simulate_obd()
     {
         received.clear();
         output.clear();
-        received = serial->read_serial_data(16, 100);
+        received = serial->read_serial_data(100);
         if (received != "")
         {
             qDebug() << "Received:" << parse_message_to_hex(received);

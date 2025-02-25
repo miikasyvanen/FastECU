@@ -34,7 +34,7 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
         mcu_type_index++;
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
-    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + mcu_type_index, true, true);
+    emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -61,13 +61,26 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
     target_id = 0x10;
     serial->open_serial_port();
     serial->change_port_speed("39063");
-    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
 
-    int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
-                                   tr("Make sure VPP and MOD1 is connected and turn ignition ON and press OK to start initializing connection to ECU"),
+    int ret = 0;
+
+    if (cmd_type == "write")
+    {
+        emit LOG_I("Set programming voltage +12v to Line End Check 1 and MOD1 to Line End Check 2", true, true);
+        serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalEnabled());
+
+        ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                   tr("Make sure VPP and MOD1 is connected and turn ignition ON and press OK to start initialising connection to ECU"),
                                    QMessageBox::Ok | QMessageBox::Cancel,
                                    QMessageBox::Ok);
-
+    }
+    else
+    {
+        ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                       tr("Turn ignition ON and press OK to start initializing connection to ECU"),
+                                       QMessageBox::Ok | QMessageBox::Cancel,
+                                       QMessageBox::Ok);
+    }
     switch (ret)
     {
     case QMessageBox::Ok:
@@ -87,9 +100,12 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
                 emit external_logger("Writing ROM, please wait...");
                 emit LOG_I("Writing ROM to Subaru Unisia Jecs UJ20/30WWW using K-Line", true, true);
                 result = write_mem();
+                emit LOG_I("Unset programming voltage +12v to Line End Check 1", true, true);
+                serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
             }
         }
         emit external_logger("Finished");
+        serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
         if (result == STATUS_SUCCESS)
         {
@@ -153,8 +169,8 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
 
     emit LOG_I("Checking if ECU in read mode", true, true);
     serial->change_port_speed("38400");
-    received = send_subaru_sid_bf_ssm_init();
-    emit LOG_D("Response: " + parse_message_to_hex(received), true, true);
+    received = send_sid_bf_ssm_init();
+
 
     if (received != "" && received.length() > 12)
     {
@@ -174,7 +190,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
     {
         // SSM init
         serial->change_port_speed("4800");
-        received = send_subaru_sid_bf_ssm_init();
+        received = send_sid_bf_ssm_init();
         if (received == "" && (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
 
@@ -190,31 +206,26 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
         }
         ecuid = msg;
         emit LOG_I("ECU ID = " + ecuid, true, true);
-        //send_log_window_message("ECU ID = " + ecuid, true, true);
+        //emit LOG_I("ECU ID = " + ecuid, true, true);
 
         received = send_subaru_sid_b8_change_baudrate_38400();
-        //send_log_window_message("0xB8 response: " + parse_message_to_hex(received), true, true);
-        //qDebug() << "0xB8 response:" << parse_message_to_hex(received);
+        //emit LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
         if (received == "" || (uint8_t)received.at(4) != 0xf8)
             return STATUS_ERROR;
 
         serial->change_port_speed("38400");
 
         // Checking connection after baudrate change with SSM Init
-        received = send_subaru_sid_bf_ssm_init();
+        received = send_sid_bf_ssm_init();
         emit LOG_D("Init response: " + parse_message_to_hex(received), true, true);
         if (received == "" || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
     }
 
-    ecuCalDef->RomId = ecuid;
+    ecuCalDef->RomId = ecuid + "_";
 
+    start_addr += 0x00100000;
     pagesize = 0x80;
-    if (start_addr == 0 && length == 0)
-    {
-        start_addr = 0;
-        length = 0x040000;
-    }
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
@@ -259,9 +270,8 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
         //chk_sum = calculate_checksum(output, false);
         //output.append((uint8_t) chk_sum);
         received = serial->write_serial_data_echo_check(output);
-        received = serial->read_serial_data(pagesize + 6, serial_read_extra_long_timeout);
+        received = serial->read_serial_data(serial_read_extra_long_timeout);
 
-        //qDebug() << "Received map data:" << parse_message_to_hex(received);
         if (received.startsWith("\x80\xf0"))
         {
             received.remove(0, 5);
@@ -290,8 +300,8 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("ROM read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
-        LOG_I(msg, true, true);
+        msg = QString("ROM read addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        emit LOG_I(msg, true, true);
         delay(1);
 
         addr += (numblocks * pagesize);
@@ -314,7 +324,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
 
     if (!serial->is_serial_port_open())
     {
-        LOG_E("ERROR: Serial port is not open.", true, true);
+        emit LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
     }
 
@@ -324,44 +334,63 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
         emit LOG_E("Unable to open kernel file for reading", true, true);
         return STATUS_ERROR;
     }
+    //LOG_I("Kernel file " + file.fileName() + " opened.", true, true);
 
     QByteArray kerneldata = file.readAll();
     file.close();
 
+    while (kerneldata.length() % 0x80)
+        kerneldata.append((uint8_t)0x00);
+
     int filesize = kerneldata.length();
 
     emit LOG_I("Uploading kernel, please wait...", true, true);
-    for (int i = 0; i < filesize; i++)
+    for (int i = 0; i < filesize; i+=0x80)
     {
+        if (kill_process)
+            return 0;
+
         output.clear();
-        output.append(kerneldata.at(i));
+        for (int j = 0; j < 0x80; j++)
+            output.append(kerneldata.at(i + j));
         serial->write_serial_data_echo_check(output);
         pleft = (float)i / (float)filesize * 100.0f;
         set_progressbar_value(pleft);
     }
+    set_progressbar_value(100);
+
     delay(500);
-    received = serial->read_serial_data(100, 200);
+    received = serial->read_serial_data(serial_read_short_timeout);
     received.clear();
 
-    set_progressbar_value(100);
 
 
     return STATUS_SUCCESS;
 }
 
+/*
+ *
+ * Error codes:
+ * 0x48 - Missing VPP voltage
+ * 0x5a -
+ * 0x5c - Checksum error
+ * 0x72 - Address error in 0x61 command
+ * 0x8a - FENTRY bit not set
+ *
+ */
 int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
 {
     QByteArray output;
     QByteArray received;
-    float pleft = 0;
-    uint32_t dataaddr = 0;
-
-    QMessageBox::information(this, tr("Flash file"), "Remove MOD1 voltage and press ok to continue.");
+    QString msg;
 
     serial->reset_connection();
     serial->set_serial_port_parity(QSerialPort::NoParity);
     serial->open_serial_port();
     serial->change_port_speed("19200");
+
+    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
+    QMessageBox::information(this, tr("Flash file"), "Remove MOD1 voltage and press ok to continue.");
 
     emit LOG_I("Initialising serial port, please wait...", true, true);
     if(!serial->is_serial_port_open())
@@ -389,22 +418,25 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         received.clear();
         for (int i = 0; i < 20; i++)
         {
-            received.append(serial->read_serial_data(10, 1));
+            if (kill_process)
+                return 0;
+
+            received.append(serial->read_serial_data(10));
             emit LOG_I(".", false, false);
-            qDebug() << ".";
             if (received.length() > 6)
             {
                 if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x42)
                 {
                     emit LOG_I("", false, true);
                     emit LOG_I("Flash erase in progress, please wait...", true, true);
+
                     break;
                 }
                 else
                 {
                     emit LOG_I("", false, true);
                     emit LOG_E("Flash erase cmd failed!", true, true);
-                    emit LOG_E("Received: " + parse_message_to_hex(received), true, true);
+                    emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
                     return STATUS_ERROR;
                 }
             }
@@ -414,7 +446,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         {
             emit LOG_I("", false, true);
             emit LOG_E("Flash erase cmd failed!", true, true);
-            emit LOG_E("Received: " + parse_message_to_hex(received), true, true);
+            emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
             serial->reset_connection();
 
             return STATUS_ERROR;
@@ -424,22 +456,25 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     received.clear();
     for (int i = 0; i < 20; i++)
     {
-        received.append(serial->read_serial_data(10, 1));
+        if (kill_process)
+            return 0;
+
+        received.append(serial->read_serial_data(10));
         emit LOG_I(".", false, false);
-        qDebug() << ".";
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
             {
                 emit LOG_I("", false, true);
                 emit LOG_I("Flash erased!", true, true);
+
                 break;
             }
             else
             {
                 emit LOG_I("", false, true);
                 emit LOG_E("Flash erase failed!", true, true);
-                emit LOG_E("Received: " + parse_message_to_hex(received), true, true);
+                emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
         }
@@ -451,14 +486,25 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     QByteArray filedata;
     filedata = ecuCalDef->FullRomData;
 
-    int flashfilesize = filedata.length();
-    dataaddr = 0;
-    int blocksize = 128;
-    int blocks = flashfilesize / blocksize;
-    //int encrypt = 0x82;
+    QString flashdata_filename = ecuCalDef->FileName;
+    int flashdatasize = filedata.length();
+    uint32_t dataaddr = 0;
+    int blocksize = 0x80;
+    int blocks = flashdatasize / blocksize;
 
+    uint32_t start = 0;
+    uint32_t byteindex = 0;
+    unsigned long chrono;
+    unsigned curspeed, tleft;
+    QElapsedTimer timer;
+
+    emit LOG_I("Uploading file " + flashdata_filename + " to flash, please wait...", true, true);
+    emit LOG_D("Uploading " + QString::number(blocks) + " blocks", true, true);
     for (int i = 0; i < blocks; i++)
     {
+        if (kill_process)
+            return 0;
+
         output.clear();
         output.append((uint8_t)0x80);
         output.append((uint8_t)0x10);
@@ -479,49 +525,64 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         output.append(calculate_checksum(output, false));
 
         serial->write_serial_data_echo_check(output);
-        emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
-        delay(5);
         received.clear();
         if (output.at(5) == 0x61)
         {
-            for (int i = 0; i < 500; i++)
+            received = serial->read_serial_data(serial_read_extra_long_timeout);
+            if (received.length() > 6)
             {
-                received.append(serial->read_serial_data(10, 1));
-                if (received.length() > 6)
+                if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
                 {
-                    if ((uint8_t)received.at(0) == 0x80 && (uint8_t)received.at(1) == 0xf0 && (uint8_t)received.at(2) == 0x10 && (uint8_t)received.at(3) == 0x02 && (uint8_t)received.at(4) == 0xEF && (uint8_t)received.at(5) == 0x52)
-                    {
-                        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
-                        break;
-                    }
-                    else
-                    {
-                        emit LOG_E("Block flash failed!", true, true);
-                        emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
-                        return STATUS_ERROR;
-                    }
+
                 }
-                delay(50);
+                else
+                {
+                    emit LOG_E("Block flash failed!", true, true);
+                    emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
+                    return STATUS_ERROR;
+                }
             }
-            if (received == "")
+            else
             {
                 emit LOG_E("Flash failed!", true, true);
                 emit LOG_E("Response: " + parse_message_to_hex(received), true, true);
                 return STATUS_ERROR;
             }
+            delay(10);
         }
-        else
-        {
-            emit LOG_I("File written to flash, please wait...", true, true);
-            delay(5);
-            emit LOG_I("Done! Please remove VPP voltage, power cycle ECU and request SSM Init to confirm.", true, true);
+
+        QString start_address = QString("%1").arg(start,8,16,QLatin1Char('0')).toUpper();
+        QString block_len = QString("%1").arg(blocksize,8,16,QLatin1Char('0')).toUpper();
+        msg = QString("Kernel write addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        emit LOG_I(msg, true, true);
+
+        start += blocksize;
+        byteindex += blocksize;
+
+        chrono = timer.elapsed();
+        timer.start();
+
+        if (!chrono) {
+            chrono += 1;
         }
+        curspeed = blocksize * (1000.0f / chrono);  //avg B/s
+        if (!curspeed) {
+            curspeed += 1;
+        }
+
+        tleft = ((float)flashdatasize - byteindex) / curspeed;  //s
+        if (tleft > 9999) {
+            tleft = 9999;
+        }
+        tleft++;
+
         dataaddr += blocksize;
-        pleft = (float)(i * blocksize) / (float)flashfilesize * 100.0f;
+        float pleft = (float)(i * blocksize) / (float)flashdatasize * 100;
         set_progressbar_value(pleft);
     }
-
     set_progressbar_value(100);
+    emit LOG_I("File " + flashdata_filename + " written to flash.", true, true);
+    emit LOG_I("Please remove VPP voltage, power cycle ECU and request SSM Init to confirm.", true, true);
 
     return STATUS_SUCCESS;
 }
@@ -535,7 +596,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
  *
  * @return ECU ID and capabilities
  */
-QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_bf_ssm_init()
+QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
@@ -545,8 +606,8 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_bf_ssm_init()
     output.append((uint8_t)0xBF);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(250);
-    received = serial->read_serial_data(100, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(receive_timeout);
+
     while (received == "" && loop_cnt < comm_try_count)
     {
         if (kill_process)
@@ -555,8 +616,8 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_bf_ssm_init()
         serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
         emit LOG_I("SSM init", true, true);
         delay(comm_try_timeout);
-        received = serial->read_serial_data(100, receive_timeout);
-        emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+        received = serial->read_serial_data(receive_timeout);
+
         loop_cnt++;
     }
 
@@ -569,7 +630,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     QByteArray received;
     QByteArray msg;
 
-    emit LOG_I("Request baudrate change to 4800", true, true);
+    emit LOG_I("Requesting baudrate change to 4800", true, true);
     output.clear();
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);
@@ -578,8 +639,8 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     output.append((uint8_t)0x15);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(200);
-    received = serial->read_serial_data(8, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(receive_timeout);
+
 
     return received;
 }
@@ -590,7 +651,7 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     QByteArray received;
     QByteArray msg;
 
-    emit LOG_I("Request baudrate change to 38400", true, true);
+    emit LOG_I("Requesting baudrate change to 38400", true, true);
     output.clear();
     output.append((uint8_t)0xB8);
     output.append((uint8_t)0x00);
@@ -599,8 +660,8 @@ QByteArray FlashEcuSubaruUnisiaJecsM32rBootMode::send_subaru_sid_b8_change_baudr
     output.append((uint8_t)0x75);
     serial->write_serial_data_echo_check(add_ssm_header(output, tester_id, target_id, false));
     delay(200);
-    received = serial->read_serial_data(8, receive_timeout);
-    emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(receive_timeout);
+
 
     return received;
 }
@@ -657,35 +718,6 @@ QString FlashEcuSubaruUnisiaJecsM32rBootMode::parse_message_to_hex(QByteArray re
     }
 
     return msg;
-}
-
-/*
- * Output text to log window
- *
- * @return
- */
-int FlashEcuSubaruUnisiaJecsM32rBootMode::send_log_window_message(QString message, bool timestamp, bool linefeed)
-{
-    QDateTime dateTime = dateTime.currentDateTime();
-    QString dateTimeString = dateTime.toString("[yyyy-MM-dd hh':'mm':'ss'.'zzz']  ");
-
-    if (timestamp)
-        message = dateTimeString + message;
-    if (linefeed)
-        message = message + "\n";
-
-    QTextEdit* textedit = this->findChild<QTextEdit*>("text_edit");
-    if (textedit)
-    {
-        ui->text_edit->insertPlainText(message);
-        ui->text_edit->ensureCursorVisible();
-
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_ERROR;
 }
 
 void FlashEcuSubaruUnisiaJecsM32rBootMode::set_progressbar_value(int value)

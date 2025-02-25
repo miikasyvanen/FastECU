@@ -19,6 +19,12 @@ inline long qvariant_to_scalar<long>(QVariant v)
     return v.toLongLong();
 }
 
+template<>
+inline unsigned long qvariant_to_scalar<unsigned long>(QVariant v)
+{
+    return v.toULongLong();
+}
+
 template <>
 inline int qvariant_to_scalar<int>(QVariant v)
 {

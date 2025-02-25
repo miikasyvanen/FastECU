@@ -1,17 +1,7 @@
-#ifndef FLASH_TCU_CVT_HITACHI_CAN_H
-#define FLASH_TCU_CVT_HITACHI_CAN_H
+#ifndef FLASH_ECU_SUBARU_DENSO_SH72543_CAN_H
+#define FLASH_ECU_SUBARU_DENSO_SH72543_CAN_H
 
-#include <QApplication>
-#include <QByteArray>
-#include <QCoreApplication>
-#include <QDebug>
-#include <QMainWindow>
-#include <QSerialPort>
-#include <QTime>
-#include <QTimer>
 #include <QWidget>
-#include <QtCharts/QChartView>
-#include <QLineSeries>
 
 #include <kernelcomms.h>
 #include <kernelmemorymodels.h>
@@ -22,17 +12,17 @@
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
-    class EcuOperationsWindow;
+class EcuOperationsWindow;
 }
 QT_END_NAMESPACE
 
-class FlashTcuCvtSubaruHitachiM32rCan : public QDialog
+class FlashEcuSubaruDensoSH72543CanDiesel : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FlashTcuCvtSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
-    ~FlashTcuCvtSubaruHitachiM32rCan();
+    explicit FlashEcuSubaruDensoSH72543CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent = nullptr);
+    ~FlashEcuSubaruDensoSH72543CanDiesel();
 
     void run();
 
@@ -48,8 +38,8 @@ private:
     FileActions::EcuCalDefStructure *ecuCalDef;
     QString cmd_type;
 
-    #define STATUS_SUCCESS							0x00
-    #define STATUS_ERROR							0x01
+#define STATUS_SUCCESS	0x00
+#define STATUS_ERROR	0x01
 
     bool kill_process = false;
     bool kernel_alive = false;
@@ -82,12 +72,12 @@ private:
     void closeEvent(QCloseEvent *event);
 
     int connect_bootloader();
-    int read_mem(uint32_t start_addr, uint32_t length);
-    int write_mem(bool test_write);
+    int read_memory(uint32_t start_addr, uint32_t length);
+    int write_memory(bool test_write);
     int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
-    int erase_mem();
+    int erase_memory();
 
-    QByteArray generate_seed_key(QByteArray requested_seed);
+    QByteArray generate_can_seed_key(QByteArray requested_seed);
     QByteArray calculate_seed_key(QByteArray requested_seed, const uint16_t *keytogenerateindex, const uint8_t *indextransformation);
     QByteArray encrypt_payload(QByteArray buf, uint32_t len);
     QByteArray decrypt_payload(QByteArray buf, uint32_t len);
@@ -98,11 +88,11 @@ private:
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);
     void delay(int timeout);
-    int hack_words();
 
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
 
+
 };
 
-#endif // FLASH_TCU_CVT_HITACHI_CAN_H
+#endif // FLASH_ECU_SUBARU_DENSO_SH72543_CAN_H

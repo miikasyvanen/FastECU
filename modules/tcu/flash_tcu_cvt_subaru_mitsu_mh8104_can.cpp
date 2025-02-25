@@ -170,7 +170,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x02 && (uint8_t)received.at(6) == 0x02 && (uint8_t)received.at(7) == 0x03)
     {
@@ -199,7 +199,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
         //delay(50);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(200);
         if (received != "")
         {
             connected = true;
@@ -237,7 +237,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
         //delay(50);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(200);
         if (received != "")
         {
             connected = true;
@@ -267,7 +267,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
 
     if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
@@ -290,7 +290,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
     {
@@ -324,7 +324,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x02)
     {
@@ -349,7 +349,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x42)
     {
@@ -381,7 +381,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::connect_bootloader_subaru_tcu_mitsu_can()
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x74 && (uint8_t)received.at(5) != 0x20 && (uint8_t)received.at(6) != 0x01 && (uint8_t)received.at(7) != 0x04)
     {
@@ -444,7 +444,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
     send_log_window_message("Send msg: " + parse_message_to_hex(output), true, true);
     serial->write_serial_data_echo_check(output);
     delay(200);
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     if ((uint8_t)received.at(4) != 0x75 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x01)
     {
@@ -496,7 +496,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
         serial->write_serial_data_echo_check(output);
         //qDebug() << "0xB7 message sent to kernel to dump 256 bytes";
         delay(50);
-        received = serial->read_serial_data(270, 200);
+        received = serial->read_serial_data(200);
         //qDebug() << "Response to 0xB7 (dump mem) message:" << parse_message_to_hex(received);
         send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
         if ((uint8_t)received.at(4) != 0xF7)
@@ -568,7 +568,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
-        received = serial->read_serial_data(270, 200);
+        received = serial->read_serial_data(200);
         if (received != "")
         {
             connected = true;
@@ -744,7 +744,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         send_log_window_message("Sent: " + parse_message_to_hex(output), true, true);
         qDebug() << "Sent:" << parse_message_to_hex(output);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(200);
         if (received != "")
         {
             connected = true;
@@ -789,7 +789,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         qDebug() << "Kernel data:" << parse_message_to_hex(output);
         //delay(20);
         delay(20);
-        received = serial->read_serial_data(5, receive_timeout);
+        received = serial->read_serial_data(receive_timeout);
 
         float pleft = (float)blockctr / (float)maxblocks * 100;
         set_progressbar_value(pleft);
@@ -815,7 +815,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         qDebug() << "Sent:" << parse_message_to_hex(output);
         //delay(50);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(200);
         if (received != "")
         {
             connected = true;
@@ -854,7 +854,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         qDebug() << "Sent:" << parse_message_to_hex(output);
         //delay(50);
         delay(200);
-        received = serial->read_serial_data(20, 200);
+        received = serial->read_serial_data(200);
         if (received != "")
         {
             connected = true;
@@ -915,7 +915,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::erase_subaru_tcu_mitsu_can()
 
     // should there be a QTime delay to wait for erasing process?
 
-    received = serial->read_serial_data(20, 200);
+    received = serial->read_serial_data(200);
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     delay(5000);
 

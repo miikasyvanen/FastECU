@@ -13,7 +13,7 @@ FileActions::ConfigValuesStructure *FileActions::create_romraider_def_id_list(Co
 
     if(!configValues->romraider_definition_files.length())
     {
-        qDebug() << "No RomRaider definition files";
+        emit LOG_D("No RomRaider definition files", true, true);
         return configValues;
     }
 
@@ -21,7 +21,7 @@ FileActions::ConfigValuesStructure *FileActions::create_romraider_def_id_list(Co
     {
         filename = configValues->romraider_definition_files.at(i);
 
-        qDebug() << "Reading RomRaider ID's from file:" << filename;
+        emit LOG_D("Reading RomRaider ID's from file: " + filename, true, true);
 
         QFile file(filename);
         if (!file.open(QIODevice::ReadOnly ))
@@ -55,7 +55,7 @@ FileActions::ConfigValuesStructure *FileActions::create_romraider_def_id_list(Co
                         {
                             if (id_child.tagName() == "xmlid")
                             {
-                                //qDebug() << cal_id_count << "cal tag:" << id_child.text();
+                                //emit LOG_D(cal_id_count + " cal tag:" << id_child.text();
                                 cal_id_found = true;
                                 configValues->romraider_def_cal_id.append(id_child.text());
                                 configValues->romraider_def_filename.append(filename);
@@ -63,13 +63,13 @@ FileActions::ConfigValuesStructure *FileActions::create_romraider_def_id_list(Co
                             }
                             if (id_child.tagName() == "internalidaddress")
                             {
-                                //qDebug() << "cal addr:" << id_child.text();
+                                //emit LOG_D("cal addr:" << id_child.text();
                                 cal_id_addr_found = true;
                                 configValues->romraider_def_cal_id_addr.append(id_child.text());
                             }
                             if (id_child.tagName() == "ecuid")
                             {
-                                //qDebug() << "ecuid:" << id_child.text();
+                                //emit LOG_D("ecuid:" << id_child.text();
                                 ecu_id_found = true;
                                 configValues->romraider_def_ecu_id.append(id_child.text());
                             }
@@ -92,15 +92,15 @@ FileActions::ConfigValuesStructure *FileActions::create_romraider_def_id_list(Co
         }
         file_count++;
     }
-    qDebug() << file_count << "RomRaider definition files found";
-    qDebug() << cal_id_count << "RomRaider ecu id's found";
+    emit LOG_D(QString::number(file_count) + " RomRaider definition files found", true, true);
+    emit LOG_D(QString::number(cal_id_count) + " RomRaider ecu id's found", true, true);
 
     return configValues;
 }
 
 FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCalDefStructure *ecuCalDef)
 {
-    ConfigValuesStructure *configValues = &ConfigValuesStruct;
+    //ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     bool OemEcuDefBaseFileFound = false;
 
@@ -117,7 +117,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
     if (!file.open(QIODevice::ReadOnly ))
     {
         ecuCalDef = NULL;
-        //qDebug() << "Unable to open OEM ecu base definitions file " + filename + " for reading";
+        //emit LOG_D("Unable to open OEM ecu base definitions file " + filename + " for reading";
         QMessageBox::warning(this, tr("Ecu definitions file"), "Unable to open OEM ecu base definitions file " + filename + " for reading");
         return NULL;
     }
@@ -126,15 +126,9 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
     file.close();
 
     QDomElement root = xmlBOM.documentElement();
-
-    QString Type = root.tagName();
-    QString Name = root.attribute("name"," ");
-    QDomElement TagType = root.firstChild().toElement();
-
-    uint16_t index = 0;
-
     QDomNodeList items = root.childNodes();
-    for(int x=0; x< items.count(); x++)
+    emit LOG_D("Child nodes: " + QString::number(items.count()), true, true);
+    for(int x = 0; x < items.count(); x++)
     {
         if (items.at(x).isComment())
             continue;
@@ -142,7 +136,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
         QDomElement TagType = items.at(x).toElement();
         if (TagType.tagName() == "rom")
         {
-            //qDebug() << "Reading base...";
+            //emit LOG_D("Reading base...";
             rombase = TagType.attribute("base","No base");
             if (rombase == "No base")
             {
@@ -161,7 +155,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                 }
                 if (xmlid == ecuCalDef->RomInfo[RomBase])
                 {
-                    //qDebug() << "Found base...";
+                    //emit LOG_D("Found base...";
 
                     OemEcuDefBaseFileFound = true;
                     QDomElement Table = TagType.firstChild().toElement();
@@ -171,10 +165,10 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                         {
                             for (int i = 0; i < ecuCalDef->NameList.length(); i++)
                             {
-                                //qDebug() << "Checking table:" << ecuCalDef->NameList.at(i);
+                                //emit LOG_D("Checking table:" << ecuCalDef->NameList.at(i);
                                 if (Table.attribute("name","No name") == ecuCalDef->NameList.at(i))
                                 {
-                                    //qDebug() << "Found table:" << ecuCalDef->NameList.at(i);
+                                    //emit LOG_D("Found table:" << ecuCalDef->NameList.at(i);
                                     QString type = Table.attribute("type"," ");
                                     QString storage_type = Table.attribute("storagetype"," ");
                                     if (type == "Switch")
@@ -198,7 +192,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                     ecuCalDef->EndianList.replace(i, Table.attribute("endian"," "));
                                     ecuCalDef->LogParamList.replace(i, Table.attribute("logparam"," "));
 
-                                    //qDebug() << "DEF BASE:" << ecuCalDef->XSizeList.at(i) << ecuCalDef->YSizeList.at(i);
+                                    //emit LOG_D("DEF BASE:" << ecuCalDef->XSizeList.at(i) << ecuCalDef->YSizeList.at(i);
                                     ecuCalDef->SyncedWithEcu = true;
 
                                     QDomElement TableChild = Table.firstChild().toElement();
@@ -414,8 +408,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
     {
         if (configValues->romraider_def_cal_id.at(index) == cal_id)
         {
-            //qDebug() << "RomRaider ID found:" << configValues->romraider_def_cal_id.at(index) << cal_id;
-            //qDebug() << "RomRaider file name:" << configValues->romraider_def_filename.at(index);
+            //emit LOG_D("RomRaider ID found:" << configValues->romraider_def_cal_id.at(index) << cal_id;
+            //emit LOG_D("RomRaider file name:" << configValues->romraider_def_filename.at(index);
             cal_id_file_found = true;
             file_index = index;
             continue;
@@ -451,12 +445,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
     uint16_t index = 0;
 
     QDomElement root = xmlBOM.documentElement();
-
-    QString Type = root.tagName();
-    QString Name = root.attribute("name"," ");
-
     QDomNodeList items = root.childNodes();
-    qDebug() << "Child nodes:" << items.count();
+    emit LOG_D("Child nodes: " + QString::number(items.count()), true, true);
     for(int x = 0; x < items.count(); x++)
     {
         if (items.at(x).isComment())
@@ -514,10 +504,10 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                     }
                     if (xmlid == cal_id)
                     {
-                        qDebug() << "XML ID:" << xmlid << cal_id;
+                        emit LOG_D("XML ID: " + xmlid + " " + cal_id, true, true);
                         if (ecuCalDef->RomInfo.at(XmlId) == " ")
                         {
-                            bool flashmethod_alias_found = false;
+                            //bool flashmethod_alias_found = false;
                             ecuCalDef->RomInfo.replace(XmlId, xmlid);
                             ecuCalDef->RomInfo.replace(InternalIdAddress, internalidaddress);
                             ecuCalDef->RomInfo.replace(InternalIdString, internalidstring);
@@ -539,9 +529,9 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                                 {
                                     if (aliases.at(j) == flashmethod)
                                     {
-                                        flashmethod_alias_found = true;
-                                        qDebug() << "Alias: " << flashmethod;
-                                        qDebug() << "Protocol:" << configValues->flash_protocol_protocol_name.at(i);
+                                        //flashmethod_alias_found = true;
+                                        emit LOG_D("Alias: " + flashmethod, true, true);
+                                        emit LOG_D("Protocol: " + configValues->flash_protocol_protocol_name.at(i), true, true);
                                         ecuCalDef->RomInfo.replace(FlashMethod, configValues->flash_protocol_protocol_name.at(i));
                                     }
                                 }

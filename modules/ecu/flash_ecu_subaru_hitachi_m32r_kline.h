@@ -1,5 +1,5 @@
-#ifndef FLASHECUUNISIAJECS0X27_H
-#define FLASHECUUNISIAJECS0X27_H
+#ifndef FLASH_ECU_SUBARU_HITACHI_M32R_KLINE_H
+#define FLASH_ECU_SUBARU_HITACHI_M32R_KLINE_H
 
 #include <QApplication>
 #include <QByteArray>
@@ -52,8 +52,6 @@ private:
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
-    bool request_denso_kernel_init = false;
-    bool request_denso_kernel_id = false;
 
     int result;
     int mcu_type_index;
@@ -66,6 +64,7 @@ private:
     uint8_t comm_try_count = 4;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
@@ -86,7 +85,7 @@ private:
     int write_mem(bool test_write);
     int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
 
-    QByteArray send_subaru_sid_bf_ssm_init();
+    QByteArray send_sid_bf_ssm_init();
     QByteArray send_subaru_sid_b8_change_baudrate_38400();
     QByteArray send_subaru_sid_81_start_communication();
     QByteArray send_subaru_sid_83_request_timings();
@@ -107,7 +106,6 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
-    //int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);
     void delay(int timeout);
@@ -115,9 +113,6 @@ private:
     SerialPortActions *serial;
     Ui::EcuOperationsWindow *ui;
 
-private slots:
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
-
 };
 
-#endif // FLASHECUUNISIAJECS0X27_H
+#endif // FLASH_ECU_SUBARU_HITACHI_M32R_KLINE_H

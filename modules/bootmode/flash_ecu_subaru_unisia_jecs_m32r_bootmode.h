@@ -91,7 +91,7 @@ private:
     int read_mem(uint32_t start_addr, uint32_t length);
     int write_mem();
 
-    QByteArray send_subaru_sid_bf_ssm_init();
+    QByteArray send_sid_bf_ssm_init();
     QByteArray send_subaru_sid_b8_change_baudrate_4800();
     QByteArray send_subaru_sid_b8_change_baudrate_38400();
 
@@ -99,7 +99,6 @@ private:
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
 
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

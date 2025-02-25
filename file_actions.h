@@ -4,7 +4,6 @@
 #include <QApplication>
 #include <QWidget>
 #include <QScreen>
-//#include <QDesktopWidget>
 #include <QWidget>
 #include <QFileDialog>
 #include <QDomDocument>
@@ -44,7 +43,6 @@
 
 #include <kernelmemorymodels.h>
 
-
 #ifdef WIN32
     #include <windows.h>
 #else
@@ -67,7 +65,7 @@ public:
     struct ConfigValuesStructure {
         QString software_name = "FastECU";
         QString software_title = "FastECU";
-        QString software_version = "0.1.0-beta.4";
+        QString software_version = "0.1.0-beta.5";
 
         QString serial_port = "ttyUSB0";
         QString baudrate = "4800";
@@ -456,11 +454,17 @@ public:
         DefFile,
     };
 
+    /***********************************
+     * Negative response codes (NRC)
+     * ********************************/
+    static const QHash<int, QString> neg_rsp_codes; //Inited at file_actions.cpp
+
     /****************************************************
      * Check if FastECU dir exists in users home folder
      * If not, create one with appropriate files
      ***************************************************/
-    ConfigValuesStructure *check_config_dir(ConfigValuesStructure *configValues);
+    ConfigValuesStructure *set_base_dirs(ConfigValuesStructure *configValues);
+    ConfigValuesStructure *check_config_dirs(ConfigValuesStructure *configValues);
     bool copy_directory_files(const QString &source_dir, const QString &target_dir, bool cover_file_if_exist);
 
     /****************************
@@ -554,6 +558,15 @@ public:
      * Calculate ROM map data with parsed expressions
      *************************************************/
     double calculate_value_from_expression(QStringList expression);
+
+    /**************************************************
+     * Parse negative response code message
+     *************************************************/
+    static QString parse_nrc_message(QByteArray nrc);
+
+private:
+    QDir copyConfigFromDirectory;
+    QDir copyKernelsFromDirectory;
 
 signals:
     void LOG_E(QString message, bool timestamp, bool linefeed);

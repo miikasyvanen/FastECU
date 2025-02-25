@@ -57,7 +57,6 @@ private:
     bool kill_process = false;
     bool kernel_alive = false;
     bool test_write = false;
-    bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
     bool flash_write_init = false;
 
@@ -69,12 +68,14 @@ private:
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
     uint16_t serial_read_medium_timeout = 400;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    uint32_t flashmsgsize = 0;
     uint32_t flashblocksize = 0;
     uint32_t flashmessagesize = 0;
     uint32_t flashbytescount = 0;
@@ -84,16 +85,16 @@ private:
     QString flash_method;
     QString kernel;
 
-    QByteArray denso_bootloader_init_request_wrx02 = { "\x4D\xFF\xB4" };
-    QByteArray denso_bootloader_init_response_stock_wrx02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_ecutek_wrx02_ok = { "\x4C\x00\xB4" };
-    QByteArray denso_bootloader_init_response_cobb_wrx02_ok = { "\x4D\x00\xB3" };
-    QByteArray denso_bootloader_init_response_wrx02_ok;
+    QByteArray bootloader_init_request_wrx02 = { "\x4D\xFF\xB4" };
+    QByteArray bootloader_init_response_stock_wrx02_ok = { "\x4D\x00\xB3" };
+    QByteArray bootloader_init_response_ecutek_wrx02_ok = { "\x4C\x00\xB4" };
+    QByteArray bootloader_init_response_cobb_wrx02_ok = { "\x4D\x00\xB3" };
+    QByteArray bootloader_init_response_wrx02_ok;
 
     void closeEvent(QCloseEvent *bar);
 
-    int connect_bootloader_subaru_denso_kline_wrx02();
-    int upload_kernel_subaru_denso_kline_wrx02(QString kernel, uint32_t kernel_start_addr);
+    int connect_bootloader();
+    int upload_kernel(QString kernel, uint32_t kernel_start_addr);
 
     int read_mem(uint32_t start_addr, uint32_t length);
     int write_mem(bool test_write);
@@ -112,9 +113,7 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     int check_received_message(QByteArray msg, QByteArray received);
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void set_progressbar_value(int value);
     void delay(int timeout);
 

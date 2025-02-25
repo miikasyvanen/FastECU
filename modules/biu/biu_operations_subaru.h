@@ -29,11 +29,23 @@ class BiuOperationsSubaru : public QDialog
 {
     Q_OBJECT
 
+signals:
+    void LOG_E(QString message, bool timestamp, bool linefeed);
+    void LOG_W(QString message, bool timestamp, bool linefeed);
+    void LOG_I(QString message, bool timestamp, bool linefeed);
+    void LOG_D(QString message, bool timestamp, bool linefeed);
+
 public:
     explicit BiuOperationsSubaru(SerialPortActions *serial, QWidget *parent = nullptr);
     ~BiuOperationsSubaru();
 
 private:
+    uint16_t receive_timeout = 500;
+    uint16_t serial_read_extra_short_timeout = 50;
+    uint16_t serial_read_short_timeout = 200;
+    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_long_timeout = 800;
+    uint16_t serial_read_extra_long_timeout = 3000;
 
     enum BiuCommands {
         NO_COMMAND = 0x00,
@@ -378,7 +390,6 @@ private:
     uint8_t calculate_checksum(QByteArray out, bool dec_0x100);
     void parse_biu_message(QByteArray message);
     QString parse_message_to_hex(QByteArray received);
-    int send_log_window_message(QString message, bool timestamp, bool linefeed);
     void delay(int timeout);
     BiuOpsSubaruSwitches* update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches);
     BiuOpsSubaruData* update_biu_ops_subaru_data_window(BiuOpsSubaruData *biuOpsSubaruData);
