@@ -1180,7 +1180,7 @@ int SerialPortActionsDirect::set_j2534_can_filters()
         emit LOG_D("Set CAN filters", true, true);
         txmsg.ProtocolID = protocol;
         txmsg.RxStatus = 0;
-        txmsg.TxFlags = ISO15765_FRAME_PAD;
+        txmsg.TxFlags = CAN_29BIT_ID;
         txmsg.Timestamp = 0;
         txmsg.DataSize = 4;
         txmsg.ExtraDataIndex = 0;
