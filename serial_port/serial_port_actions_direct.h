@@ -67,7 +67,7 @@ public:
     uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
-    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_medium_timeout = 500;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
@@ -109,6 +109,7 @@ public:
 
     bool is_serial_port_open();
     int change_port_speed(QString portSpeed);
+    QByteArray five_baud_init(QByteArray output);
     int fast_init(QByteArray output);
     int set_lec_lines(int lec1, int lec2);
     int pulse_lec_1_line(int timeout);
@@ -131,6 +132,7 @@ public:
     QString open_serial_port();
 
     unsigned long read_vbatt();
+    int set_j2534_ioctl(unsigned long parameter, int value);
 
 private:
 #ifndef ARRAYSIZE
@@ -152,7 +154,6 @@ private:
     long PassThruGetLastError(char *pErrorDescription);
     long PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, const void *pInput, void *pOutput);
 
-    int set_j2534_ioctl(unsigned long parameter, int value);
     int init_j2534_connection();
     int set_j2534_can();
     int unset_j2534_can();
@@ -183,7 +184,7 @@ private:
     QSerialPort *serial;
 
     unsigned int baudrate = 4800;
-    unsigned long devID;
+    unsigned long devID = 0;
     unsigned long chanID;
     unsigned long flags;
     unsigned int parity = NO_PARITY;

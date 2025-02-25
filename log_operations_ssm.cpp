@@ -11,7 +11,7 @@ void MainWindow::kline_listener()
     while (haltech_ic7_display_on)
     {
         received = serial->read_serial_data(receive_timeout);
-        //qDebug() << parse_message_to_hex(received);
+        //emit LOG_D(parse_message_to_hex(received), true, true);
         //delay(5);
     }
 }
@@ -23,7 +23,7 @@ void MainWindow::canbus_listener()
     while (haltech_ic7_display_on)
     {
         received = serial->read_serial_data(receive_timeout);
-        //qDebug() << parse_message_to_hex(received);
+        //emit LOG_D(parse_message_to_hex(received), true, true);
         //delay(5);
     }
 }
@@ -48,11 +48,11 @@ bool MainWindow::ecu_init()
     }
     else
     {
-        //qDebug() << "Connection is not ready!";
+        //emit LOG_D("Connection is not ready!", true, true);
         ecu_init_complete = false;
         ecuid.clear();
     }
-    //qDebug() << "ECU ID check complete";
+    //emit LOG_D("ECU ID check complete", true, true);
 
     return ecu_init_complete;
 }
@@ -67,9 +67,9 @@ void MainWindow::ssm_init()
     serial->set_serial_port_parity(QSerialPort::EvenParity);
     serial->open_serial_port();
 
-    qDebug() << "Using SSM1 protocol";
+    emit LOG_D("Using SSM1 protocol", true, true);
 
-    qDebug() << "Issue read cmd...";
+    emit LOG_D("Issue read cmd...", true, true);
     received.clear();
     output.clear();
     output.append((uint8_t)0x78);
@@ -82,14 +82,14 @@ void MainWindow::ssm_init()
     {
         received.append(serial->read_serial_data(500));
     }
-    qDebug() << "Received:" << parse_message_to_hex(received);
+    emit LOG_D("Received: " + parse_message_to_hex(received), true, true);
     //if (received.length() > 0)
-    //    qDebug() << "Something received" << parse_message_to_hex(received);
+    //    emit LOG_D("Something received " + parse_message_to_hex(received), true, true);
     //else
-    //    qDebug() << "No response...";
+    //    emit LOG_D("No response...", true, true);
 
 
-    qDebug() << "Issue init cmd...";
+    emit LOG_D("Issue init cmd...", true, true);
     received.clear();
     output.clear();
     output.append((uint8_t)0x00);
@@ -98,14 +98,14 @@ void MainWindow::ssm_init()
     output.append((uint8_t)0x49);
     serial->write_serial_data(output);
 
-    qDebug() << "Init sent, delaying 2s...";
+    emit LOG_D("Init sent, delaying 2s...", true, true);
     //delay(2000);
     for (int i = 0; i < 2; i++)
     {
         received.append(serial->read_serial_data(500));
     }
-    qDebug() << "Received:" << parse_message_to_hex(received);
-    //qDebug() << "Checking response...";
+    emit LOG_D("Received: " + parse_message_to_hex(received), true, true);
+    //emit LOG_D("Checking response...";
     //received = serial->read_serial_data(receive_timeout);
     received.clear();
     output.clear();
@@ -118,13 +118,13 @@ void MainWindow::ssm_init()
 
     if (received.length() > 0)
     {
-        qDebug() << "Something received" << parse_message_to_hex(received);;
+        emit LOG_D("Something received " + parse_message_to_hex(received), true, true);
 
         if (received.length() == (uint8_t)received.at(3) + 5)
         {
             ecu_init_complete = true;
             ecuid = parse_ecuid(received);
-            qDebug() << "ECU ID:" << ecuid;
+            emit LOG_D("ECU ID: " + ecuid, true, true);
             parse_log_value_list(received, "SSM");
             if (ecuid == "")
                 set_status_bar_label(true, false, "");
@@ -147,7 +147,7 @@ void MainWindow::ssm_init()
         }
     }
     else
-        qDebug() << "No response...";
+        emit LOG_D("No response...", true, true);
 
 }
 
@@ -157,19 +157,19 @@ void MainWindow::ssm_kline_init()
     QByteArray received;
     int loopcount = 0;
 
-    //qDebug() << "ECU K-Line INIT";
+    //emit LOG_D("ECU K-Line INIT";
     if (!ecu_init_started)
     {
         ecu_init_started = true;
 
-        qDebug() << "K-Line SSM init with BF";
+        emit LOG_D("K-Line SSM init with BF", true, true);
         output.clear();
         output.append((uint8_t)0xBF);
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
-        qDebug() << "K-Line SSM init sent";
+        emit LOG_D("K-Line SSM init sent", true, true);
         delay(200);
         received = serial->read_serial_data(serial_read_short_timeout);
-        qDebug() << "K-Line SSM init response:" << parse_message_to_hex(received);
+        emit LOG_D("K-Line SSM init response: " + parse_message_to_hex(received), true, true);
         while (received.length() < 4 && loopcount < 10)
         {
             received.append(serial->read_serial_data(50));
@@ -178,7 +178,7 @@ void MainWindow::ssm_kline_init()
         if (received.length() < 4)
             return;
 
-        qDebug() << "SSM Init response header received";
+        emit LOG_D("SSM Init response header received", true, true);
         loopcount = 0;
         while (received.length() < (uint8_t)received.at(3) + 5 && loopcount < 10)
         {
@@ -188,15 +188,15 @@ void MainWindow::ssm_kline_init()
         if (received.length() < (uint8_t)received.at(3) + 5)
             return;
 
-        qDebug() << "ECU INIT length:" << QString::number((uint8_t)received.at(3)) << received.length();
+        emit LOG_D("ECU INIT length: " + QString::number((uint8_t)received.at(3)) + " " + received.length(), true, true);
         if (received.length() >= (uint8_t)received.at(3) + 5)
         {
             ecu_init_complete = true;
             //set_status_bar_label(true, true, ecuid);
             ecuid = parse_ecuid(received);
-            qDebug() << "ECU ID:" << ecuid;
+            emit LOG_D("ECU ID: " + ecuid, true, true);
             parse_log_value_list(received, "SSM");
-            //qDebug() << "ECU ID:" << ecuid;
+            //emit LOG_D("ECU ID: " + ecuid, true, true);
             if (ecuid == "")
                 set_status_bar_label(true, false, "");
             else
@@ -207,7 +207,7 @@ void MainWindow::ssm_kline_init()
         received.append(serial->read_serial_data(100));
         while(received.length() > 0)
         {
-            //qDebug() << "ECU ID:" << parse_ecuid(received);
+            //emit LOG_D("ECU ID: " + parse_ecuid(received), true, true);
             ecu_init_complete = true;
             //set_status_bar_label(true, true, ecuid);
             ecuid = parse_ecuid(received);
@@ -240,7 +240,7 @@ void MainWindow::ssm_can_init()
     const uint8_t cu_addr_b1 = (uint8_t)((control_unit_addr >> 8) & 0xFF);
     const uint8_t cu_addr_b0 = (uint8_t)(control_unit_addr & 0xFF);
 
-    qDebug() << Q_FUNC_INFO << configValues->flash_protocol_selected_log_protocol;
+    emit LOG_D(QString(Q_FUNC_INFO) + " " + configValues->flash_protocol_selected_log_protocol, true, true);
 
     if (configValues->flash_protocol_selected_log_protocol == "CAN")
         received = serial->read_serial_data(receive_timeout);
@@ -281,7 +281,7 @@ void MainWindow::ssm_can_init()
             {
                 msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
             }
-            qDebug() << "ECU ID" << msg;
+            emit LOG_D("ECU ID " + msg, true, true);
             set_status_bar_label(true, true, msg);
         }
     }
@@ -307,7 +307,7 @@ void MainWindow::log_ssm_values()
         }
         else
         {
-            //qDebug() << "Send log request";
+            //emit LOG_D("Send log request";
             output.append((uint8_t)0xA8);
             output.append((uint8_t)0x01);
             for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
@@ -317,7 +317,7 @@ void MainWindow::log_ssm_values()
                     if (logValues->lower_panel_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
                     {
                         value_count++;
-                        //qDebug() << logValues->log_value_id.at(i) << "at" << logValues->log_value_address.at(i) << "enabled, length" << logValues->log_value_length.at(i);
+                        //emit LOG_D(logValues->log_value_id.at(i) << "at" << logValues->log_value_address.at(i) << "enabled, length" << logValues->log_value_length.at(i), true, true);
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 16));
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 8));
                         output.append((uint8_t)logValues->log_value_address.at(j).toUInt(&ok,16));
@@ -332,7 +332,7 @@ void MainWindow::log_ssm_values()
                     if (logValues->dashboard_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
                     {
                         value_count++;
-                        //qDebug() << logValues->log_value_id.at(i) << "at" << logValues->log_value_address.at(i) << "enabled, length" << logValues->log_value_length.at(i);
+                        //emit LOG_D(logValues->log_value_id.at(i) << "at" << logValues->log_value_address.at(i) << "enabled, length" << logValues->log_value_length.at(i), true, true);
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 16));
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 8));
                         output.append((uint8_t)logValues->log_value_address.at(j).toUInt(&ok,16));
@@ -352,7 +352,7 @@ void MainWindow::read_log_serial_data()
     if (!logparams_read_active)
     {
         logparams_read_active = true;
-        //qDebug() << "Read logger data from ECU";
+        //emit LOG_D("Read logger data from ECU", true, true);
         if (serial->get_use_openport2_adapter())
             received = serial->read_serial_data(100);
         else
@@ -363,7 +363,7 @@ void MainWindow::read_log_serial_data()
                 received.append(serial->read_serial_data(10));
                 loop_count++;
             }
-            //qDebug() << "Header data" << parse_message_to_hex(received);
+            //emit LOG_D("Header data" << parse_message_to_hex(received), true, true);
             loop_count = 0;
             while (((uint8_t)received.at(0) != 0x80 || (uint8_t)received.at(1) != 0xf0 || (uint8_t)received.at(2) != 0x10) && loop_count < 200)
             {
@@ -380,11 +380,11 @@ void MainWindow::read_log_serial_data()
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
             parse_log_params(received, protocol);
-            //qDebug() << "Log params data:" << parse_message_to_hex(received);
+            //emit LOG_D("Log params data:" << parse_message_to_hex(received), true, true);
         }
         else
         {
-            //qDebug() << "Log params get failed:" << parse_message_to_hex(received);
+            //emit LOG_D("Log params get failed:" << parse_message_to_hex(received), true, true);
         }
 
         logparams_read_active = false;
@@ -404,12 +404,12 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
     double data_received = received.length();
     double log_speed = 1000.0f / timer_elapsed * data_received;
 
-    //qDebug() << (uint16_t)log_speed << "values read per second:" << data_received << "bytes at" << timer_elapsed << "milliseconds";
+    //emit LOG_D((uint16_t)log_speed << "values read per second:" << data_received << "bytes at" << timer_elapsed << "milliseconds", true, true);
 
     if (!logging_request_active)
     {
         logging_request_active = true;
-        //qDebug() << "Log read count:" << logging_counter++;
+        //emit LOG_D("Log read count:" << logging_counter++, true, true);
         for (int i = 0; i < logValues->lower_panel_log_value_id.length(); i++)
         {
             for (int j = 0; j < logValues->log_value_id.length(); j++)
@@ -440,7 +440,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                         QString calc_value = QString::number(calc_float_value, 'f', format);
                         logValues->log_value.replace(j, calc_value);
 
-                        //qDebug() << QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte;
+                        //emit LOG_D(QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte, true, true);
                         //params.append(calc_value);
                         //params.append(", ");
 
@@ -450,7 +450,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
             }
         }
 
-        //qDebug() << "indexOf" << logValues->log_value_id.indexOf(QString(logValues->dashboard_log_value_id.at(2)))+1;
+        //emit LOG_D("indexOf " + logValues->log_value_id.indexOf(QString(logValues->dashboard_log_value_id.at(2)))+1, true, true);
         for (int i = 0; i < logValues->dashboard_log_value_id.length(); i++)
         {
             for (int j = 0; j < logValues->log_value_id.length(); j++)
@@ -458,7 +458,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                 //value_index = logValues->log_value_id.indexOf(QString(logValues->log_values_by_protocol.at(i)))+1;
                 if (logValues->dashboard_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
                 {
-                    //qDebug() << logValues->log_value_name.at(j) << logValues->log_value_enabled.at(j);
+                    //emit LOG_D(logValues->log_value_name.at(j) << logValues->log_value_enabled.at(j), true, true);
                     if (logValues->log_value_enabled.at(j) == "1" && log_value_index < received.length())
                     {
                         QStringList conversion = logValues->log_value_units.at(j).split(",");
@@ -483,7 +483,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                         QString calc_value = QString::number(calc_float_value, 'f', format);
                         logValues->log_value.replace(j, calc_value);
 
-                        //qDebug() << QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte;
+                        //emit LOG_D(QString::number(log_value_index) + ". " + value_name + ": " + calc_value + " " + unit + " from_byte: " + value + " via expr: " + from_byte, true, true);
                         //params.append(calc_value);
                         //params.append(", ");
 
@@ -493,8 +493,8 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
             }
         }
 
-        //qDebug() << parse_message_to_hex(received);
-        //qDebug() << " ";
+        //emit LOG_D(parse_message_to_hex(received), true, true);
+        //emit LOG_D(" ", true, true);
         logging_request_active = false;
         log_to_file();
     }
@@ -514,11 +514,11 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
 
     received.remove(0, 5);
 
-    //qDebug() << parse_message_to_hex(received);
+    //emit LOG_D(parse_message_to_hex(received), true, true);
 
     logValues->log_values_by_protocol.clear();
 
-    //qDebug() << "Parsing log values list";
+    //emit LOG_D("Parsing log values list", true, true), true, true);
     for (int i = 0; i < log_value_count; i++)
     {
         if (logValues->log_value_protocol.at(i) == protocol)
@@ -528,19 +528,19 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
             uint16_t ecu_byte_index = logValues->log_value_ecu_byte_index.at(i).toUInt();
             if (ecu_byte_index < received.length() && logValues->log_value_ecu_byte_index.at(i) != "No byte index")
             {
-                //qDebug() << "Value: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i);
+                //emit LOG_D("Value: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i), true, true);
                 uint8_t ecu_bit = logValues->log_value_ecu_bit.at(i).toUInt();
                 uint16_t value = (uint8_t)received.at(ecu_byte_index);
                 if (((value) & (1 << (ecu_bit))))
                 {
                     logValues->log_value_enabled.replace(i, "1");
-                    //qDebug() << "Enabled: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i) + " " + logValues->log_value_enabled.at(i);
+                    //emit LOG_D("Enabled: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i) + " " + logValues->log_value_enabled.at(i), true, true);
                     enabled_log_value_count++;
                 }
                 else
                 {
                     logValues->log_value_enabled.replace(i, "0");
-                    //qDebug() << "Disabled: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i) + " " + logValues->log_value_enabled.at(i);
+                    //emit LOG_D("Disabled: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i) + " " + logValues->log_value_enabled.at(i), true, true);
                 }
             }
             else
@@ -548,9 +548,9 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
 
         }
     }
-    //qDebug() << "Log values list ready";
+    //emit LOG_D("Log values list ready", true, true);
 
-    //qDebug() << "Parsing log switches list";
+    //emit LOG_D("Parsing log switches list", true, true);
     for (int i = 0; i < log_switch_count; i++)
     {
         if (logValues->log_switch_protocol.at(i) == protocol)
@@ -560,13 +560,13 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
             if (switch_byte_index < received.length())
             {
                 uint8_t switch_bit = logValues->log_switch_ecu_bit.at(i).toUInt();
-                //qDebug() << "1" << switch_byte_index;
+                //emit LOG_D("1 " + switch_byte_index, true, true);
                 uint8_t value = (uint8_t)received.at(switch_byte_index);
-                //qDebug() << "2";
+                //emit LOG_D("2", true, true);
                 if (((value) & (1 << (switch_bit))))
                 {
                     logValues->log_switch_enabled.replace(i, "1");
-                    //qDebug() << "Switch: " + logValues->log_switch_id.at(i) + " " + logValues->log_switch_name.at(i) + " " + logValues->log_switch_enabled.at(i);
+                    //emit LOG_D("Switch: " + logValues->log_switch_id.at(i) + " " + logValues->log_switch_name.at(i) + " " + logValues->log_switch_enabled.at(i), true, true);
                     enabled_log_switch_count++;
                 }
                 else
@@ -575,7 +575,7 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
         }
     }
     fileActions->read_logger_conf(logValues, ecuid, false);
-    //qDebug() << "Log switches list ready";
+    //emit LOG_D("Log switches list ready", true, true);
 
     update_logboxes(protocol);
 }
@@ -587,19 +587,19 @@ QByteArray MainWindow::add_ssm_header(QByteArray output, bool dec_0x100)
     output.insert(0, (uint8_t)0x80);
     if (ecu_radio_button->isChecked())
     {
-        qDebug() << "ECU selected";
+        emit LOG_D("Set target ID to ECU ", true, true);
         output.insert(1, (uint8_t)0x10);
     }
     else
     {
-        qDebug() << "TCU selected";
+        emit LOG_D("Set target ID to TCU", true, true);
         output.insert(1, (uint8_t)0x18);
     }
     output.insert(2, (uint8_t)0xF0);
     output.insert(3, length);
     output.append(calculate_checksum(output, dec_0x100));
 
-    qDebug() << "Generated SSM message:" << parse_message_to_hex(output);
+    emit LOG_D("Generated SSM message: " + parse_message_to_hex(output), true, true);
 
     return output;
 }

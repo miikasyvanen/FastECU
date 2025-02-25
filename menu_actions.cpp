@@ -60,6 +60,9 @@ void MainWindow::menu_action_triggered(QString action)
         change_gauge_values();
 
     // TESTING MENU
+    if (action == "dtc_window")
+        show_dtc_window();
+
     if (action == "haltech_ic7")
         toggle_haltech_ic7_display();
     if (action == "simulate_obd")
@@ -1022,6 +1025,30 @@ void MainWindow::toggle_can_listener()
         can_listener();
 }
 
+void MainWindow::show_dtc_window()
+{
+    serial->reset_connection();
+    ecuid.clear();
+    ecu_init_complete = false;
+
+    QStringList spl;
+    spl.append(serial_ports.at(serial_port_list->currentIndex()));
+    serial->set_serial_port_list(spl);
+
+    emit LOG_D("Starting DTC operations", true, true);
+
+    DtcOperations *dtcOperations = new DtcOperations(serial, this);
+    QObject::connect(dtcOperations, &DtcOperations::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(dtcOperations, &DtcOperations::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(dtcOperations, &DtcOperations::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(dtcOperations, &DtcOperations::LOG_D, syslogger, &SystemLogger::log_messages);
+
+    //dtcOperations->exec();
+    dtcOperations->run();
+
+    emit LOG_D("DTC operations stopped", true, true);
+}
+
 void MainWindow::show_preferences_window()
 {
     Settings *settings = new Settings(configValues);
@@ -1032,8 +1059,6 @@ void MainWindow::show_preferences_window()
 
 void MainWindow::show_subaru_biu_window()
 {
-    //serial_poll_timer->stop();
-    //ssm_init_poll_timer->stop();
     logging_poll_timer->stop();
 
     serial->reset_connection();
@@ -1053,11 +1078,9 @@ void MainWindow::show_subaru_biu_window()
 
     biuOperationsSubaru.exec();
 
-    qDebug() << "BIU stopped";
+    emit LOG_D("BIU stopped", true, true);
 
     serial->set_add_iso14230_header(false);
-    //serial_poll_timer->start();
-    //ssm_init_poll_timer->start();
 }
 
 void MainWindow::show_terminal_window()

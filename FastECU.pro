@@ -68,6 +68,7 @@ SOURCES += \
     calibration_treewidget.cpp \
     cipher.cpp \
     definition_file_convert.cpp \
+    dtc_operations.cpp \
     ecu_operations.cpp \
     file_actions.cpp \
     file_defs_ecuflash.cpp \
@@ -138,6 +139,7 @@ HEADERS += \
     calibration_treewidget.h \
     cipher.h \
     definition_file_convert.h \
+    dtc_operations.h \
     ecu_operations.h \
     file_actions.h \
     get_key_operations_subaru.h \
@@ -204,7 +206,7 @@ FORMS += \
     calibration_map_table.ui \
     data_terminal.ui \
     definition_file_convert.ui \
-#    ecu_manual_operations.ui \
+    dtc_operations.ui \
     ecu_operations.ui \
     logvalues.ui \
     mainwindow.ui \

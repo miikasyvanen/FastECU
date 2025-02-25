@@ -108,7 +108,6 @@ void SerialPortActions::waitForSource(void)
     //Wait for replication
     while (!serial_remote->waitForSource(10000))
     {
-        delay(100);
         sendAutoDiscoveryMessage();
         emit LOG_D("SerialPortActions: Waiting for remote peer...", true, true);
     }
@@ -835,6 +834,33 @@ int SerialPortActions::change_port_speed(QString portSpeed)
     return result;
 }
 
+int SerialPortActions::set_j2534_ioctl(unsigned long parameter, int value)
+{
+    bool result = STATUS_SUCCESS;
+    this->set_comm_busy(true);
+
+    if (isDirectConnection())
+        result = serial_direct->set_j2534_ioctl(parameter, value);
+    else
+        result = qtrohelper::slot_sync(serial_remote->set_j2534_ioctl(parameter, value));
+
+    return result;
+}
+
+QByteArray SerialPortActions::five_baud_init(QByteArray output)
+{
+    QByteArray response;
+    bool result = STATUS_SUCCESS;
+    this->set_comm_busy(true);
+
+    if (isDirectConnection())
+        response = serial_direct->five_baud_init(output);
+    else
+        response = qtrohelper::slot_sync(serial_remote->five_baud_init(output));
+
+    return response;
+}
+
 int SerialPortActions::fast_init(QByteArray output)
 {
     bool result = STATUS_SUCCESS;
@@ -1062,6 +1088,7 @@ unsigned long SerialPortActions::read_vbatt()
             set_read_vbatt(true);
         //emit LOG_D("Remote vBatt: " + QString::number(vBatt), true, true);
     }
+
     return vBatt;
 }
 

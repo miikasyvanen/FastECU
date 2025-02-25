@@ -1590,8 +1590,8 @@ void MainWindow::selectable_combobox_item_changed(QString item)
                         storagesize = ecuCalDef[mapRomNumber]->SelectionsValueList.at(mapNumber).split(",").at(0).length() / 2;
                         for (int k = 0; k < storagesize; k++)
                         {
-                            dataByte = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).mid(0, 2).toUInt(&bStatus, 16);
-                            ecuCalDef[mapRomNumber]->FullRomData[byteAddress] = dataByte;
+                            dataByte = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).mid(k*2, 2).toUInt(&bStatus, 16);
+                            ecuCalDef[mapRomNumber]->FullRomData[byteAddress+k] = dataByte;
                         }
                     }
                 }
@@ -2242,15 +2242,7 @@ void MainWindow::external_logger_set_progressbar_value(int value)
     if (remote_utility->isValid())
         remote_utility->set_progressbar_value(value);
 }
-/*
-void MainWindow::logger(QString message, bool timestamp, bool linefeed)
-{
 
-    QMetaMethod metaMethod = sender()->metaObject()->method(senderSignalIndex());
-
-    write_syslog_to_file = true;
-}
-*/
 void MainWindow::send_message_to_log_window(QString msg)
 {
     // EcuOperationsWindow
@@ -2266,19 +2258,28 @@ void MainWindow::send_message_to_log_window(QString msg)
             textEdit->ensureCursorVisible();
         }
     }
-    else
+    QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
+    if (biuOperationsSubaruWindow)
     {
-        QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
-        if (biuOperationsSubaruWindow)
+        //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+        QTextEdit *textEdit = biuOperationsSubaruWindow->findChild<QTextEdit*>("text_edit");
+        if (textEdit)
         {
-            //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
-            QTextEdit *textEdit = biuOperationsSubaruWindow->findChild<QTextEdit*>("text_edit");
-            if (textEdit)
-            {
-                //emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
-                textEdit->insertPlainText(msg);
-                textEdit->ensureCursorVisible();
-            }
+            //emit LOG_D("Found biuOperationsSubaruWindow->textEdit", true, true);
+            textEdit->insertPlainText(msg);
+            textEdit->ensureCursorVisible();
+        }
+    }
+    QDialog *dtcOperationsWindow = this->findChild<QDialog*>("DtcOperationsWindow");
+    if (dtcOperationsWindow)
+    {
+        //emit LOG_D("Found dtcOperationsWindow", true, true);
+        QTextEdit *textEdit = dtcOperationsWindow->findChild<QTextEdit*>("text_edit");
+        if (textEdit)
+        {
+            //emit LOG_D("Found dtcOperationsWindow->textEdit", true, true);
+            textEdit->insertPlainText(msg);
+            textEdit->ensureCursorVisible();
         }
     }
 }
@@ -2300,6 +2301,32 @@ void MainWindow::update_vbatt()
             QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
             vBattLabel->setText(vBattText);
             emit LOG_D(vBattText, true, true);
+        }
+    }
+    QDialog *biuOperationsSubaruWindow = this->findChild<QDialog*>("BiuOperationsSubaruWindow");
+    if (biuOperationsSubaruWindow)
+    {
+        //emit LOG_D("Found biuOperationsSubaruWindow", true, true);
+        QLabel *vBattLabel = biuOperationsSubaruWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            //emit LOG_D("Found biuOperationsSubaruWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            //emit LOG_D(vBattText, true, true);
+        }
+    }
+    QDialog *dtcOperationsWindow = this->findChild<QDialog*>("DtcOperationsWindow");
+    if (dtcOperationsWindow)
+    {
+        //emit LOG_D("Found dtcOperationsWindow", true, true);
+        QLabel *vBattLabel = dtcOperationsWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            //emit LOG_D("Found dtcOperationsWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            //emit LOG_D(vBattText, true, true);
         }
     }
 }
