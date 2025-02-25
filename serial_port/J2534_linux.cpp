@@ -312,6 +312,26 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
 
                 msg_index = 0;
             }
+            else if (received.at(2) == 'r')
+            {
+                while ((uint8_t)received.at(received.length()-1) != 0x0a)
+                    received.append(read_serial_data(1, Timeout));
+                for (int i = 0; i < received.length(); i++)
+                    pMsg->Data[i] = (uint8_t)received.at(i);
+                pMsg->DataSize = received.length();
+
+                return STATUS_NOERROR;
+            }
+            else if (received.at(2) == 'w')
+            {
+                while ((uint8_t)received.at(received.length()-1) != 0x0a)
+                    received.append(read_serial_data(1, Timeout));
+                for (int i = 0; i < received.length(); i++)
+                    pMsg->Data[i] = (uint8_t)received.at(i);
+                pMsg->DataSize = received.length();
+
+                return STATUS_NOERROR;
+            }
             else if (received.at(2) == 'y')
             {
                 received.append(read_serial_data(2, Timeout));
