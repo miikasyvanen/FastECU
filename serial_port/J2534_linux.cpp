@@ -227,7 +227,7 @@ long J2534::PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, un
     }
 
     output.clear();
-    QString str = "ato" + QString::number(ProtocolID) + " " + QString::number(Flags) + " " + QString::number(Baudrate) + " " + QString::number(*pChannelID) + "\r\n";
+    QString str = "ato" + QString::number(ProtocolID) + " " + QString::number(Flags) + " " + QString::number(Baudrate) + " " + QString::number(ProtocolID) + "\r\n";
     output.append(str.toUtf8());
     //emit LOG_D("Send data:" << output;
     write_serial_data(output);

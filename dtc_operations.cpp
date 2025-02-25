@@ -6,12 +6,7 @@ DtcOperations::DtcOperations(SerialPortActions *serial, QWidget *parent)
     , serial(serial)
 {
     ui->setupUi(this);
-    //this->show();
 
-    emit LOG_I("DtcOperations Started", true, true);
-
-    //run();
-    //init_obd();
 }
 
 DtcOperations::~DtcOperations()
@@ -27,7 +22,6 @@ void DtcOperations::closeEvent(QCloseEvent *event)
 void DtcOperations::run()
 {
     this->show();
-    emit LOG_I("Start RUN", true, true);
 
     int result = STATUS_ERROR;
 
@@ -54,51 +48,84 @@ void DtcOperations::run()
 
 int DtcOperations::init_obd()
 {
-    emit LOG_I("Start INIT_OBD", true, true);
-
     QByteArray output;
     QByteArray received;
-    QByteArray VIN;
+    QByteArray response;
     int result = STATUS_SUCCESS;
 
-    // FIVE_BAUD_INIT
-    emit LOG_I("Request FIVE BAUD INIT", true, true);
+    if (!serial->is_serial_port_open())
+    {
+        emit LOG_E("ERROR: Serial port is not open.", true, true);
+        return STATUS_ERROR;
+    }
+
+    emit LOG_I("Initializing iso9141 K-Line communications, please wait...", true, true);
 
     output.clear();
     output.append((uint8_t)0x33);
     received = serial->five_baud_init(output);
-    //received = serial->read_serial_data(serial_read_extra_short_timeout);
+
     serial->set_comm_busy(true);
-    emit LOG_I("5 baud init response: " + parse_message_to_hex(received), true, true);
-    //serial->set_j2534_ioctl(W3, (uint8_t)received.at(5));
+    //emit LOG_I("5 baud init response: " + parse_message_to_hex(received), true, true);
     serial->set_j2534_ioctl(P1_MAX, 35);
-    //serial->set_j2534_ioctl(P4_MIN, 5);
+
+    if ((uint8_t)received.at(5) == '8' && (uint8_t)received.at(7) == '8')
+        emit LOG_I("iso9141 five baud init mode succesfully completed.", true, true);
+
+    emit LOG_I("Requesting vehicle info, please wait...", true, true);
 
     delay(500);
+    response = request_data(vehicle_info, request_VIN);
+    emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
+    emit LOG_I("VIN: " + QString(response), true, true);
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID_Length);
+    emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID);
+    emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
+    emit LOG_I("CAL ID: " + QString(response), true, true);
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID_Num_Length);
+    emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID_Num);
+    emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
+    //emit LOG_I("CAL ID num: " + QString(response), true, true);
+    delay(250);
+
+    return STATUS_SUCCESS;
+}
+
+QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray response;
+
     output.clear();
-    output.append((uint8_t)0x68);
-    output.append((uint8_t)0x6A);
-    output.append((uint8_t)0xF1);
-    output.append((uint8_t)0x09);
-    output.append((uint8_t)0x02);
-    //output.append((uint8_t)0x0D);
+    for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
+        output.append((uint8_t)live_data_start_bytes_9141[i]);
+    output.append((uint8_t)cmd);
+    output.append((uint8_t)sub_cmd);
     output.append(calculate_checksum(output, false));
     serial->write_serial_data_echo_check(output);
     while (1)
     {
         serial->set_comm_busy(true);
-        received = serial->read_serial_data(serial_read_timeout);
-        if (received.at(3) != 0x49)
+        received = serial->read_serial_data(serial_read_short_timeout);
+        if (received.at(3) != (cmd | 0x40) || received.at(4) != sub_cmd)
             break;
-        received.remove(0, 6);
         received.remove(received.length()-1, 1);
-        VIN.append(received);
+        if (received.length() < 7)
+            received.remove(0, received.length()-1);
+        else
+            received.remove(0, 6);
+        response.append(received);
     }
-    emit LOG_I("VIN: " + parse_message_to_hex(VIN), true, true);
 
-    return STATUS_SUCCESS;
+    return response;
 }
-
 
 
 

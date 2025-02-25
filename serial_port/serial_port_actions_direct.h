@@ -64,9 +64,10 @@ public:
 
     uint16_t echo_check_timout = 5000;
     uint16_t receive_timeout = 500;
+    uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
-    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_medium_timeout = 500;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 

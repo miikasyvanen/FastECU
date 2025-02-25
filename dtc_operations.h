@@ -61,7 +61,7 @@ private:
     uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;
-    uint16_t serial_read_medium_timeout = 400;
+    uint16_t serial_read_medium_timeout = 500;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
@@ -70,29 +70,32 @@ private:
     // PIDs (https://en.wikipedia.org/wiki/OBD-II_PIDs)
     //-------------------------------------------------------------------------------------//
 
-    const uint8_t start_Bytes[3] = { 0xC1, 0x33, 0xF1 };
-    const uint8_t start_Bytes_9141[3] = { 0x68, 0x6A, 0xF1 };
+    const uint8_t init_OBD = 0x81;                                      // Init ISO14230 fast init
+    const uint8_t init_OBD_9141 = 0x33;                                 // Init ISO9141 five baud init
 
-    const uint8_t live_data[4] = { 0xC2, 0x33, 0xF1, 0x01 };           //Live Data Start Bytes
-    const uint8_t live_data_9141[4] = { 0x68, 0x6A, 0xF1, 0x01 };      //Live Data Start Bytes
+    const uint8_t start_bytes[3] = { 0xC1, 0x33, 0xF1 };
+    const uint8_t start_bytes_9141[3] = { 0x68, 0x6A, 0xF1 };
 
-    const uint8_t freeze_frame[4] = { 0xC3, 0x33, 0xF1, 0x02 };        //Freeze Frame Start Bytes
-    const uint8_t freeze_frame_9141[4] = { 0x68, 0x6A, 0xF1, 0x02 };   //Freeze Frame Start Bytes
+    const uint8_t freeze_frame[4] = { 0xC3, 0x33, 0xF1, 0x02 };         // Freeze Frame Start Bytes
+    const uint8_t freeze_frame_9141[4] = { 0x68, 0x6A, 0xF1, 0x02 };    // Freeze Frame Start Bytes
 
-    const uint8_t vehicle_info[4] = { 0xC2, 0x33, 0xF1, 0x09 };        //Live Data Start Bytes
-    const uint8_t vehicle_info_9141[4] = { 0x68, 0x6A, 0xF1, 0x09 };   //Live Data Start Bytes
+    const uint8_t live_data_start_bytes[3] = { 0xC2, 0x33, 0xF1 };
+    const uint8_t live_data_start_bytes_9141[3] = { 0x68, 0x6A, 0xF1 };
 
-    const uint8_t init_OBD = 0x81;    // Init fast ISO14230
-    const uint8_t init_OBD_9141 = 0x55;    // Init fast ISO9141 five baud init
-    const uint8_t read_DTCs = 0x03;   // Read Troubleshoot Codes
-    const uint8_t clear_DTCs = 0x04;  // Clear Troubleshoot Codes
+    // Commands
+    const uint8_t live_data = 0x01;                                     // Live Data Start Bytes
+    const uint8_t read_DTCs = 0x03;                                     // Read Troubleshoot Codes
+    const uint8_t clear_DTCs = 0x04;                                    // Clear Troubleshoot Codes
+    const uint8_t vehicle_info = 0x09;                                  // Read vehicle info
 
-    const uint8_t read_VIN = 0x02;             // Read VIN
-    const uint8_t read_ID_Length = 0x03;       // Read Calibration ID Length
-    const uint8_t read_ID = 0x04;              // Read Calibration ID
-    const uint8_t read_ID_Num_Length = 0x05;   // Read Calibration ID Number Length
-    const uint8_t read_ID_Num = 0x06;          // Read Calibration ID Number
+    // Subcommands
+    const uint8_t request_VIN = 0x02;                                   // Read VIN
+    const uint8_t request_CAL_ID_Length = 0x03;                         // Read Calibration ID Length
+    const uint8_t request_CAL_ID = 0x04;                                // Read Calibration ID
+    const uint8_t request_CAL_ID_Num_Length = 0x05;                     // Read Calibration ID Number Length
+    const uint8_t request_CAL_ID_Num = 0x06;                            // Read Calibration ID Number
 
+    // Live data
     const uint8_t SUPPORTED_PIDS_1_20              = 0x00;  // bit encoded
     const uint8_t MONITOR_STATUS_SINCE_DTC_CLEARED = 0x01;  // bit encoded          suported
     const uint8_t FREEZE_DTC                       = 0x02;  //                      suported
@@ -205,6 +208,8 @@ private:
 
     void closeEvent(QCloseEvent *event);
     int init_obd();
+
+    QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);

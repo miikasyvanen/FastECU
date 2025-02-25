@@ -164,6 +164,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     if (!configValues->ecuflash_def_cal_id.length())
         return NULL;
 
+    emit LOG_D("Search ID: " + cal_id, true, true);
     QString def_id;
     for (int index = 0; index < configValues->ecuflash_def_cal_id.length(); index++)
     {
@@ -171,6 +172,9 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         {
             QFileInfo def_file(configValues->ecuflash_def_filename.at(index));
             def_id = def_file.fileName();
+            if (def_id.contains("BASE"))
+                emit LOG_D("Search ID: " + def_id, true, true);
+
             if (def_id == (cal_id + ".xml") && configValues->ecuflash_def_cal_id.at(index) == cal_id)
             {
                 emit LOG_D("EcuFlash ID found: " + configValues->ecuflash_def_cal_id.at(index) + " " + cal_id, true, true);
@@ -180,6 +184,14 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 break;
             }
             else if (def_id.startsWith(cal_id) && def_id.endsWith(".xml") && configValues->ecuflash_def_cal_id.at(index) == cal_id)
+            {
+                emit LOG_D("EcuFlash ID found: " + configValues->ecuflash_def_cal_id.at(index) + " " + cal_id, true, true);
+                emit LOG_D("EcuFlash def file name: " + configValues->ecuflash_def_filename.at(index), true, true);
+                cal_id_file_found = true;
+                file_index = index;
+                break;
+            }
+            else if (configValues->ecuflash_def_cal_id.at(index) == cal_id)
             {
                 emit LOG_D("EcuFlash ID found: " + configValues->ecuflash_def_cal_id.at(index) + " " + cal_id, true, true);
                 emit LOG_D("EcuFlash def file name: " + configValues->ecuflash_def_filename.at(index), true, true);
@@ -203,6 +215,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
 
     if (!cal_id_file_found)
         return ecuCalDef;
+
+    emit LOG_D("Found ID: " + cal_id, true, true);
 
     ecuCalDef->use_ecuflash_definition = true;
 
@@ -232,6 +246,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     {
         def_map_index = 0;
         base_defined = true;
+        emit LOG_D("BASE include found: " + cal_id, true, true);
     }
     else
         base_defined = false;
@@ -319,13 +334,13 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         else if (rom_child.tagName() == "include")
         {
             inherits_cal_id = rom_child.text();
-            //emit LOG_D("INCLUDE TAG childs: " + cal_id + " -> inherits " + inherits_cal_id;
+            emit LOG_D("INCLUDE: " + cal_id + " -> inherits " + inherits_cal_id, true, true);
             if (inherits_cal_id.contains("BASE"))
                 ecuCalDef->RomInfo.replace(RomBase, inherits_cal_id);
         }
         else if (rom_child.tagName() == "scaling")
         {
-            //emit LOG_D("Parse scaling for ID " + cal_id;
+            //emit LOG_D("Parse scaling for ID " + cal_id, true, true);
             ecuCalDef->ScalingNameList.append(rom_child.attribute("name"," "));
             ecuCalDef->ScalingUnitsList.append(rom_child.attribute("units"," "));
             ecuCalDef->ScalingFromByteList.append(rom_child.attribute("toexpr"," "));
@@ -364,7 +379,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         {
             map_defined = false;
 
-            //emit LOG_D("TABLE TAG childs: " + def_map_index << rom_child.tagName() << rom_child.attribute("name", "n/a");
+            //emit LOG_D("TABLE TAG childs: " + QString::number(def_map_index) + " " + rom_child.tagName() + " " + rom_child.attribute("name", "n/a"), true, true);
             QString map_name = rom_child.attribute("name"," ");
             for (int i = 0; i < ecuCalDef->NameList.length(); i++)
             {
@@ -424,7 +439,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 {
                     if (rom_scale_child.tagName() == "scaling")
                     {
-                        emit LOG_D("Table scaling", true, true);
+                        //emit LOG_D("Table scaling", true, true);
                         if (ecuCalDef->StorageTypeList.at(def_map_index) == " ")
                             ecuCalDef->StorageTypeList.replace(def_map_index, rom_scale_child.attribute("storagetype", " "));
                         if (ecuCalDef->UnitsList.at(def_map_index) == " ")
@@ -645,7 +660,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         while (!rom_scale_child.isNull())
                         {
                             if (rom_scale_child.tagName() == "data"){
-                                emit LOG_D("Static data found: " + rom_scale_child.text(), true, true);
+                                //emit LOG_D("Static data found: " + rom_scale_child.text(), true, true);
                                 StaticYScaleData.append(rom_scale_child.text());
                                 StaticYScaleData.append(",");
                             }

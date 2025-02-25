@@ -69,6 +69,7 @@ private:
     QString opened_serial_port;
     QString serial_port_baudrate = "4800";
 
+    uint16_t receive_timeout = 500;
     uint16_t serial_read_timeout = 2000;
     uint16_t serial_read_extra_short_timeout = 50;
     uint16_t serial_read_short_timeout = 200;

@@ -2402,6 +2402,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
             ecuCalDef->MapData.replace(i, mapData);
+            //emit LOG_D("Mapdata " + ecuCalDef->MapData.at(i), true, true);
         }
         else
         {
@@ -2443,7 +2444,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
                     }
                     //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
-                    //    emit LOG_D("MapData value " + value, true, true);
+                        //emit LOG_D("MapData value " + QString::number(value), true, true);
                 }
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
             }
