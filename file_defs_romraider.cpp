@@ -568,11 +568,11 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
                         {
                             if (rom_sub_child.tagName() == "table")
                             {
-                                if (rom_sub_child.attribute("type", "") == "X Axis")
+                                if (rom_sub_child.attribute("type", " ") == "X Axis")
                                     ecuCalDef->XScaleAddressList.replace(index, rom_sub_child.attribute("storageaddress", " "));
-                                if (rom_sub_child.attribute("type", "") == "Y Axis")
+                                if (rom_sub_child.attribute("type", " ") == "Y Axis")
                                     ecuCalDef->YScaleAddressList.replace(index, rom_sub_child.attribute("storageaddress", " "));
-                                if (rom_sub_child.attribute("type", "") == "Static Y Axis")
+                                if (rom_sub_child.attribute("type", " ") == "Static Y Axis")
                                 {
 
                                 }

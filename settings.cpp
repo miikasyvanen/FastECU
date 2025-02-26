@@ -302,8 +302,11 @@ void Settings::set_romraider_logger_file()
     if (filename.isEmpty())
         QMessageBox::information(this, tr("RomRaider logger file"), "No file selected");
     else
+    {
         configValues->romraider_logger_definition_file = filename;
-
+        romraider_logger_file_lineedit->clear();
+        romraider_logger_file_lineedit->setText(configValues->romraider_logger_definition_file);
+    }
 }
 
 void Settings::set_ecu_cal_dir()
