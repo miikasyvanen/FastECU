@@ -475,7 +475,10 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                             {
                                 if (rom_scale_sub_child.tagName() == "data"){
                                     selection_name.append(rom_scale_sub_child.attribute("name"," ") + ",");
-                                    selection_value.append(rom_scale_sub_child.attribute("value"," ") + ",");
+                                    if (rom_scale_child.attribute("value"," ") != " ")
+                                        selection_value.append(rom_scale_child.attribute("value"," ") + ",");
+                                    else
+                                        selection_value.append(rom_scale_child.attribute("data"," ") + ",");
                                 }
                                 rom_scale_sub_child = rom_scale_sub_child.nextSibling().toElement();
                             }
