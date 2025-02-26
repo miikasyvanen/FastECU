@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QByteArray>
+#include <QStandardItemModel>
 #include <QCoreApplication>
 #include <QDebug>
 #include <QMainWindow>
@@ -225,6 +226,9 @@ private:
     SerialPortActions *serial;
     Ui::DtcOperationsWindow *ui;
 
+private slots:
+    int read_dtc();
+    int clear_dtc();
 };
 
 #endif // DTC_OPERATIONS_H

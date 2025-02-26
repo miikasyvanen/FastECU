@@ -7,6 +7,27 @@ DtcOperations::DtcOperations(SerialPortActions *serial, QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->protocolComboBox->addItem("iso9141 (K-line)");
+    ui->protocolComboBox->addItem("iso14230 (K-line)");
+    ui->protocolComboBox->addItem("iso15765 (CAN-TP)");
+
+    auto * model = qobject_cast<QStandardItemModel*>(ui->protocolComboBox->model());
+    assert(model);
+    if(!model) return;
+
+    auto * item = model->item(1);
+    assert(item);
+    if(!item) return;
+    item->setEnabled(false);
+    item = model->item(2);
+    assert(item);
+    if(!item) return;
+    item->setEnabled(false);
+
+    connect(ui->readDtcButton, &QPushButton::clicked, this, &DtcOperations::read_dtc);
+    connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::close);
+
+    this->show();
 }
 
 DtcOperations::~DtcOperations()
@@ -21,8 +42,6 @@ void DtcOperations::closeEvent(QCloseEvent *event)
 
 void DtcOperations::run()
 {
-    this->show();
-
     int result = STATUS_ERROR;
 
     // Set serial port
@@ -110,16 +129,19 @@ int DtcOperations::init_obd()
         //emit LOG_I("CAL ID num: " + QString(response), true, true);
         delay(250);
 
+        read_dtc();
+/*
         response = request_dtc_list();
         emit LOG_I("DTCs: " + parse_message_to_hex(response), true, true);
 
         for (int i = 0; i < response.length(); i+=2)
         {
-            emit LOG_I("DTC: " + FileActions::parse_dtc_message(((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1)), true, true);
+            if (((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1) != 0)
+                emit LOG_I("DTC: " + FileActions::parse_dtc_message(((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1)), true, true);
             //emit LOG_I("DTC: " + QString::number(((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1), 16), true, true);
         }
         delay(250);
-
+*/
     }
 
     return STATUS_SUCCESS;
@@ -192,6 +214,40 @@ QByteArray DtcOperations::request_dtc_list()
     return response;
 
 }
+
+int DtcOperations::read_dtc()
+{
+    QByteArray response;
+    QStringList dtc_list;
+    bool ok = false;
+
+    response = request_dtc_list();
+    emit LOG_I("DTCs: " + parse_message_to_hex(response), true, true);
+
+    for (int i = 0; i < response.length(); i+=2)
+    {
+        uint16_t dtc = ((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1);
+        if (dtc != 0)
+        {
+            dtc_list.append(QString("%1").arg(dtc,4,16,QLatin1Char('0')).toUpper());
+            //emit LOG_I("DTC: " + FileActions::parse_dtc_message(dtc), true, true);
+        }
+    }
+    sort(dtc_list.begin(), dtc_list.end(), less<QString>());
+    for (int i = 0; i < dtc_list.length(); i++)
+        emit LOG_I("DTC: " + FileActions::parse_dtc_message(dtc_list.at(i).toUInt(&ok, 16)), true, true);
+
+    delay(250);
+
+    return STATUS_SUCCESS;
+}
+
+int DtcOperations::clear_dtc()
+{
+
+    return STATUS_SUCCESS;
+}
+
 
 
 /*
