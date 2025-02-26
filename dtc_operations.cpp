@@ -63,36 +63,53 @@ int DtcOperations::init_obd()
 
     output.clear();
     output.append((uint8_t)0x33);
+
+    if (serial->get_use_openport2_adapter())
+        serial->set_j2534_ioctl(P1_MAX, 35);
+    else
+        serial->set_kline_timings(SERIAL_P1_MAX, 35);
+
     received = serial->five_baud_init(output);
+    emit LOG_I("Five baud init response: " + parse_message_to_hex(received), true, true);
 
-    serial->set_comm_busy(true);
-    //emit LOG_I("5 baud init response: " + parse_message_to_hex(received), true, true);
-    serial->set_j2534_ioctl(P1_MAX, 35);
 
-    if ((uint8_t)received.at(5) == '8' && (uint8_t)received.at(7) == '8')
-        emit LOG_I("iso9141 five baud init mode succesfully completed.", true, true);
+    if (serial->get_use_openport2_adapter())
+    {
+        if ((uint8_t)received.at(5) == '8' && (uint8_t)received.at(7) == '8')
+            five_baud_init_ok = true;
+    }
+    else
+    {
+        if ((uint8_t)received.at(1) == 0x08 && (uint8_t)received.at(2) == 0x08)
+                five_baud_init_ok = true;
+        serial->set_kline_timings(SERIAL_P1_MAX, 25);
+    }
+    if (five_baud_init_ok)
+    {
+        emit LOG_I("ISO9141 five baud init mode succesfully completed.", true, true);
 
-    emit LOG_I("Requesting vehicle info, please wait...", true, true);
+        emit LOG_I("Requesting vehicle info, please wait...", true, true);
 
-    delay(500);
-    response = request_data(vehicle_info, request_VIN);
-    emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
-    emit LOG_I("VIN: " + QString(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Length);
-    emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID);
-    emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
-    emit LOG_I("CAL ID: " + QString(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Num_Length);
-    emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Num);
-    emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
-    //emit LOG_I("CAL ID num: " + QString(response), true, true);
-    delay(250);
+        delay(500);
+        response = request_data(vehicle_info, request_VIN);
+        emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
+        emit LOG_I("VIN: " + QString(response), true, true);
+        delay(250);
+        response = request_data(vehicle_info, request_CAL_ID_Length);
+        emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
+        delay(250);
+        response = request_data(vehicle_info, request_CAL_ID);
+        emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
+        emit LOG_I("CAL ID: " + QString(response), true, true);
+        delay(250);
+        response = request_data(vehicle_info, request_CAL_ID_Num_Length);
+        emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
+        delay(250);
+        response = request_data(vehicle_info, request_CAL_ID_Num);
+        emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
+        //emit LOG_I("CAL ID num: " + QString(response), true, true);
+        delay(250);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -112,8 +129,11 @@ QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
     serial->write_serial_data_echo_check(output);
     while (1)
     {
-        serial->set_comm_busy(true);
-        received = serial->read_serial_data(serial_read_short_timeout);
+        if (serial->get_use_openport2_adapter())
+            received = serial->read_serial_data(serial_read_short_timeout);
+        else
+            received = serial->read_serial_obd_data(serial_read_short_timeout);
+
         if (received.at(3) != (cmd | 0x40) || received.at(4) != sub_cmd)
             break;
         received.remove(received.length()-1, 1);

@@ -51,6 +51,7 @@ private:
 
 
     bool kill_process = false;
+    bool five_baud_init_ok = false;
 
     int result;
 
@@ -65,6 +66,11 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    struct kline_timings
+    {
+        int _P1_MIN;
+        int _P1_MAX;
+    };
 
     //-------------------------------------------------------------------------------------//
     // PIDs (https://en.wikipedia.org/wiki/OBD-II_PIDs)

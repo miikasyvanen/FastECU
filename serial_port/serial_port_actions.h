@@ -127,6 +127,9 @@ public:
     uint32_t get_iso15765_destination_address();
     bool     set_iso15765_destination_address(uint32_t value);
 
+    //struct kline_timings get_kline_timings();
+    bool     set_kline_timings(unsigned long parameter, int value);
+
     int set_j2534_ioctl(unsigned long parameter, int value);
 
     bool is_serial_port_open(void);
@@ -139,6 +142,7 @@ public:
 
     bool reset_connection(void);
 
+    QByteArray read_serial_obd_data(uint16_t timeout);
     QByteArray read_serial_data(uint16_t timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);
