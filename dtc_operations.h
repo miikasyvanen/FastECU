@@ -216,6 +216,7 @@ private:
     int init_obd();
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
+    QByteArray request_dtc_list();
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);

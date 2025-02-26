@@ -456,7 +456,11 @@ public:
     /***********************************
      * Negative response codes (NRC)
      * ********************************/
-    static const QHash<int, QString> neg_rsp_codes; //Inited at file_actions.cpp
+    static const QHash<int, QString> neg_rsp_codes; //Inited at error_codes.h
+    static const QHash<int, QString> dtc_Pxxxx_codes; //Inited at error_codes.h
+    static const QHash<int, QString> dtc_Bxxxx_codes; //Inited at error_codes.h
+    static const QHash<int, QString> dtc_Cxxxx_codes; //Inited at error_codes.h
+    static const QHash<int, QString> dtc_Uxxxx_codes; //Inited at error_codes.h
 
     /****************************************************
      * Check if FastECU dir exists in users home folder
@@ -562,6 +566,10 @@ public:
      * Parse negative response code message
      *************************************************/
     static QString parse_nrc_message(QByteArray nrc);
+    /**************************************************
+     * Parse diagnostic trouble code message
+     *************************************************/
+    static QString parse_dtc_message(uint16_t dtc);
 
 private:
     QDir copyConfigFromDirectory;

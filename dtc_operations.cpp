@@ -109,6 +109,17 @@ int DtcOperations::init_obd()
         emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
         //emit LOG_I("CAL ID num: " + QString(response), true, true);
         delay(250);
+
+        response = request_dtc_list();
+        emit LOG_I("DTCs: " + parse_message_to_hex(response), true, true);
+
+        for (int i = 0; i < response.length(); i+=2)
+        {
+            emit LOG_I("DTC: " + FileActions::parse_dtc_message(((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1)), true, true);
+            //emit LOG_I("DTC: " + QString::number(((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1), 16), true, true);
+        }
+        delay(250);
+
     }
 
     return STATUS_SUCCESS;
@@ -136,6 +147,7 @@ QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
 
         if (received.at(3) != (cmd | 0x40) || received.at(4) != sub_cmd)
             break;
+
         received.remove(received.length()-1, 1);
         if (received.length() < 7)
             received.remove(0, received.length()-1);
@@ -147,8 +159,39 @@ QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
     return response;
 }
 
+QByteArray DtcOperations::request_dtc_list()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray response;
 
+    output.clear();
+    for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
+        output.append((uint8_t)live_data_start_bytes_9141[i]);
+    output.append((uint8_t)0x03);
+    output.append(calculate_checksum(output, false));
+    serial->write_serial_data_echo_check(output);
+    while (1)
+    {
+        if (serial->get_use_openport2_adapter())
+            received = serial->read_serial_data(serial_read_short_timeout);
+        else
+            received = serial->read_serial_obd_data(serial_read_short_timeout);
 
+        if (received.at(3) != (0x03 | 0x40))
+            break;
+
+        received.remove(received.length()-1, 1);
+        if (received.length() < 7)
+            received.remove(0, received.length()-1);
+        else
+            received.remove(0, 4);
+        response.append(received);
+    }
+
+    return response;
+
+}
 
 
 /*

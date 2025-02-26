@@ -141,6 +141,7 @@ HEADERS += \
     definition_file_convert.h \
     dtc_operations.h \
     ecu_operations.h \
+    error_codes.h \
     file_actions.h \
     get_key_operations_subaru.h \
     hexcommander.h \
