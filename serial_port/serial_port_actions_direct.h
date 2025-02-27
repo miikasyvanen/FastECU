@@ -117,7 +117,6 @@ public:
 #define SERIAL_P4_MAX   0x07 // J2534 says this may not be changed
 
     uint8_t _P1_MAX = 10;
-    //kline_timings get_kline_timings();
     bool     set_kline_timings(unsigned long parameter, int value);
 
     bool is_serial_port_open();

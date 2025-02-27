@@ -34,16 +34,7 @@ bool SerialPortActionsDirect::is_serial_port_open()
 
     return serial->isOpen();
 }
-/*
-struct SerialPortActionsDirect::kline_timings SerialPortActionsDirect::get_kline_timings()
-{
-    struct kline_timings timings;
 
-    timings._P1_MAX = 35;
-
-    return timings;
-}
-*/
 bool SerialPortActionsDirect::set_kline_timings(unsigned long parameter, int value)
 {
     _P1_MAX = value;
