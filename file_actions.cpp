@@ -2919,7 +2919,7 @@ QString FileActions::parse_nrc_message(QByteArray nrc)
 
 QString FileActions::parse_dtc_message(uint16_t dtc)
 {
-    QString ret = "Unknown error code";
+    QString ret = "P" + QString::number(dtc, 16) + " - Unknown error code";
 
     ret = dtc_Pxxxx_codes.value(dtc, ret);
 
