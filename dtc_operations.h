@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QByteArray>
+#include <QStandardItemModel>
 #include <QCoreApplication>
 #include <QDebug>
 #include <QMainWindow>
@@ -51,6 +52,7 @@ private:
 
 
     bool kill_process = false;
+    bool five_baud_init_ok = false;
 
     int result;
 
@@ -65,6 +67,11 @@ private:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
+    struct kline_timings
+    {
+        int _P1_MIN;
+        int _P1_MAX;
+    };
 
     //-------------------------------------------------------------------------------------//
     // PIDs (https://en.wikipedia.org/wiki/OBD-II_PIDs)
@@ -210,6 +217,7 @@ private:
     int init_obd();
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
+    QByteArray request_dtc_list();
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);
@@ -218,6 +226,9 @@ private:
     SerialPortActions *serial;
     Ui::DtcOperationsWindow *ui;
 
+private slots:
+    int read_dtc();
+    int clear_dtc();
 };
 
 #endif // DTC_OPERATIONS_H

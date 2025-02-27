@@ -188,7 +188,7 @@ void MainWindow::ssm_kline_init()
         if (received.length() < (uint8_t)received.at(3) + 5)
             return;
 
-        emit LOG_D("ECU INIT length: " + QString::number((uint8_t)received.at(3)) + " " + received.length(), true, true);
+        emit LOG_D("ECU INIT length: " + QString::number((uint8_t)received.at(3)) + " " + QString::number(received.length()), true, true);
         if (received.length() >= (uint8_t)received.at(3) + 5)
         {
             ecu_init_complete = true;
