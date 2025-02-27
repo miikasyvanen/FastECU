@@ -57,10 +57,10 @@ void FlashEcuSubaruUnisiaJecsM32rBootMode::run()
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
     serial->set_serial_port_parity(QSerialPort::EvenParity);
+    serial->set_serial_port_baudrate("39063");
     tester_id = 0xF0;
     target_id = 0x10;
     serial->open_serial_port();
-    serial->change_port_speed("39063");
 
     int ret = 0;
 
