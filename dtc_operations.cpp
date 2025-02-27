@@ -7,6 +7,27 @@ DtcOperations::DtcOperations(SerialPortActions *serial, QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->protocolComboBox->addItem("iso9141 (K-line)");
+    ui->protocolComboBox->addItem("iso14230 (K-line)");
+    ui->protocolComboBox->addItem("iso15765 (CAN-TP)");
+
+    auto * model = qobject_cast<QStandardItemModel*>(ui->protocolComboBox->model());
+    assert(model);
+    if(!model) return;
+
+    auto * item = model->item(1);
+    assert(item);
+    if(!item) return;
+    item->setEnabled(false);
+    item = model->item(2);
+    assert(item);
+    if(!item) return;
+    item->setEnabled(false);
+
+    connect(ui->readDtcButton, &QPushButton::clicked, this, &DtcOperations::read_dtc);
+    connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::close);
+
+    this->show();
 }
 
 DtcOperations::~DtcOperations()
@@ -21,8 +42,6 @@ void DtcOperations::closeEvent(QCloseEvent *event)
 
 void DtcOperations::run()
 {
-    this->show();
-
     int result = STATUS_ERROR;
 
     // Set serial port
@@ -77,38 +96,16 @@ int DtcOperations::five_baud_init()
 
     output.clear();
     output.append((uint8_t)0x33);
+
+    if (serial->get_use_openport2_adapter())
+        serial->set_j2534_ioctl(P1_MAX, 35);
+    else
+        serial->set_kline_timings(SERIAL_P1_MAX, 35);
+
     received = serial->five_baud_init(output);
+    emit LOG_I("Five baud init response: " + parse_message_to_hex(received), true, true);
 
-    serial->set_comm_busy(true);
-    //emit LOG_I("5 baud init response: " + parse_message_to_hex(received), true, true);
-    serial->set_j2534_ioctl(P1_MAX, 35);
 
-    if ((uint8_t)received.at(5) == '8' && (uint8_t)received.at(7) == '8')
-        emit LOG_I("iso9141 five baud init mode succesfully completed.", true, true);
-
-    emit LOG_I("Requesting vehicle info, please wait...", true, true);
-
-<<<<<<< Updated upstream
-    delay(500);
-    response = request_data(vehicle_info, request_VIN);
-    emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
-    emit LOG_I("VIN: " + QString(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Length);
-    emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID);
-    emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
-    emit LOG_I("CAL ID: " + QString(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Num_Length);
-    emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
-    delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Num);
-    emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
-    //emit LOG_I("CAL ID num: " + QString(response), true, true);
-    delay(250);
-=======
     if (serial->get_use_openport2_adapter())
     {
         if ((uint8_t)received.at(5) == '8' && (uint8_t)received.at(7) == '8')
@@ -117,43 +114,47 @@ int DtcOperations::five_baud_init()
     else
     {
         if ((uint8_t)received.at(1) == 0x08 && (uint8_t)received.at(2) == 0x08)
-            five_baud_init_ok = true;
+                five_baud_init_ok = true;
         serial->set_kline_timings(SERIAL_P1_MAX, 25);
     }
     if (five_baud_init_ok)
     {
-        emit LOG_I("iso9141 five baud init mode succesfully completed.", true, true);
+        emit LOG_I("ISO9141 five baud init mode succesfully completed.", true, true);
 
         emit LOG_I("Requesting vehicle info, please wait...", true, true);
 
         delay(500);
         response = request_data(vehicle_info, request_VIN);
-        if (!response.length())
-            return STATUS_ERROR;
-        emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
-        emit LOG_I("VIN: " + QString(response), true, true);
+        if (response.length())
+        {
+            emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
+            emit LOG_I("VIN: " + QString(response), true, true);
+        }
         delay(250);
         response = request_data(vehicle_info, request_CAL_ID_Length);
-        if (!response.length())
-            return STATUS_ERROR;
-        emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
+        if (response.length())
+        {
+            emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
+        }
         delay(250);
         response = request_data(vehicle_info, request_CAL_ID);
-        if (!response.length())
-            return STATUS_ERROR;
-        emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
-        emit LOG_I("CAL ID: " + QString(response), true, true);
+        if (response.length())
+        {
+            emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
+            emit LOG_I("CAL ID: " + QString(response), true, true);
+        }
         delay(250);
         response = request_data(vehicle_info, request_CAL_ID_Num_Length);
-        if (!response.length())
-            return STATUS_ERROR;
-        emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
+        if (response.length())
+        {
+            emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
+        }
         delay(250);
         response = request_data(vehicle_info, request_CAL_ID_Num);
-        if (!response.length())
-            return STATUS_ERROR;
-        emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
-        //emit LOG_I("CAL ID num: " + QString(response), true, true);
+        if (response.length())
+        {
+            emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
+        }
         delay(250);
 
         result = read_dtc();
@@ -244,7 +245,6 @@ int DtcOperations::fast_init()
     }
     else
         return STATUS_ERROR;
->>>>>>> Stashed changes
 
     return STATUS_SUCCESS;
 }
@@ -300,9 +300,12 @@ QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
     return response;
 }
 
+QByteArray DtcOperations::request_dtc_list()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray response;
 
-<<<<<<< Updated upstream
-=======
     output.clear();
     for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
         output.append((uint8_t)live_data_start_bytes_9141[i]);
@@ -340,6 +343,7 @@ int DtcOperations::read_dtc()
     response = request_dtc_list();
     if (!response.length())
         return STATUS_ERROR;
+
     emit LOG_I("DTCs: " + parse_message_to_hex(response), true, true);
 
     for (int i = 0; i < response.length(); i+=2)
@@ -365,7 +369,6 @@ int DtcOperations::clear_dtc()
 
     return STATUS_SUCCESS;
 }
->>>>>>> Stashed changes
 
 
 

@@ -306,10 +306,9 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
             this, &MainWindow::network_state_changed, Qt::DirectConnection);
 
     // Set timer to read vbatt value
-    QTimer *vBattTimer = new QTimer(this);
-    vBattTimer->setInterval(1000);
-    connect(vBattTimer, SIGNAL(timeout()), this, SLOT(update_vbatt()));
-    vBattTimer->start();
+    vbatt_timer = new QTimer(this);
+    vbatt_timer->setInterval(vbatt_timer_timeout);
+    connect(vbatt_timer, SIGNAL(timeout()), this, SLOT(update_vbatt()));
 
     setSplashScreenProgress("Setting up toolbar...", 10);
     toolbar_item_size.setWidth(configValues->toolbar_iconsize.toInt());
@@ -1022,6 +1021,9 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         serial->set_serial_port_parity(QSerialPort::NoParity);
         serial->set_serial_port_baudrate("4800");
 
+        update_vbatt();
+        vbatt_timer->start();
+
         if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != '/')
             configValues->kernel_files_directory.append("/");
 
@@ -1385,6 +1387,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
 
     }
+    vbatt_timer->stop();
 
     serial->reset_connection();
     ecuid.clear();

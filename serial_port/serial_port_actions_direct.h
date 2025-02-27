@@ -107,6 +107,19 @@ public:
     uint32_t iso15765_source_address = 0;
     uint32_t iso15765_destination_address = 0;
 
+#define SERIAL_P1_MIN   0x00 // J2534 says this may not be changed
+#define SERIAL_P1_MAX   0x01
+#define SERIAL_P2_MIN   0x02 // J2534 says this may not be changed
+#define SERIAL_P2_MAX   0x03 // J2534 says this may not be changed
+#define SERIAL_P3_MIN   0x04
+#define SERIAL_P3_MAX   0x05 // J2534 says this may not be changed
+#define SERIAL_P4_MIN   0x06
+#define SERIAL_P4_MAX   0x07 // J2534 says this may not be changed
+
+    uint8_t _P1_MAX = 10;
+    //kline_timings get_kline_timings();
+    bool     set_kline_timings(unsigned long parameter, int value);
+
     bool is_serial_port_open();
     int change_port_speed(QString portSpeed);
     QByteArray five_baud_init(QByteArray output);
@@ -118,6 +131,7 @@ public:
     void reset_connection();
 
     QByteArray set_error();
+    QByteArray read_serial_obd_data(uint16_t timeout);
     QByteArray read_serial_data(uint16_t timeout);
     QByteArray write_serial_data(QByteArray output);
     QByteArray write_serial_data_echo_check(QByteArray output);

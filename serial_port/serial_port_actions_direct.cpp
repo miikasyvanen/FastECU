@@ -34,6 +34,21 @@ bool SerialPortActionsDirect::is_serial_port_open()
 
     return serial->isOpen();
 }
+/*
+struct SerialPortActionsDirect::kline_timings SerialPortActionsDirect::get_kline_timings()
+{
+    struct kline_timings timings;
+
+    timings._P1_MAX = 35;
+
+    return timings;
+}
+*/
+bool SerialPortActionsDirect::set_kline_timings(unsigned long parameter, int value)
+{
+    _P1_MAX = value;
+    return STATUS_SUCCESS;
+}
 
 int SerialPortActionsDirect::change_port_speed(QString portSpeed)
 {
@@ -116,6 +131,43 @@ QByteArray SerialPortActionsDirect::five_baud_init(QByteArray output)
         }
         for (unsigned long i = 0; i < OutputMsg.NumOfBytes; i++)
             response.append(OutputMsg.BytePtr[i]);
+    }
+    else
+    {
+        // Set timeout to 350ms before init
+        accurate_delay(350);
+        // Set break to set seril line low
+        serial->setBreakEnabled(true);
+        // Set timeout to 200ms to generate 200ms low pulse
+        accurate_delay(200);
+        // Unset break to set seril line high
+        serial->setBreakEnabled(false);
+        // Set timeout to 400ms to generate 400ms high pulse
+        accurate_delay(400);
+        serial->setBreakEnabled(true);
+        accurate_delay(400);
+        serial->setBreakEnabled(false);
+        accurate_delay(400);
+        serial->setBreakEnabled(true);
+        accurate_delay(400);
+        serial->setBreakEnabled(false);
+        accurate_delay(400);
+        // Set timeout to 400ms to generate 400ms high pulse before init data is sent
+
+        // Send init data
+        write_serial_data_echo_check(output);
+        response = read_serial_obd_data(40);
+        //emit LOG_D("Read response", true, true);
+        response = read_serial_obd_data(200);
+        //emit LOG_D("Five baud init response: " + parse_message_to_hex(response), true, true);
+        if ((uint8_t)response.at(1) == 0x08 && (uint8_t)response.at(2) == 0x08)
+        {
+            //delay(30);
+            output.clear();
+            output.append(~((uint8_t)response.at(2)));
+            write_serial_data_echo_check(output);
+            response.append(read_serial_obd_data(200));
+        }
     }
 
     return response;
@@ -616,6 +668,43 @@ QByteArray SerialPortActionsDirect::set_error()
     received.append((uint8_t)0x7f);
     received.append((uint8_t)0x00);
     received.append((uint8_t)0x13);
+
+    return received;
+}
+
+QByteArray SerialPortActionsDirect::read_serial_obd_data(uint16_t timeout)
+{
+    QByteArray received;
+
+    //emit LOG_D("Check bytes available", true, true);
+    QTime dieTime = QTime::currentTime().addMSecs(timeout);
+    while (!serial->bytesAvailable() && QTime::currentTime() < dieTime)
+    {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+    }
+    //emit LOG_D("Byte(s) available or timeout", true, true);
+    if (serial->bytesAvailable())
+    {
+        //emit LOG_D("Byte(s) available", true, true);
+        QTime intervalTime = QTime::currentTime().addMSecs(_P1_MAX);
+        while (QTime::currentTime() < dieTime)
+        {
+            if (serial->bytesAvailable())
+            {
+                //emit LOG_D("Byte available", true, true);
+                received.append(serial->read(1));
+                intervalTime = QTime::currentTime().addMSecs(_P1_MAX);
+            }
+            if (intervalTime < QTime::currentTime())
+            {
+                //emit LOG_D("Byte timeout", true, true);
+                break;
+            }
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+        }
+        //if (QTime::currentTime() > dieTime)
+        //    emit LOG_D("Message timeout", true, true);
+    }
 
     return received;
 }

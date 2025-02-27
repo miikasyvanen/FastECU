@@ -226,6 +226,10 @@ private:
     QString protocol = "";
     QString log_protocol = "";
 
+    QTimer *vbatt_timer;
+    uint16_t vbatt_timer_timeout = 1000;
+    uint16_t vbatt_timer_comms_timeout = 5000;
+
     //QTimer *ssm_init_poll_timer;
     uint16_t ssm_init_poll_timer_timeout = 250;
 

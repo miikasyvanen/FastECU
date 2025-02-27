@@ -833,6 +833,26 @@ int SerialPortActions::change_port_speed(QString portSpeed)
     set_comm_busy(false);
     return result;
 }
+/*
+struct SerialPortActions::kline_timings SerialPortActions::get_kline_timings()
+{
+    kline_timings timings;
+
+    if (isDirectConnection())
+        return serial_direct->get_kline_timings();
+    //else
+    //    timings = qtrohelper::slot_sync(serial_remote->get_kline_timings());
+
+    return timings;
+}
+*/
+bool SerialPortActions::set_kline_timings(unsigned long parameter, int value)
+{
+    if (isDirectConnection())
+        serial_direct->set_kline_timings(parameter, value);
+
+    return STATUS_SUCCESS;
+}
 
 int SerialPortActions::set_j2534_ioctl(unsigned long parameter, int value)
 {
@@ -944,6 +964,15 @@ bool SerialPortActions::reset_connection()
     else
         r = qtrohelper::slot_sync(serial_remote->reset_connection());
     return r;
+}
+
+QByteArray SerialPortActions::read_serial_obd_data(uint16_t timeout)
+{
+    QByteArray response;
+    if (isDirectConnection())
+        response = serial_direct->read_serial_obd_data(timeout);
+
+    return response;
 }
 
 QByteArray SerialPortActions::read_serial_data(uint16_t timeout)

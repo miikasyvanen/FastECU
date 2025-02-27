@@ -63,6 +63,23 @@
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
+      <widget class="QComboBox" name="protocolComboBox"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="readDtcButton">
+       <property name="text">
+        <string>Read DTCs</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="clearDtcButton">
+       <property name="text">
+        <string>Clear DTCs</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
