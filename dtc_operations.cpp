@@ -145,41 +145,7 @@ int DtcOperations::five_baud_init()
     {
         emit LOG_I("iso9141 five baud init mode succesfully completed.", true, true);
 
-        emit LOG_I("Requesting vehicle info, please wait...", true, true);
-
-        delay(500);
-        response = request_data(vehicle_info, request_VIN);
-        if (response.length())
-        {
-            emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
-            emit LOG_I("VIN: " + QString(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID_Length);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
-            emit LOG_I("CAL ID: " + QString(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID_Num_Length);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID_Num);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
-        }
-        delay(250);
+        request_vehicle_info();
 
         result = read_dtc();
         if (result)
@@ -211,8 +177,8 @@ int DtcOperations::fast_init()
     output.append((uint8_t)init_OBD);
     output.append(calculate_checksum(output, false));
     result = serial->fast_init(output);
-    //if (!result)
-    //    return STATUS_ERROR;
+    if (result)
+        return STATUS_ERROR;
 
     if (serial->get_use_openport2_adapter())
         received = serial->read_serial_data(serial_read_short_timeout);
@@ -227,41 +193,7 @@ int DtcOperations::fast_init()
     {
         emit LOG_I("iso14230 fast init mode succesfully completed.", true, true);
 
-        emit LOG_I("Requesting vehicle info, please wait...", true, true);
-
-        delay(500);
-        response = request_data(vehicle_info, request_VIN);
-        if (response.length())
-        {
-            emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
-            emit LOG_I("VIN: " + QString(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID_Length);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
-            emit LOG_I("CAL ID: " + QString(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID_Num_Length);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
-        }
-        delay(250);
-        response = request_data(vehicle_info, request_CAL_ID_Num);
-        if (response.length())
-        {
-            emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
-        }
-        delay(250);
+        request_vehicle_info();
 
         result = read_dtc();
         if (result)
@@ -327,6 +259,56 @@ QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
     return response;
 }
 
+void DtcOperations::request_vehicle_info()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray response;
+
+    emit LOG_I("Requesting vehicle info, please wait...", true, true);
+
+    delay(500);
+    response = request_data(live_data, request_support_info);
+    if (response.length())
+    {
+        emit LOG_I("Supported PIDs: " + parse_message_to_hex(response), true, true);
+        emit LOG_I("Supported PIDs: " + QString(response), true, true);
+    }
+    delay(250);
+    response = request_data(vehicle_info, request_VIN);
+    if (response.length())
+    {
+        emit LOG_I("VIN: " + parse_message_to_hex(response), true, true);
+        emit LOG_I("VIN: " + QString(response), true, true);
+    }
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID_Length);
+    if (response.length())
+    {
+        emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
+    }
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID);
+    if (response.length())
+    {
+        emit LOG_I("CAL ID: " + parse_message_to_hex(response), true, true);
+        emit LOG_I("CAL ID: " + QString(response), true, true);
+    }
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID_Num_Length);
+    if (response.length())
+    {
+        emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
+    }
+    delay(250);
+    response = request_data(vehicle_info, request_CAL_ID_Num);
+    if (response.length())
+    {
+        emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
+    }
+    delay(250);
+
+}
 QByteArray DtcOperations::request_dtc_list()
 {
     QByteArray output;

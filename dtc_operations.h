@@ -97,6 +97,7 @@ private:
     const uint8_t vehicle_info = 0x09;                                  // Read vehicle info
 
     // Subcommands
+    const uint8_t request_support_info = 0x00;                          // Read support info
     const uint8_t request_VIN = 0x02;                                   // Read VIN
     const uint8_t request_CAL_ID_Length = 0x03;                         // Read Calibration ID Length
     const uint8_t request_CAL_ID = 0x04;                                // Read Calibration ID
@@ -221,6 +222,7 @@ private:
     int fast_init();
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
+    void request_vehicle_info();
     QByteArray request_dtc_list();
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
