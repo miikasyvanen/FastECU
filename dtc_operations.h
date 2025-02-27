@@ -215,6 +215,7 @@ private:
 
 
     void closeEvent(QCloseEvent *event);
+    int select_operation();
     int init_obd();
     int five_baud_init();
     int fast_init();
