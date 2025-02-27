@@ -982,7 +982,7 @@ QByteArray SerialPortActions::read_serial_data(uint16_t timeout)
     {
         response = serial_direct->read_serial_data(timeout);
         emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
-        if (get_read_vbatt())
+        if (get_read_vbatt() && response.length())
         {
             vBatt = serial_direct->read_vbatt();
             set_read_vbatt(false);

@@ -358,7 +358,7 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
 
     QString mcu_name;
 
-    emit LOG_D("Start address to upload kernel: " + QString::number(addr), true, true);
+    emit LOG_D("Start address to upload kernel: 0x" + QString::number(addr, 16), true, true);
 
     if (!serial->is_serial_port_open())
     {
