@@ -401,7 +401,7 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
     if (serial->change_port_speed("15625"))
         return STATUS_ERROR;
 
-    emit LOG_I("Requesting kernel upload'", true, true);
+    emit LOG_I("Requesting kernel upload", true, true);
     received = send_sid_34_request_upload(addr, len);
     if (received.length() > 4)
     {

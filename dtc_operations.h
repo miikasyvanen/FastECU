@@ -51,6 +51,8 @@ private:
 
 
     bool kill_process = false;
+    bool five_baud_init_ok = false;
+    bool fast_init_ok = false;
 
     int result;
 
@@ -208,6 +210,8 @@ private:
 
     void closeEvent(QCloseEvent *event);
     int init_obd();
+    int five_baud_init();
+    int fast_init();
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
 
