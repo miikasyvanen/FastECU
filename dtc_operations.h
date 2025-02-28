@@ -74,37 +74,42 @@ private:
         int _P1_MAX;
     };
 
-    //-------------------------------------------------------------------------------------//
-    // PIDs (https://en.wikipedia.org/wiki/OBD-II_PIDs)
-    //-------------------------------------------------------------------------------------//
-
     const uint8_t init_OBD = 0x81;                                      // Init ISO14230 fast init
     const uint8_t init_OBD_9141 = 0x33;                                 // Init ISO9141 five baud init
 
     const uint8_t start_bytes[3] = { 0xC1, 0x33, 0xF1 };
     const uint8_t start_bytes_9141[3] = { 0x68, 0x6A, 0xF1 };
 
-    const uint8_t freeze_frame[4] = { 0xC3, 0x33, 0xF1, 0x02 };         // Freeze Frame Start Bytes
-    const uint8_t freeze_frame_9141[4] = { 0x68, 0x6A, 0xF1, 0x02 };    // Freeze Frame Start Bytes
-
     const uint8_t live_data_start_bytes[3] = { 0xC2, 0x33, 0xF1 };
     const uint8_t live_data_start_bytes_9141[3] = { 0x68, 0x6A, 0xF1 };
 
-    // Commands
-    const uint8_t live_data = 0x01;                                     // Live Data Start Bytes
-    const uint8_t read_DTCs = 0x03;                                     // Read Troubleshoot Codes
-    const uint8_t clear_DTCs = 0x04;                                    // Clear Troubleshoot Codes
-    const uint8_t vehicle_info = 0x09;                                  // Read vehicle info
+    //-------------------------------------------------------------------------------------//
+    // Service mode IDs (https://en.wikipedia.org/wiki/OBD-II_PIDs)
+    //-------------------------------------------------------------------------------------//
+    const uint8_t live_data = 0x01;                                     // Show current data
+    const uint8_t freeze_frame = 0x02;                                  // Show freeze frame data
+    const uint8_t read_DTCs = 0x03;                                     // Show stored Diagnostic Trouble Codes
+    const uint8_t clear_DTCs = 0x04;                                    // Clear Diagnostic Trouble Codes and stored values
+    const uint8_t test_result_kline = 0x05;                             // Test results, oxygen sensor monitoring (non CAN only)
+    const uint8_t test_result_can = 0x06;                               // Test results, other component/system monitoring (Test results, oxygen sensor monitoring for CAN only)
+    const uint8_t read_pending_DTCs = 0x07;                             // Show pending Diagnostic Trouble Codes (detected during current or last driving cycle)
+    const uint8_t control_operation = 0x08;                             // Control operation of on-board component/system
+    const uint8_t vehicle_info = 0x09;                                  // Request vehicle information
+    const uint8_t read_permanent_DTCs = 0x0A;                           // Permanent Diagnostic Trouble Codes (DTCs) (Cleared DTCs)
 
-    // Subcommands
+    //-------------------------------------------------------------------------------------//
+    // PIDs (https://en.wikipedia.org/wiki/OBD-II_PIDs)
+    //-------------------------------------------------------------------------------------//
+    // SID 0x09 - Vehicle info
     const uint8_t request_support_info[7] = { 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0 }; // Read support info
+    const uint8_t request_VIN_length = 0x01;                            // Request VIN msg length
     const uint8_t request_VIN = 0x02;                                   // Read VIN
-    const uint8_t request_CAL_ID_Length = 0x03;                         // Read Calibration ID Length
+    const uint8_t request_CAL_ID_length = 0x03;                         // Read Calibration ID msg length
     const uint8_t request_CAL_ID = 0x04;                                // Read Calibration ID
-    const uint8_t request_CAL_ID_Num_Length = 0x05;                     // Read Calibration ID Number Length
-    const uint8_t request_CAL_ID_Num = 0x06;                            // Read Calibration ID Number
+    const uint8_t request_CAL_ID_num_length = 0x05;                     // Read Calibration ID number msg length
+    const uint8_t request_CAL_ID_num = 0x06;                            // Read Calibration ID number
 
-    // Live data
+    // SID 0x01 - Live data
     const uint8_t SUPPORTED_PIDS_1_20              = 0x00;  // bit encoded
     const uint8_t MONITOR_STATUS_SINCE_DTC_CLEARED = 0x01;  // bit encoded          suported
     const uint8_t FREEZE_DTC                       = 0x02;  //                      suported

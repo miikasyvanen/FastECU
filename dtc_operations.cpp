@@ -293,6 +293,19 @@ void DtcOperations::request_vehicle_info()
         }
         delay(250);
     }
+    response = request_data(live_data, MONITOR_STATUS_SINCE_DTC_CLEARED);
+    if (response.length())
+    {
+        emit LOG_I("Status since DTCs cleared: " + parse_message_to_hex(response), true, true);
+    }
+    delay(250);
+    response = request_data(vehicle_info, request_VIN_length);
+    if (response.length())
+    {
+        emit LOG_I("VIN length: " + parse_message_to_hex(response), true, true);
+        emit LOG_I("VIN length: " + QString(response), true, true);
+    }
+    delay(250);
     response = request_data(vehicle_info, request_VIN);
     if (response.length())
     {
@@ -300,7 +313,7 @@ void DtcOperations::request_vehicle_info()
         emit LOG_I("VIN: " + QString(response), true, true);
     }
     delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Length);
+    response = request_data(vehicle_info, request_CAL_ID_length);
     if (response.length())
     {
         emit LOG_I("CAL ID length: " + parse_message_to_hex(response), true, true);
@@ -313,13 +326,13 @@ void DtcOperations::request_vehicle_info()
         emit LOG_I("CAL ID: " + QString(response), true, true);
     }
     delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Num_Length);
+    response = request_data(vehicle_info, request_CAL_ID_num_length);
     if (response.length())
     {
         emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
     }
     delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_Num);
+    response = request_data(vehicle_info, request_CAL_ID_num);
     if (response.length())
     {
         emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
