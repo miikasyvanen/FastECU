@@ -513,6 +513,15 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
     }
     file.close();
 
+    if (!configValues->calibration_files_directory.endsWith("/") || !configValues->calibration_files_directory.endsWith("\\"))
+        configValues->calibration_files_directory.append("/");
+    if (!configValues->ecuflash_definition_files_directory.endsWith("/") || !configValues->ecuflash_definition_files_directory.endsWith("\\"))
+        configValues->ecuflash_definition_files_directory.append("/");
+    if (!configValues->datalog_files_directory.endsWith("/") || !configValues->datalog_files_directory.endsWith("\\"))
+        configValues->datalog_files_directory.append("/");
+    if (!configValues->syslog_files_directory.endsWith("/") || !configValues->syslog_files_directory.endsWith("\\"))
+        configValues->syslog_files_directory.append("/");
+
     save_config_file(configValues);
 
     return configValues;
