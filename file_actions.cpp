@@ -2167,7 +2167,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             }
         }
     }
-    if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
+    else if (configValues->primary_definition_base == "romraider" && configValues->romraider_definition_files.length())
     {
         if (configValues->use_romraider_definitions == "enabled")
         {

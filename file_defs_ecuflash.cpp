@@ -166,10 +166,13 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
 
     emit LOG_D("Search ID: " + cal_id, true, true);
     QString def_id;
-    for (int index = 0; index < configValues->ecuflash_def_cal_id.length(); index++)
+    if (cal_id.contains("BASE"))
     {
-        if (cal_id.contains("BASE"))
+        for (int index = 0; index < configValues->ecuflash_def_cal_id.length(); index++)
         {
+            if (cal_id_file_found)
+                break;
+
             QFileInfo def_file(configValues->ecuflash_def_filename.at(index));
             def_id = def_file.fileName();
             if (def_id.contains("BASE"))
@@ -181,26 +184,48 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 emit LOG_D("EcuFlash def file name: " + configValues->ecuflash_def_filename.at(index), true, true);
                 cal_id_file_found = true;
                 file_index = index;
-                break;
-            }
-            else if (def_id.startsWith(cal_id) && def_id.endsWith(".xml") && configValues->ecuflash_def_cal_id.at(index) == cal_id)
-            {
-                emit LOG_D("EcuFlash ID found: " + configValues->ecuflash_def_cal_id.at(index) + " " + cal_id, true, true);
-                emit LOG_D("EcuFlash def file name: " + configValues->ecuflash_def_filename.at(index), true, true);
-                cal_id_file_found = true;
-                file_index = index;
-                break;
-            }
-            else if (configValues->ecuflash_def_cal_id.at(index) == cal_id)
-            {
-                emit LOG_D("EcuFlash ID found: " + configValues->ecuflash_def_cal_id.at(index) + " " + cal_id, true, true);
-                emit LOG_D("EcuFlash def file name: " + configValues->ecuflash_def_filename.at(index), true, true);
-                cal_id_file_found = true;
-                file_index = index;
-                break;
             }
         }
-        else
+        for (int index = 0; index < configValues->ecuflash_def_cal_id.length(); index++)
+        {
+            if (cal_id_file_found)
+                break;
+
+            QFileInfo def_file(configValues->ecuflash_def_filename.at(index));
+            def_id = def_file.fileName();
+            if (def_id.contains("BASE"))
+                emit LOG_D("Search ID: " + def_id, true, true);
+
+            if (def_id.startsWith(cal_id) && def_id.endsWith(".xml") && configValues->ecuflash_def_cal_id.at(index) == cal_id)
+            {
+                emit LOG_D("EcuFlash ID found: " + configValues->ecuflash_def_cal_id.at(index) + " " + cal_id, true, true);
+                emit LOG_D("EcuFlash def file name: " + configValues->ecuflash_def_filename.at(index), true, true);
+                cal_id_file_found = true;
+                file_index = index;
+            }
+        }
+        for (int index = 0; index < configValues->ecuflash_def_cal_id.length(); index++)
+        {
+            if (cal_id_file_found)
+                break;
+
+            QFileInfo def_file(configValues->ecuflash_def_filename.at(index));
+            def_id = def_file.fileName();
+            if (def_id.contains("BASE"))
+                emit LOG_D("Search ID: " + def_id, true, true);
+
+            if (configValues->ecuflash_def_cal_id.at(index) == cal_id)
+            {
+                emit LOG_D("EcuFlash ID found: " + configValues->ecuflash_def_cal_id.at(index) + " " + cal_id, true, true);
+                emit LOG_D("EcuFlash def file name: " + configValues->ecuflash_def_filename.at(index), true, true);
+                cal_id_file_found = true;
+                file_index = index;
+            }
+        }
+    }
+    else
+    {
+        for (int index = 0; index < configValues->ecuflash_def_cal_id.length(); index++)
         {
             if (configValues->ecuflash_def_cal_id.at(index) == cal_id)
             {
@@ -225,7 +250,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     while (ecuCalDef->RomInfo.length() < ecuCalDef->RomInfoStrings.length())
         ecuCalDef->RomInfo.append(" ");
 
-    ecuCalDef->RomInfo.replace(DefFile, filename);
+    if (!cal_id.contains("BASE"))
+        ecuCalDef->RomInfo.replace(DefFile, filename);
 
     QFile file(filename);
 
