@@ -982,7 +982,7 @@ QByteArray SerialPortActions::read_serial_data(uint16_t timeout)
     {
         response = serial_direct->read_serial_data(timeout);
         emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
-        if (get_read_vbatt() && response.length())
+        if (get_read_vbatt())
         {
             vBatt = serial_direct->read_vbatt();
             set_read_vbatt(false);
@@ -1110,9 +1110,7 @@ unsigned long SerialPortActions::read_vbatt()
     else
     {
         if (!get_is_comm_busy() && !get_read_vbatt())
-        {
             vBatt = qtrohelper::slot_sync(serial_remote->read_vbatt());
-        }
         else
             set_read_vbatt(true);
         //emit LOG_D("Remote vBatt: " + QString::number(vBatt), true, true);
