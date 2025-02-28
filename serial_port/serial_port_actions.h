@@ -130,7 +130,7 @@ public:
     //struct kline_timings get_kline_timings();
     bool     set_kline_timings(unsigned long parameter, int value);
 
-    int set_j2534_ioctl(unsigned long parameter, int value);
+    int set_j2534_ioctl(uint32_t parameter, int value);
 
     bool is_serial_port_open(void);
     int change_port_speed(QString portSpeed);

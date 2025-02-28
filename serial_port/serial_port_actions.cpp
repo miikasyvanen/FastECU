@@ -854,7 +854,7 @@ bool SerialPortActions::set_kline_timings(unsigned long parameter, int value)
     return STATUS_SUCCESS;
 }
 
-int SerialPortActions::set_j2534_ioctl(unsigned long parameter, int value)
+int SerialPortActions::set_j2534_ioctl(uint32_t parameter, int value)
 {
     bool result = STATUS_SUCCESS;
     this->set_comm_busy(true);
