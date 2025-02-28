@@ -97,7 +97,7 @@ private:
     const uint8_t vehicle_info = 0x09;                                  // Read vehicle info
 
     // Subcommands
-    const uint8_t request_support_info = 0x00;                          // Read support info
+    const uint8_t request_support_info[7] = { 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0 }; // Read support info
     const uint8_t request_VIN = 0x02;                                   // Read VIN
     const uint8_t request_CAL_ID_Length = 0x03;                         // Read Calibration ID Length
     const uint8_t request_CAL_ID = 0x04;                                // Read Calibration ID

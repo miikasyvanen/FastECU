@@ -251,6 +251,8 @@ QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
         received.remove(received.length()-1, 1);
         if (received.length() < 7)
             received.remove(0, received.length()-1);
+        else if (received.length() < 10)
+            received.remove(0, 5);
         else
             received.remove(0, 6);
         response.append(received);
@@ -268,13 +270,29 @@ void DtcOperations::request_vehicle_info()
     emit LOG_I("Requesting vehicle info, please wait...", true, true);
 
     delay(500);
-    response = request_data(live_data, request_support_info);
-    if (response.length())
+    for (unsigned int info = 0; info < 7; info++)
     {
-        emit LOG_I("Supported PIDs: " + parse_message_to_hex(response), true, true);
-        emit LOG_I("Supported PIDs: " + QString(response), true, true);
+        response = request_data(live_data, request_support_info[info]);
+        if (response.length())
+        {
+            QString PIDs;
+            int PIDstart = info * 0x20+1;
+            int PIDend = PIDstart + 0x1f;
+            emit LOG_I("Supported PIDs 0x" + QString::number(PIDstart, 16) + "-0x" + QString::number(PIDend, 16) + ": " + parse_message_to_hex(response), true, true);
+            //emit LOG_I("Supported PIDs: " + QString(response), true, true);
+            emit LOG_I("Supported PIDs: ", true, false);
+            for (int i = 0; i < response.length(); i++)
+            {
+                for (int j = 7; j >= 0; j--)
+                {
+                    int PIDen = (((uint8_t)response.at(i) >> j) & 0x01);
+                    PIDs.append(QString("0x%1 ").arg(PIDen * ((i * 8 + 7 - j) + PIDstart),2,16,QLatin1Char('0')));
+                }
+            }
+            emit LOG_I(PIDs, false, true);
+        }
+        delay(250);
     }
-    delay(250);
     response = request_data(vehicle_info, request_VIN);
     if (response.length())
     {
