@@ -75,6 +75,7 @@ SOURCES += \
     file_defs_romraider.cpp \
     get_key_operations_subaru.cpp \
     hexcommander.cpp \
+    hexedit.cpp \
     log_operations_ssm.cpp \
     logbox.cpp \
     logvalues.cpp \
@@ -145,6 +146,7 @@ HEADERS += \
     file_actions.h \
     get_key_operations_subaru.h \
     hexcommander.h \
+    hexedit.h \
     kernelcomms.h \
     kernelmemorymodels.h \
     logbox.h \
@@ -209,6 +211,7 @@ FORMS += \
     definition_file_convert.ui \
     dtc_operations.ui \
     ecu_operations.ui \
+    hexedit.ui \
     logvalues.ui \
     mainwindow.ui \
     modules/biu/biu_operations_subaru.ui \

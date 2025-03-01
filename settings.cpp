@@ -278,7 +278,7 @@ void Settings::set_ecuflash_def_dir()
                                                  | QFileDialog::DontResolveSymlinks);
 
     qDebug() << "Selected path:" << ecuflash_definition_dir;
-    if (!ecuflash_definition_dir.endsWith("/") || !ecuflash_definition_dir.endsWith("\\"))
+    if (!ecuflash_definition_dir.endsWith("/") && !ecuflash_definition_dir.endsWith("\\"))
         ecuflash_definition_dir.append("/");
     if (!ecuflash_definition_dir.isEmpty()){
         configValues->ecuflash_definition_files_directory = ecuflash_definition_dir;
@@ -322,7 +322,7 @@ void Settings::set_ecu_cal_dir()
                                                  | QFileDialog::DontResolveSymlinks);
 
     qDebug() << "Selected path:" << calibration_dir;
-    if (!calibration_dir.endsWith("/") || !calibration_dir.endsWith("\\"))
+    if (!calibration_dir.endsWith("/") && !calibration_dir.endsWith("\\"))
         calibration_dir.append("/");
     if (!calibration_dir.isEmpty()){
         configValues->calibration_files_directory = calibration_dir;
@@ -343,7 +343,7 @@ void Settings::set_log_files_dir()
 
 
     qDebug() << "Selected path:" << logfiles_dir;
-    if (!logfiles_dir.endsWith("/") || !logfiles_dir.endsWith("\\"))
+    if (!logfiles_dir.endsWith("/") && !logfiles_dir.endsWith("\\"))
         logfiles_dir.append("/");
     if (!logfiles_dir.isEmpty()){
         configValues->datalog_files_directory = logfiles_dir;

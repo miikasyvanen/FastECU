@@ -513,15 +513,6 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
     }
     file.close();
 
-    if (!configValues->calibration_files_directory.endsWith("/") || !configValues->calibration_files_directory.endsWith("\\"))
-        configValues->calibration_files_directory.append("/");
-    if (!configValues->ecuflash_definition_files_directory.endsWith("/") || !configValues->ecuflash_definition_files_directory.endsWith("\\"))
-        configValues->ecuflash_definition_files_directory.append("/");
-    if (!configValues->datalog_files_directory.endsWith("/") || !configValues->datalog_files_directory.endsWith("\\"))
-        configValues->datalog_files_directory.append("/");
-    if (!configValues->syslog_files_directory.endsWith("/") || !configValues->syslog_files_directory.endsWith("\\"))
-        configValues->syslog_files_directory.append("/");
-
     save_config_file(configValues);
 
     return configValues;
@@ -536,6 +527,15 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
         QMessageBox::warning(this, tr("Config file"), "Unable to open config file '" + file.fileName() + "' for writing");
         return 0;
     }
+
+    if (!configValues->calibration_files_directory.endsWith("/") && !configValues->calibration_files_directory.endsWith("\\"))
+        configValues->calibration_files_directory.append("/");
+    if (!configValues->ecuflash_definition_files_directory.endsWith("/") && !configValues->ecuflash_definition_files_directory.endsWith("\\"))
+        configValues->ecuflash_definition_files_directory.append("/");
+    if (!configValues->datalog_files_directory.endsWith("/") && !configValues->datalog_files_directory.endsWith("\\"))
+        configValues->datalog_files_directory.append("/");
+    if (!configValues->syslog_files_directory.endsWith("/") && !configValues->syslog_files_directory.endsWith("\\"))
+        configValues->syslog_files_directory.append("/");
 
     //QTextStream outStream(&configFile);
 
@@ -2352,7 +2352,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 dataByte = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                 mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
-            emit LOG_D("Selectable " + ecuCalDef->NameList.at(i) + " -> addr: 0x" + QString::number(byteAddress, 16) + " -> value: 0x" + mapData, true, true);
+            //emit LOG_D("Selectable " + ecuCalDef->NameList.at(i) + " -> addr: 0x" + QString::number(byteAddress, 16) + " -> value: 0x" + mapData, true, true);
             ecuCalDef->MapData.replace(i, mapData);
             //emit LOG_D("Mapdata " + ecuCalDef->MapData.at(i), true, true);
         }

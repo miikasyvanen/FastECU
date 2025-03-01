@@ -62,6 +62,8 @@ void MainWindow::menu_action_triggered(QString action)
     // TESTING MENU
     if (action == "dtc_window")
         show_dtc_window();
+    if (action == "hex_editor")
+        show_hex_editor();
 
     if (action == "haltech_ic7")
         toggle_haltech_ic7_display();
@@ -1047,6 +1049,25 @@ void MainWindow::show_dtc_window()
     dtcOperations->run();
 
     emit LOG_D("DTC operations stopped", true, true);
+}
+
+void MainWindow::show_hex_editor()
+{
+    emit LOG_D("Show hex editor", true, true);
+
+    int rom_number = 0;
+
+    QTreeWidgetItem *selectedItem = NULL;
+    int item_count = ui->calibrationFilesTreeWidget->selectedItems().count();
+    if (item_count)
+    {
+        selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
+        rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
+
+        HexEdit *hexEdit = new HexEdit(ecuCalDef[rom_number], this);
+        hexEdit->run();
+    }
+
 }
 
 void MainWindow::show_preferences_window()
