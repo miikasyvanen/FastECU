@@ -2291,6 +2291,9 @@ void MainWindow::update_vbatt()
 {
     unsigned long vBatt = 0;
 
+    if (!serial->get_use_openport2_adapter())
+        return;
+
     vBatt = serial->read_vbatt();
 
     QDialog *ecuOperationsWindow = this->findChild<QDialog*>("EcuOperationsWindow");
@@ -2316,7 +2319,7 @@ void MainWindow::update_vbatt()
             //emit LOG_D("Found biuOperationsSubaruWindow->vBattLabel", true, true);
             QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
             vBattLabel->setText(vBattText);
-            //emit LOG_D(vBattText, true, true);
+            emit LOG_D(vBattText, true, true);
         }
     }
     QDialog *dtcOperationsWindow = this->findChild<QDialog*>("DtcOperationsWindow");
@@ -2329,7 +2332,7 @@ void MainWindow::update_vbatt()
             //emit LOG_D("Found dtcOperationsWindow->vBattLabel", true, true);
             QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
             vBattLabel->setText(vBattText);
-            //emit LOG_D(vBattText, true, true);
+            emit LOG_D(vBattText, true, true);
         }
     }
 }
