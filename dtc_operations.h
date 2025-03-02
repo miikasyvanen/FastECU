@@ -57,8 +57,9 @@ private:
 
     int result;
 
-    uint8_t tester_id;
-    uint8_t target_id;
+    uint8_t startbyte = 0;
+    uint8_t tester_id = 0;
+    uint8_t target_id = 0;
 
     uint16_t receive_timeout = 500;
     uint16_t serial_read_timeout = 2000;
@@ -74,8 +75,8 @@ private:
         int _P1_MAX;
     };
 
-    const uint8_t init_OBD = 0x81;                                      // Init ISO14230 fast init
-    const uint8_t init_OBD_9141 = 0x33;                                 // Init ISO9141 five baud init
+    const uint8_t fast_init_OBD = 0x81;                                      // Init ISO14230 fast init
+    const uint8_t five_baud_init_OBD = 0x33;                                 // Init ISO9141 five baud init
 
     const uint8_t start_bytes[3] = { 0xC1, 0x33, 0xF1 };
     const uint8_t start_bytes_9141[3] = { 0x68, 0x6A, 0xF1 };

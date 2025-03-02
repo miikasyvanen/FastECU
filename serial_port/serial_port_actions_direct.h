@@ -47,6 +47,8 @@ public:
     bool setDataTerminalReady = true;
     bool signalToReadBattVoltage = false;
 
+    bool is_ssm_protocol = false;
+    bool add_iso9141_header = false;
     bool add_iso14230_header = false;
     bool is_iso14230_connection = false;
     bool is_can_connection = false;
@@ -70,6 +72,10 @@ public:
     uint16_t serial_read_medium_timeout = 500;
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
+
+    uint8_t iso9141_startbyte = 0;
+    uint8_t iso9141_tester_id = 0;
+    uint8_t iso9141_target_id = 0;
 
     uint8_t iso14230_startbyte = 0;
     uint8_t iso14230_tester_id = 0;
@@ -231,7 +237,8 @@ private:
     QMap<QString, QString> installed_drivers;
 #endif
 
-    QByteArray add_packet_header(QByteArray output);
+    QByteArray append_iso9141_header(QByteArray output);
+    QByteArray append_iso14230_header(QByteArray output);
     int write_j2534_data(QByteArray output);
     QByteArray read_j2534_data(unsigned long timeout);
     QString parse_message_to_hex(QByteArray received);

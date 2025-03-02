@@ -1043,8 +1043,8 @@ void MainWindow::show_dtc_window()
     QObject::connect(dtcOperations, &DtcOperations::LOG_I, syslogger, &SystemLogger::log_messages);
     QObject::connect(dtcOperations, &DtcOperations::LOG_D, syslogger, &SystemLogger::log_messages);
 
-    //dtcOperations->exec();
-    dtcOperations->run();
+    dtcOperations->exec();
+    //dtcOperations->run();
 
     emit LOG_D("DTC operations stopped", true, true);
 }

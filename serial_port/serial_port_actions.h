@@ -34,6 +34,8 @@ public:
     bool get_setDataTerminalReady();
     bool set_setDataTerminalReady(bool value);
 
+    bool get_add_iso9141_header();
+    bool set_add_iso9141_header(bool value);
     bool get_add_iso14230_header();
     bool set_add_iso14230_header(bool value);
     bool get_is_iso14230_connection();
@@ -61,6 +63,13 @@ public:
     void set_comm_busy(bool value);
     bool get_read_vbatt();
     void set_read_vbatt(bool value);
+
+    uint8_t get_iso9141_startbyte();
+    bool    set_iso9141_startbyte(uint8_t value);
+    uint8_t get_iso9141_tester_id();
+    bool    set_iso9141_tester_id(uint8_t value);
+    uint8_t get_iso9141_target_id();
+    bool    set_iso9141_target_id(uint8_t value);
 
     uint8_t get_iso14230_startbyte();
     bool    set_iso14230_startbyte(uint8_t value);

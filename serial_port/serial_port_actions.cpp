@@ -178,6 +178,23 @@ bool SerialPortActions::set_setDataTerminalReady(bool value)
     return r;
 }
 
+bool SerialPortActions::get_add_iso9141_header(void)
+{
+    if (isDirectConnection())
+        return serial_direct->add_iso9141_header;
+    else
+        return qtrohelper::slot_sync(serial_remote->get_add_iso9141_header());
+}
+bool SerialPortActions::set_add_iso9141_header(bool value)
+{
+    bool r = true;
+    if (isDirectConnection())
+        serial_direct->add_iso9141_header = value;
+    else
+        r = qtrohelper::slot_sync(serial_remote->set_add_iso9141_header(value));
+    return r;
+}
+
 bool SerialPortActions::get_add_iso14230_header(void)
 {
     if (isDirectConnection())
@@ -338,6 +355,55 @@ bool SerialPortActions::set_dataTerminalDisabled(int value)
         serial_direct->dataTerminalDisabled = value;
     else
         r = qtrohelper::slot_sync(serial_remote->set_dataTerminalDisabled(value));
+    return r;
+}
+
+uint8_t SerialPortActions::get_iso9141_startbyte(void)
+{
+    if (isDirectConnection())
+        return serial_direct->iso9141_startbyte;
+    else
+        return qtrohelper::slot_sync(serial_remote->get_iso9141_startbyte());
+}
+bool SerialPortActions::set_iso9141_startbyte(uint8_t value)
+{
+    bool r = true;
+    if (isDirectConnection())
+        serial_direct->iso9141_startbyte = value;
+    else
+        r = qtrohelper::slot_sync(serial_remote->set_iso9141_startbyte(value));
+    return r;
+}
+uint8_t SerialPortActions::get_iso9141_tester_id(void)
+{
+    if (isDirectConnection())
+        return serial_direct->iso9141_tester_id;
+    else
+        return qtrohelper::slot_sync(serial_remote->get_iso9141_tester_id());
+}
+bool SerialPortActions::set_iso9141_tester_id(uint8_t value)
+{
+    bool r = true;
+    if (isDirectConnection())
+        serial_direct->iso9141_tester_id = value;
+    else
+        r = qtrohelper::slot_sync(serial_remote->set_iso9141_tester_id(value));
+    return r;
+}
+uint8_t SerialPortActions::get_iso9141_target_id(void)
+{
+    if (isDirectConnection())
+        return serial_direct->iso9141_target_id;
+    else
+        return qtrohelper::slot_sync(serial_remote->get_iso9141_target_id());
+}
+bool SerialPortActions::set_iso9141_target_id(uint8_t value)
+{
+    bool r = true;
+    if (isDirectConnection())
+        serial_direct->iso9141_target_id = value;
+    else
+        r = qtrohelper::slot_sync(serial_remote->set_iso9141_target_id(value));
     return r;
 }
 
