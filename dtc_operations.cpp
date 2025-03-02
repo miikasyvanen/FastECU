@@ -71,6 +71,7 @@ void DtcOperations::run()
 int DtcOperations::select_operation()
 {
     QObject *obj = QObject::sender();
+    int result = STATUS_SUCCESS;
 
     if (ui->protocolComboBox->currentText().startsWith("SSM"))
     {
@@ -82,9 +83,7 @@ int DtcOperations::select_operation()
         serial->set_kline_tester_id(0xF1);
         serial->set_kline_target_id(0x6A);
 
-        five_baud_init();
-        if (obj->objectName() == "clearDtcButton")
-            clear_dtc();
+        result = five_baud_init();
     }
     else if (ui->protocolComboBox->currentText().startsWith("iso14230"))
     {
@@ -92,9 +91,7 @@ int DtcOperations::select_operation()
         serial->set_kline_tester_id(0xF1);
         serial->set_kline_target_id(0x33);
 
-        fast_init();
-        if (obj->objectName() == "clearDtcButton")
-            clear_dtc();
+        result = fast_init();
     }
     else if (ui->protocolComboBox->currentText().startsWith("iso15765"))
     {
@@ -102,15 +99,28 @@ int DtcOperations::select_operation()
         destination_id = 0x7e8;
         serial->set_iso15765_source_address(source_id);
         serial->set_iso15765_destination_address(destination_id);
-        iso15765_init();
-        if (obj->objectName() == "clearDtcButton")
-            clear_dtc();
+        result = iso15765_init();
+    }
+
+    if (result == STATUS_SUCCESS)
+    {
+        if (obj->objectName() == "readDtcButton")
+        {
+            result = read_dtc();
+        }
+        else if (obj->objectName() == "clearDtcButton")
+        {
+            result = clear_dtc();
+        }
     }
 
     serial->set_add_ssm_header(false);
     serial->set_add_iso9141_header(false);
     serial->set_add_iso14230_header(false);
     serial->reset_connection();
+
+    if (result)
+        return STATUS_ERROR;
 
     return STATUS_SUCCESS;
 }
@@ -181,9 +191,6 @@ int DtcOperations::five_baud_init()
 
         request_vehicle_info();
 
-        result = read_dtc();
-        if (result)
-            return STATUS_ERROR;
     }
     else
     {
@@ -232,9 +239,6 @@ int DtcOperations::fast_init()
 
         request_vehicle_info();
 
-        result = read_dtc();
-        if (result)
-            return STATUS_ERROR;
     }
     else
     {
@@ -298,9 +302,6 @@ int DtcOperations::iso15765_init()
 
         request_vehicle_info();
 
-        result = read_dtc();
-        if (result)
-            return STATUS_ERROR;
     }
     else
     {
@@ -416,7 +417,6 @@ void DtcOperations::request_vehicle_info()
     if (response.length())
     {
         emit LOG_I("VIN length: " + parse_message_to_hex(response), true, true);
-        emit LOG_I("VIN length: " + QString(response), true, true);
     }
     delay(250);
     response = request_data(vehicle_info, request_VIN);
@@ -565,6 +565,8 @@ int DtcOperations::read_dtc()
 
     delay(250);
 
+    emit LOG_I("Diagnostic trouble codes succesfully read!", true, true);
+
     return STATUS_SUCCESS;
 }
 
@@ -588,18 +590,7 @@ int DtcOperations::clear_dtc()
         output.append((uint8_t)(source_id >> 8));
         output.append((uint8_t)source_id);
     }
-    else if (!serial->get_is_iso14230_connection())
-    {
-        for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
-            output.append((uint8_t)live_data_start_bytes_9141[i]);
-    }
-    else if (serial->get_is_iso14230_connection())
-    {
-        for (unsigned long i = 0; i < ARRAYSIZE(start_bytes); i++)
-            output.append((uint8_t)start_bytes[i]);
-    }
     output.append((uint8_t)clear_DTCs);
-    output.append(calculate_checksum(output, false));
     serial->write_serial_data_echo_check(output);
     while (1)
     {
@@ -634,6 +625,7 @@ int DtcOperations::clear_dtc()
         return STATUS_ERROR;
 
     emit LOG_I("Diagnostic trouble codes succesfully cleared!", true, true);
+
     return STATUS_SUCCESS;
 }
 
