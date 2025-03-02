@@ -74,9 +74,9 @@ int DtcOperations::select_operation()
 
     if (ui->protocolComboBox->currentText().startsWith("iso9141"))
     {
-        serial->set_iso9141_startbyte(0x68);
-        serial->set_iso9141_tester_id(0xF1);
-        serial->set_iso9141_target_id(0x6A);
+        serial->set_kline_startbyte(0x68);
+        serial->set_kline_tester_id(0xF1);
+        serial->set_kline_target_id(0x6A);
 
         five_baud_init();
         if (obj->objectName() == "clearDtcButton")
@@ -84,9 +84,9 @@ int DtcOperations::select_operation()
     }
     if (ui->protocolComboBox->currentText().startsWith("iso14230"))
     {
-        serial->set_iso14230_startbyte(0xC0);
-        serial->set_iso14230_tester_id(0xF1);
-        serial->set_iso14230_target_id(0x33);
+        serial->set_kline_startbyte(0xC0);
+        serial->set_kline_tester_id(0xF1);
+        serial->set_kline_target_id(0x33);
 
         fast_init();
         if (obj->objectName() == "clearDtcButton")
@@ -95,6 +95,7 @@ int DtcOperations::select_operation()
     //if (ui->protocolComboBox->currentText().startsWith("iso15765"))
     //    iso15765_init();
 
+    serial->set_add_ssm_header(false);
     serial->set_add_iso9141_header(false);
     serial->set_add_iso14230_header(false);
     serial->reset_connection();
@@ -131,6 +132,7 @@ int DtcOperations::five_baud_init()
 
     serial->reset_connection();
     serial->set_is_iso14230_connection(false);
+    serial->set_add_ssm_header(false);
     serial->set_add_iso9141_header(false);
     serial->set_add_iso14230_header(false);
     serial->set_serial_port_baudrate("10400");
@@ -189,6 +191,7 @@ int DtcOperations::fast_init()
 
     serial->reset_connection();
     serial->set_is_iso14230_connection(true);
+    serial->set_add_ssm_header(false);
     serial->set_add_iso9141_header(false);
     serial->set_add_iso14230_header(true);
     serial->set_serial_port_baudrate("10400");

@@ -47,7 +47,7 @@ public:
     bool setDataTerminalReady = true;
     bool signalToReadBattVoltage = false;
 
-    bool is_ssm_protocol = false;
+    bool add_ssm_header = false;
     bool add_iso9141_header = false;
     bool add_iso14230_header = false;
     bool is_iso14230_connection = false;
@@ -73,13 +73,9 @@ public:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
-    uint8_t iso9141_startbyte = 0;
-    uint8_t iso9141_tester_id = 0;
-    uint8_t iso9141_target_id = 0;
-
-    uint8_t iso14230_startbyte = 0;
-    uint8_t iso14230_tester_id = 0;
-    uint8_t iso14230_target_id = 0;
+    uint8_t kline_startbyte = 0;
+    uint8_t kline_tester_id = 0;
+    uint8_t kline_target_id = 0;
 
     QByteArray ssm_receive_header_start = { "\x80\xf0\x10" };
 
@@ -237,6 +233,7 @@ private:
     QMap<QString, QString> installed_drivers;
 #endif
 
+    QByteArray append_ssm_header(QByteArray output);
     QByteArray append_iso9141_header(QByteArray output);
     QByteArray append_iso14230_header(QByteArray output);
     int write_j2534_data(QByteArray output);

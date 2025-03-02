@@ -162,15 +162,15 @@ void DataTerminal::sendToInterface()
             serialOk = false;
 
         qDebug() << "Checking tester id:" << ui->klineTesterId->text();
-        serial->set_iso14230_tester_id(ui->klineTesterId->text().toUInt(&ok, 16));
+        serial->set_kline_tester_id(ui->klineTesterId->text().toUInt(&ok, 16));
 
         qDebug() << "Checking target id:" << ui->klineTargetId->text();
-        serial->set_iso14230_target_id(ui->klineTargetId->text().toUInt(&ok, 16));
+        serial->set_kline_target_id(ui->klineTargetId->text().toUInt(&ok, 16));
 
         if (serialOk)
         {
             qDebug() << "All good, setting interface...";
-            serial->set_iso14230_startbyte(0x80);
+            serial->set_kline_startbyte(0x80);
             serial->set_is_can_connection(false);
             serial->set_is_iso15765_connection(false);
             serial->set_is_29_bit_id(false);
