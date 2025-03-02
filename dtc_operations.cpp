@@ -378,20 +378,7 @@ QByteArray DtcOperations::request_dtc_list(uint8_t cmd)
     QByteArray response;
 
     output.clear();
-    /*
-    if (!serial->get_is_iso14230_connection())
-    {
-        for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
-            output.append((uint8_t)live_data_start_bytes_9141[i]);
-    }
-    else if (serial->get_is_iso14230_connection())
-    {
-        for (unsigned long i = 0; i < ARRAYSIZE(start_bytes); i++)
-            output.append((uint8_t)start_bytes[i]);
-    }
-*/
     output.append(cmd);
-    //output.append(calculate_checksum(output, false));
     serial->write_serial_data_echo_check(output);
     while (1)
     {
