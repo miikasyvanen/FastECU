@@ -1088,7 +1088,7 @@ void MainWindow::show_terminal_window()
     QStringList serial_port;
     serial_port.append(serial_ports.at(serial_port_list->currentIndex()));
     serial->set_serial_port_list(serial_port);
-    HexCommander hexCommander(serial, this);
+    DataTerminal hexCommander(serial, this);
     hexCommander.exec();
 }
 

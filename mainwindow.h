@@ -41,7 +41,7 @@
 #include <vehicle_select.h>
 #include <definition_file_convert.h>
 #include <modules/biu/biu_operations_subaru.h>
-#include <hexcommander.h>
+#include <dataterminal.h>
 #include <get_key_operations_subaru.h>
 #include <file_actions.h>
 #include <logbox.h>

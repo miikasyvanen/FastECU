@@ -88,7 +88,7 @@ private:
     //-------------------------------------------------------------------------------------//
     const uint8_t live_data = 0x01;                                     // Show current data
     const uint8_t freeze_frame = 0x02;                                  // Show freeze frame data
-    const uint8_t read_DTCs = 0x03;                                     // Show stored Diagnostic Trouble Codes
+    const uint8_t read_stored_DTCs = 0x03;                                     // Show stored Diagnostic Trouble Codes
     const uint8_t clear_DTCs = 0x04;                                    // Clear Diagnostic Trouble Codes and stored values
     const uint8_t test_result_kline = 0x05;                             // Test results, oxygen sensor monitoring (non CAN only)
     const uint8_t test_result_can = 0x06;                               // Test results, other component/system monitoring (Test results, oxygen sensor monitoring for CAN only)
@@ -228,7 +228,8 @@ private:
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
     void request_vehicle_info();
-    QByteArray request_dtc_list();
+    QByteArray request_stored_dtc_list();
+    QByteArray request_pending_dtc_list();
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);

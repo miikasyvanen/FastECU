@@ -1,6 +1,6 @@
-#include "hexcommander.h"
+#include "dataterminal.h"
 
-HexCommander::HexCommander(SerialPortActions *serial, QWidget *parent)
+DataTerminal::DataTerminal(SerialPortActions *serial, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::DataTerminal)
 {
@@ -52,12 +52,12 @@ HexCommander::HexCommander(SerialPortActions *serial, QWidget *parent)
     this->show();
 }
 
-HexCommander::~HexCommander()
+DataTerminal::~DataTerminal()
 {
     delete ui;
 }
 
-void HexCommander::protocolTypeChanged(int)
+void DataTerminal::protocolTypeChanged(int)
 {
     qDebug() << "Change protocol type";
     QObject *obj = sender();
@@ -74,7 +74,7 @@ void HexCommander::protocolTypeChanged(int)
     }
 }
 
-void HexCommander::listenInterface()
+void DataTerminal::listenInterface()
 {
     QObject *obj = sender();
     QString interfaceTypeName = obj->objectName();
@@ -92,7 +92,7 @@ void HexCommander::listenInterface()
             qDebug() << "Stop listening CANbus interface";
 }
 
-void HexCommander::sendToInterface()
+void DataTerminal::sendToInterface()
 {
     bool serialOk = true;
     bool ok = false;
@@ -307,7 +307,7 @@ void HexCommander::sendToInterface()
  *
  * @return parsed message
  */
-QByteArray HexCommander::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
+QByteArray DataTerminal::add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100)
 {
     uint8_t length = output.length();
 
@@ -328,7 +328,7 @@ QByteArray HexCommander::add_ssm_header(QByteArray output, uint8_t tester_id, ui
  *
  * @return 8-bit checksum
  */
-uint8_t HexCommander::calculate_checksum(QByteArray output, bool dec_0x100)
+uint8_t DataTerminal::calculate_checksum(QByteArray output, bool dec_0x100)
 {
     uint8_t checksum = 0;
 
@@ -346,7 +346,7 @@ uint8_t HexCommander::calculate_checksum(QByteArray output, bool dec_0x100)
  *
  * @return parsed message
  */
-QString HexCommander::parse_message_to_hex(QByteArray received)
+QString DataTerminal::parse_message_to_hex(QByteArray received)
 {
     QString msg;
 
@@ -358,7 +358,7 @@ QString HexCommander::parse_message_to_hex(QByteArray received)
     return msg;
 }
 
-void HexCommander::delay(int timeout)
+void DataTerminal::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);
     while (QTime::currentTime() < dieTime)
