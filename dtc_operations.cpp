@@ -351,7 +351,7 @@ void DtcOperations::request_vehicle_info()
 
 }
 
-QByteArray DtcOperations::request_stored_dtc_list()
+QByteArray DtcOperations::request_dtc_list(uint8_t cmd)
 {
     QByteArray output;
     QByteArray received;
@@ -368,7 +368,7 @@ QByteArray DtcOperations::request_stored_dtc_list()
         for (unsigned long i = 0; i < ARRAYSIZE(start_bytes); i++)
             output.append((uint8_t)start_bytes[i]);
     }
-    output.append((uint8_t)read_stored_DTCs);
+    output.append(cmd);
     output.append(calculate_checksum(output, false));
     serial->write_serial_data_echo_check(output);
     while (1)
@@ -387,7 +387,7 @@ QByteArray DtcOperations::request_stored_dtc_list()
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
                 break;
             }
-            else if (received.at(3) != (read_stored_DTCs | 0x40))
+            else if (received.at(3) != (cmd | 0x40))
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
                 break;
@@ -403,58 +403,6 @@ QByteArray DtcOperations::request_stored_dtc_list()
 
     return response;
 
-}
-
-QByteArray DtcOperations::request_pending_dtc_list()
-{
-    QByteArray output;
-    QByteArray received;
-    QByteArray response;
-
-    output.clear();
-    if (!serial->get_is_iso14230_connection())
-    {
-        for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
-            output.append((uint8_t)live_data_start_bytes_9141[i]);
-    }
-    else if (serial->get_is_iso14230_connection())
-    {
-        for (unsigned long i = 0; i < ARRAYSIZE(start_bytes); i++)
-            output.append((uint8_t)start_bytes[i]);
-    }
-    output.append((uint8_t)read_pending_DTCs);
-    output.append(calculate_checksum(output, false));
-    serial->write_serial_data_echo_check(output);
-    while (1)
-    {
-        if (serial->get_use_openport2_adapter())
-            received = serial->read_serial_data(serial_read_short_timeout);
-        else
-            received = serial->read_serial_obd_data(serial_read_short_timeout);
-
-        if (!received.length())
-            break;
-        if (received.length() > 3)
-        {
-            if (received.at(3) == 0x7f)
-            {
-                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
-                break;
-            }
-            else if (received.at(3) != (read_stored_DTCs | 0x40))
-            {
-                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
-                break;
-            }
-        }
-        received.remove(received.length()-1, 1);
-        if (received.length() < 7)
-            received.remove(0, received.length()-1);
-        else
-            received.remove(0, 4);
-        response.append(received);
-    }
-    return response;
 }
 
 int DtcOperations::read_dtc()
@@ -463,7 +411,7 @@ int DtcOperations::read_dtc()
     QStringList dtc_list;
     bool ok = false;
 
-    response = request_stored_dtc_list();
+    response = request_dtc_list(read_stored_DTCs);
     if (!response.length())
         return STATUS_ERROR;
 
@@ -484,12 +432,13 @@ int DtcOperations::read_dtc()
 
     delay(250);
 
-    response = request_pending_dtc_list();
+    response = request_dtc_list(read_pending_DTCs);
     if (!response.length())
         return STATUS_ERROR;
 
     emit LOG_I("Pending DTCs: " + parse_message_to_hex(response), true, true);
 
+    dtc_list.clear();
     for (int i = 0; i < response.length(); i+=2)
     {
         uint16_t dtc = ((uint8_t)response.at(i) << 8) + (uint8_t)response.at(i+1);

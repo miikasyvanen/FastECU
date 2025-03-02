@@ -228,8 +228,7 @@ private:
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
     void request_vehicle_info();
-    QByteArray request_stored_dtc_list();
-    QByteArray request_pending_dtc_list();
+    QByteArray request_dtc_list(uint8_t cmd);
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);
