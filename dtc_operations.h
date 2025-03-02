@@ -54,12 +54,15 @@ private:
     bool kill_process = false;
     bool five_baud_init_ok = false;
     bool fast_init_ok = false;
+    bool can_init_ok = false;
 
     int result;
 
     uint8_t startbyte = 0;
     uint8_t tester_id = 0;
     uint8_t target_id = 0;
+    uint16_t source_id = 0;
+    uint16_t destination_id = 0;
 
     uint16_t receive_timeout = 500;
     uint16_t serial_read_timeout = 2000;
@@ -107,8 +110,8 @@ private:
     const uint8_t request_VIN = 0x02;                                   // Read VIN
     const uint8_t request_CAL_ID_length = 0x03;                         // Read Calibration ID msg length
     const uint8_t request_CAL_ID = 0x04;                                // Read Calibration ID
-    const uint8_t request_CAL_ID_num_length = 0x05;                     // Read Calibration ID number msg length
-    const uint8_t request_CAL_ID_num = 0x06;                            // Read Calibration ID number
+    const uint8_t request_CVN_length = 0x05;                     // Read Calibration ID number msg length
+    const uint8_t request_CVN = 0x06;                            // Read Calibration ID number
 
     // SID 0x01 - Live data
     const uint8_t SUPPORTED_PIDS_1_20              = 0x00;  // bit encoded
@@ -226,6 +229,7 @@ private:
     int init_obd();
     int five_baud_init();
     int fast_init();
+    int iso15765_init();
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
     void request_vehicle_info();

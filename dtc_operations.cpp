@@ -7,11 +7,11 @@ DtcOperations::DtcOperations(SerialPortActions *serial, QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->protocolComboBox->addItem("SSM (K-line)");
+    ui->protocolComboBox->addItem("SSM (K-Line)");
     ui->protocolComboBox->addItem("SSM (CAN)");
-    ui->protocolComboBox->addItem("iso9141 (K-line)");
-    ui->protocolComboBox->addItem("iso14230 (K-line)");
-    ui->protocolComboBox->addItem("iso15765 (CAN-TP)");
+    ui->protocolComboBox->addItem("iso9141");
+    ui->protocolComboBox->addItem("iso14230");
+    ui->protocolComboBox->addItem("iso15765");
     ui->protocolComboBox->setCurrentIndex(2);
 
     auto * model = qobject_cast<QStandardItemModel*>(ui->protocolComboBox->model());
@@ -24,7 +24,7 @@ DtcOperations::DtcOperations(SerialPortActions *serial, QWidget *parent)
         assert(item);
         if(!item)
             return;
-        if (item->text().startsWith("SSM ") || item->text().startsWith("iso15765"))
+        if (item->text().startsWith("SSM "))
             item->setEnabled(false);
     }
 
@@ -72,7 +72,11 @@ int DtcOperations::select_operation()
 {
     QObject *obj = QObject::sender();
 
-    if (ui->protocolComboBox->currentText().startsWith("iso9141"))
+    if (ui->protocolComboBox->currentText().startsWith("SSM"))
+    {
+
+    }
+    else if (ui->protocolComboBox->currentText().startsWith("iso9141"))
     {
         serial->set_kline_startbyte(0x68);
         serial->set_kline_tester_id(0xF1);
@@ -82,7 +86,7 @@ int DtcOperations::select_operation()
         if (obj->objectName() == "clearDtcButton")
             clear_dtc();
     }
-    if (ui->protocolComboBox->currentText().startsWith("iso14230"))
+    else if (ui->protocolComboBox->currentText().startsWith("iso14230"))
     {
         serial->set_kline_startbyte(0xC0);
         serial->set_kline_tester_id(0xF1);
@@ -92,8 +96,16 @@ int DtcOperations::select_operation()
         if (obj->objectName() == "clearDtcButton")
             clear_dtc();
     }
-    //if (ui->protocolComboBox->currentText().startsWith("iso15765"))
-    //    iso15765_init();
+    else if (ui->protocolComboBox->currentText().startsWith("iso15765"))
+    {
+        source_id = 0x7e0;
+        destination_id = 0x7e8;
+        serial->set_iso15765_source_address(source_id);
+        serial->set_iso15765_destination_address(destination_id);
+        iso15765_init();
+        if (obj->objectName() == "clearDtcButton")
+            clear_dtc();
+    }
 
     serial->set_add_ssm_header(false);
     serial->set_add_iso9141_header(false);
@@ -138,7 +150,7 @@ int DtcOperations::five_baud_init()
     serial->set_serial_port_baudrate("10400");
     serial->open_serial_port();
 
-    emit LOG_I("Initializing iso9141 K-Line communications, please wait...", true, true);
+    emit LOG_I("Initialising iso9141 K-Line communications, please wait...", true, true);
 
     output.clear();
     output.append((uint8_t)five_baud_init_OBD);
@@ -197,7 +209,7 @@ int DtcOperations::fast_init()
     serial->set_serial_port_baudrate("10400");
     serial->open_serial_port();
 
-    emit LOG_I("Initializing iso14230 K-Line communications, please wait...", true, true);
+    emit LOG_I("Initialising iso14230 K-Line communications, please wait...", true, true);
 
     output.clear();
     output.append((uint8_t)fast_init_OBD);
@@ -233,28 +245,91 @@ int DtcOperations::fast_init()
     return STATUS_SUCCESS;
 }
 
+int DtcOperations::iso15765_init()
+{
+    QByteArray output;
+    QByteArray received;
+    QByteArray response;
+    int result = STATUS_SUCCESS;
+
+    serial->reset_connection();
+    serial->set_is_iso14230_connection(false);
+    serial->set_add_ssm_header(false);
+    serial->set_add_iso9141_header(false);
+    serial->set_add_iso14230_header(false);
+    serial->set_is_can_connection(false);
+    serial->set_is_iso15765_connection(true);
+    serial->set_is_29_bit_id(false);
+    serial->set_can_speed("500000");
+    serial->open_serial_port();
+
+    emit LOG_I("Initialising iso15765 CAN communications, please wait...", true, true);
+
+    output.clear();
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)(serial->get_iso15765_source_address() >> 8) & 0xff);
+    output.append((uint8_t)serial->get_iso15765_source_address() & 0xff);
+    output.append((uint8_t)0x01);
+    output.append((uint8_t)0x00);
+    serial->write_serial_data_echo_check(output);
+    received = serial->read_serial_data(serial_read_timeout);
+    if (received.length() > 4)
+    {
+        if (received.at(4) == 0x7f)
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
+            return STATUS_ERROR;
+        }
+        else if (received.at(4) != 0x41)
+        {
+            emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    else
+        return STATUS_ERROR;
+
+    can_init_ok = true;
+
+    if (can_init_ok)
+    {
+        emit LOG_I("iso15765 init mode succesfully completed.", true, true);
+
+        request_vehicle_info();
+
+        result = read_dtc();
+        if (result)
+            return STATUS_ERROR;
+    }
+    else
+    {
+        emit LOG_E("iso15765 init mode failed.", true, true);
+        return STATUS_ERROR;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
 {
     QByteArray output;
     QByteArray received;
     QByteArray response;
 
+    uint8_t cmd_index = 3;
+
     output.clear();
-/*
-    if (!serial->get_is_iso14230_connection())
+    if (ui->protocolComboBox->currentText().startsWith("iso15765"))
     {
-        for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
-            output.append((uint8_t)live_data_start_bytes_9141[i]);
+        cmd_index = 4;
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)(source_id >> 8));
+        output.append((uint8_t)source_id);
     }
-    else if (serial->get_is_iso14230_connection())
-    {
-        for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes); i++)
-            output.append((uint8_t)live_data_start_bytes[i]);
-    }
-*/
     output.append((uint8_t)cmd);
     output.append((uint8_t)sub_cmd);
-    //output.append(calculate_checksum(output, false));
     serial->write_serial_data_echo_check(output);
     while (1)
     {
@@ -265,27 +340,35 @@ QByteArray DtcOperations::request_data(const uint8_t cmd, const uint8_t sub_cmd)
 
         if (!received.length())
             break;
-        else if (received.length() > 3)
+        else if (received.length() > cmd_index)
         {
-            if (received.at(3) == 0x7f)
+            if (received.at(cmd_index) == 0x7f)
             {
-                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(cmd_index, received.length()-1)), true, true);
                 break;
             }
-            else if (received.at(3) != (cmd | 0x40) || received.at(4) != sub_cmd)
+            else if (received.at(cmd_index) != (cmd | 0x40) || received.at(cmd_index+1) != sub_cmd)
             {
                 emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                 break;
             }
         }
-        received.remove(received.length()-1, 1);
-        if (received.length() < 7)
-            received.remove(0, received.length()-1);
-        else if (received.length() < 10)
-            received.remove(0, 5);
+        if (ui->protocolComboBox->currentText().startsWith("iso15765"))
+        {
+            received.remove(0, cmd_index+3);
+            response.append(received);
+        }
         else
-            received.remove(0, 6);
-        response.append(received);
+        {
+            received.remove(received.length()-1, 1);
+            if (received.length() < 7)
+                received.remove(0, received.length()-1);
+            else if (received.length() < 10)
+                received.remove(0, 5);
+            else
+                received.remove(0, 6);
+            response.append(received);
+        }
     }
 
     return response;
@@ -356,13 +439,13 @@ void DtcOperations::request_vehicle_info()
         emit LOG_I("CAL ID: " + QString(response), true, true);
     }
     delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_num_length);
+    response = request_data(vehicle_info, request_CVN_length);
     if (response.length())
     {
         emit LOG_I("CAL ID num length: " + parse_message_to_hex(response), true, true);
     }
     delay(250);
-    response = request_data(vehicle_info, request_CAL_ID_num);
+    response = request_data(vehicle_info, request_CVN);
     if (response.length())
     {
         emit LOG_I("CAL ID num: " + parse_message_to_hex(response), true, true);
@@ -376,8 +459,17 @@ QByteArray DtcOperations::request_dtc_list(uint8_t cmd)
     QByteArray output;
     QByteArray received;
     QByteArray response;
+    uint8_t cmd_index = 3;
 
     output.clear();
+    if (ui->protocolComboBox->currentText().startsWith("iso15765"))
+    {
+        cmd_index = 4;
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)(source_id >> 8));
+        output.append((uint8_t)source_id);
+    }
     output.append(cmd);
     serial->write_serial_data_echo_check(output);
     while (1)
@@ -389,25 +481,33 @@ QByteArray DtcOperations::request_dtc_list(uint8_t cmd)
 
         if (!received.length())
             break;
-        if (received.length() > 3)
+        if (received.length() > cmd_index)
         {
-            if (received.at(3) == 0x7f)
+            if (received.at(cmd_index) == 0x7f)
             {
-                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(cmd_index, received.length()-1)), true, true);
                 break;
             }
-            else if (received.at(3) != (cmd | 0x40))
+            else if (received.at(cmd_index) != (cmd | 0x40))
             {
                 emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                 break;
             }
         }
-        received.remove(received.length()-1, 1);
-        if (received.length() < 7)
-            received.remove(0, received.length()-1);
+        if (ui->protocolComboBox->currentText().startsWith("iso15765"))
+        {
+            received.remove(0, cmd_index+2);
+            response.append(received);
+        }
         else
-            received.remove(0, 4);
-        response.append(received);
+        {
+            received.remove(received.length()-1, 1);
+            if (received.length() < 7)
+                received.remove(0, received.length()-1);
+            else
+                received.remove(0, 4);
+            response.append(received);
+        }
     }
 
     return response;
@@ -459,7 +559,9 @@ int DtcOperations::read_dtc()
     }
     sort(dtc_list.begin(), dtc_list.end(), less<QString>());
     for (int i = 0; i < dtc_list.length(); i++)
-        emit LOG_I("DTC: " + FileActions::parse_dtc_message(dtc_list.at(i).toUInt(&ok, 16)), true, true);
+    {
+            emit LOG_I("DTC: " + FileActions::parse_dtc_message(dtc_list.at(i).toUInt(&ok, 16)), true, true);
+    }
 
     delay(250);
 
@@ -470,6 +572,7 @@ int DtcOperations::clear_dtc()
 {
     QByteArray output;
     QByteArray received;
+    uint8_t cmd_index = 3;
     bool clear_dtc_ok = false;
 
     result = read_dtc();
@@ -477,7 +580,15 @@ int DtcOperations::clear_dtc()
         return STATUS_ERROR;
 
     output.clear();
-    if (!serial->get_is_iso14230_connection())
+    if (ui->protocolComboBox->currentText().startsWith("iso15765"))
+    {
+        cmd_index = 4;
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)0x00);
+        output.append((uint8_t)(source_id >> 8));
+        output.append((uint8_t)source_id);
+    }
+    else if (!serial->get_is_iso14230_connection())
     {
         for (unsigned long i = 0; i < ARRAYSIZE(live_data_start_bytes_9141); i++)
             output.append((uint8_t)live_data_start_bytes_9141[i]);
@@ -499,14 +610,14 @@ int DtcOperations::clear_dtc()
 
         if (!received.length())
             break;
-        if (received.length() > 3)
+        if (received.length() > cmd_index)
         {
-            if (received.at(3) == 0x7f)
+            if (received.at(cmd_index) == 0x7f)
             {
-                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(3, received.length()-1)), true, true);
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(cmd_index, received.length()-1)), true, true);
                 break;
             }
-            else if (received.at(3) != (clear_DTCs | 0x40))
+            else if (received.at(cmd_index) != (clear_DTCs | 0x40))
             {
                 emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
                 break;
@@ -522,7 +633,7 @@ int DtcOperations::clear_dtc()
     if (!clear_dtc_ok)
         return STATUS_ERROR;
 
-    LOG_I("Diagnostic trouble codes succesfully cleared!", true, true);
+    emit LOG_I("Diagnostic trouble codes succesfully cleared!", true, true);
     return STATUS_SUCCESS;
 }
 
