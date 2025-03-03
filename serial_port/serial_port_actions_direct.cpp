@@ -741,7 +741,7 @@ QByteArray SerialPortActionsDirect::read_serial_data(uint16_t timeout)
                 {
                     //emit LOG_D("Check for valid header", true, true);
                     error_bytes.clear();
-                    while (received.length() > 2 && ((uint8_t)received.at(0) != 0x80 || (uint8_t)received.at(1) != 0xf0 || (uint8_t)received.at(2) != 0x10))
+                    while (received.length() > 2 && !received.startsWith("\xbe\xef") && !received.startsWith("\x80\xf0\x10") && !received.startsWith("\x80\xf0\x01"))
                     {
                         error_bytes.append(received.mid(0, 1));
                         received.remove(0, 1);
