@@ -272,8 +272,8 @@ int DtcOperations::iso15765_init()
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
-    output.append((uint8_t)(serial->get_iso15765_source_address() >> 8) & 0xff);
-    output.append((uint8_t)serial->get_iso15765_source_address() & 0xff);
+    output.append((uint8_t)(source_id >> 8) & 0xff);
+    output.append((uint8_t)source_id & 0xff);
     output.append((uint8_t)0x01);
     output.append((uint8_t)0x00);
     serial->write_serial_data_echo_check(output);
