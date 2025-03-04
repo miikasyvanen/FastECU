@@ -52,7 +52,8 @@ private:
 
 
     bool kill_process = false;
-    bool five_baud_init_ok = false;
+    bool five_baud_init_iso9141_ok = false;
+    bool five_baud_init_iso14230_ok = false;
     bool fast_init_ok = false;
     bool can_init_ok = false;
 
@@ -226,8 +227,7 @@ private:
 
     void closeEvent(QCloseEvent *event);
     int select_operation();
-    int init_obd();
-    int five_baud_init();
+    int five_baud_init(QString protocol);
     int fast_init();
     int iso15765_init();
 

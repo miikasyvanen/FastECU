@@ -42,6 +42,7 @@ DtcOperations::~DtcOperations()
 
 void DtcOperations::closeEvent(QCloseEvent *event)
 {
+    serial->reset_connection();
     kill_process = true;
 }
 
@@ -83,7 +84,7 @@ int DtcOperations::select_operation()
         serial->set_kline_tester_id(0xF1);
         serial->set_kline_target_id(0x6A);
 
-        result = five_baud_init();
+        result = five_baud_init("iso9141");
     }
     else if (ui->protocolComboBox->currentText().startsWith("iso14230"))
     {
@@ -92,6 +93,8 @@ int DtcOperations::select_operation()
         serial->set_kline_target_id(0x33);
 
         result = fast_init();
+        if (result)
+            result = five_baud_init("iso14230");
     }
     else if (ui->protocolComboBox->currentText().startsWith("iso15765"))
     {
@@ -120,37 +123,20 @@ int DtcOperations::select_operation()
     serial->reset_connection();
 
     if (result)
-        return STATUS_ERROR;
+        return result;
 
     return STATUS_SUCCESS;
 }
 
-int DtcOperations::init_obd()
-{
-    int result = STATUS_SUCCESS;
-
-    if (!serial->is_serial_port_open())
-    {
-        emit LOG_E("ERROR: Serial port is not open.", true, true);
-        return STATUS_ERROR;
-    }
-
-    result = five_baud_init();
-    delay(1000);
-    if (result)
-        result = fast_init();
-    if (result)
-        return STATUS_ERROR;
-
-    return STATUS_SUCCESS;
-}
-
-int DtcOperations::five_baud_init()
+int DtcOperations::five_baud_init(QString protocol)
 {
     QByteArray output;
     QByteArray received;
     QByteArray response;
     int result = STATUS_SUCCESS;
+
+    five_baud_init_iso9141_ok = false;
+    five_baud_init_iso14230_ok = false;
 
     serial->reset_connection();
     serial->set_is_iso14230_connection(false);
@@ -160,41 +146,52 @@ int DtcOperations::five_baud_init()
     serial->set_serial_port_baudrate("10400");
     serial->open_serial_port();
 
-    emit LOG_I("Initialising iso9141 K-Line communications, please wait...", true, true);
-
-    output.clear();
-    output.append((uint8_t)five_baud_init_OBD);
+    emit LOG_I("Testing " + protocol + " five baud init, please wait...", true, true);
 
     if (serial->get_use_openport2_adapter())
         serial->set_j2534_ioctl(P1_MAX, 35);
     else
         serial->set_kline_timings(SERIAL_P1_MAX, 35);
 
+    output.clear();
+    output.append((uint8_t)five_baud_init_OBD);
     received = serial->five_baud_init(output);
-    emit LOG_I("Five baud init response: " + parse_message_to_hex(received), true, true);
+    emit LOG_I("Init response: " + parse_message_to_hex(received), true, true);
 
     if (serial->get_use_openport2_adapter())
     {
-        if ((uint8_t)received.at(5) == '8' && (uint8_t)received.at(7) == '8')
-            five_baud_init_ok = true;
+        if ((uint8_t)received.at(5) == '8' && (uint8_t)received.at(7) == '8' && protocol == "iso9141")
+            five_baud_init_iso9141_ok = true;
+        if ((uint8_t)received.at(8) == '8' && (uint8_t)received.at(9) == 'f' && protocol == "iso14230")
+            five_baud_init_iso14230_ok = true;
     }
     else
     {
         if ((uint8_t)received.at(1) == 0x08 && (uint8_t)received.at(2) == 0x08)
-                five_baud_init_ok = true;
+            five_baud_init_iso9141_ok = true;
+        if ((uint8_t)received.at(2) == 0x8f)
+            five_baud_init_iso14230_ok = true;
         serial->set_kline_timings(SERIAL_P1_MAX, 25);
     }
-    if (five_baud_init_ok)
+    if (five_baud_init_iso9141_ok)
     {
         serial->set_add_iso9141_header(true);
-        emit LOG_I("iso9141 five baud init mode succesfully completed.", true, true);
+        emit LOG_I(protocol + " five baud init succesfully completed.", true, true);
+
+        request_vehicle_info();
+
+    }
+    else if (five_baud_init_iso14230_ok)
+    {
+        serial->set_add_iso14230_header(true);
+        emit LOG_I(protocol + " five baud init succesfully completed.", true, true);
 
         request_vehicle_info();
 
     }
     else
     {
-        emit LOG_E("iso9141 five baud init mode failed.", true, true);
+        emit LOG_E(protocol + " five baud init failed.", true, true);
         return STATUS_ERROR;
     }
 
@@ -216,7 +213,7 @@ int DtcOperations::fast_init()
     serial->set_serial_port_baudrate("10400");
     serial->open_serial_port();
 
-    emit LOG_I("Initialising iso14230 K-Line communications, please wait...", true, true);
+    emit LOG_I("Initialising iso14230 fast init K-Line communications, please wait...", true, true);
 
     output.clear();
     output.append((uint8_t)fast_init_OBD);
