@@ -353,7 +353,6 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
     QByteArray msg;
     QByteArray pl_encr;
     uint32_t pl_len = 0;
-    uint32_t len = 0;
     QByteArray cks_bypass;
 
     QString mcu_name;
@@ -366,7 +365,9 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
         return STATUS_ERROR;
     }
 
-    //serial->set_add_iso14230_header(false);
+    // Change port speed to upload kernel
+    if (serial->change_port_speed("15625"))
+        return STATUS_ERROR;
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -376,33 +377,28 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
     }
 
     pl_encr = file.readAll();
-/*
+
     pl_encr.append((uint8_t)0x00);
     pl_encr.append((uint8_t)0x00);
-    pl_encr.append((uint8_t)0x00);
-    pl_encr.append((uint8_t)0x00);
-*/
+
     pl_len = pl_encr.length();
     pl_len = (pl_len + 3) & ~3;
-    len = pl_len;
-/*
-    uint16_t balance_value = 0;
-    for (uint32_t i = 0; i < pl_len; i++)
-        chksum += (uint8_t)pl_encr.at(i);
-
-    balance_value = 0x5aa5 - chksum;
-    emit LOG_D("Checksum: " + QString::number(chksum, 16), true, true);
-    emit LOG_D("Balance value: " + QString::number(balance_value, 16), true, true);
+    while((uint32_t)pl_encr.length() < pl_len)
+        pl_encr.append((uint8_t)0x00);
     pl_encr.remove(pl_encr.length()-2, 2);
-    pl_encr.append((balance_value >> 8) & 0xff);
-    pl_encr.append(balance_value & 0xff);
-*/
-    // Change port speed to upload kernel
-    if (serial->change_port_speed("15625"))
-        return STATUS_ERROR;
+
+    uint16_t chk_sum = 0;
+    for (int i = 0; i < pl_encr.length(); i+=4)
+        chk_sum += (((uint8_t)pl_encr.at(i) << 24) & 0xFF000000) | (((uint8_t)pl_encr.at(i + 1) << 16) & 0xFF0000) | (((uint8_t)pl_encr.at(i + 2) << 8) & 0xFF00) | (((uint8_t)pl_encr.at(i + 3)) & 0xFF);
+
+    chk_sum = 0x5aa5 - chk_sum;
+    pl_encr.append((uint8_t)((chk_sum >> 8) & 0xff));
+    pl_encr.append((uint8_t)(chk_sum & 0xff));
+    pl_encr = encrypt_payload(pl_encr, pl_encr.length());
 
     emit LOG_I("Requesting kernel upload", true, true);
-    received = send_sid_34_request_upload(addr, len);
+    received = send_sid_34_request_upload(addr, pl_encr.length());
+
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x74)
@@ -420,12 +416,8 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
     }
     emit LOG_I("Kernel upload request ok", true, true);
     
-
-    //pl_encr = sub_encrypt_buf(pl_encr, (uint32_t) pl_len);
-    pl_encr = encrypt_payload(pl_encr, pl_len);
-
     emit LOG_I("Transfer kernel data", true, true);
-    received = send_sid_36_transferdata(addr, pl_encr, len);
+    received = send_sid_36_transferdata(addr, pl_encr, pl_encr.length());
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x76)
@@ -441,52 +433,6 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
         
         return STATUS_ERROR;
     }
-    emit LOG_I("Kernel uploaded", true, true);
-
-    emit LOG_D("Kernel checksum bypass", true, true);
-    received = send_sid_34_request_upload(addr+len, 4);
-    if (received.length() > 4)
-    {
-        if ((uint8_t)received.at(4) != 0x74)
-        {
-            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
-            return STATUS_ERROR;
-        }
-    }
-    else
-    {
-        emit LOG_E("No valid response from ECU", true, true);
-        
-        return STATUS_ERROR;
-    }
-    
-
-    cks_bypass.append((uint8_t)0x00);
-    cks_bypass.append((uint8_t)0x00);
-    cks_bypass.append((uint8_t)0x5A);
-    cks_bypass.append((uint8_t)0xA5);
-
-    cks_bypass = encrypt_payload(cks_bypass, 4);
-
-    received = send_sid_36_transferdata(addr+len, cks_bypass, 4);
-    if (received.length() > 4)
-    {
-        if ((uint8_t)received.at(4) != 0x76)
-        {
-            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
-            return STATUS_ERROR;
-        }
-    }
-    else
-    {
-        emit LOG_E("No valid response from ECU", true, true);
-        
-        return STATUS_ERROR;
-    }
-    emit LOG_D("Checksum bypass ok", true, true);
-
     emit LOG_I("Kernel uploaded", true, true);
 
     emit LOG_I("Jump to kernel", true, true);
