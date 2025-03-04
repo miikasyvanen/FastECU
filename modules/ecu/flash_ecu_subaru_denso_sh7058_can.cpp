@@ -274,32 +274,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
 
     emit LOG_I("Initialising connection...", true, true);
 
-    output.clear();
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x07);
-    output.append((uint8_t)0xE0);
-    output.append((uint8_t)0x01);
-    output.append((uint8_t)0x00);
-
-    serial->write_serial_data_echo_check(output);
-    
-    delay(50);
-    received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
-    {
-        if ((uint8_t)received.at(4) != 0x41 || (uint8_t)received.at(5) != 0x00)
-        {
-            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
-        }
-    }
-    else
-    {
-        emit LOG_E("No valid response from ECU", true, true);
-        
-    }
-
     emit LOG_I("Requesting ECU ID", true, true);
     output.clear();
     output.append((uint8_t)0x00);

@@ -3,7 +3,7 @@
 
 Settings::Settings(FileActions::ConfigValuesStructure *configValues, QWidget *parent)
     : QWidget(parent),
-      ui(new Ui::Settings)
+    ui(new Ui::Settings)
 {
     ui->setupUi(this);
 
@@ -60,7 +60,7 @@ int Settings::save_config_file()
 QVBoxLayout *Settings::create_files_config_page(FileActions::ConfigValuesStructure *configValues)
 {
     QGroupBox *romraider_definitions_group = new QGroupBox(tr("RomRaider Definition Files"));
-/*
+    /*
     qDebug() << "Calibration path:" << configValues->calibration_files_directory;
     qDebug() << "Romraider definition files:" << configValues->romraider_definition_files;
     qDebug() << "EcuFlash definition path:" << configValues->ecuflash_definition_files_directory;
@@ -273,9 +273,9 @@ void Settings::set_ecuflash_def_dir()
 {
 
     QString ecuflash_definition_dir = QFileDialog::getExistingDirectory(this, tr("Select EcuFlash definition directory"),
-                                                 configValues->ecuflash_definition_files_directory,
-                                                 QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks);
+                                                                        configValues->ecuflash_definition_files_directory,
+                                                                        QFileDialog::ShowDirsOnly
+                                                                            | QFileDialog::DontResolveSymlinks);
 
     qDebug() << "Selected path:" << ecuflash_definition_dir;
     if (!ecuflash_definition_dir.endsWith("/") && !ecuflash_definition_dir.endsWith("\\"))
@@ -317,9 +317,9 @@ void Settings::set_ecu_cal_dir()
 {
 
     QString calibration_dir = QFileDialog::getExistingDirectory(this, tr("Select calibrations directory"),
-                                                 configValues->calibration_files_directory,
-                                                 QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks);
+                                                                configValues->calibration_files_directory,
+                                                                QFileDialog::ShowDirsOnly
+                                                                    | QFileDialog::DontResolveSymlinks);
 
     qDebug() << "Selected path:" << calibration_dir;
     if (!calibration_dir.endsWith("/") && !calibration_dir.endsWith("\\"))
@@ -337,9 +337,9 @@ void Settings::set_log_files_dir()
 {
 
     QString logfiles_dir = QFileDialog::getExistingDirectory(this, tr("Select logfiles directory"),
-                                                 configValues->datalog_files_directory,
-                                                 QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks);
+                                                             configValues->datalog_files_directory,
+                                                             QFileDialog::ShowDirsOnly
+                                                                 | QFileDialog::DontResolveSymlinks);
 
 
     qDebug() << "Selected path:" << logfiles_dir;

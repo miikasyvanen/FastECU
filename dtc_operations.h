@@ -54,11 +54,15 @@ private:
     bool kill_process = false;
     bool five_baud_init_ok = false;
     bool fast_init_ok = false;
+    bool can_init_ok = false;
 
     int result;
 
-    uint8_t tester_id;
-    uint8_t target_id;
+    uint8_t startbyte = 0;
+    uint8_t tester_id = 0;
+    uint8_t target_id = 0;
+    uint16_t source_id = 0;
+    uint16_t destination_id = 0;
 
     uint16_t receive_timeout = 500;
     uint16_t serial_read_timeout = 2000;
@@ -74,8 +78,8 @@ private:
         int _P1_MAX;
     };
 
-    const uint8_t init_OBD = 0x81;                                      // Init ISO14230 fast init
-    const uint8_t init_OBD_9141 = 0x33;                                 // Init ISO9141 five baud init
+    const uint8_t fast_init_OBD = 0x81;                                      // Init ISO14230 fast init
+    const uint8_t five_baud_init_OBD = 0x33;                                 // Init ISO9141 five baud init
 
     const uint8_t start_bytes[3] = { 0xC1, 0x33, 0xF1 };
     const uint8_t start_bytes_9141[3] = { 0x68, 0x6A, 0xF1 };
@@ -88,7 +92,7 @@ private:
     //-------------------------------------------------------------------------------------//
     const uint8_t live_data = 0x01;                                     // Show current data
     const uint8_t freeze_frame = 0x02;                                  // Show freeze frame data
-    const uint8_t read_DTCs = 0x03;                                     // Show stored Diagnostic Trouble Codes
+    const uint8_t read_stored_DTCs = 0x03;                                     // Show stored Diagnostic Trouble Codes
     const uint8_t clear_DTCs = 0x04;                                    // Clear Diagnostic Trouble Codes and stored values
     const uint8_t test_result_kline = 0x05;                             // Test results, oxygen sensor monitoring (non CAN only)
     const uint8_t test_result_can = 0x06;                               // Test results, other component/system monitoring (Test results, oxygen sensor monitoring for CAN only)
@@ -106,8 +110,8 @@ private:
     const uint8_t request_VIN = 0x02;                                   // Read VIN
     const uint8_t request_CAL_ID_length = 0x03;                         // Read Calibration ID msg length
     const uint8_t request_CAL_ID = 0x04;                                // Read Calibration ID
-    const uint8_t request_CAL_ID_num_length = 0x05;                     // Read Calibration ID number msg length
-    const uint8_t request_CAL_ID_num = 0x06;                            // Read Calibration ID number
+    const uint8_t request_CVN_length = 0x05;                     // Read Calibration ID number msg length
+    const uint8_t request_CVN = 0x06;                            // Read Calibration ID number
 
     // SID 0x01 - Live data
     const uint8_t SUPPORTED_PIDS_1_20              = 0x00;  // bit encoded
@@ -225,10 +229,11 @@ private:
     int init_obd();
     int five_baud_init();
     int fast_init();
+    int iso15765_init();
 
     QByteArray request_data(const uint8_t cmd, const uint8_t sub_cmd);
     void request_vehicle_info();
-    QByteArray request_dtc_list();
+    QByteArray request_dtc_list(uint8_t cmd);
 
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     QString parse_message_to_hex(QByteArray received);

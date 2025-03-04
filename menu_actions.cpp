@@ -1045,8 +1045,8 @@ void MainWindow::show_dtc_window()
     QObject::connect(dtcOperations, &DtcOperations::LOG_I, syslogger, &SystemLogger::log_messages);
     QObject::connect(dtcOperations, &DtcOperations::LOG_D, syslogger, &SystemLogger::log_messages);
 
-    //dtcOperations->exec();
-    dtcOperations->run();
+    dtcOperations->exec();
+    //dtcOperations->run();
 
     emit LOG_D("DTC operations stopped", true, true);
 }
@@ -1109,7 +1109,7 @@ void MainWindow::show_terminal_window()
     QStringList serial_port;
     serial_port.append(serial_ports.at(serial_port_list->currentIndex()));
     serial->set_serial_port_list(serial_port);
-    HexCommander hexCommander(serial, this);
+    DataTerminal hexCommander(serial, this);
     hexCommander.exec();
 }
 
