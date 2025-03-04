@@ -856,7 +856,6 @@ int FlashTcuSubaruDensoSH705xCan::connect_bootloader()
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE1);
     output.append((uint8_t)0xAA);
-
     serial->write_serial_data_echo_check(output);
     
     delay(50);
