@@ -127,7 +127,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
 
     QDomElement root = xmlBOM.documentElement();
     QDomNodeList items = root.childNodes();
-    emit LOG_D("Child nodes: " + QString::number(items.count()), true, true);
+    //emit LOG_D("ECU base child nodes: " + QString::number(items.count()), true, true);
     for(int x = 0; x < items.count(); x++)
     {
         if (items.at(x).isComment())
@@ -136,7 +136,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
         QDomElement TagType = items.at(x).toElement();
         if (TagType.tagName() == "rom")
         {
-            //emit LOG_D("Reading base...";
+            //emit LOG_D("Reading base...", true, true);
             rombase = TagType.attribute("base","No base");
             if (rombase == "No base")
             {
@@ -155,7 +155,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                 }
                 if (xmlid == ecuCalDef->RomInfo[RomBase])
                 {
-                    //emit LOG_D("Found base...";
+                    //emit LOG_D("Found base...", true, true);
 
                     OemEcuDefBaseFileFound = true;
                     QDomElement Table = TagType.firstChild().toElement();
@@ -321,7 +321,9 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                         }
                                         else if (TableChild.tagName() == "state")
                                         {
-                                            selection_name.append(TableChild.attribute("name"," ") + ",");
+                                            QString name = TableChild.attribute("name"," ");
+                                            name.replace(",", ":");
+                                            selection_name.append(name + ",");
                                             selection_value.append(TableChild.attribute("data"," ") + ",");
                                             selection_value.remove(' ');
                                         }
@@ -446,7 +448,7 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_def(EcuCalDefSt
 
     QDomElement root = xmlBOM.documentElement();
     QDomNodeList items = root.childNodes();
-    emit LOG_D("Child nodes: " + QString::number(items.count()), true, true);
+    //emit LOG_D("ECU def child nodes: " + QString::number(items.count()), true, true);
     for(int x = 0; x < items.count(); x++)
     {
         if (items.at(x).isComment())

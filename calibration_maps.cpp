@@ -266,7 +266,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     }
     else if (ecuCalDef->TypeList.at(mapIndex) == "Selectable")
     {
-        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Selectable'";
+        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type 'Selectable'";
         QString mapDataCellText = ecuCalDef->MapData.at(mapIndex);//.split(",");
         QStringList selectionNameList = ecuCalDef->SelectionsNameList.at(mapIndex).split(",");
         QStringList selectionValueList = ecuCalDef->SelectionsValueList.at(mapIndex).split(",");
@@ -278,12 +278,14 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         for (int j = 0; j < selectionNameList.length() - 1; j++){
             if (selectionNameList.at(j) != "")
                 selectableComboBox->addItem(selectionNameList.at(j));
+            //qDebug() << "Set item: " + selectionNameList.at(j);
         }
         selectableComboBox->setObjectName("selectableComboBox");
         for (int i = 0; i < selectionNameList.length() - 1; i++)
         {
             if (selectionValueList.at(i).toUpper() == mapDataCellText.toUpper())
                 currentIndex = i;
+            //qDebug() << "Set item index: " + selectionNameList.at(i);
         }
         selectableComboBox->setCurrentIndex(currentIndex);
         ui->mapDataTableWidget->setCellWidget(0, 0, selectableComboBox);

@@ -2350,7 +2350,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 dataByte = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                 mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
-            emit LOG_D("Selectable " + ecuCalDef->NameList.at(i) + " -> addr: 0x" + QString::number(byteAddress, 16) + " -> value: 0x" + mapData, true, true);
+            //emit LOG_D("Selectable " + ecuCalDef->NameList.at(i) + " -> addr: 0x" + QString::number(byteAddress, 16) + " -> value: 0x" + mapData, true, true);
             ecuCalDef->MapData.replace(i, mapData);
             //emit LOG_D("Mapdata " + ecuCalDef->MapData.at(i), true, true);
         }

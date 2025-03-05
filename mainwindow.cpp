@@ -1581,9 +1581,9 @@ void MainWindow::selectable_combobox_item_changed(QString item)
             for (int j = 0; j < selectionsNameList.length(); j++){
                 if (selectionsNameList.at(j) == item)
                 {
-                    emit LOG_D("Old selectable value is: " + ecuCalDef[mapRomNumber]->MapData.at(mapNumber), true, true);
+                    //emit LOG_D("Old selectable value was: " + ecuCalDef[mapRomNumber]->MapData.at(mapNumber), true, true);
                     ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, selectionsValueList.at(j));
-                    emit LOG_D("New selectable value is: " + ecuCalDef[mapRomNumber]->MapData.at(mapNumber), true, true);
+                    //emit LOG_D("New selectable value is: " + ecuCalDef[mapRomNumber]->MapData.at(mapNumber), true, true);
 
                     if (ecuCalDef[mapRomNumber]->StorageTypeList.at(mapNumber) == "bloblist")
                     {
