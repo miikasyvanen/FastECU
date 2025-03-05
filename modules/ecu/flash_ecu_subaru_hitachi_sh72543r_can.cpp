@@ -859,27 +859,23 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
-        
-        received = serial->read_serial_data(serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_timeout);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
             {
                 emit LOG_I("Checksum verified...", true, true);
-                
                 return STATUS_SUCCESS;
             }
             else
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                
                 //return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            
         }
         try_count++;
     }
@@ -887,7 +883,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
 }
 
 /*
- * Erase Subaru Hitachi TCU CAN (iso15765)
+ * Erase Subaru Hitachi ECU CAN (iso15765)
  *
  * @return success
  */
