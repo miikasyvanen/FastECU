@@ -30,11 +30,6 @@ void FlashEcuSubaruDensoSH72543CanDiesel::run()
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    QByteArray dec_data = "\x4B\x4B\x31\x33";
-    emit LOG_I("Enc " + parse_message_to_hex(encrypt_payload(dec_data, dec_data.length())), true, true);
-    QByteArray enc_data = "\xe8\x44\xf8\xdb\x79\xd0\x53\x7a\xd6\xa6\x1e";
-    emit LOG_I("Dec " + parse_message_to_hex(decrypt_payload(enc_data, enc_data.length())), true, true);
-
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -1279,6 +1274,8 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
         set_progressbar_value(pleft);
     }
 
+    set_progressbar_value(100);
+
     emit LOG_I("Closing out Flashing of this block", true, true);
 
     bool connected = false;
@@ -1325,14 +1322,10 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
     output.append((uint8_t)0x02);
     output.append((uint8_t)0x01);
     serial->write_serial_data_echo_check(output);
-
-    delay(1000);
-    received = serial->read_serial_data(receive_timeout);
-    emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
+    received = serial->read_serial_data(serial_read_timeout);
     if (received.length() != 7)
     {
         emit LOG_I("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-
         emit LOG_I("Checksum not verified", true, true);
         return STATUS_ERROR;
     }
@@ -1341,36 +1334,28 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
         if ((uint8_t)received.at(4) != 0x7F || (uint8_t)received.at(5) != 0x31 || (uint8_t)received.at(6) != 0x78)
         {
             emit LOG_I("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-
             emit LOG_I("Checksum not verified", true, true);
             return STATUS_ERROR;
         }
         else
         {
-            delay(200);
-            received = serial->read_serial_data(receive_timeout);
-            //emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-
+            received = serial->read_serial_data(serial_read_timeout);
             if (received.length() > 6)
             {
                 if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
                 {
                     emit LOG_I("ROM checksum error", true, true);
-
                     return STATUS_ERROR;
                 }
             }
             else
             {
                 emit LOG_E("No valid response from ECU", true, true);
-
                 return STATUS_ERROR;
             }
         }
         emit LOG_I("Checksum verified", true, true);
     }
-
-    set_progressbar_value(100);
 
     return STATUS_SUCCESS;
 }

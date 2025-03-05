@@ -2646,7 +2646,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             else if (flashMethod.startsWith("sub_ecu_denso_sh72543_can_diesel"))
             {
                 chksumModuleAvailable = true;
-                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH7xxx::calculate_checksum(ecuCalDef->FullRomData, 0x1FF800, 17 * 12);
+                ecuCalDef->FullRomData = ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(ecuCalDef->FullRomData, 0x1FF800, 17 * 12);
             }
             /*
             * Denso TCU
