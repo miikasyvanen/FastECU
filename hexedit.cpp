@@ -28,7 +28,7 @@ HexEdit::HexEdit(FileActions::EcuCalDefStructure *ecuCalDef, QWidget *parent)
     text = ui->chartColumnHeader->text();
     w = fm.boundingRect(text).width() + chars * addPixels;
     ui->chartColumnHeader->setFixedWidth(w);
-    ui->chartColumnTextEdit->setFixedWidth(w);
+    ui->charColumnTextEdit->setFixedWidth(w);
 
     //connect(ui->scrollArea->verticalScrollBar(), SIGNAL(sliderMoved(int)), ui->dataColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
     //connect(ui->scrollArea->verticalScrollBar(), SIGNAL(sliderMoved(int)), ui->chartColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
@@ -36,7 +36,7 @@ HexEdit::HexEdit(FileActions::EcuCalDefStructure *ecuCalDef, QWidget *parent)
 
     ui->addrColumnTextEdit->verticalScrollBar()->setSingleStep(32);
     ui->dataColumnTextEdit->verticalScrollBar()->setSingleStep(32);
-    ui->chartColumnTextEdit->verticalScrollBar()->setSingleStep(32);
+    ui->charColumnTextEdit->verticalScrollBar()->setSingleStep(32);
 /*
     connect(ui->addrColumnTextEdit->verticalScrollBar(), SIGNAL(sliderMoved(int)), ui->dataColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
     connect(ui->addrColumnTextEdit->verticalScrollBar(), SIGNAL(sliderMoved(int)), ui->chartColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
@@ -46,11 +46,20 @@ HexEdit::HexEdit(FileActions::EcuCalDefStructure *ecuCalDef, QWidget *parent)
     connect(ui->chartColumnTextEdit->verticalScrollBar(), SIGNAL(sliderMoved(int)), ui->dataColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
 */
     connect(ui->addrColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->dataColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
-    connect(ui->addrColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->chartColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->addrColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->charColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->addrColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->barColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+
     connect(ui->dataColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->addrColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
-    connect(ui->dataColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->chartColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
-    connect(ui->chartColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->addrColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
-    connect(ui->chartColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->dataColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->dataColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->charColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->dataColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->barColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+
+    connect(ui->charColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->addrColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->charColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->dataColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->charColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->barColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+
+    connect(ui->barColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->addrColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->barColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->dataColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
+    connect(ui->barColumnTextEdit->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->charColumnTextEdit->verticalScrollBar(), SLOT(setValue(int)));
 
     connect(ui->dataColumnTextEdit, SIGNAL(cursorPositionChanged()), this, SLOT(getCursorPosition()));
 
@@ -62,6 +71,16 @@ HexEdit::~HexEdit()
     delete ui;
 }
 
+static auto const bars = QStringLiteral (
+    "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
+    "▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂"
+    "▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃"
+    "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+    "▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅"
+    "▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆"
+    "▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇"
+    "████████████████████████████████");
+
 static auto const CP437 = QStringLiteral(
     " ☺☻♥♦♣♠•◘○◙♂♀♪♫☼▶◀↕‼¶§▬↨↑↓→←∟↔▲▼"
     "␣!\"#$%&'()*+,-./0123456789:;<=>?"
@@ -72,7 +91,8 @@ static auto const CP437 = QStringLiteral(
     "└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀"
     "αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ");
 
-static inline QChar decode(char ch) { return CP437[uchar(ch)]; }
+static inline QChar decode_chars(char ch) { return CP437[uchar(ch)]; }
+static inline QChar decode_bars(char ch) { return bars[uchar(ch)]; }
 
 void HexEdit::getCursorPosition()
 {
@@ -117,6 +137,7 @@ void HexEdit::run()
     QString addr_column_text;
     QString data_column_text;
     QString chart_column_text;
+    QString bar_column_text;
 /*
     QColor color(QWidget::palette().color(QWidget::backgroundRole()));
     QString style = QString("background-color: rgb(%1,%2,%3); border: 0px ;").arg(color.red()).arg(color.green()).arg(color.blue());
@@ -133,16 +154,28 @@ void HexEdit::run()
         data_column_text.append("\n");
 
         for (int j = 0; j < column_data_size; j++)
-            chart_column_text.append(decode((uint8_t)ecuCalDef->FullRomData.at(current_addr+j)));
+            chart_column_text.append(decode_chars((uint8_t)ecuCalDef->FullRomData.at(current_addr+j)));
         chart_column_text.append("\n");
+
+        for (int j = 0; j < column_data_size; j++)
+            bar_column_text.append((uint8_t)ecuCalDef->FullRomData.at(current_addr+j) / 2 + 0x30);
+        bar_column_text.append("\n");
 
         current_addr+=column_data_size;
 
     }
 
+    QString msg;
+    QFont f("fastecu_bars_128", 10);
+    ui->barColumnTextEdit->setFont(f);
+    //for (int i = 0x30; i < 0x100; i++)
+    //    msg.append(QString(i));
+    //ui->charColumnTextEdit->setText(msg);
+
     ui->addrColumnTextEdit->insertPlainText(addr_column_text);
     ui->dataColumnTextEdit->insertPlainText(data_column_text);
-    ui->chartColumnTextEdit->insertPlainText(chart_column_text);
+    ui->charColumnTextEdit->insertPlainText(chart_column_text);
+    ui->barColumnTextEdit->insertPlainText(bar_column_text);
 
     ui->dataColumnTextEdit->moveCursor(QTextCursor::Start);
 /*

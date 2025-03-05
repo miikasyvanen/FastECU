@@ -85,6 +85,9 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLineEdit" name="barColumnHeader"/>
+       </item>
       </layout>
      </item>
      <item>
@@ -186,7 +189,7 @@
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <item>
-              <widget class="QTextEdit" name="chartColumnTextEdit">
+              <widget class="QTextEdit" name="charColumnTextEdit">
                <property name="font">
                 <font>
                  <family>DejaVu Sans Mono</family>
@@ -208,6 +211,24 @@
               </widget>
              </item>
             </layout>
+           </item>
+           <item>
+            <widget class="QTextEdit" name="barColumnTextEdit">
+             <property name="font">
+              <font>
+               <family>DejaVu Sans Mono</family>
+              </font>
+             </property>
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOff</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOff</enum>
+             </property>
+             <property name="sizeAdjustPolicy">
+              <enum>QAbstractScrollArea::AdjustToContents</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
