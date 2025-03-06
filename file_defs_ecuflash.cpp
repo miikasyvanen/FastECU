@@ -175,8 +175,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
 
             QFileInfo def_file(configValues->ecuflash_def_filename.at(index));
             def_id = def_file.fileName();
-            if (def_id.contains("BASE"))
-                emit LOG_D("Search ID: " + def_id, true, true);
+            //if (def_id.contains("BASE"))
+            //    emit LOG_D("Search BASE ID: " + def_id, true, true);
 
             if (def_id == (cal_id + ".xml") && configValues->ecuflash_def_cal_id.at(index) == cal_id)
             {
@@ -193,8 +193,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
 
             QFileInfo def_file(configValues->ecuflash_def_filename.at(index));
             def_id = def_file.fileName();
-            if (def_id.contains("BASE"))
-                emit LOG_D("Search ID: " + def_id, true, true);
+            //if (def_id.contains("BASE"))
+            //    emit LOG_D("Search BASE ID: " + def_id, true, true);
 
             if (def_id.startsWith(cal_id) && def_id.endsWith(".xml") && configValues->ecuflash_def_cal_id.at(index) == cal_id)
             {
@@ -211,8 +211,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
 
             QFileInfo def_file(configValues->ecuflash_def_filename.at(index));
             def_id = def_file.fileName();
-            if (def_id.contains("BASE"))
-                emit LOG_D("Search ID: " + def_id, true, true);
+            //if (def_id.contains("BASE"))
+            //    emit LOG_D("Search BASE ID: " + def_id, true, true);
 
             if (configValues->ecuflash_def_cal_id.at(index) == cal_id)
             {
@@ -360,7 +360,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         else if (rom_child.tagName() == "include")
         {
             inherits_cal_id = rom_child.text();
-            emit LOG_D("INCLUDE: " + cal_id + " -> inherits " + inherits_cal_id, true, true);
+            //emit LOG_D("INCLUDE: " + cal_id + " -> inherits " + inherits_cal_id, true, true);
             if (inherits_cal_id.contains("BASE"))
                 ecuCalDef->RomInfo.replace(RomBase, inherits_cal_id);
         }

@@ -69,7 +69,7 @@ struct flashdev_t {
 
 const struct flashblock fblocks_SH72543d[] = {
 //    {0x00000000,    0x00008000},
-    {0x00008000,    0x001F8000},
+    {0x00008000,    0x001F7F00},
 /*
     {0x00000000,    0x00002000},
     {0x00002000,    0x00002000},
@@ -527,7 +527,7 @@ const struct flashdev_t flashdevices[] = {
     { "SH7058_1block", SH7058, 1024 * 1024, 1, fblocks_SH7058_1block, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
     { "SH7058d", SH7058d, 1024 * 1024, 16, fblocks_SH7058d, rblocks_SH7058d, kblocks_SH7058d, eblocks_SH7058d },
     { "SH7059d", SH7059d, 1536 * 1024, 16, fblocks_SH7059d, rblocks_SH7059d, kblocks_SH7059d, eblocks_SH7059d },
-    { "SH72543d", SH72543d, 2 * 1024 * 1024, 28, fblocks_SH72543d, rblocks_SH72543d, kblocks_SH72543d, eblocks_SH72543d },
+    { "SH72543d", SH72543d, 2 * 1024 * 1024, 1, fblocks_SH72543d, rblocks_SH72543d, kblocks_SH72543d, eblocks_SH72543d },
     { "SH72531", SH72531, 1280 * 1024, 3, fblocks_SH72531, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "N83M_4MB",     N83M_4MB, 3984 * 1024, 3, fblocks_N83M_4MB,   rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "N83M_1_5MB", N83M_1_5MB, 1488 * 1024, 3, fblocks_N83M_1_5MB, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated

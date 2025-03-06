@@ -525,13 +525,8 @@ int FlashTcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
         float pleft = 0;
         unsigned long chrono;
 
-        //uint32_t curblock = (addr / pagesize);
-
-
         pleft = (float)(addr - start_addr) / (float)length * 100.0f;
         set_progressbar_value(pleft);
-
-        //length = 256;
 
         output[5] = (uint8_t)((addr >> 16) & 0xFF);
         output[6] = (uint8_t)((addr >> 8) & 0xFF);
@@ -581,7 +576,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
         delay(1);
 

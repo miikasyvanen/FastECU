@@ -568,7 +568,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
 
         QString start_address = QString("%1").arg(addr,8,16,QLatin1Char('0')).toUpper();
         QString block_len = QString("%1").arg(pagesize,8,16,QLatin1Char('0')).toUpper();
-        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s remaining").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
+        msg = QString("Kernel read addr:  0x%1  length:  0x%2,  %3  B/s  %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
 
         // and drop extra bytes at the end //
@@ -859,27 +859,23 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     while (try_count < 20)
     {
         serial->write_serial_data_echo_check(output);
-        
-        received = serial->read_serial_data(serial_read_long_timeout);
+        received = serial->read_serial_data(serial_read_timeout);
         if (received.length() > 6)
         {
             if ((uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
             {
                 emit LOG_I("Checksum verified...", true, true);
-                
                 return STATUS_SUCCESS;
             }
             else
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                
                 //return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            
         }
         try_count++;
     }
@@ -887,7 +883,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
 }
 
 /*
- * Erase Subaru Hitachi TCU CAN (iso15765)
+ * Erase Subaru Hitachi ECU CAN (iso15765)
  *
  * @return success
  */
