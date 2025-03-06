@@ -23,8 +23,8 @@
         <file>icons/zoom-in.png</file>
         <file>icons/zoom-original.png</file>
         <file>icons/zoom-out.png</file>
-        <file>icons/gtk-go-down.png</file>
-        <file>icons/gtk-go-forward-ltr.png</file>
+        <file>icons/go-down.png</file>
+        <file>icons/go-forward.png</file>
         <file>icons/1D-64.png</file>
         <file>icons/2D-64.png</file>
         <file>icons/3D-64.png</file>
@@ -35,5 +35,9 @@
         <file>icons/read.png</file>
         <file>icons/test_write.png</file>
         <file>icons/write.png</file>
+        <file>icons/media-stop.png</file>
+        <file>icons/disconnect.png</file>
+        <file>icons/connect.png</file>
+        <file>icons/help-about.png</file>
     </qresource>
 </RCC>

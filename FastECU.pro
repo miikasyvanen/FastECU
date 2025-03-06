@@ -233,6 +233,7 @@ flatpak {
 
 RESOURCES += \
     config.qrc \
+    fonts.qrc \
     icons.qrc \
     images.qrc \
     kernels.qrc
