@@ -72,7 +72,7 @@ HexEdit::~HexEdit()
 }
 
 static auto const bars = QStringLiteral (
-    "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
+    " ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
     "▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂"
     "▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃"
     "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
@@ -158,7 +158,8 @@ void HexEdit::run()
         chart_column_text.append("\n");
 
         for (int j = 0; j < column_data_size; j++)
-            bar_column_text.append((uint8_t)ecuCalDef->FullRomData.at(current_addr+j) / 2 + 0x30);
+            bar_column_text.append(decode_bars((uint8_t)ecuCalDef->FullRomData.at(current_addr+j)));
+            //bar_column_text.append((uint8_t)ecuCalDef->FullRomData.at(current_addr+j) / 2 + 0x30);
         bar_column_text.append("\n");
 
         current_addr+=column_data_size;
@@ -166,11 +167,23 @@ void HexEdit::run()
     }
 
     QString msg;
-    QFont f("fastecu_bars_128", 10);
-    ui->barColumnTextEdit->setFont(f);
-    //for (int i = 0x30; i < 0x100; i++)
-    //    msg.append(QString(i));
-    //ui->charColumnTextEdit->setText(msg);
+    //QFont f("fastecu_bars_128", 10);
+    //ui->barColumnTextEdit->setFont(f);
+    for (int i = 0x30; i < 0xb0; i++)
+    {
+        if (i > 0x30 && i % 0x10 == 0)
+            msg.append('\n');
+        msg.append(QString(i));
+    }
+    //ui->barColumnTextEdit->setText(msg);
+
+    QFont charFont = ui->charColumnTextEdit->font();
+    charFont.setLetterSpacing(QFont::AbsoluteSpacing, 2);
+    //ui->charColumnTextEdit->setFont(charFont);
+
+    QFont barFont = ui->barColumnTextEdit->font();
+    barFont.setLetterSpacing(QFont::AbsoluteSpacing, 1);
+    ui->barColumnTextEdit->setFont(barFont);
 
     ui->addrColumnTextEdit->insertPlainText(addr_column_text);
     ui->dataColumnTextEdit->insertPlainText(data_column_text);
