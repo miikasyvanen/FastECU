@@ -107,7 +107,8 @@ QByteArray ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(QByteArray rom
     {
         checksum_array.clear();
         checksum_area_start = 0x001FF8E8;
-        checksum_area_end = checksum_area_start + (2 * 12);
+        checksum_area_length = 2 * 12;
+        checksum_area_end = checksum_area_start + checksum_area_length;
 
         for (uint32_t i = checksum_area_start; i < checksum_area_end; i+=12)
         {
@@ -167,7 +168,6 @@ QByteArray ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(QByteArray rom
         {
             romData.replace(checksum_area_start, checksum_area_length, checksum_array);
             qDebug() << "SH72543 EURO6 additional checksums corrected";
-            QMessageBox::information(nullptr, QObject::tr("Subaru Denso SH705x Checksum"), "Checksums corrected");
         }
     }
     if (!checksum_ok || !sh72543_checksum_ok)
