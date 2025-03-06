@@ -398,6 +398,7 @@ int FlashEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
 
     emit LOG_I("Requesting kernel upload", true, true);
     received = send_sid_34_request_upload(addr, pl_encr.length());
+
     if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0x74)

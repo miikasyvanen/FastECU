@@ -41,6 +41,8 @@ BiuOperationsSubaru::BiuOperationsSubaru(SerialPortActions *serial, QWidget *par
     connect(keep_alive_timer, SIGNAL(timeout()), this, SLOT(keep_alive()));
 
     emit LOG_I("BIU started", true, true);
+
+    this->show();
 }
 
 BiuOperationsSubaru::~BiuOperationsSubaru()

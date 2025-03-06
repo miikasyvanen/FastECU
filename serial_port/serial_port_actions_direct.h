@@ -47,6 +47,8 @@ public:
     bool setDataTerminalReady = true;
     bool signalToReadBattVoltage = false;
 
+    bool add_ssm_header = false;
+    bool add_iso9141_header = false;
     bool add_iso14230_header = false;
     bool is_iso14230_connection = false;
     bool is_can_connection = false;
@@ -71,9 +73,9 @@ public:
     uint16_t serial_read_long_timeout = 800;
     uint16_t serial_read_extra_long_timeout = 3000;
 
-    uint8_t iso14230_startbyte = 0;
-    uint8_t iso14230_tester_id = 0;
-    uint8_t iso14230_target_id = 0;
+    uint8_t kline_startbyte = 0;
+    uint8_t kline_tester_id = 0;
+    uint8_t kline_target_id = 0;
 
     QByteArray ssm_receive_header_start = { "\x80\xf0\x10" };
 
@@ -117,7 +119,6 @@ public:
 #define SERIAL_P4_MAX   0x07 // J2534 says this may not be changed
 
     uint8_t _P1_MAX = 10;
-    //kline_timings get_kline_timings();
     bool     set_kline_timings(unsigned long parameter, int value);
 
     bool is_serial_port_open();
@@ -232,7 +233,9 @@ private:
     QMap<QString, QString> installed_drivers;
 #endif
 
-    QByteArray add_packet_header(QByteArray output);
+    QByteArray append_ssm_header(QByteArray output);
+    QByteArray append_iso9141_header(QByteArray output);
+    QByteArray append_iso14230_header(QByteArray output);
     int write_j2534_data(QByteArray output);
     QByteArray read_j2534_data(unsigned long timeout);
     QString parse_message_to_hex(QByteArray received);

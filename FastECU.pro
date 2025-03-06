@@ -67,6 +67,7 @@ SOURCES += \
     calibration_maps.cpp \
     calibration_treewidget.cpp \
     cipher.cpp \
+    dataterminal.cpp \
     definition_file_convert.cpp \
     dtc_operations.cpp \
     ecu_operations.cpp \
@@ -74,7 +75,6 @@ SOURCES += \
     file_defs_ecuflash.cpp \
     file_defs_romraider.cpp \
     get_key_operations_subaru.cpp \
-    hexcommander.cpp \
     log_operations_ssm.cpp \
     logbox.cpp \
     logvalues.cpp \
@@ -138,13 +138,13 @@ HEADERS += \
     calibration_maps.h \
     calibration_treewidget.h \
     cipher.h \
+    dataterminal.h \
     definition_file_convert.h \
     dtc_operations.h \
     ecu_operations.h \
     error_codes.h \
     file_actions.h \
     get_key_operations_subaru.h \
-    hexcommander.h \
     kernelcomms.h \
     kernelmemorymodels.h \
     logbox.h \
