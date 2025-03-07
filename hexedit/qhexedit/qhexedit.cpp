@@ -10,6 +10,18 @@
 
 // ********************************************************************** Constructor, destructor
 
+static auto const bars = QStringLiteral (
+    " ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
+    "▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂"
+    "▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃▃"
+    "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+    "▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅"
+    "▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆"
+    "▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇"
+    "████████████████████████████████");
+
+static inline QChar decode_bars(char ch) { return bars[uchar(ch)]; }
+
 QHexEdit::QHexEdit(QWidget *parent) : QAbstractScrollArea(parent)
     , _addressArea(true)
     , _addressWidth(4)
@@ -1084,9 +1096,9 @@ void QHexEdit::paintEvent(QPaintEvent *event)
                 {
                     if (c == viewport()->palette().color(QPalette::Base))
                         c = _barAreaColor;
-                    int ch = (uchar)_dataShown.at(bPosLine + colIdx);
-                    if ( ch < ' ' || ch > '~' )
-                        ch = '.';
+                    QChar ch = decode_bars((uchar)_dataShown.at(bPosLine + colIdx));
+                    //if ( ch < ' ' || ch > '~' )
+                    //    ch = '.';
                     r.setRect(pxPosBarX2, pxPosY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight);
                     painter.fillRect(r, c);
                     painter.setPen(QPen(_barFontColor));
