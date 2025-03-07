@@ -11,58 +11,7 @@
    </rect>
   </property>
   <property name="styleSheet">
-   <string notr="true">QScrollBar::vertical {              
-        border: 1px solid #999999;
-        background:white;
-        width:6px;    
-        margin: 0px 0px 0px 0px;
-}
-QScrollBar::handle:vertical {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop: 0 rgb(140, 140, 140), stop: 0.5 rgb(140, 140, 140), stop:1 rgb(140, 140, 140));
-        min-height: 0px;
-}
-QScrollBar::add-line:vertical {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop: 0 rgb(40, 40, 40), stop: 0.5 rgb(40, 40, 40),  stop:1 rgb(40, 40, 40));
-        height: 0px;
-        subcontrol-position: bottom;
-        subcontrol-origin: margin;
-}
-QScrollBar::sub-line:vertical {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop: 0  rgb(140, 140, 140), stop: 0.5 rgb(140, 140, 140),  stop:1 rgb(140, 140, 140));
-        height: 0 px;
-        subcontrol-position: top;
-        subcontrol-origin: margin;
-}
-
-QScrollBar::horizontal {              
-        border: 1px solid #999999;
-        background:white;
-        height:6px;    
-        margin: 0px 0px 0px 0px;
-}
-QScrollBar::handle:horizontal {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop: 0 rgb(140, 140, 140), stop: 0.5 rgb(140, 140, 140), stop:1 rgb(140, 140, 140));
-        min-width: 0px;
-}
-QScrollBar::add-line:horizontal {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop: 0 rgb(40, 40, 40), stop: 0.5 rgb(40, 40, 40),  stop:1 rgb(40, 40, 40));
-        width: 0px;
-        subcontrol-position: right;
-        subcontrol-origin: margin;
-}
-QScrollBar::sub-line:horizontal {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop: 0  rgb(140, 140, 140), stop: 0.5 rgb(140, 140, 140),  stop:1 rgb(140, 140, 140));
-        width: 0 px;
-        subcontrol-position: left;
-        subcontrol-origin: margin;
-}
-</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -75,7 +24,7 @@ QScrollBar::sub-line:horizontal {
     <item row="1" column="0">
      <widget class="QWidget" name="switchBoxWidget" native="true">
       <property name="contextMenuPolicy">
-       <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+       <enum>Qt::CustomContextMenu</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_5">
        <property name="spacing">
@@ -102,7 +51,7 @@ QScrollBar::sub-line:horizontal {
     <item row="2" column="0">
      <widget class="QWidget" name="logBoxWidget" native="true">
       <property name="contextMenuPolicy">
-       <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+       <enum>Qt::CustomContextMenu</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <property name="spacing">
@@ -153,14 +102,14 @@ QScrollBar::sub-line:horizontal {
        <item>
         <widget class="QSplitter" name="splitter_2">
          <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
+          <enum>Qt::Horizontal</enum>
          </property>
          <property name="childrenCollapsible">
           <bool>false</bool>
          </property>
          <widget class="QSplitter" name="splitter">
           <property name="orientation">
-           <enum>Qt::Orientation::Vertical</enum>
+           <enum>Qt::Vertical</enum>
           </property>
           <property name="childrenCollapsible">
            <bool>false</bool>
@@ -352,11 +301,11 @@ QScrollBar::sub-line:horizontal {
            </property>
            <property name="font">
             <font>
-             <pointsize>12</pointsize>
+             <pointsize>10</pointsize>
             </font>
            </property>
            <property name="editTriggers">
-            <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+            <set>QAbstractItemView::NoEditTriggers</set>
            </property>
            <property name="showDropIndicator" stdset="0">
             <bool>false</bool>
@@ -557,7 +506,7 @@ QScrollBar::sub-line:horizontal {
            </property>
            <property name="font">
             <font>
-             <pointsize>12</pointsize>
+             <pointsize>10</pointsize>
             </font>
            </property>
            <property name="indentation">
@@ -575,16 +524,16 @@ QScrollBar::sub-line:horizontal {
          </widget>
          <widget class="QMdiArea" name="mdiArea">
           <property name="contextMenuPolicy">
-           <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+           <enum>Qt::CustomContextMenu</enum>
           </property>
           <property name="styleSheet">
            <string notr="true"/>
           </property>
           <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
+           <enum>Qt::ScrollBarAlwaysOn</enum>
           </property>
           <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
+           <enum>Qt::ScrollBarAlwaysOn</enum>
           </property>
           <property name="background">
            <brush brushstyle="SolidPattern">
@@ -609,7 +558,7 @@ QScrollBar::sub-line:horizontal {
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
