@@ -46,7 +46,6 @@
 #include <file_actions.h>
 #include <logbox.h>
 #include <settings.h>
-#include <serial_port/serial_port_actions.h>
 #include <dtc_operations.h>
 
 // Flash modules
@@ -91,6 +90,9 @@
 #include <systemlogger.h>
 
 #include <remote_utility/remote_utility.h>
+
+//Forward declaration
+class SerialPortActions;
 
 extern void log_error(const QString &message, bool timestamp, bool linefeed);
 extern void log_warning(const QString &message, bool timestamp, bool linefeed);

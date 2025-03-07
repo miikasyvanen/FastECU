@@ -1,4 +1,5 @@
 #include "flash_tcu_subaru_hitachi_m32r_kline.h"
+#include "serial_port_actions.h"
 
 FlashTcuSubaruHitachiM32rKline::FlashTcuSubaruHitachiM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

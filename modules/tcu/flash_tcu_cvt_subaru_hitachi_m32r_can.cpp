@@ -1,4 +1,5 @@
 #include "flash_tcu_cvt_subaru_hitachi_m32r_can.h"
+#include "serial_port_actions.h"
 
 //QT_CHARTS_USE_NAMESPACE
 

@@ -1,6 +1,7 @@
 #include "serial_port_actions.h"
 #include "qdialog.h"
 #include "qtrohelper.hpp"
+#include "rep_serial_port_actions_replica.h"
 
 SerialPortActions::SerialPortActions(QString peerAddress,
                                      QString password,

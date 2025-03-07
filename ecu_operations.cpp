@@ -1,4 +1,5 @@
 #include "ecu_operations.h"
+#include "serial_port_actions.h"
 
 EcuOperations::EcuOperations(QWidget *ui, SerialPortActions *serial, QString mcu_type_string, int mcu_type_index)
 {

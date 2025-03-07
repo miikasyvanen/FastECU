@@ -2,9 +2,12 @@
 #define REMOTE_UTILITY_H
 
 #include <QObject>
-#include "rep_remote_utility_replica.h"
+#include <QtRemoteObjects/qremoteobjectnode.h>
 #include "websocketiodevice.h"
 #include "qtrohelper.hpp"
+
+//Forward declaration
+class RemoteUtilityReplica;
 
 class RemoteUtility : public QObject
 {

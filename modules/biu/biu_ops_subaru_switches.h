@@ -15,7 +15,8 @@
 #include <QGroupBox>
 #include <QLabel>
 
-#include <serial_port/serial_port_actions.h>
+//Forward declaration
+class SerialPortActions;
 
 QT_BEGIN_NAMESPACE
 namespace Ui
