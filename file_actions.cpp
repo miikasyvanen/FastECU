@@ -1,4 +1,4 @@
-#include "file_actions.h"
+//#include "file_actions.h"
 #include "error_codes.h"
 
 FileActions::FileActions(QWidget *parent)
@@ -2926,9 +2926,17 @@ QString FileActions::parse_nrc_message(QByteArray nrc)
 
 QString FileActions::parse_dtc_message(uint16_t dtc)
 {
-    QString ret = "Unknown error code";
+    QString ret = QString("P%1 - Unknown error code").arg((uint16_t)dtc,4,16,QLatin1Char('0'));
 
-    ret = dtc_Pxxxx_codes.value(dtc, ret);
+    int dtc_category = dtc >> 14;
+    if (dtc_category == 0x00)
+        ret = dtc_Pxxxx_codes.value(dtc, ret);
+    if (dtc_category == 0x01)
+        ret = dtc_Cxxxx_codes.value(dtc, ret);
+    if (dtc_category == 0x02)
+        ret = dtc_Bxxxx_codes.value(dtc, ret);
+    if (dtc_category == 0x03)
+        ret = dtc_Uxxxx_codes.value(dtc, ret);
 
     return ret;
 }

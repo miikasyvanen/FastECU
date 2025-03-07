@@ -34,16 +34,7 @@ bool SerialPortActionsDirect::is_serial_port_open()
 
     return serial->isOpen();
 }
-/*
-struct SerialPortActionsDirect::kline_timings SerialPortActionsDirect::get_kline_timings()
-{
-    struct kline_timings timings;
 
-    timings._P1_MAX = 35;
-
-    return timings;
-}
-*/
 bool SerialPortActionsDirect::set_kline_timings(unsigned long parameter, int value)
 {
     _P1_MAX = value;
@@ -189,8 +180,12 @@ int SerialPortActionsDirect::fast_init(QByteArray output)
         InputMsg.ProtocolID = ISO14230;
         InputMsg.TxFlags = 0;
 
-        if (add_iso14230_header)
-            output = add_packet_header(output);
+        if (add_ssm_header)
+            output = append_ssm_header(output);
+        else if (add_iso9141_header)
+            output = append_iso9141_header(output);
+        else if (add_iso14230_header)
+            output = append_iso14230_header(output);
 
         for (int i = 0; i < output.length(); i++)
         {
@@ -805,8 +800,12 @@ QByteArray SerialPortActionsDirect::write_serial_data(QByteArray output)
 
     if (is_serial_port_open())
     {
-        if (add_iso14230_header)
-            output = add_packet_header(output);
+        if (add_ssm_header)
+            output = append_ssm_header(output);
+        else if (add_iso9141_header)
+            output = append_iso9141_header(output);
+        else if (add_iso14230_header)
+            output = append_iso14230_header(output);
 
         if (use_openport2_adapter)
         {
@@ -837,8 +836,12 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
 
     if (is_serial_port_open())
     {
-        if (add_iso14230_header)
-            output = add_packet_header(output);
+        if (add_ssm_header)
+            output = append_ssm_header(output);
+        else if (add_iso9141_header)
+            output = append_iso9141_header(output);
+        else if (add_iso14230_header)
+            output = append_iso14230_header(output);
 
         if (use_openport2_adapter)
         {
@@ -877,16 +880,55 @@ QByteArray SerialPortActionsDirect::write_serial_data_echo_check(QByteArray outp
     return STATUS_SUCCESS;
 }
 
-QByteArray SerialPortActionsDirect::add_packet_header(QByteArray output)
+QByteArray SerialPortActionsDirect::append_ssm_header(QByteArray output)
+{
+    uint8_t chk_sum = 0;
+    uint8_t msglength = output.length();
+
+    output.insert(0, kline_startbyte);
+    output.insert(1, kline_target_id);
+    output.insert(2, kline_tester_id);
+    output.insert(3, msglength);
+
+    for (int i = 0; i < output.length(); i++)
+        chk_sum = chk_sum + output.at(i);
+
+    output.append(chk_sum);
+
+    //LOG_D("Generated iso9141 message: " + parse_message_to_hex(output), true, true);
+
+    return output;
+}
+
+QByteArray SerialPortActionsDirect::append_iso9141_header(QByteArray output)
+{
+    uint8_t chk_sum = 0;
+    uint8_t msglength = output.length();
+
+    output.insert(0, kline_startbyte);
+    output.insert(1, kline_target_id);
+    output.insert(2, kline_tester_id);
+
+    for (int i = 0; i < output.length(); i++)
+        chk_sum = chk_sum + output.at(i);
+
+    output.append(chk_sum);
+
+    //LOG_D("Generated iso9141 message: " + parse_message_to_hex(output), true, true);
+
+    return output;
+}
+
+QByteArray SerialPortActionsDirect::append_iso14230_header(QByteArray output)
 {
     uint8_t chk_sum = 0;
     uint8_t msglength = output.length();
 
     //emit LOG_D("Adding iso14230 header to message", true, true);
 
-    output.insert(0, iso14230_startbyte);
-    output.insert(1, iso14230_target_id);
-    output.insert(2, iso14230_tester_id);
+    output.insert(0, kline_startbyte);
+    output.insert(1, kline_target_id);
+    output.insert(2, kline_tester_id);
     if (msglength < 0x40)
         output[0] = output[0] | msglength;
     else
@@ -897,7 +939,7 @@ QByteArray SerialPortActionsDirect::add_packet_header(QByteArray output)
 
     output.append(chk_sum);
 
-    LOG_D("Generated iso14230 message: " + parse_message_to_hex(output), true, true);
+    //LOG_D("Generated iso14230 message: " + parse_message_to_hex(output), true, true);
 
     return output;
 }

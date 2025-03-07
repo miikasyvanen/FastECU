@@ -1,5 +1,5 @@
-#ifndef HEXCOMMANDER_H
-#define HEXCOMMANDER_H
+#ifndef DATATERMINAL_H
+#define DATATERMINAL_H
 
 #include <QApplication>
 #include <QButtonGroup>
@@ -30,7 +30,7 @@ class DataTerminal;
 }
 QT_END_NAMESPACE
 
-class HexCommander : public QDialog
+class DataTerminal : public QDialog
 {
     Q_OBJECT
 
@@ -41,8 +41,8 @@ signals:
     void LOG_D(QString message, bool timestamp, bool linefeed);
 
 public:
-    explicit HexCommander(SerialPortActions *serial, QWidget *parent = nullptr);
-    ~HexCommander();
+    explicit DataTerminal(SerialPortActions *serial, QWidget *parent = nullptr);
+    ~DataTerminal();
 
 
 private:
@@ -72,4 +72,4 @@ private slots:
 
 };
 
-#endif // HEXCOMMANDER_H
+#endif // DATATERMINAL_H
