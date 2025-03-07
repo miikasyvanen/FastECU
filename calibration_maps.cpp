@@ -136,7 +136,7 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
 
     setMapTableWidgetItems(ecuCalDef, mapIndex);
-    setMapTableWidgetSize(mdiAreaSize.width(), mdiAreaSize.height(), xSize);
+    setMapTableWidgetSize(mdiAreaSize.width()-15, mdiAreaSize.height()-15, xSize);
 
     if (ecuCalDef->TypeList.at(mapIndex) != "Selectable" && ecuCalDef->TypeList.at(mapIndex) != "Switch")
     {
@@ -159,20 +159,25 @@ void CalibrationMaps::setMapTableWidgetSize(int maxWidth, int maxHeight, int xSi
     w += ui->mapDataTableWidget->contentsMargins().left() + ui->mapDataTableWidget->contentsMargins().right();
     h += ui->mapDataTableWidget->contentsMargins().top() + ui->mapDataTableWidget->contentsMargins().bottom();
     w += ui->mapDataTableWidget->verticalHeader()->width();
-    if (xSize > 17)
-        h += ui->mapDataTableWidget->horizontalHeader()->height() + 15;
-    else
-        h += ui->mapDataTableWidget->horizontalHeader()->height();
-
     for (int i = 0; i < ui->mapDataTableWidget->columnCount(); i++)
         w += ui->mapDataTableWidget->columnWidth(i);
     for (int i=0; i < ui->mapDataTableWidget->rowCount(); i++)
         h += ui->mapDataTableWidget->rowHeight(i);
 
     if (w > maxWidth)
-        w = maxWidth - 55;
+    {
+        w = maxWidth - 40;
+        h += ui->mapDataTableWidget->horizontalHeader()->height() + 15;
+    }
+    else
+        h += ui->mapDataTableWidget->horizontalHeader()->height();
     if (h > maxHeight)
-        h = maxHeight - 55;
+    {
+        h = maxHeight - 40;
+        w += ui->mapDataTableWidget->verticalHeader()->width() + 15;
+    }
+    else
+        w += ui->mapDataTableWidget->verticalHeader()->width();
 
     ui->mapDataTableWidget->setMinimumWidth(w);
     ui->mapDataTableWidget->setMaximumWidth(w);
