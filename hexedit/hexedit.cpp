@@ -3,11 +3,18 @@
 /*****************************************************************************/
 /* Public methods */
 /*****************************************************************************/
-HexEdit::HexEdit()
+HexEdit::HexEdit(FileActions::EcuCalDefStructure *ecuCalDef, QWidget *parent)
+    : QMainWindow(parent)
+    , ecuCalDef(ecuCalDef)
 {
     setAcceptDrops( true );
     init();
     setCurrentFile("");
+
+    hexEdit->setData(ecuCalDef->FullRomData);
+    setCurrentFile(ecuCalDef->FileName);
+
+    this->show();
 }
 
 /*****************************************************************************/

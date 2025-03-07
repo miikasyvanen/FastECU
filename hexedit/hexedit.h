@@ -19,6 +19,7 @@
 #include "optionsdialog.h"
 #include "qmainwindow.h"
 #include "searchdialog.h"
+#include "file_actions.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -34,7 +35,7 @@ class HexEdit : public QMainWindow
     Q_OBJECT
 
 public:
-    HexEdit();
+    HexEdit(FileActions::EcuCalDefStructure *ecuCalDef, QWidget *parent = nullptr);
 
 protected:
     void closeEvent(QCloseEvent *event);
@@ -61,6 +62,8 @@ public:
     void loadFile(const QString &fileName);
 
 private:
+    FileActions::EcuCalDefStructure *ecuCalDef;
+
     void init();
     void createActions();
     void createMenus();
