@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_denso_sh7058_can_diesel.h"
+#include "serial_port_actions.h"
 
 FlashEcuSubaruDensoSH7058CanDiesel::FlashEcuSubaruDensoSH7058CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

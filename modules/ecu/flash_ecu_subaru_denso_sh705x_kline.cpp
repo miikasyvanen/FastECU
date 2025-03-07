@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_denso_sh705x_kline.h"
+#include "serial_port_actions.h"
 
 FlashEcuSubaruDensoSH705xKline::FlashEcuSubaruDensoSH705xKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

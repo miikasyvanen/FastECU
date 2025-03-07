@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_unisia_jecs.h"
+#include "serial_port_actions.h"
 
 FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

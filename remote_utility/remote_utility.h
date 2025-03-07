@@ -6,7 +6,7 @@
 #include "websocketiodevice.h"
 #include "qtrohelper.hpp"
 
-//Forwaard declaration
+//Forward declaration
 class RemoteUtilityReplica;
 
 class RemoteUtility : public QObject

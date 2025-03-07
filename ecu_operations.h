@@ -9,7 +9,9 @@
 #include <kernelcomms.h>
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
-#include <serial_port/serial_port_actions.h>
+
+//Forward declaration
+class SerialPortActions;
 
 class EcuOperations : public QWidget
 {

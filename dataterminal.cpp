@@ -1,4 +1,5 @@
 #include "dataterminal.h"
+#include "serial_port_actions.h"
 
 DataTerminal::DataTerminal(SerialPortActions *serial, QWidget *parent)
     : QDialog(parent)

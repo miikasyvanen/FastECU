@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_denso_mc68hc16y5_02.h"
+#include "serial_port_actions.h"
 
 FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

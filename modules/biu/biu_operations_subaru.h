@@ -12,11 +12,13 @@
 #include <QWidget>
 #include <QDialog>
 
-#include <serial_port/serial_port_actions.h>
 #include <modules/biu/biu_ops_subaru_switches.h>
 #include <modules/biu/biu_ops_subaru_data.h>
 #include <modules/biu/biu_ops_subaru_input1.h>
 #include <modules/biu/biu_ops_subaru_input2.h>
+
+//Forward declaration
+class SerialPortActions;
 
 QT_BEGIN_NAMESPACE
 namespace Ui

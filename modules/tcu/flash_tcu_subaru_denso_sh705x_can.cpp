@@ -1,4 +1,5 @@
 #include "flash_tcu_subaru_denso_sh705x_can.h"
+#include "serial_port_actions.h"
 
 FlashTcuSubaruDensoSH705xCan::FlashTcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
