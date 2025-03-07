@@ -1,4 +1,5 @@
 #include "remote_utility.h"
+#include "rep_remote_utility_replica.h"
 
 RemoteUtility::RemoteUtility(QString peerAddress,
                              QString password,

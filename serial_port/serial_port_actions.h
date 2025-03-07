@@ -4,8 +4,12 @@
 #include <QObject>
 #include <QLabel>
 #include "serial_port_actions_direct.h"
-#include "rep_serial_port_actions_replica.h"
+#include <QtRemoteObjects/qremoteobjectnode.h>
+
 #include "websocketiodevice.h"
+
+//Forward declaration
+class SerialPortActionsRemoteReplica;
 
 class SerialPortActions : public QObject
 {

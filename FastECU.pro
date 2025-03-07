@@ -20,7 +20,9 @@ win32 {
     #LIBS += -LC:\Qt\5.9.9\mingw53_32\lib\libQt5OpenGL.a -lopengl32 -lsetupapi
     #OpenSSL library must be stated first because in case
     #of static build it cannot be linked static, dynamic only
-    QMAKE_LFLAGS += -lcrypto-3
+    QMAKE_LFLAGS += -L\"C:\Program Files (x86)\OpenSSL-Win32\bin\" \
+                    -L\"C:\Program Files\OpenSSL-Win32\bin\" \
+                    -lcrypto-3
     LIBS += -lopengl32 -lsetupapi
     SOURCES += \
     serial_port/J2534_win.cpp
