@@ -275,9 +275,9 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
     //emit LOG_D("Message block length:" << received.length() << "data:" << parseMessageToHex(received);
     while (received.length() > 0 && is_serial_port_open())
     {
-        //emit LOG_D("RECEIVED:" << received << parseMessageToHex(received);
+        //emit LOG_D("Message header: " + parseMessageToHex(received), true, true);
 
-        //emit LOG_D("Message header" << received.at(0) << received.at(1) << received.at(2);
+        //emit LOG_D("Message header: " << received.at(0) << received.at(1) << received.at(2);
         if (received.at(0) == 0x61 && received.at(1) == 0x72)
         {
             if (received.at(2) == 'o')
@@ -352,7 +352,6 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                 for (unsigned long i = 0; i < msg_byte_cnt; i++)
                     pMsg->Data[msg_index++] = (uint8_t)msg.at(i);
 
-                //emit LOG_D("Response:" << parseMessageToHex(received);
                 //emit LOG_D("Msg:" << parseMessageToHex(msg);
 
                 pMsg->RxStatus = NORM_MSG;
@@ -463,7 +462,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     pMsg->RxStatus = NORM_MSG;
 
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
-                    //emit LOG_D("NORM_MSG:" << parseMessageToHex(received);
+                    //emit LOG_D("NORM_MSG: " + parseMessageToHex(received), true, true);
 
                     //emit LOG_D("msg_byte_cnt:" << msg_byte_cnt;
                     if (received.at(2) == '5' || received.at(2) == '6')
