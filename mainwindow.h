@@ -48,7 +48,7 @@
 #include <settings.h>
 #include <serial_port/serial_port_actions.h>
 #include <dtc_operations.h>
-#include <hexedit.h>
+#include <hexedit/hexedit.h>
 
 // Flash modules
 // BDM

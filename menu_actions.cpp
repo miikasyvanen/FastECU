@@ -1054,7 +1054,7 @@ void MainWindow::show_dtc_window()
 void MainWindow::show_hex_editor()
 {
     emit LOG_D("Show hex editor", true, true);
-
+/*
     int rom_number = 0;
 
     QTreeWidgetItem *selectedItem = NULL;
@@ -1064,9 +1064,12 @@ void MainWindow::show_hex_editor()
         selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
         rom_number = ui->calibrationFilesTreeWidget->indexOfTopLevelItem(selectedItem);
 
+        //HexEdit *hexEdit = new HexEdit(ecuCalDef[rom_number], this);
         HexEdit *hexEdit = new HexEdit(ecuCalDef[rom_number], this);
         hexEdit->run();
     }
+*/
+    HexEdit *hexEdit = new HexEdit();
 
 }
 

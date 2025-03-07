@@ -1,8 +1,23 @@
 #ifndef HEXEDIT_H
 #define HEXEDIT_H
 
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QApplication>
+#include <QStatusBar>
+#include <QLabel>
+#include <QAction>
+#include <QMenuBar>
+#include <QToolBar>
+#include <QColorDialog>
+#include <QFontDialog>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QVBoxLayout>
+
 #include "./qhexedit/qhexedit.h"
 #include "optionsdialog.h"
+#include "qmainwindow.h"
 #include "searchdialog.h"
 
 QT_BEGIN_NAMESPACE
@@ -14,7 +29,7 @@ class QDragEnterEvent;
 class QDropEvent;
 QT_END_NAMESPACE
 
-class HexEdit : public QWidget
+class HexEdit : public QMainWindow
 {
     Q_OBJECT
 

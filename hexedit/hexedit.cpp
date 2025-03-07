@@ -1,16 +1,3 @@
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QApplication>
-#include <QStatusBar>
-#include <QLabel>
-#include <QAction>
-#include <QMenuBar>
-#include <QToolBar>
-#include <QColorDialog>
-#include <QFontDialog>
-#include <QDragEnterEvent>
-#include <QDropEvent>
-
 #include "hexedit.h"
 
 /*****************************************************************************/
@@ -213,6 +200,7 @@ void HexEdit::init()
 
     hexEdit = new QHexEdit;
     setCentralWidget(hexEdit);
+
     connect(hexEdit, SIGNAL(overwriteModeChanged(bool)), this, SLOT(setOverwriteMode(bool)));
     connect(hexEdit, SIGNAL(dataChanged()), this, SLOT(dataChanged()));
     searchDialog = new SearchDialog(hexEdit, this);
@@ -224,7 +212,8 @@ void HexEdit::init()
 
     readSettings();
 
-    setUnifiedTitleAndToolBarOnMac(true);
+    //setUnifiedTitleAndToolBarOnMac(true);
+    this->show();
 }
 
 void HexEdit::createActions()
