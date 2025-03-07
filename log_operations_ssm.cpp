@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "serial_port_actions.h"
 
 void MainWindow::kline_listener()
 {

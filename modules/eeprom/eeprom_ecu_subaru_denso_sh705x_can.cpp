@@ -1,4 +1,5 @@
 #include "eeprom_ecu_subaru_denso_sh705x_can.h"
+#include "serial_port_actions.h"
 
 EepromEcuSubaruDensoSH705xCan::EepromEcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

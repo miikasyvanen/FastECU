@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_mitsu_m32r_kline.h"
+#include "serial_port_actions.h"
 
 //QT_CHARTS_USE_NAMESPACE
 

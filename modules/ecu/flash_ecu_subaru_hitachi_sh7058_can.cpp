@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_hitachi_sh7058_can.h"
+#include "serial_port_actions.h"
 
 //QT_CHARTS_USE_NAMESPACE
 

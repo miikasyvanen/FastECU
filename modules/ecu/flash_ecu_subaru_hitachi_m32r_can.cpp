@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_hitachi_m32r_can.h"
+#include "serial_port_actions.h"
 
 FlashEcuSubaruHitachiM32rCan::FlashEcuSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

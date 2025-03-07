@@ -1,4 +1,5 @@
 #include "flash_tcu_cvt_subaru_mitsu_mh8104_can.h"
+#include "serial_port_actions.h"
 
 FlashTcuCvtSubaruMitsuMH8104Can::FlashTcuCvtSubaruMitsuMH8104Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)

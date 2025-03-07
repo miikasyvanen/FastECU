@@ -1,5 +1,6 @@
 #include "biu_ops_subaru_switches.h"
 #include <ui_biu_ops_subaru_switches.h>
+#include "serial_port_actions.h"
 
 BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *parent)
     : QWidget(parent),

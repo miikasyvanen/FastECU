@@ -1,4 +1,5 @@
 #include "dtc_operations.h"
+#include "serial_port_actions.h"
 
 DtcOperations::DtcOperations(SerialPortActions *serial, QWidget *parent)
     : QDialog(parent)

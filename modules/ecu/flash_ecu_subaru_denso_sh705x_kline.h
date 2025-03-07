@@ -14,8 +14,10 @@
 #include <kernelcomms.h>
 #include <kernelmemorymodels.h>
 #include <file_actions.h>
-#include <serial_port/serial_port_actions.h>
 #include <ui_ecu_operations.h>
+
+//Forward declaration
+class SerialPortActions;
 
 QT_BEGIN_NAMESPACE
 namespace Ui
