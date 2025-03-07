@@ -38,6 +38,7 @@ void OptionsDialog::readSettings()
 
     ui->cbAddressArea->setChecked(settings.value("AddressArea", true).toBool());
     ui->cbAsciiArea->setChecked(settings.value("AsciiArea", true).toBool());
+    ui->cbBarArea->setChecked(settings.value("BarArea", true).toBool());
     ui->cbHighlighting->setChecked(settings.value("Highlighting", true).toBool());
     ui->cbOverwriteMode->setChecked(settings.value("OverwriteMode", true).toBool());
     ui->cbReadOnly->setChecked(settings.value("ReadOnly").toBool());
@@ -64,6 +65,7 @@ void OptionsDialog::writeSettings()
     QSettings settings;
     settings.setValue("AddressArea", ui->cbAddressArea->isChecked());
     settings.setValue("AsciiArea", ui->cbAsciiArea->isChecked());
+    settings.setValue("BarArea", ui->cbBarArea->isChecked());
     settings.setValue("Highlighting", ui->cbHighlighting->isChecked());
     settings.setValue("OverwriteMode", ui->cbOverwriteMode->isChecked());
     settings.setValue("ReadOnly", ui->cbReadOnly->isChecked());

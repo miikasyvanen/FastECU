@@ -85,6 +85,16 @@ class QHEXEDIT_API QHexEdit : public QAbstractScrollArea
     */
     Q_PROPERTY(QColor asciiFontColor READ asciiFontColor WRITE setAsciiFontColor)
 
+    /*! Property bar area color sets (setBarAreaColor()) the backgorund
+    color of bar areas. You can also read the color (barAreaColor()).
+    */
+    Q_PROPERTY(QColor barAreaColor READ barAreaColor WRITE setBarAreaColor)
+
+    /*! Property bar font color sets (setBarFontColor()) the text
+    color of bar areas. You can also read the color (barFontColor()).
+    */
+    Q_PROPERTY(QColor barFontColor READ barFontColor WRITE setBarFontColor)
+
     /*! Property hex font color sets (setHexFontColor()) the text
     color of hex areas. You can also read the color (hexFontColor()).
     */
@@ -104,6 +114,10 @@ class QHEXEDIT_API QHexEdit : public QAbstractScrollArea
     /*! Switch the ascii area on (true, show it) or off (false, hide it).
     */
     Q_PROPERTY(bool asciiArea READ asciiArea WRITE setAsciiArea)
+
+    /*! Switch the bar area on (true, show it) or off (false, hide it).
+    */
+    Q_PROPERTY(bool barArea READ barArea WRITE setBarArea)
 
     /*! Set and get bytes number per line.*/
     Q_PROPERTY(int bytesPerLine READ bytesPerLine WRITE setBytesPerLine)
@@ -323,6 +337,12 @@ public:
     QColor asciiFontColor();
     void setAsciiFontColor(const QColor &color);
 
+    QColor barAreaColor();
+    void setBarAreaColor(const QColor &color);
+
+    QColor barFontColor();
+    void setBarFontColor(const QColor &color);
+
     QColor hexFontColor();
     void setHexFontColor(const QColor &color);
 
@@ -334,6 +354,9 @@ public:
 
     bool asciiArea();
     void setAsciiArea(bool asciiArea);
+
+    bool barArea();
+    void setBarArea(bool barArea);
 
     int bytesPerLine();
     void setBytesPerLine(int count);
@@ -398,9 +421,11 @@ private:
     int _pxPosHexX;                             // X-Pos of HeaxArea
     int _pxPosAdrX;                             // X-Pos of Address Area
     int _pxPosAsciiX;                           // X-Pos of Ascii Area
+    int _pxPosBarX;                             // X-Pos of Bar Area
     int _pxGapAdr;                              // gap left from AddressArea
     int _pxGapAdrHex;                           // gap between AddressArea and HexAerea
     int _pxGapHexAscii;                         // gap between HexArea and AsciiArea
+    int _pxGapAsciiBar;                         // gap between AsciiArea and BarArea
     int _pxCursorWidth;                         // cursor width
     int _pxSelectionSub;                        // offset selection rect
     int _pxCursorX;                             // current cursor pos
@@ -418,11 +443,14 @@ private:
     bool _addressArea;                          // left area of QHexEdit
     QColor _addressAreaColor;
     QColor _asciiAreaColor;
+    QColor _barAreaColor;
     QColor _addressFontColor;
     QColor _asciiFontColor;
+    QColor _barFontColor;
     QColor _hexFontColor;
     int _addressWidth;
     bool _asciiArea;
+    bool _barArea;
     qint64 _addressOffset;
     int _bytesPerLine;
     int _hexCharsInLine;
@@ -438,6 +466,7 @@ private:
 
     // other variables
     bool _editAreaIsAscii;                      // flag about the ascii mode edited
+    bool _editAreaIsBar;                        // flag about the ascii mode edited
     int _addrDigits;                            // real no of addressdigits, may be > addressWidth
     bool _blink;                                // help get cursor blinking
     QBuffer _bData;                             // buffer, when setup with QByteArray

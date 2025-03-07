@@ -382,6 +382,7 @@ void HexEdit::readSettings()
 
     hexEdit->setAddressArea(settings.value("AddressArea").toBool());
     hexEdit->setAsciiArea(settings.value("AsciiArea").toBool());
+    hexEdit->setBarArea(settings.value("BarArea").toBool());
     hexEdit->setHighlighting(settings.value("Highlighting").toBool());
     hexEdit->setOverwriteMode(settings.value("OverwriteMode").toBool());
     hexEdit->setReadOnly(settings.value("ReadOnly").toBool());
@@ -393,6 +394,8 @@ void HexEdit::readSettings()
     hexEdit->setAddressFontColor(settings.value("AddressFontColor").value<QColor>());
     hexEdit->setAsciiAreaColor(settings.value("AsciiAreaColor").value<QColor>());
     hexEdit->setAsciiFontColor(settings.value("AsciiFontColor").value<QColor>());
+    hexEdit->setBarAreaColor(settings.value("BarAreaColor").value<QColor>());
+    hexEdit->setBarFontColor(settings.value("BarFontColor").value<QColor>());
     hexEdit->setHexFontColor(settings.value("HexFontColor").value<QColor>());
 
     hexEdit->setAddressWidth(settings.value("AddressAreaWidth").toInt());

@@ -55,6 +55,13 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="cbBarArea">
+        <property name="text">
+         <string>Bar Area</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
