@@ -1022,8 +1022,8 @@ int MainWindow::start_ecu_operations(QString cmd_type)
         serial->set_serial_port_parity(QSerialPort::NoParity);
         serial->set_serial_port_baudrate("4800");
 
-        update_vbatt();
-        vbatt_timer->start();
+        //update_vbatt();
+        //vbatt_timer->start();
 
         if (configValues->kernel_files_directory.at(configValues->kernel_files_directory.length() - 1) != '/')
             configValues->kernel_files_directory.append("/");
