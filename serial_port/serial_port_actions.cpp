@@ -110,6 +110,7 @@ void SerialPortActions::waitForSource(void)
     while (!serial_remote->waitForSource(10000))
     {
         sendAutoDiscoveryMessage();
+        delay(50);
         emit LOG_D("SerialPortActions: Waiting for remote peer...", true, true);
     }
 }

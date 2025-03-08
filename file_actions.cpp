@@ -2917,9 +2917,9 @@ QString FileActions::parse_nrc_message(QByteArray nrc)
     QString ret = "Unknown error code";
 
     if (nrc.length() > 2 && (uint8_t)nrc.at(0) == 0x7f)
-    {
         ret = neg_rsp_codes.value((uint8_t)nrc.at(2), ret);
-    }
+    if ((uint8_t)nrc.at(0) == 0x7f)
+        ret = "Not a valid answer";
 
     return ret;
 }

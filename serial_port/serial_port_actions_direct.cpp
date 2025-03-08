@@ -1504,8 +1504,8 @@ int SerialPortActionsDirect::set_j2534_iso9141_timings()
     {
         // Set timeouts etc.
         SCONFIG_LIST scl;
-        SCONFIG scp[10] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0},{W4,0}};
-        scl.NumOfParams = 7;
+        SCONFIG scp[6] = {{LOOPBACK,0},{P1_MAX,0},{P3_MIN,0},{P4_MIN,0},{PARITY,0},{TINIL,0}};
+        scl.NumOfParams = 6;
         scp[0].Value = 0;
         scp[1].Value = 1;
         scp[2].Value = 0;
@@ -1516,7 +1516,6 @@ int SerialPortActionsDirect::set_j2534_iso9141_timings()
         else if (serial_port_parity == QSerialPort::EvenParity)
             scp[4].Value = EVEN_PARITY;
         scp[5].Value = 25;
-        scp[9].Value = 40;
         scl.ConfigPtr = scp;
         if (j2534->PassThruIoctl(chanID,SET_CONFIG,&scl,NULL))
         {
