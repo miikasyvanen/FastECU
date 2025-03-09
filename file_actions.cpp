@@ -528,13 +528,13 @@ FileActions::ConfigValuesStructure *FileActions::save_config_file(FileActions::C
         return 0;
     }
 
-    if (!configValues->calibration_files_directory.endsWith("/") && !configValues->calibration_files_directory.endsWith("\\"))
+    if (!configValues->calibration_files_directory.endsWith("/") && !configValues->calibration_files_directory.endsWith("\\") && configValues->calibration_files_directory.length())
         configValues->calibration_files_directory.append("/");
-    if (!configValues->ecuflash_definition_files_directory.endsWith("/") && !configValues->ecuflash_definition_files_directory.endsWith("\\"))
+    if (!configValues->ecuflash_definition_files_directory.endsWith("/") && !configValues->ecuflash_definition_files_directory.endsWith("\\") && configValues->ecuflash_definition_files_directory.length())
         configValues->ecuflash_definition_files_directory.append("/");
-    if (!configValues->datalog_files_directory.endsWith("/") && !configValues->datalog_files_directory.endsWith("\\"))
+    if (!configValues->datalog_files_directory.endsWith("/") && !configValues->datalog_files_directory.endsWith("\\") && configValues->datalog_files_directory.length())
         configValues->datalog_files_directory.append("/");
-    if (!configValues->syslog_files_directory.endsWith("/") && !configValues->syslog_files_directory.endsWith("\\"))
+    if (!configValues->syslog_files_directory.endsWith("/") && !configValues->syslog_files_directory.endsWith("\\") && configValues->syslog_files_directory.length())
         configValues->syslog_files_directory.append("/");
 
     QXmlStreamWriter stream(&file);
