@@ -1096,14 +1096,19 @@ void QHexEdit::paintEvent(QPaintEvent *event)
                 {
                     if (c == viewport()->palette().color(QPalette::Base))
                         c = _barAreaColor;
-                    QChar ch = decode_bars((uchar)_dataShown.at(bPosLine + colIdx));
+                    int ch = (uchar)_dataShown.at(bPosLine + colIdx) / 2 + 0x30;
+                    //QChar ch = decode_bars((uchar)_dataShown.at(bPosLine + colIdx));
                     //if ( ch < ' ' || ch > '~' )
                     //    ch = '.';
                     r.setRect(pxPosBarX2, pxPosY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight);
                     painter.fillRect(r, c);
+                    QFont prevFont = painter.font();
+                    QFont barFont("fastecu_bars_128");
+                    painter.setFont(barFont);
                     painter.setPen(QPen(_barFontColor));
                     painter.drawText(pxPosBarX2, pxPosY, QChar(ch));
                     pxPosBarX2 += _pxCharWidth;
+                    painter.setFont(prevFont);
                 }
             }
         }
