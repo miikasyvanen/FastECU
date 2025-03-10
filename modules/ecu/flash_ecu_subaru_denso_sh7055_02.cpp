@@ -149,19 +149,41 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    delay(200);
+    emit LOG_I("Swicth ignition on count 3.", true, true);
+    delay(2000);
+    emit LOG_I("Count 1...", true, true);
+    delay(1000);
+    emit LOG_I("Count 2...", true, true);
+    delay(1000);
+    emit LOG_I("Count 3... Switch Ignition ON!", true, true);
+    delay(1000);
     serial->pulse_lec_2_line(200);
-    delay(200);
     output.clear();
-    for (uint8_t i = 0; i < bootloader_init_request_fxt02.length(); i++)
+
+    uint16_t loopcount = 0;
+    bool connected = false;
+    while (loopcount < 20 && connected == false)
     {
+        for (uint8_t i = 0; i < bootloader_init_request_fxt02.length(); i++)
+        {
         output.append(bootloader_init_request_fxt02[i]);
+        }
+        serial->write_serial_data_echo_check(output);
+        output.clear();
+        received = serial->read_serial_data(10);
+            if ((uint8_t)received.at(0) != 0x4D || (uint8_t)received.at(1) != 0x00 || (uint8_t)received.at(2) != 0xB3)
+                {
+                 emit LOG_I(".", false, false);
+                }
+            else if ((uint8_t)received.at(0) == 0x4D && (uint8_t)received.at(1) == 0x00 && (uint8_t)received.at(2) == 0xB3)
+             {
+              connected = true;
+              delay(100);
+              emit LOG_I("", false, true);
+             }
+        loopcount++;
     }
-    serial->write_serial_data_echo_check(output);
-    
-    delay(185);
-    received = serial->read_serial_data(100);//serial_read_short_timeout);
-    
+   received = serial->read_serial_data(400);
 
     if (flash_method.endsWith("_ecutek"))
         bootloader_init_response_fxt02_ok = bootloader_init_response_ecutek_fxt02_ok;
@@ -622,7 +644,7 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc(const uint8_t *src, uint32_t star
     QByteArray msg;
     uint32_t datalen = 0;
     uint16_t chksum;
-    uint16_t pagesize = len;
+    uint32_t pagesize = len;
     uint32_t imgcrc32;
     uint32_t ecucrc32;
 
