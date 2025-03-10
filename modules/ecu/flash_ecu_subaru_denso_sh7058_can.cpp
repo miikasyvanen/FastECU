@@ -28,34 +28,49 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     bool ok = false;
 
-/*
-    uint32_t base = 0x811c9dc5;//0x811c50a5 + 0x4d20;//2d58;
+    //QString vin_string = "JF1VA2V62L9812353";
+    QString vin_string = "JF1GR89638L821202";
+    QByteArray vin_bytes;
+    uint32_t base = 0x811c9dc5; //0x811c50a5 + 0x4d20 = 0x811c9dc5
     uint32_t xor_multi = 0x01000193;
-    uint8_t xor_byte_1 = 0;//0x4b;//0xf6;
-    uint8_t xor_byte_2 = 0;//0x09;//0x2b;
+    uint8_t xor_byte_1 = 0x4b; //0x4b; //0xf6;
+    uint8_t xor_byte_2 = 0x09; //0x09; //0x2b;
 
     // F10D1D
-    uint32_t vin_highbyte = 0xff;
-    uint32_t vin_lowbyte = 0xff;
+    //QByteArray vin_highbyte = 0x00;
+    //QByteArray vin_lowbyte = 0x00;
+    uint8_t vin_highbyte = 0x00;
+    uint8_t vin_lowbyte = 0x00;
 
-    uint32_t et_rr_key = 0;//0xb04fdbfc;
-    uint32_t et_rr_seed = 0;
+    uint32_t et_rr_key = 0xb04fdbfc;
+    uint32_t et_rr_seed = 0x24874322;
     QByteArray req_seed;
 
+    vin_bytes = vin_string.toUtf8();
+    vin_bytes.append((uint8_t)0xff);
+    emit LOG_D("VIN bytes: " + parse_message_to_hex(vin_bytes), true, true);
+    uint8_t vin_offset = 0;
     for (int i = 0; i < 9; i++)
     {
-        base = (((base^vin_highbyte) * xor_multi) ^ vin_lowbyte) * xor_multi;
+        vin_highbyte = (uint8_t)vin_bytes.at((i+vin_offset)*2);
+        vin_lowbyte = (uint8_t)vin_bytes.at((i+vin_offset)*2+1);
+        emit LOG_I("VIN"+QString::number(i+vin_offset)+" hi: " + QString::number(vin_highbyte, 16) + " VIN"+QString::number(i+vin_offset)+" lo: " + QString::number(vin_lowbyte, 16), true, true);
+        base = (((base ^ vin_highbyte) * xor_multi) ^ vin_lowbyte) * xor_multi;
     }
+    emit LOG_I("BASE value: 0x" + QString::number(base, 16), true, true);
+    // With my ECU
     if (base == 0xd3983e93)
-        emit LOG_D("Valid BASE value FOUND: 0x" + QString::number(base, 16), true, true);
+        emit LOG_I("Valid BASE value FOUND: 0x" + QString::number(base, 16), true, true);
+    // JF1GR89638L821202 - 0x6ac4756e
+    if (base == 0x6ac4756e)
+        emit LOG_I("Valid BASE value FOUND: 0x" + QString::number(base, 16), true, true);
 
-    emit LOG_D("BASE value: 0x" + QString::number(base, 16), true, true);
     emit LOG_D("KEY value: 0x" + QString::number(et_rr_key, 16), true, true);
     req_seed.clear();
-    req_seed.append((uint8_t)(et_rr_key >> 24));
-    req_seed.append((uint8_t)(et_rr_key >> 16));
-    req_seed.append((uint8_t)(et_rr_key >> 8));
-    req_seed.append((uint8_t)et_rr_key);
+    req_seed.append((uint8_t)(et_rr_seed >> 24));
+    req_seed.append((uint8_t)(et_rr_seed >> 16));
+    req_seed.append((uint8_t)(et_rr_seed >> 8));
+    req_seed.append((uint8_t)et_rr_seed);
     req_seed = generate_ecutek_seed_key(req_seed);
     et_rr_seed = ((uint8_t)req_seed.at(0) << 24) & 0xFF000000;
     et_rr_seed += ((uint8_t)req_seed.at(1) << 16) & 0x00FF0000;
@@ -65,7 +80,7 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     et_rr_seed = ((((base^et_rr_seed)^xor_byte_1)*xor_multi)^xor_byte_2)*xor_multi;
     emit LOG_D("ALTERED SEED value: 0x" + QString::number(et_rr_seed, 16), true, true);
-*/
+
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -248,7 +263,14 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         // Open serial port
         serial->open_serial_port();
 
-        // AE5Z500V - JF1VA2V62L9812353
+        ram_value = read_ram_location(0xffff204c);
+        emit LOG_D("Value at RAM loc 0xffff204c: 0x" + QString::number(ram_value, 16), true, true);
+        ram_value = read_ram_location(0xffff5d68);
+        emit LOG_D("Value at RAM loc 0xffff5d68: 0x" + QString::number(ram_value, 16), true, true);
+
+/*
+        // AE5Z500V - JF1VA2V62L9812353 - alter value 0x6ac4756e - xor values 0x84489e41
+        // seed_alter = 0xffff1ed8, xor values = 0xffff1e80 xor_byte_1 = 0x4b, xor_byte_2 = 0x09
         ram_value = read_ram_location(0xffff1ed8);
         emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
         seed_alter = ram_value;
@@ -256,8 +278,20 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         emit LOG_D("Value at RAM loc 0xffff1e80: 0x" + QString::number(ram_value, 16), true, true);
         xor_byte_1 = ((ram_value >> 8) & 0xff);
         xor_byte_2 = (ram_value & 0xff);
+*/
+        // AZ1G202I - 6912783007 - JF1GR89638L821202
+        // seed_alter = 0xffffbbfc, xor values = 0xffffbc00 xor_byte_1 = 0x9e, xor_byte_2 = 0x41
+        ram_value = read_ram_location(0xffffbbfc);
+        emit LOG_D("Value at RAM loc 0xffffbbfc: 0x" + QString::number(ram_value, 16), true, true);
+        seed_alter = ram_value;
+        ram_value = read_ram_location(0xffffbc00);
+        emit LOG_D("Value at RAM loc : 0x" + QString::number(ram_value, 16), true, true);
+        xor_byte_1 = ((ram_value >> 8) & 0xff);
+        xor_byte_2 = (ram_value & 0xff);
+
 /*
         // AE5I910V
+        // seed_alter = 0xffffbba8, xor values = 0xffffbbf0 xor_byte_1 = 0xf6, xor_byte_2 = 0x2b
         ram_value = read_ram_location(0xffffbba8);
         emit LOG_D("Value at RAM loc 0xffffbba8: 0x" + QString::number(ram_value, 16), true, true);
         seed_alter = ram_value;
