@@ -73,6 +73,7 @@ void FlashEcuSubaruDensoSH7055_02::run()
     // Open serial port
     serial->open_serial_port();
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    serial->read_serial_data(10);
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
@@ -149,20 +150,6 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    delay(200);
-    serial->pulse_lec_2_line(200);
-    delay(200);
-    output.clear();
-    for (uint8_t i = 0; i < bootloader_init_request_fxt02.length(); i++)
-    {
-        output.append(bootloader_init_request_fxt02[i]);
-    }
-    serial->write_serial_data_echo_check(output);
-    
-    delay(185);
-    received = serial->read_serial_data(100);//serial_read_short_timeout);
-    
-
     if (flash_method.endsWith("_ecutek"))
         bootloader_init_response_fxt02_ok = bootloader_init_response_ecutek_fxt02_ok;
     else if (flash_method.endsWith("_cobb"))
@@ -170,21 +157,45 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
     else
         bootloader_init_response_fxt02_ok = bootloader_init_response_stock_fxt02_ok;
 
-    if (received.length() < 3 || !check_received_message(bootloader_init_response_fxt02_ok, received))
-    {
-        emit LOG_E("Bad response from bootloader: " + parse_message_to_hex(received), true, true);
-    }
-    else
-    {
-        emit LOG_I("Connected to bootloader", true, true);
-        return STATUS_SUCCESS;
-    }
+    // Start countdown
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
 
+    //delay(200);
+    serial->pulse_lec_2_line(200);
+    //delay(200);
+
+    uint16_t loopcount = 20;
+    emit LOG_I(".", true, false);
+    for (int i = 0; i < loopcount; i++)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        output.clear();
+        for (uint8_t i = 0; i < bootloader_init_request_fxt02.length(); i++)
+        {
+            output.append(bootloader_init_request_fxt02[i]);
+        }
+
+        serial->write_serial_data_echo_check(output);
+        //delay(185);
+        received = serial->read_serial_data(10);
+
+        if (check_received_message(bootloader_init_response_fxt02_ok, received))
+        {
+            emit LOG_I("", false, true);
+            emit LOG_I("Connected to bootloader", true, true);
+            return STATUS_SUCCESS;
+        }
+        emit LOG_I(".", false, false);
+    }
+    emit LOG_I("", false, true);
     delay(100);
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
     serial->change_port_speed("62500");
 
-    emit LOG_I("Checking if Kernel already running...", true, true);
+    emit LOG_I("No connection to bootloader, checking if kernel already running...", true, true);
     emit LOG_I("Requesting kernel ID", true, true);
     received.clear();
     received = request_kernel_id();
@@ -226,7 +237,6 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
     uint32_t file_len = 0;
     uint32_t pl_len = 0;
     uint32_t len = 0;
-    uint32_t ram_addr = 0;
     uint8_t chk_sum = 0;
 
     start_address = kernel_start_addr;
@@ -361,7 +371,6 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
 
     timer.start();
 
@@ -372,7 +381,6 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
 
         uint32_t numblocks = 1;
         unsigned curspeed = 0, tleft;
-        uint32_t curblock = (addr / pagesize);
         float pleft = 0;
         unsigned long chrono;
 
@@ -440,7 +448,6 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
         emit LOG_I(msg, true, true);
         delay(1);
 
-        len_done += cplen;
         addr += (numblocks * pagesize);
         willget -= pagesize;
     }
@@ -464,13 +471,6 @@ int FlashEcuSubaruDensoSH7055_02::write_mem(bool test_write)
     uint16_t chksum;
 
     filedata = ecuCalDef->FullRomData;
-
-    if (filedata.length() < 190 * 1024)
-    {
-        emit LOG_D("Padding 160kb file to 192kb", true, true);
-        for (int i = 0; i < 0x8000; i++)
-            filedata.insert(0x20000, (uint8_t)0xff);
-    }
 
     QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
@@ -621,10 +621,10 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc(const uint8_t *src, uint32_t star
     QByteArray received;
     QByteArray msg;
     uint32_t datalen = 0;
-    uint16_t chksum;
-    uint16_t pagesize = len;
+    uint32_t pagesize = len;
     uint32_t imgcrc32;
     uint32_t ecucrc32;
+    uint8_t chksum;
 
     datalen = 8;
     flash_write_init = false;
@@ -886,12 +886,9 @@ int FlashEcuSubaruDensoSH7055_02::init_flash_write()
  */
 int FlashEcuSubaruDensoSH7055_02::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
-    int errval;
-
     uint32_t start = 0;
     uint32_t len = 0;
     uint32_t datalen = 0;
-    uint16_t pagesize = 0x200;
     uint16_t chksum;
 
     QByteArray output;
@@ -967,11 +964,10 @@ int FlashEcuSubaruDensoSH7055_02::flash_block(const uint8_t *src, uint32_t start
     uint32_t remain = len;
     uint32_t byteindex = flashbytesindex;
     uint32_t datalen = 0;
-    uint32_t blockstart = start;
     uint32_t imgcrc32 = 0;
     uint32_t flashblockstart = start;
     uint16_t blocksize = 0x200;
-    uint16_t chksum;
+    uint8_t chksum;
 
     QElapsedTimer timer;
     QByteArray output;
@@ -1321,10 +1317,30 @@ int FlashEcuSubaruDensoSH7055_02::check_received_message(QByteArray msg, QByteAr
     {
         if (received.length() > i - 1)
             if (msg.at(i) != received.at(i))
-                return 0;
+                return STATUS_SUCCESS;
     }
 
-    return 1;
+    return STATUS_ERROR;
+}
+
+/*
+ * Countdown prior power on
+ *
+ * @return
+ */
+int FlashEcuSubaruDensoSH7055_02::connect_bootloader_start_countdown(int timeout)
+{
+    for (int i = timeout; i > 0; i--)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+        emit LOG_I("Starting in " + QString::number(i), true, true);
+        delay(1000);
+    }
+    emit LOG_I("Switch Ignition ON!", true, true);
+    delay(250);
+
+    return STATUS_SUCCESS;
 }
 
 /*

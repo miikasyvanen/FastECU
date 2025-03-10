@@ -74,6 +74,7 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     serial->open_serial_port();
     //serial->set_serial_port_baudrate("9600");
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    serial->read_serial_data(10);
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
                                    tr("Turn ignition ON and press OK to start initializing connection to ECU"),
