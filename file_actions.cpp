@@ -2150,31 +2150,15 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     def_map_index = 0;
 
     uint32_t chksum = 0;
-    uint32_t chksum_start = 0x00000000;
-    uint32_t chksum_end = 0x00010000;
-    for (uint32_t i = chksum_start; i < chksum_end; i+=1)
-    {
-        chksum += (uint8_t)ecuCalDef->FullRomData.at(i);
-    }
-    emit LOG_D("CHKSUM 1: 0x" + QString::number(chksum, 16), true, true);
-    chksum += 0x84489e41;
-    emit LOG_D("CHKSUM 2: 0x" + QString::number(chksum, 16), true, true);
-    chksum = 0;
-    for (uint32_t i = chksum_start; i < chksum_end; i+=2)
-    {
-        chksum += ((uint8_t)ecuCalDef->FullRomData.at(i) << 8) + (uint8_t)ecuCalDef->FullRomData.at(i + 1);
-    }
-    emit LOG_D("CHKSUM 1: 0x" + QString::number(chksum, 16), true, true);
-    chksum += 0x84489e41;
-    emit LOG_D("CHKSUM 2: 0x" + QString::number(chksum, 16), true, true);
+    uint32_t chksum_start = 0x00002000;
+    uint32_t chksum_end = 0x000ffaf7;
     chksum = 0;
     for (uint32_t i = chksum_start; i < chksum_end; i+=4)
     {
         chksum += ((uint8_t)ecuCalDef->FullRomData.at(i) << 24) + ((uint8_t)ecuCalDef->FullRomData.at(i + 1) << 16) + ((uint8_t)ecuCalDef->FullRomData.at(i + 2) << 8) + (uint8_t)ecuCalDef->FullRomData.at(i + 3);
     }
     emit LOG_D("CHKSUM 1: 0x" + QString::number(chksum, 16), true, true);
-    chksum += 0x84489e41;
-    emit LOG_D("CHKSUM 2: 0x" + QString::number(chksum, 16), true, true);
+    emit LOG_D("CHKSUM 2: 0x" + QString::number(0x5aa5a55a-chksum, 16), true, true);
 
     ecuCalDef->use_ecuflash_definition = false;
     ecuCalDef->use_romraider_definition = false;

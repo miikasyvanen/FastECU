@@ -31,14 +31,11 @@ void FlashEcuSubaruDensoSH7058Can::run()
     //QString vin_string = "JF1VA2V62L9812353";
     QString vin_string = "JF1GR89638L821202";
     QByteArray vin_bytes;
-    uint32_t base = 0x811c9dc5; //0x811c50a5 + 0x4d20 = 0x811c9dc5
+    uint32_t base = 0x811c9dc5; // 0x811c50a5 + 0x4d20 = 0x811c9dc5
     uint32_t xor_multi = 0x01000193;
     uint8_t xor_byte_1 = 0x4b; //0x4b; //0xf6;
     uint8_t xor_byte_2 = 0x09; //0x09; //0x2b;
 
-    // F10D1D
-    //QByteArray vin_highbyte = 0x00;
-    //QByteArray vin_lowbyte = 0x00;
     uint8_t vin_highbyte = 0x00;
     uint8_t vin_lowbyte = 0x00;
 
@@ -264,9 +261,9 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         serial->open_serial_port();
 
         ram_value = read_ram_location(0xffff204c);
-        emit LOG_D("Value at RAM loc 0xffff204c: 0x" + QString::number(ram_value, 16), true, true);
+        emit LOG_I("Value at RAM loc 0xffff204c: 0x" + QString::number(ram_value, 16), true, true);
         ram_value = read_ram_location(0xffff5d68);
-        emit LOG_D("Value at RAM loc 0xffff5d68: 0x" + QString::number(ram_value, 16), true, true);
+        emit LOG_I("Value at RAM loc 0xffff5d68: 0x" + QString::number(ram_value, 16), true, true);
 
 /*
         // AE5Z500V - JF1VA2V62L9812353 - alter value 0x6ac4756e - xor values 0x84489e41
@@ -306,6 +303,8 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
         serial->set_is_iso15765_connection(true);
         serial->open_serial_port();
     }
+
+    //return STATUS_ERROR;
 
     emit LOG_I("Initialising connection...", true, true);
 
