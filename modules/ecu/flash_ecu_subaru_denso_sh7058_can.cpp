@@ -19,6 +19,21 @@ FlashEcuSubaruDensoSH7058Can::FlashEcuSubaruDensoSH7058Can(SerialPortActions *se
     this->serial = serial;
 }
 
+int FUN_00006a6a(uint param_1,ushort param_2,uint param_3)
+{
+    uint8_t bVar1;
+    uint32_t PTR_DAT_00006ac4 = 0x01;
+    uint32_t PTR_DAT_00006ad0 = 0x04000000;
+    uint32_t PTR_DAT_00006acc = 0x02000000;
+    uint32_t PTR_DAT_00006ac8 = 0x000000FF;
+
+    bVar1 = PTR_DAT_00006ac4;
+    return (int)(PTR_DAT_00006ad0 + (uint)bVar1 * 4) +
+           (int)(PTR_DAT_00006acc + (param_1 & 0xff) * 4 + (uint)bVar1 * 0x14) +
+           (uint)(param_2 & (ushort)(PTR_DAT_00006ac8 + (uint)bVar1 * 2)) * 0x10000 +
+           (param_3 & 0xffff);
+}
+
 void FlashEcuSubaruDensoSH7058Can::run()
 {
     this->show();
@@ -28,44 +43,6 @@ void FlashEcuSubaruDensoSH7058Can::run()
 
     bool ok = false;
 
-/*
-    uint32_t base = 0x811c9dc5;//0x811c50a5 + 0x4d20;//2d58;
-    uint32_t xor_multi = 0x01000193;
-    uint8_t xor_byte_1 = 0;//0x4b;//0xf6;
-    uint8_t xor_byte_2 = 0;//0x09;//0x2b;
-
-    // F10D1D
-    uint32_t vin_highbyte = 0xff;
-    uint32_t vin_lowbyte = 0xff;
-
-    uint32_t et_rr_key = 0;//0xb04fdbfc;
-    uint32_t et_rr_seed = 0;
-    QByteArray req_seed;
-
-    for (int i = 0; i < 9; i++)
-    {
-        base = (((base^vin_highbyte) * xor_multi) ^ vin_lowbyte) * xor_multi;
-    }
-    if (base == 0xd3983e93)
-        emit LOG_D("Valid BASE value FOUND: 0x" + QString::number(base, 16), true, true);
-
-    emit LOG_D("BASE value: 0x" + QString::number(base, 16), true, true);
-    emit LOG_D("KEY value: 0x" + QString::number(et_rr_key, 16), true, true);
-    req_seed.clear();
-    req_seed.append((uint8_t)(et_rr_key >> 24));
-    req_seed.append((uint8_t)(et_rr_key >> 16));
-    req_seed.append((uint8_t)(et_rr_key >> 8));
-    req_seed.append((uint8_t)et_rr_key);
-    req_seed = generate_ecutek_seed_key(req_seed);
-    et_rr_seed = ((uint8_t)req_seed.at(0) << 24) & 0xFF000000;
-    et_rr_seed += ((uint8_t)req_seed.at(1) << 16) & 0x00FF0000;
-    et_rr_seed += ((uint8_t)req_seed.at(2) << 8) & 0x0000FF00;
-    et_rr_seed += (uint8_t)req_seed.at(3) & 0x000000FF;
-    emit LOG_D("SEED value: 0x" + QString::number(et_rr_seed, 16), true, true);
-
-    et_rr_seed = ((((base^et_rr_seed)^xor_byte_1)*xor_multi)^xor_byte_2)*xor_multi;
-    emit LOG_D("ALTERED SEED value: 0x" + QString::number(et_rr_seed, 16), true, true);
-*/
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
 
@@ -77,7 +54,6 @@ void FlashEcuSubaruDensoSH7058Can::run()
     }
     QString mcu_name = flashdevices[mcu_type_index].name;
     emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
-
 
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
@@ -195,7 +171,10 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     QByteArray seed;
     QByteArray seed_key;
     QString msg;
+    QString cal_id;
 
+    uint32_t seed_alter_addr = 0;
+    uint32_t xor_bytes_addr = 0;
     uint32_t ram_value = 0;
 
     if (!serial->is_serial_port_open())
@@ -231,47 +210,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     }
 
     emit LOG_I("No response from kernel, initialising ECU...", true, true);
-
-    if (flash_method.endsWith("_ecutek_racerom_alt"))
-    {
-        serial->reset_connection();
-        serial->set_is_iso14230_connection(false);
-        serial->set_is_can_connection(false);
-        serial->set_is_iso15765_connection(false);
-        serial->set_is_29_bit_id(false);
-        serial->set_serial_port_baudrate("4800");
-        serial->set_can_speed("500000");
-        serial->set_can_source_address(0x7E0);
-        serial->set_can_destination_address(0x7E8);
-        serial->set_iso15765_source_address(0x7E0);
-        serial->set_iso15765_destination_address(0x7E8);
-        // Open serial port
-        serial->open_serial_port();
-
-        // AE5Z500V - JF1VA2V62L9812353
-        ram_value = read_ram_location(0xffff1ed8);
-        emit LOG_D("Value at RAM loc 0xffff1ed8: 0x" + QString::number(ram_value, 16), true, true);
-        seed_alter = ram_value;
-        ram_value = read_ram_location(0xffff1e80);
-        emit LOG_D("Value at RAM loc 0xffff1e80: 0x" + QString::number(ram_value, 16), true, true);
-        xor_byte_1 = ((ram_value >> 8) & 0xff);
-        xor_byte_2 = (ram_value & 0xff);
-/*
-        // AE5I910V
-        ram_value = read_ram_location(0xffffbba8);
-        emit LOG_D("Value at RAM loc 0xffffbba8: 0x" + QString::number(ram_value, 16), true, true);
-        seed_alter = ram_value;
-        ram_value = read_ram_location(0xffffbbf0);
-        emit LOG_D("Value at RAM loc 0xffffbbf0: 0x" + QString::number(ram_value, 16), true, true);
-        xor_byte_1 = ((ram_value >> 8) & 0xff);
-        xor_byte_2 = (ram_value & 0xff);
-*/
-        emit LOG_I("Seed alter is: 0x" + QString::number(seed_alter, 16), true, true);
-        emit LOG_I("XOR values are: 0x" + QString::number(xor_byte_1, 16) + " and 0x" + QString::number(xor_byte_2, 16), true, true);
-        serial->reset_connection();
-        serial->set_is_iso15765_connection(true);
-        serial->open_serial_port();
-    }
 
     emit LOG_I("Initialising connection...", true, true);
 
@@ -369,6 +307,7 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
             emit LOG_I("CAL ID: " + response, true, true);
             if (cmd_type == "read")
                 ecuCalDef->RomId.insert(0, QString(response) + "_");
+            cal_id = response;
         }
         else
         {
@@ -417,6 +356,37 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
     {
         emit LOG_E("No valid response from ECU", true, true);
         
+    }
+
+    if (flash_method.endsWith("_ecutek_racerom_alt"))
+    {
+        if (cal_id == "AE5Z500V")
+        {
+            seed_alter_addr = 0xffff1ed8;
+            xor_bytes_addr = 0xffff1e80;
+        }
+        else if (cal_id == "AZ1G202I")
+        {
+            seed_alter_addr = 0xffffbbfc;
+            xor_bytes_addr = 0xffffbc00;
+        }
+        else if (cal_id == "AE5I910V")
+        {
+            seed_alter_addr = 0xffffbba8;
+            xor_bytes_addr = 0xffffbc00;
+        }
+
+        ram_value = read_ram_location(seed_alter_addr);
+        seed_alter = ram_value;
+        emit LOG_D("Value at RAM loc 0x" + QString::number(seed_alter_addr, 16) + " is: 0x" + QString::number(ram_value, 16), true, true);
+
+        ram_value = read_ram_location(xor_bytes_addr);
+        xor_byte_1 = ((ram_value >> 8) & 0xff);
+        xor_byte_2 = (ram_value & 0xff);
+        emit LOG_D("Value at RAM loc 0x" + QString::number(xor_bytes_addr, 16) + " is: 0x" + QString::number(ram_value, 16), true, true);
+
+        emit LOG_I("Seed alter is: 0x" + QString::number(seed_alter, 16), true, true);
+        emit LOG_I("XOR values are: 0x" + QString::number(xor_byte_1, 16) + " and 0x" + QString::number(xor_byte_2, 16), true, true);
     }
 
     bool req_10_03_connected = false;
@@ -639,7 +609,7 @@ uint32_t FlashEcuSubaruDensoSH7058Can::read_ram_location(uint32_t loc)
     received = serial->read_serial_data(serial_read_timeout);
     response = received;
 
-    if (received.length() > 8)
+    if (received.length() > 4)
     {
         if ((uint8_t)received.at(4) != 0xE8)
         {
