@@ -55,68 +55,8 @@ void FlashEcuSubaruDensoSH7058Can::run()
     QString mcu_name = flashdevices[mcu_type_index].name;
     emit LOG_D("MCU type: " + mcu_name + " " + mcu_type_string + " and index: " + QString::number(mcu_type_index), true, true);
 
-
     kernel = ecuCalDef->Kernel;
     flash_method = ecuCalDef->FlashMethod;
-
-    //QString vin_string = "JF1VA2V62L9812353";
-    QString vin_string = "JF1GR89638L821202";
-    QByteArray vin_bytes;
-    uint32_t base = 0x811c9dc5; // 0x811c50a5 + 0x4d20 = 0x811c9dc5
-    uint32_t xor_multi = 0x01000193;
-
-    uint8_t vin_highbyte = 0x00;
-    uint8_t vin_lowbyte = 0x00;
-
-    vin_bytes = vin_string.toUtf8();
-    vin_bytes.append((uint8_t)0x00);
-    //vin_bytes.append(vin_bytes);
-    emit LOG_D("VIN bytes: " + parse_message_to_hex(vin_bytes), true, true);
-    uint8_t vin_offset = 0;
-    emit LOG_I("Look for BASE: 0x6ac4756e", true, true);
-    for (int i = 0; i < 9; i++)
-    {
-        vin_highbyte = (uint8_t)vin_bytes.at((i+vin_offset)*2);
-        vin_lowbyte = (uint8_t)vin_bytes.at((i+vin_offset)*2+1);
-        base = (((base ^ vin_highbyte) * xor_multi) ^ vin_lowbyte) * xor_multi;
-    }
-    emit LOG_I("Calculated BASE: 0x" + QString::number(base, 16), true, true);
-    // With my ECU
-    if (base == 0xd3983e93)
-        emit LOG_I("Valid BASE FOUND: 0x" + QString::number(base, 16), true, true);
-    // JF1GR89638L821202 - 0x6ac4756e
-    if (base == 0x6ac4756e)
-        emit LOG_I("Valid BASE FOUND: 0x" + QString::number(base, 16), true, true);
-
-    uint32_t et_rr_seed = 0x00;
-    QByteArray req_seed;
-    //uint8_t xor_byte_1 = 0x4b; //0x4b; //0xf6;
-    //uint8_t xor_byte_2 = 0x09; //0x09; //0x2b;
-
-    seed_alter = base;//0x6ac4756e;
-    xor_byte_1 = 0x9e;
-    xor_byte_2 = 0x41;
-    et_rr_seed = 0x346eec09;
-    // Key 0xd2329a02
-    // Altered key 0x18855b15
-
-    req_seed.clear();
-    req_seed.append((uint8_t)(et_rr_seed >> 24));
-    req_seed.append((uint8_t)(et_rr_seed >> 16));
-    req_seed.append((uint8_t)(et_rr_seed >> 8));
-    req_seed.append((uint8_t)et_rr_seed);
-    emit LOG_I("Seed: 0x" + QString::number(et_rr_seed, 16), true, true);
-    req_seed = generate_ecutek_seed_key(req_seed);
-    et_rr_seed = ((uint8_t)req_seed.at(0) << 24) & 0xFF000000;
-    et_rr_seed += ((uint8_t)req_seed.at(1) << 16) & 0x00FF0000;
-    et_rr_seed += ((uint8_t)req_seed.at(2) << 8) & 0x0000FF00;
-    et_rr_seed += (uint8_t)req_seed.at(3) & 0x000000FF;
-    emit LOG_I("Altered seed key: 0x" + QString::number(et_rr_seed, 16), true, true);
-
-
-    // base = (((base ^ vin_highbyte) * xor_multi) ^ vin_lowbyte) * xor_multi;
-    //et_rr_seed = ((((base ^ et_rr_seed) ^ xor_byte_1) * xor_multi) ^ xor_byte_2) * xor_multi;
-    //emit LOG_D("ALTERED SEED value: 0x" + QString::number(et_rr_seed, 16), true, true);
 
     emit external_logger("Starting");
 
