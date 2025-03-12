@@ -360,15 +360,6 @@ int FlashEcuSubaruDensoSH7058Can::connect_bootloader()
 
     if (flash_method.endsWith("_ecutek_racerom_alt"))
     {
-        ram_value = read_ram_location(0x000ffb88);
-        emit LOG_I("Value at ROM loc 0x000ffb88: 0x" + QString::number(ram_value, 16), true, true);
-
-        ram_value = read_ram_location(0xffff204c);
-        emit LOG_I("Value at RAM loc 0xffff204c: 0x" + QString::number(ram_value, 16), true, true);
-        ram_value = read_ram_location(0xffff5d68);
-        emit LOG_I("Value at RAM loc 0xffff5d68: 0x" + QString::number(ram_value, 16), true, true);
-
-
         if (cal_id == "AE5Z500V")
         {
             seed_alter_addr = 0xffff1ed8;
