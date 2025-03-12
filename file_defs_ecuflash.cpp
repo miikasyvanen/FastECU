@@ -36,6 +36,11 @@ FileActions::ConfigValuesStructure *FileActions::create_ecuflash_def_id_list(Con
         return configValues;
     }
 
+    configValues->ecuflash_def_cal_id.clear();
+    configValues->ecuflash_def_filename.clear();
+    configValues->ecuflash_def_cal_id_addr.clear();
+    configValues->ecuflash_def_ecu_id.clear();
+
     if (QDir(configValues->ecuflash_definition_files_directory).exists())
     {
         QDirIterator it(dir, QStringList() << "*.xml", QDir::Files, QDirIterator::Subdirectories);
@@ -262,12 +267,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
         return NULL;
     }
 
-    QDomDocument xmlBOM;
-    xmlBOM.setContent(&file);
-    file.close();
-
-    QDomElement root = xmlBOM.documentElement();
-
     if (cal_id.contains("BASE"))
     {
         def_map_index = 0;
@@ -277,14 +276,30 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
     else
         base_defined = false;
 
+    QDomDocument xmlBOM;
+    xmlBOM.setContent(&file);
+    file.close();
+
+    QDomElement root = xmlBOM.documentElement();
+/*
     QDomNodeList rom_childs = xmlBOM.elementsByTagName("rom");
     QDomElement rom_child = rom_childs.at(0).toElement().firstChild().toElement();
     while (!rom_child.isNull())
     {
         if (rom_child.isComment())
             continue;
+*/
+    QDomNodeList rom_childs = xmlBOM.elementsByTagName("rom");
+    QDomElement rom_child_element = rom_childs.at(0).toElement();
+    QDomNodeList items = rom_child_element.childNodes();
+    for(int x = 0; x < items.count(); x++)
+    {
+        if (items.at(x).isComment())
+            continue;
 
-        //emit LOG_D("Checking TAGS";
+        QDomElement rom_child = items.at(x).toElement();
+
+        //emit LOG_D("Checking TAGS:" + rom_child.tagName(), true, true);
         if (rom_child.tagName() == "romid")
         {
             QDomElement rom_id_child = rom_child.firstChild().toElement();
@@ -729,7 +744,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 def_map_index++;
             }
         }
-        rom_child = rom_child.nextSibling().toElement();
+        //rom_child = rom_child.nextSibling().toElement();
     }
 
     //emit LOG_D("CAL ID " + cal_id + " read";
