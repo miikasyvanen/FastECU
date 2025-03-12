@@ -1366,7 +1366,6 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_bf_ssm_init()
     
     received = serial->read_serial_data(serial_read_timeout);
     
-
     return received;
 }
 

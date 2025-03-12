@@ -147,6 +147,7 @@ public:
     int set_lec_lines(int lec1, int lec2);
     int pulse_lec_1_line(int timeout);
     int pulse_lec_2_line(int timeout);
+    bool get_is_tx_done();
 
     bool reset_connection(void);
 

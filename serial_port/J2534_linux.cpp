@@ -132,11 +132,16 @@ QByteArray J2534::write_serial_iso14230_data(QByteArray output)
     return output;
 }
 
+bool J2534::get_is_tx_done()
+{
+    return is_tx_done;
+}
+
 QString J2534::parseMessageToHex(QByteArray received)
 {
     QByteArray msg;
 
-    for (unsigned long i = 0; i < received.length(); i++)
+    for (int i = 0; i < received.length(); i++)
     {
         msg.append(QString("%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
     }
@@ -406,8 +411,9 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
                     msg_index = 0;
                     msg_cnt = 0;
-                    //emit LOG_D("TX_DONE_MSG: " + parseMessageToHex(received), true, true);
+                    emit LOG_D("TX_DONE_MSG: " + parseMessageToHex(received), true, true);
                     received.clear();
+                    is_tx_done = true;
                 }
                 if (msg_type == TX_LB_START_IND)
                 {
@@ -559,6 +565,7 @@ long J2534::PassThruWriteMsgs(unsigned long ChannelID, const PASSTHRU_MSG *pMsg,
         }
         write_serial_data(output);
         pMsg++;
+        is_tx_done = false;
     }
 
     return result;

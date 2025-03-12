@@ -89,11 +89,11 @@ private:
     QString flash_method;
     QString kernel;
 
-    QByteArray bootloader_init_request_fxt02 = { "\x4D\xFF\xB4" };
-    QByteArray bootloader_init_response_stock_fxt02_ok = { "\x4D\x00\xB3" };
-    QByteArray bootloader_init_response_ecutek_fxt02_ok = { "\x4D\x00\xB3" };
-    QByteArray bootloader_init_response_cobb_fxt02_ok = { "\x4D\x00\xB3" };
-    QByteArray bootloader_init_response_fxt02_ok;
+    uint8_t bootloader_init_request_fxt02[3] = { 0x4D, 0xFF, 0xB4 };
+    uint8_t bootloader_init_response_stock_fxt02_ok[3] = { 0x4D, 0x00, 0xB3 };
+    uint8_t bootloader_init_response_ecutek_fxt02_ok[3] = { 0x4D, 0x00, 0xB3 };
+    uint8_t bootloader_init_response_cobb_fxt02_ok[3] = { 0x4D, 0x00, 0xB3 };
+    uint8_t bootloader_init_response_fxt02_ok[3];
 
     void closeEvent(QCloseEvent *bar);
 
@@ -120,7 +120,7 @@ private:
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
-    int check_received_message(QByteArray msg, QByteArray received);
+    int check_received_message(uint8_t *req_response, QByteArray received);
     int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);

@@ -1006,8 +1006,12 @@ QByteArray SerialPortActions::read_serial_obd_data(uint16_t timeout)
 {
     QByteArray response;
     if (isDirectConnection())
+    {
         response = serial_direct->read_serial_obd_data(timeout);
+        emit LOG_D("Response: " + parse_message_to_hex(response.mid(0,20)), true, true);
+    }
 
+    set_comm_busy(false);
     return response;
 }
 
@@ -1060,6 +1064,14 @@ QByteArray SerialPortActions::write_serial_data_echo_check(QByteArray output)
         return serial_direct->write_serial_data_echo_check(output);
     else
         return qtrohelper::slot_sync(serial_remote->write_serial_data_echo_check(output));
+}
+
+bool SerialPortActions::get_is_tx_done()
+{
+    if (isDirectConnection())
+        return serial_direct->get_is_tx_done();
+    //else
+    //    return qtrohelper::slot_sync(serial_remote->get_is_tx_done());
 }
 
 int SerialPortActions::clear_rx_buffer()

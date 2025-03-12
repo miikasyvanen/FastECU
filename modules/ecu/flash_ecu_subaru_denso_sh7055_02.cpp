@@ -67,7 +67,7 @@ void FlashEcuSubaruDensoSH7055_02::run()
     serial->set_is_can_connection(false);
     serial->set_is_iso15765_connection(false);
     serial->set_is_29_bit_id(false);
-    serial->set_serial_port_baudrate("9600");
+    serial->set_serial_port_baudrate("62500");
     tester_id = 0xF0;
     target_id = 0x10;
     // Open serial port
@@ -150,51 +150,6 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    if (flash_method.endsWith("_ecutek"))
-        bootloader_init_response_fxt02_ok = bootloader_init_response_ecutek_fxt02_ok;
-    else if (flash_method.endsWith("_cobb"))
-        bootloader_init_response_fxt02_ok = bootloader_init_response_cobb_fxt02_ok;
-    else
-        bootloader_init_response_fxt02_ok = bootloader_init_response_stock_fxt02_ok;
-
-    // Start countdown
-    if (connect_bootloader_start_countdown(bootloader_start_countdown))
-        return STATUS_ERROR;
-
-    //delay(200);
-    serial->pulse_lec_2_line(200);
-    //delay(200);
-
-    uint16_t loopcount = 20;
-    emit LOG_I(".", true, false);
-    for (int i = 0; i < loopcount; i++)
-    {
-        if (kill_process)
-            return STATUS_ERROR;
-
-        output.clear();
-        for (uint8_t i = 0; i < bootloader_init_request_fxt02.length(); i++)
-        {
-            output.append(bootloader_init_request_fxt02[i]);
-        }
-
-        serial->write_serial_data_echo_check(output);
-        //delay(185);
-        received = serial->read_serial_data(10);
-
-        if (check_received_message(bootloader_init_response_fxt02_ok, received))
-        {
-            emit LOG_I("", false, true);
-            emit LOG_I("Connected to bootloader", true, true);
-            return STATUS_SUCCESS;
-        }
-        emit LOG_I(".", false, false);
-    }
-    emit LOG_I("", false, true);
-    delay(100);
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
-    serial->change_port_speed("62500");
-
     emit LOG_I("No connection to bootloader, checking if kernel already running...", true, true);
     emit LOG_I("Requesting kernel ID", true, true);
     received.clear();
@@ -204,15 +159,13 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID | 0x40))
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
-            return STATUS_ERROR;
         }
         else
         {
             received.remove(0, 5);
             received.remove(received.length() - 1, 1);
             emit LOG_I("Kernel ID: " + received, true, true);
-            
+
             kernel_alive = true;
             return STATUS_SUCCESS;
         }
@@ -220,9 +173,102 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        
-        return STATUS_ERROR;
     }
+
+    if (cmd_type == "read")
+    {
+        //serial->reset_connection();
+        //serial->open_serial_port();
+        serial->change_port_speed("4800");
+        //QMessageBox::information(this, tr("ECU Operation"), "Requesting ECU ID, turn ign on and click OK to continue");
+
+        emit LOG_I("Requesting ECU ID", true, true);
+        received = send_sid_bf_ssm_init();
+        if (received.length() > 4)
+        {
+            if ((uint8_t)received.at(4) != 0xFF)
+            {
+                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+                return STATUS_ERROR;
+            }
+        }
+        else
+        {
+            emit LOG_E("No valid response from ECU", true, true);
+            return STATUS_ERROR;
+        }
+
+        received.remove(0, 8);
+        received.remove(5, received.length() - 5);
+
+        QString msg;
+        for (int i = 0; i < received.length(); i++)
+            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+
+        QString ecuid = msg;
+        emit LOG_I("ECU ID: " + ecuid, true, true);
+        if (cmd_type == "read")
+            ecuCalDef->RomId = ecuid + "_";
+    }
+
+    //serial->reset_connection();
+    //serial->open_serial_port();
+    serial->change_port_speed("9600");
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    serial->read_serial_data(10);
+    QMessageBox::information(this, tr("ECU Operation"), "Connecting to bootloader, turn ign off / on and click OK to continue");
+
+    if (flash_method.endsWith("_ecutek"))
+        memcpy(bootloader_init_response_fxt02_ok, bootloader_init_response_ecutek_fxt02_ok, 3);
+    else if (flash_method.endsWith("_cobb"))
+        memcpy(bootloader_init_response_fxt02_ok, bootloader_init_response_cobb_fxt02_ok, 3);
+    else
+        memcpy(bootloader_init_response_fxt02_ok, bootloader_init_response_stock_fxt02_ok, 3);
+
+    // Start countdown
+    if (connect_bootloader_start_countdown(bootloader_start_countdown))
+        return STATUS_ERROR;
+
+    //delay(2250);
+
+    serial->pulse_lec_2_line(200);
+    serial->read_serial_data(10);
+    delay(190);
+
+    output.clear();
+    for (uint8_t i = 0; i < ARRAYSIZE(bootloader_init_request_fxt02); i++)
+    {
+        output.append(bootloader_init_request_fxt02[i]);
+    }
+
+    uint16_t loopcount = 20;
+    emit LOG_I(".", true, false);
+    for (int i = 0; i < loopcount; i++)
+    {
+        if (kill_process)
+            return STATUS_ERROR;
+
+        serial->write_serial_data_echo_check(output);
+        //delay(185);
+        received = serial->read_serial_obd_data(10);
+
+        if (!check_received_message(bootloader_init_response_fxt02_ok, received))
+        {
+            emit LOG_I("", false, true);
+            emit LOG_I("Connected to bootloader", true, true);
+            delay(100);
+            serial->clear_rx_buffer();
+            received = serial->read_serial_obd_data(10);
+            return STATUS_SUCCESS;
+        }
+        emit LOG_I(".", false, false);
+    }
+    emit LOG_I("", false, true);
+    delay(100);
+    //serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    received = serial->read_serial_data(100);
+
+    return STATUS_ERROR;
 }
 
 int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_start_addr)
@@ -247,10 +293,10 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
         return STATUS_ERROR;
     }
 
-    if (flash_method.endsWith("_ecutek"))
-        serial->change_port_speed("11700");
-    else
-        serial->change_port_speed("9600");
+    //if (flash_method.endsWith("_ecutek"))
+    //    serial->change_port_speed("11700");
+    //else
+    //    serial->change_port_speed("9600");
 
     // Check kernel file
     if (!file.open(QIODevice::ReadOnly ))
@@ -269,9 +315,10 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
         chk_sum += pl_encr[i];
     }
 
-    msg.clear();
-    msg.append(QString("Start address to upload kernel: 0x%1, length: 0x%2").arg(start_address,8,16,QLatin1Char('0')).arg(len,4,16,QLatin1Char('0')).toUtf8());
-    emit LOG_I(msg, true, true);
+    //msg.clear();
+    //msg.append(QString("Start address to upload kernel: 0x%1, length: 0x%2").arg(start_address,8,16,QLatin1Char('0')).arg(len,4,16,QLatin1Char('0')).toUtf8());
+    //emit LOG_I(msg, true, true);
+    emit LOG_D("Start address to upload kernel: 0x" + QString::number(start_address, 16), true, true);
 
     output.clear();
     output.append((uint8_t)SUB_UPLOAD_KERNEL & 0xFF);
@@ -292,6 +339,36 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
 
     emit LOG_I("Start sending kernel... please wait...", true, true);
     serial->write_serial_data_echo_check(output);
+
+    /*
+    uint32_t byteindex = 0;
+    uint32_t flashbytescount = output.length();
+    uint32_t blocksize = 0x80;
+    uint32_t blocks = output.length() / blocksize;
+
+    set_progressbar_value(0);
+    while (output.length())
+    {
+        if ((uint32_t)output.length() < blocksize)
+        {
+            serial->write_serial_data_echo_check(output);
+            output.clear();
+        }
+        else
+        {
+            serial->write_serial_data_echo_check(output.mid(0,blocksize));
+            output.remove(0, blocksize);
+            byteindex += blocksize;
+        }
+        float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
+        set_progressbar_value(pleft);
+        delay(50);
+    }
+    set_progressbar_value(100);
+*/
+#if defined Q_OS_UNIX
+    delay(5000);
+#endif
     received = serial->read_serial_data(serial_read_short_timeout);
     msg.clear();
     for (int i = 0; i < received.length(); i++)
@@ -1204,25 +1281,13 @@ QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_bf_ssm_init()
 {
     QByteArray output;
     QByteArray received;
-    uint8_t loop_cnt = 0;
 
-
+    output.clear();
     output.append((uint8_t)0xBF);
     output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
 
-    while (received == "" && loop_cnt < 5)
-    {
-        if (kill_process)
-            break;
-
-        emit LOG_I("SSM init", true, true);
-        serial->write_serial_data_echo_check(output);
-        
-        delay(500);
-        received = serial->read_serial_data(receive_timeout);
-        
-        loop_cnt++;
-    }
+    received = serial->read_serial_data(serial_read_timeout);
 
     return received;
 }
@@ -1311,16 +1376,23 @@ uint8_t FlashEcuSubaruDensoSH7055_02::calculate_checksum(QByteArray output, bool
     return checksum;
 }
 
-int FlashEcuSubaruDensoSH7055_02::check_received_message(QByteArray msg, QByteArray received)
+int FlashEcuSubaruDensoSH7055_02::check_received_message(uint8_t *req_response, QByteArray received)
 {
-    for (int i = 0; i < msg.length(); i++)
+    if (received.length() != 3)
     {
-        if (received.length() > i - 1)
-            if (msg.at(i) != received.at(i))
-                return STATUS_SUCCESS;
+        emit LOG_D("Error: Wrong response length: 3 / " + QString::number(received.length()), true, true);
+        return STATUS_ERROR;
     }
 
-    return STATUS_ERROR;
+    for (int i = 0; i < 3; i++)
+    {
+        if (req_response[i] != (uint8_t)received.at(i))
+        {
+            emit LOG_D("Error: Wrong response: " + parse_message_to_hex(received), true, true);
+            return STATUS_ERROR;
+        }
+    }
+    return STATUS_SUCCESS;
 }
 
 /*
