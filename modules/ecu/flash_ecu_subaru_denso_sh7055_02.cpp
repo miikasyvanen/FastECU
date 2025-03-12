@@ -150,7 +150,7 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
         return STATUS_ERROR;
     }
 
-    emit LOG_I("No connection to bootloader, checking if kernel already running...", true, true);
+    emit LOG_I("Checking if Kernel already running...", true, true);
     emit LOG_I("Requesting kernel ID", true, true);
     received.clear();
     received = request_kernel_id();
@@ -177,10 +177,7 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
 
     if (cmd_type == "read")
     {
-        //serial->reset_connection();
-        //serial->open_serial_port();
         serial->change_port_speed("4800");
-        //QMessageBox::information(this, tr("ECU Operation"), "Requesting ECU ID, turn ign on and click OK to continue");
 
         emit LOG_I("Requesting ECU ID", true, true);
         received = send_sid_bf_ssm_init();
@@ -211,8 +208,6 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
             ecuCalDef->RomId = ecuid + "_";
     }
 
-    //serial->reset_connection();
-    //serial->open_serial_port();
     serial->change_port_speed("9600");
     serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
     serial->read_serial_data(10);
@@ -228,8 +223,6 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
     // Start countdown
     if (connect_bootloader_start_countdown(bootloader_start_countdown))
         return STATUS_ERROR;
-
-    //delay(2250);
 
     serial->pulse_lec_2_line(200);
     serial->read_serial_data(10);
@@ -315,9 +308,6 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
         chk_sum += pl_encr[i];
     }
 
-    //msg.clear();
-    //msg.append(QString("Start address to upload kernel: 0x%1, length: 0x%2").arg(start_address,8,16,QLatin1Char('0')).arg(len,4,16,QLatin1Char('0')).toUtf8());
-    //emit LOG_I(msg, true, true);
     emit LOG_D("Start address to upload kernel: 0x" + QString::number(start_address, 16), true, true);
 
     output.clear();
@@ -340,32 +330,6 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
     emit LOG_I("Start sending kernel... please wait...", true, true);
     serial->write_serial_data_echo_check(output);
 
-    /*
-    uint32_t byteindex = 0;
-    uint32_t flashbytescount = output.length();
-    uint32_t blocksize = 0x80;
-    uint32_t blocks = output.length() / blocksize;
-
-    set_progressbar_value(0);
-    while (output.length())
-    {
-        if ((uint32_t)output.length() < blocksize)
-        {
-            serial->write_serial_data_echo_check(output);
-            output.clear();
-        }
-        else
-        {
-            serial->write_serial_data_echo_check(output.mid(0,blocksize));
-            output.remove(0, blocksize);
-            byteindex += blocksize;
-        }
-        float pleft = (float)byteindex / (float)flashbytescount * 100.0f;
-        set_progressbar_value(pleft);
-        delay(50);
-    }
-    set_progressbar_value(100);
-*/
 #if defined Q_OS_UNIX
     delay(5000);
 #endif
