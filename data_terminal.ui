@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>947</width>
-    <height>900</height>
+    <height>921</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -470,6 +470,11 @@ QPushButton:checked{background-color:rgb(16, 160, 16);}</string>
          <width>800</width>
          <height>600</height>
         </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>DejaVu Sans Mono</family>
+        </font>
        </property>
       </widget>
      </item>
