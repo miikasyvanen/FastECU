@@ -682,6 +682,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                     }
                                     rom_scale_child_data = rom_scale_child_data.nextSibling().toElement();
                                 }
+                                LOG_D("Scale " + ecuCalDef->XScaleNameList.at(def_map_index) + " data: " + StaticYScaleData, true, true);
                                 ecuCalDef->XScaleStaticDataList.replace(def_map_index, StaticYScaleData);
                             }
                         }
