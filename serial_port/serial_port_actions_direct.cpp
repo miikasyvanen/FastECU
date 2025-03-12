@@ -1046,7 +1046,9 @@ int SerialPortActionsDirect::stop_periodic_j2534_data()
 
 bool SerialPortActionsDirect::get_is_tx_done()
 {
+#if defined Q_OS_UNIX
     return j2534->get_is_tx_done();
+#endif
 }
 
 QByteArray SerialPortActionsDirect::read_j2534_data(unsigned long timeout)
