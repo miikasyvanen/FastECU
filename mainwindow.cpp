@@ -2286,6 +2286,18 @@ void MainWindow::send_message_to_log_window(QString msg)
             textEdit->ensureCursorVisible();
         }
     }
+    QDialog *dataTerminalWindow = this->findChild<QDialog*>("DataTerminalWindow");
+    if (dataTerminalWindow)
+    {
+        emit LOG_D("Found dataTerminalWindow", true, true);
+        QTextEdit *textEdit = dataTerminalWindow->findChild<QTextEdit*>("text_edit");
+        if (textEdit)
+        {
+            emit LOG_D("Found dataTerminalWindow->textEdit", true, true);
+            textEdit->insertPlainText(msg);
+            textEdit->ensureCursorVisible();
+        }
+    }
 }
 
 void MainWindow::update_vbatt()
@@ -2331,6 +2343,19 @@ void MainWindow::update_vbatt()
         if (vBattLabel)
         {
             //emit LOG_D("Found dtcOperationsWindow->vBattLabel", true, true);
+            QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
+            vBattLabel->setText(vBattText);
+            emit LOG_D(vBattText, true, true);
+        }
+    }
+    QDialog *dataTerminalWindow = this->findChild<QDialog*>("DataTerminalWindow");
+    if (dataTerminalWindow)
+    {
+        emit LOG_D("Found dataTerminalWindow", true, true);
+        QLabel *vBattLabel = dataTerminalWindow->findChild<QLabel*>("vBattLabel");
+        if (vBattLabel)
+        {
+            emit LOG_D("Found dataTerminalWindow->vBattLabel", true, true);
             QString vBattText = QString("Battery: %1").arg(vBatt/1000.0, 0, 'f', 3) + " V";
             vBattLabel->setText(vBattText);
             emit LOG_D(vBattText, true, true);

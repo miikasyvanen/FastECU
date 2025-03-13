@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DataTerminal</class>
- <widget class="QWidget" name="DataTerminal">
+ <class>DataTerminalWindow</class>
+ <widget class="QWidget" name="DataTerminalWindow">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>FastECU terminal</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">

@@ -411,7 +411,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
                     received.append(read_serial_data(msg_byte_cnt, Timeout));
                     msg_index = 0;
                     msg_cnt = 0;
-                    emit LOG_D("TX_DONE_MSG: " + parseMessageToHex(received), true, true);
+                    //emit LOG_D("TX_DONE_MSG: " + parseMessageToHex(received), true, true);
                     received.clear();
                     is_tx_done = true;
                 }
@@ -677,11 +677,11 @@ long J2534::PassThruReadVersion(char *pApiVersion,char *pDllVersion,char *pFirmw
     //strncpy(pFirmwareVersion, fw_version, strlen(fw_version));
 
     output = "\r\n\r\nati\r\n";
-    emit LOG_D("Sent:" + parseMessageToHex(output), true, true);
+    emit LOG_D("Sent: " + parseMessageToHex(output), true, true);
     write_serial_data(output);
     delay(50);
     received = read_serial_data(50, 100);
-    emit LOG_D("Response:" + parseMessageToHex(received), true, true);
+    emit LOG_D("Response: " + parseMessageToHex(received), true, true);
     QString response = QString::fromUtf8(received);
     QStringList fw_ver = response.split("ari ");
     fw_ver = fw_ver.at(fw_ver.length()-1).split("\r\n");

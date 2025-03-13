@@ -3,7 +3,7 @@
 
 DataTerminal::DataTerminal(SerialPortActions *serial, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::DataTerminal)
+    , ui(new Ui::DataTerminalWindow)
 {
     ui->setupUi(this);
 
@@ -60,7 +60,7 @@ DataTerminal::~DataTerminal()
 
 void DataTerminal::protocolTypeChanged(int)
 {
-    qDebug() << "Change protocol type";
+    emit LOG_D("Change protocol type", true, true);
     QObject *obj = sender();
     QString interfaceTypeName = obj->objectName();
 
@@ -69,9 +69,9 @@ void DataTerminal::protocolTypeChanged(int)
     if (protocolType)
     {
         if (interfaceTypeName == "klineProtocol")
-            qDebug() << "K-Line protocol type changed to:" << protocolType->currentText();
+            emit LOG_D("K-Line protocol type changed to: " + protocolType->currentText(), true, true);
         else if (interfaceTypeName == "canProtocol")
-            qDebug() << "Can protocol type changed to:" << protocolType->currentText();
+            emit LOG_D("Can protocol type changed to: " + protocolType->currentText(), true, true);
     }
 }
 
@@ -83,24 +83,23 @@ void DataTerminal::listenInterface()
     QPushButton *btn = (QPushButton*)obj;
     if (btn->isChecked())
         if (interfaceTypeName == "klineProtocol")
-            qDebug() << "Start listening K-Line interface";
+            emit LOG_I("Start listening K-Line interface", true, true);
         else
-            qDebug() << "Start listening CANbus interface";
+            emit LOG_I("Start listening CANbus interface", true, true);
     else
         if (interfaceTypeName == "klineProtocol")
-            qDebug() << "Stop listening K-Line interface";
+            emit LOG_I("Stop listening K-Line interface", true, true);
         else
-            qDebug() << "Stop listening CANbus interface";
+            emit LOG_I("Stop listening CANbus interface", true, true);
 }
 
 void DataTerminal::sendToInterface()
 {
     bool serialOk = true;
     bool ok = false;
-    bool readFile = false;
     QObject *obj = sender();
     QString interfaceTypeName = obj->objectName();
-    qDebug() << "Send data to interface";
+    emit LOG_D("Send data to interface", true, true);
 
     QFile file;
     QString msg;
@@ -113,25 +112,24 @@ void DataTerminal::sendToInterface()
 
     if (msg == "")
     {
+        emit LOG_E("Add message bytes or file to send", true, true);
         QMessageBox::warning(this, tr("Data terminal"), "Add message bytes or file to send");
         return;
     }
 
     if (msg.at(0) != '.' && msg.at(0) != '/')
     {
-        qDebug() << "Read message from lineedit";
+        emit LOG_D("Read message from lineedit", true, true);
         msgList.append(msg);
     }
     else
     {
-        qDebug() << "Read message from file";
-        readFile = true;
+        emit LOG_D("Read message from file", true, true);
         QFile file(msg);
         if (!file.open(QIODevice::ReadOnly ))
         {
+            emit LOG_E("Unable to open datastream file '" + file.fileName() + "' for reading", true, true);
             QMessageBox::warning(this, tr("Data terminal"), "Unable to open datastream file '" + file.fileName() + "' for reading");
-            emit LOG_I("Unable to open datastream file '" + file.fileName() + "' for reading", true, true);
-            qDebug() << "Unable to open datastream file '" + file.fileName() + "' for reading";
             return;
         }
         QTextStream in(&file);
@@ -146,9 +144,9 @@ void DataTerminal::sendToInterface()
 
     if (interfaceTypeName.startsWith("sendKlineMessage"))
     {
-        qDebug() << "Send message via K-Line";
+        emit LOG_D("Send message via K-Line", true, true);
 
-        qDebug() << "Checking protocol:" << ui->klineProtocol->currentText();
+        emit LOG_D("Checking protocol: " + ui->klineProtocol->currentText(), true, true);
         if (ui->klineProtocol->currentText() == "SSM")
             serial->set_is_iso14230_connection(false);
         else if (ui->klineProtocol->currentText() == "iso14230")
@@ -156,26 +154,26 @@ void DataTerminal::sendToInterface()
         else
             serialOk = false;
 
-        qDebug() << "Checking baudrate:" << ui->klineBaudRate->text();
+        emit LOG_D("Checking baudrate: " + ui->klineBaudRate->text(), true, true);
         if (ui->klineBaudRate->text().toDouble() >=300 && ui->klineBaudRate->text().toDouble() <=2000000)
             serial->set_serial_port_baudrate(ui->klineBaudRate->text());
         else
             serialOk = false;
 
-        qDebug() << "Checking tester id:" << ui->klineTesterId->text();
+        emit LOG_D("Checking tester id: " + ui->klineTesterId->text(), true, true);
         serial->set_kline_tester_id(ui->klineTesterId->text().toUInt(&ok, 16));
 
-        qDebug() << "Checking target id:" << ui->klineTargetId->text();
+        emit LOG_D("Checking target id: " + ui->klineTargetId->text(), true, true);
         serial->set_kline_target_id(ui->klineTargetId->text().toUInt(&ok, 16));
 
         if (serialOk)
         {
-            qDebug() << "All good, setting interface...";
+            emit LOG_D("All good, setting interface...", true, true);
             serial->set_kline_startbyte(0x80);
             serial->set_is_can_connection(false);
             serial->set_is_iso15765_connection(false);
             serial->set_is_29_bit_id(false);
-            qDebug() << "Opening interface...";
+            emit LOG_D("Opening interface...", true, true);
             serial->open_serial_port();
         }
 
@@ -183,7 +181,6 @@ void DataTerminal::sendToInterface()
         QByteArray output;
         QByteArray received;
         int rspDelay = 10;
-        qDebug() << "Append message to serial output" << msg;
         for (int j = 0; j < msgList.length(); j++)
         {
             output.clear();
@@ -199,13 +196,13 @@ void DataTerminal::sendToInterface()
                 if (ui->klineProtocol->currentText() == "SSM")
                     output = add_ssm_header(output, ui->klineTesterId->text().toUInt(&ok, 16), ui->klineTargetId->text().toUInt(&ok, 16), false);
 
-                qDebug() << "Message to send:" << parse_message_to_hex(output);
+                emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
             }
             if (msgList.length() > (j+1))
             {
                 if (msgList.at(j+1).startsWith("delay"))
                 {
-                    qDebug() << "Set delay";
+                    emit LOG_D("Set delay", true, true);
                     delay(msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt());
                     j++;
                 }
@@ -213,14 +210,15 @@ void DataTerminal::sendToInterface()
             serial->write_serial_data_echo_check(output);
             delay(rspDelay);
             received = serial->read_serial_data(serial_read_short_timeout);
+            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
         }
         serial->reset_connection();
     }
     else if (interfaceTypeName.startsWith("sendCanMessage"))
     {
-        qDebug() << "Send message via CAN / iso15765";
+        emit LOG_D("Send message via CAN / iso15765", true, true);
 
-        qDebug() << "Checking protocol:" << ui->canProtocol->currentText();
+        emit LOG_D("Checking protocol: " + ui->canProtocol->currentText(), true, true);
         serial->set_is_can_connection(false);
         serial->set_is_iso15765_connection(false);
         if (ui->canProtocol->currentText() == "CAN")
@@ -229,25 +227,25 @@ void DataTerminal::sendToInterface()
             serial->set_is_iso15765_connection(true);
         else
             serialOk = false;
-        qDebug() << "Checking baudrate:" << ui->canBaudRate->text();
+        emit LOG_D("Checking baudrate: " + ui->canBaudRate->text(), true, true);
         if (ui->canBaudRate->text().toDouble() >=300 && ui->canBaudRate->text().toDouble() <=2000000)
             serial->set_can_speed(ui->canBaudRate->text());
         else
             serialOk = false;
 
-        qDebug() << "Checking CAN ID length:" << ui->canIdLength->currentText();
+        emit LOG_D("Checking CAN ID length: " + ui->canIdLength->currentText(), true, true);
         serial->set_is_29_bit_id(ui->canIdLength->currentIndex());
 
-        qDebug() << "Checking tester id:" << ui->canTesterId->text();
+        emit LOG_D("Checking tester id: " + ui->canTesterId->text(), true, true);
         serial->set_iso15765_source_address(ui->canTesterId->text().toUInt(&ok, 16));
 
-        qDebug() << "Checking target id:" << ui->canTargetId->text();
+        emit LOG_D("Checking target id: " + ui->canTargetId->text(), true, true);
         serial->set_iso15765_destination_address(ui->canTargetId->text().toUInt(&ok, 16));
 
         if (serialOk)
         {
-            qDebug() << "All good, setting interface...";
-            qDebug() << "Opening interface...";
+            emit LOG_D("All good, setting interface...", true, true);
+            emit LOG_D("Opening interface...", true, true);
             serial->open_serial_port();
         }
 
@@ -267,10 +265,9 @@ void DataTerminal::sendToInterface()
                 {
                     if (msg.length() > 8)
                     {
-                        qDebug() << "ERROR: CAN message too long (8 message bytes)";
-                        QMessageBox::warning(this, tr("CAN message"), "ERROR: CAN message too long (use 4 ID bytes + 8 message bytes)");
+                        emit LOG_E("CAN message too long (8 message bytes)", true, true);
+                        QMessageBox::warning(this, tr("CAN message"), "CAN message too long (use 4 ID bytes + 8 message bytes)");
                     }
-                    qDebug() << "Append message to CAN output" << msg;
                 }
                 for (int i = 3; i >= 0; i--)
                 {
@@ -280,13 +277,13 @@ void DataTerminal::sendToInterface()
                 {
                     output.append(msg.at(i).toUInt(&ok, 16));
                 }
-                qDebug() << "Message to send:" << parse_message_to_hex(output);
+                emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
             }
             if (msgList.length() > (j+1))
             {
                 if (msgList.at(j+1).startsWith("delay"))
                 {
-                    qDebug() << "Set delay";
+                    emit LOG_D("Set delay", true, true);
                     rspDelay = msgList.at(j+1).split(")").at(1).split("(").at(0).toUInt();
                     j++;
                 }
@@ -295,6 +292,7 @@ void DataTerminal::sendToInterface()
 
             delay(rspDelay);
             received = serial->read_serial_data(serial_read_short_timeout);
+            emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
         }
         serial->reset_connection();
     }
@@ -312,7 +310,7 @@ QByteArray DataTerminal::add_ssm_header(QByteArray output, uint8_t tester_id, ui
 {
     uint8_t length = output.length();
 
-    qDebug() << "Append SSM header for message:" << parse_message_to_hex(output) << "length:" << QString::number(length);
+    emit LOG_D("Append SSM header for message: " + parse_message_to_hex(output) + " length: " + QString::number(length), true, true);
     output.insert(0, (uint8_t)0x80);
     output.insert(1, target_id & 0xFF);
     output.insert(2, tester_id & 0xFF);
@@ -320,7 +318,7 @@ QByteArray DataTerminal::add_ssm_header(QByteArray output, uint8_t tester_id, ui
 
     output.append(calculate_checksum(output, dec_0x100));
 
-    qDebug() << "Constructed SSM message:" << parse_message_to_hex(output);
+    emit LOG_D("Constructed SSM message: " + parse_message_to_hex(output), true, true);
     return output;
 }
 

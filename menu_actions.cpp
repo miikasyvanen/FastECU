@@ -1090,6 +1090,11 @@ void MainWindow::show_terminal_window()
     serial_port.append(serial_ports.at(serial_port_list->currentIndex()));
     serial->set_serial_port_list(serial_port);
     DataTerminal hexCommander(serial, this);
+    QObject::connect(&hexCommander, &DataTerminal::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&hexCommander, &DataTerminal::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&hexCommander, &DataTerminal::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(&hexCommander, &DataTerminal::LOG_D, syslogger, &SystemLogger::log_messages);
+
     hexCommander.exec();
 }
 

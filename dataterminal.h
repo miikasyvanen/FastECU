@@ -28,7 +28,7 @@ class SerialPortActions;
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
-class DataTerminal;
+class DataTerminalWindow;
 }
 QT_END_NAMESPACE
 
@@ -63,7 +63,7 @@ private:
     void delay(int timeout);
 
     SerialPortActions *serial;
-    Ui::DataTerminal *ui;
+    Ui::DataTerminalWindow *ui;
 
 signals:
 
