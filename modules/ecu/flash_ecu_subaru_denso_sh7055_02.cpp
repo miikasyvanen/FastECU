@@ -331,7 +331,8 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
     serial->write_serial_data_echo_check(output);
 
 #if defined Q_OS_UNIX
-    delay(5000);
+    if (serial->get_use_openport2_adapter())
+        delay(5000);
 #endif
     received = serial->read_serial_data(serial_read_short_timeout);
     msg.clear();
