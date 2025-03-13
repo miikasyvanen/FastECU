@@ -2064,18 +2064,13 @@ FileActions::EcuCalDefStructure *FileActions::use_existing_definition_for_rom(Fi
 FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
-    //save_subaru_rom_file(ecuCalDef, "calibrations/temp.bin");
 
     QString file_name_str;
-    QString ecu_id;
-    QString cal_id;
     QString selected_id;
-    bool cal_id_confirmed = true;
     QStringList cal_id_family_list;
     QStringList cal_id_ascii_list;
     QStringList cal_id_addr_list;
     QStringList cal_id_length_list;
-    bool ecu_id_confirmed = true;
     QStringList ecu_id_ascii_list;
     QStringList ecu_id_addr_list;
     QStringList ecu_id_length_list;
@@ -2148,17 +2143,6 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
 
     def_map_index = 0;
-
-    uint32_t chksum = 0;
-    uint32_t chksum_start = 0x00002000;
-    uint32_t chksum_end = 0x000ffaf7;
-    chksum = 0;
-    for (uint32_t i = chksum_start; i < chksum_end; i+=4)
-    {
-        chksum += ((uint8_t)ecuCalDef->FullRomData.at(i) << 24) + ((uint8_t)ecuCalDef->FullRomData.at(i + 1) << 16) + ((uint8_t)ecuCalDef->FullRomData.at(i + 2) << 8) + (uint8_t)ecuCalDef->FullRomData.at(i + 3);
-    }
-    emit LOG_D("CHKSUM 1: 0x" + QString::number(chksum, 16), true, true);
-    emit LOG_D("CHKSUM 2: 0x" + QString::number(0x5aa5a55a-chksum, 16), true, true);
 
     ecuCalDef->use_ecuflash_definition = false;
     ecuCalDef->use_romraider_definition = false;
