@@ -882,7 +882,7 @@ struct SerialPortActions::kline_timings SerialPortActions::get_kline_timings()
     return timings;
 }
 */
-bool SerialPortActions::set_kline_timings(unsigned long parameter, int value)
+bool SerialPortActions::set_kline_timings(uint32_t parameter, int value)
 {
     if (isDirectConnection())
         serial_direct->set_kline_timings(parameter, value);

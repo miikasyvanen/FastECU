@@ -135,8 +135,7 @@ public:
     uint32_t get_iso15765_destination_address();
     bool     set_iso15765_destination_address(uint32_t value);
 
-    //struct kline_timings get_kline_timings();
-    bool     set_kline_timings(unsigned long parameter, int value);
+    bool     set_kline_timings(uint32_t parameter, int value);
 
     int set_j2534_ioctl(uint32_t parameter, int value);
 
