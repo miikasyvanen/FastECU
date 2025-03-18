@@ -54,10 +54,9 @@ void RemoteUtility::startOverNetwok()
     //WebSocket over SSL
     QUrl url("wss://"+peerAddress);
     url.setPath(wssPath);
-    QNetworkRequest req;
-    req.setRawHeader(webSocketPasswordHeader.toUtf8(), password.toUtf8());
-    req.setUrl(url);
-    webSocket->open(req);
+    networkRequest.setRawHeader(webSocketPasswordHeader.toUtf8(), password.toUtf8());
+    networkRequest.setUrl(url);
+    webSocket->open(networkRequest);
 
     //Connect to source published with name
     remote_utility = node.acquire<RemoteUtilityReplica>(remoteObjectNameUtility);
@@ -75,8 +74,16 @@ void RemoteUtility::waitForSource(void)
     //Wait for replication
     while (!remote_utility->waitForSource(1000))
     {
-        sendAutoDiscoveryMessage();
-        qDebug() << "RemoteUtility: Waiting for remote peer...";
+        if (webSocket->state() == QAbstractSocket::UnconnectedState)
+        {
+            webSocket->open(networkRequest);
+            qDebug() << "RemoteUtility: Reopening socket...";
+        }
+        else
+        {
+            sendAutoDiscoveryMessage();
+            qDebug() << "RemoteUtility: Waiting for remote peer...";
+        }
     }
 }
 

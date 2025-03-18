@@ -183,6 +183,7 @@ private:
     const QString wssPath = "/" + remoteObjectName;
     const QString webSocketPasswordHeader = "fastecu-basic-password";
     const int heartbeatInterval; //Inited in constructor initializer list
+    QNetworkRequest networkRequest;
     QWebSocket *webSocket;
     WebSocketIoDevice *socket;
     QRemoteObjectNode node;
