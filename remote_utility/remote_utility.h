@@ -31,6 +31,10 @@ public slots:
 
 signals:
     void stateChanged(QRemoteObjectReplica::State state, QRemoteObjectReplica::State oldState);
+    void LOG_E(QString message, bool timestamp = true, bool linefeed = true);
+    void LOG_W(QString message, bool timestamp = true, bool linefeed = true);
+    void LOG_I(QString message, bool timestamp = true, bool linefeed = true);
+    void LOG_D(QString message, bool timestamp = true, bool linefeed = true);
 
 private:
     QString peerAddress;

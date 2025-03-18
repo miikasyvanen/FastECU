@@ -286,6 +286,10 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     QObject::connect(serial, &SerialPortActions::LOG_D, syslogger, &SystemLogger::log_messages);
 
     remote_utility = new RemoteUtility(peerAddress, peerPassword, nullptr, this);
+    QObject::connect(remote_utility, &RemoteUtility::LOG_E, syslogger, &SystemLogger::log_messages);
+    QObject::connect(remote_utility, &RemoteUtility::LOG_W, syslogger, &SystemLogger::log_messages);
+    QObject::connect(remote_utility, &RemoteUtility::LOG_I, syslogger, &SystemLogger::log_messages);
+    QObject::connect(remote_utility, &RemoteUtility::LOG_D, syslogger, &SystemLogger::log_messages);
     if (!serial->isDirectConnection())
     {
         netSplashProgressBar->setValue(0);
