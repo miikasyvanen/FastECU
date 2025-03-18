@@ -89,10 +89,11 @@
 
 #include <systemlogger.h>
 
-#include <remote_utility/remote_utility.h>
+#include <QRemoteObjectReplica>
 
 //Forward declaration
 class SerialPortActions;
+class RemoteUtility;
 
 extern void log_error(const QString &message, bool timestamp, bool linefeed);
 extern void log_warning(const QString &message, bool timestamp, bool linefeed);

@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QSplashScreen>
 #include "serial_port_actions.h"
+#include "remote_utility.h"
 
 const QColor MainWindow::RED_LIGHT_OFF = QColor(96, 32, 32);
 const QColor MainWindow::YELLOW_LIGHT_OFF = QColor(96, 96, 32);
