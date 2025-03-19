@@ -393,7 +393,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             ecuCalDef->ScalingFineIncList.append(QString::number(ecuCalDef->ScalingCoarseIncList.at(scaling_index).toFloat() / 10.0f));
             ecuCalDef->ScalingStorageTypeList.append(rom_child.attribute("storagetype"," "));
             ecuCalDef->ScalingEndianList.append(rom_child.attribute("endian"," "));
-            //emit LOG_D("Scaling name: " + rom_child.attribute("name","no name");
             QString selection_name;
             QString selection_value;
             if (rom_child.attribute("storagetype"," ") == "bloblist")
@@ -554,7 +553,6 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ecuCalDef->XScaleStartPosList.replace(def_map_index, rom_scale_child.attribute("startpos", "1"));
                             if (ecuCalDef->XScaleIntervalList.at(def_map_index) == " ")
                                 ecuCalDef->XScaleIntervalList.replace(def_map_index, rom_scale_child.attribute("interval", "1"));
-
                             QDomElement rom_scale_sub_child = rom_scale_child.firstChild().toElement();
                             if (rom_scale_sub_child.tagName() == "scaling")
                             {

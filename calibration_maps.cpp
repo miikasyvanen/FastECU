@@ -118,14 +118,8 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     ui->mapDataTableWidget->setObjectName(mapWindowObjectName);
     ui->mapDataTableWidget->setColumnCount(xSize);
     ui->mapDataTableWidget->setRowCount(ySize);
+    ui->mapDataTableWidget->setStyleSheet("QTableWidget::item { padding: 3px }");
     ui->mapNameLabel->setText(ecuCalDef->NameList.at(mapIndex));
-
-    for (int col = 0; col < ui->mapDataTableWidget->columnCount(); col++){
-        ui->mapDataTableWidget->horizontalHeader()->resizeSection(col, mapCellWidth);
-    }
-    for (int row = 0; row < ui->mapDataTableWidget->rowCount(); row++){
-        ui->mapDataTableWidget->verticalHeader()->resizeSection(row, mapCellHeight);
-    }
 
     if (ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
@@ -136,6 +130,9 @@ CalibrationMaps::CalibrationMaps(FileActions::EcuCalDefStructure *ecuCalDef, int
     }
 
     setMapTableWidgetItems(ecuCalDef, mapIndex);
+    ui->mapDataTableWidget->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+    ui->mapDataTableWidget->verticalHeader()->resizeSections(QHeaderView::ResizeToContents);
+
     setMapTableWidgetSize(mdiAreaSize.width()-15, mdiAreaSize.height()-15, xSize);
 
     if (ecuCalDef->TypeList.at(mapIndex) != "Selectable" && ecuCalDef->TypeList.at(mapIndex) != "Switch")
@@ -220,7 +217,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             QString switch_data = switch_states.at(i + 1);
             QString map_data;
             uint32_t byte_address = ecuCalDef->AddressList.at(mapIndex).toUInt(&bStatus, 16);
-            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < (170 * 1024) && byte_address > 0x27FFF)
+            if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && ecuCalDef->FileSize.toUInt() < (190 * 1024) && byte_address > 0x27FFF)
                 byte_address -= 0x8000;
             for (int j = 0; j < switch_data_length.length(); j++)
             {
@@ -466,7 +463,7 @@ int CalibrationMaps::getMapValueDecimalCount(QString valueFormat)
     if (valueFormat.contains("."))
         return valueFormat.split(".").at(1).count(QLatin1Char('0'));
     else
-        return 0;//valueFormat.count(QLatin1Char('0'));
+        return 0;
 }
 
 int CalibrationMaps::getMapCellColors(FileActions::EcuCalDefStructure *ecuCalDef, float mapDataValue, int mapIndex)

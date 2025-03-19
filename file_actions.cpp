@@ -2311,9 +2311,13 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     //emit LOG_D("QByteArray size = " + ecuCalDef->FullRomData.length(), true, true);
 
     int storagesize = 0;
+    QString storagetype = 0;
     QString mapData;
 
     union mapData{
+        int8_t oneSByteValue[4];
+        int16_t twoSByteValue[2];
+        int32_t fourSByteValue;
         uint8_t oneByteValue[4];
         uint16_t twoByteValue[2];
         uint32_t fourByteValue;
@@ -2324,11 +2328,12 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     {
         //emit LOG_D("Start parsing map" + " " + i + " " + ecuCalDef->NameList.at(i), true, true);
         storagesize = 1;
-        if (ecuCalDef->StorageTypeList.at(i) == "uint16")
+        storagetype = ecuCalDef->StorageTypeList.at(i);
+        if (storagetype == "uint16" || storagetype == "int16")
             storagesize = 2;
-        if (ecuCalDef->StorageTypeList.at(i) == "uint24")
+        else if (storagetype == "uint24" || storagetype == "int24")
             storagesize = 3;
-        if (ecuCalDef->StorageTypeList.at(i) == "uint32" || ecuCalDef->StorageTypeList.at(i) == "float")
+        else if (storagetype == "uint32" || storagetype == "int32" || storagetype == "float")
             storagesize = 4;
         mapData.clear();
         if (ecuCalDef->StorageTypeList.at(i) == "bloblist")
@@ -2338,7 +2343,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
             //else
             //    storagesize = ecuCalDef->SelectionsDataList.at(i).split(",").at(0).length() / 2;
-            uint8_t dataByte = 0;
+            int8_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16);
             for (int k = 0; k < storagesize; k++)
             {
@@ -2355,6 +2360,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
 
             for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
             {
+                int32_t signedDataByte = 0;
                 uint32_t dataByte = 0;
                 uint32_t startPos = ecuCalDef->StartPosList.at(i).toUInt(&bStatus,16);
                 uint32_t interval = ecuCalDef->IntervalList.at(i).toUInt(&bStatus,16);
@@ -2373,20 +2379,24 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     }
                     else
                     {
-                        dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                        dataByte = (dataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
                         mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                     }
                 }
                 //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
                     //emit LOG_D("dataByte: " + dataByte + " " + mapDataValue.twoByteValue[0] + " " + mapDataValue.twoByteValue[1], true, true);
                 double value = 0;
+                signedDataByte = dataByte;
                 if (ecuCalDef->TypeList.at(i) != "Selectable")
                 {
                     if (ecuCalDef->StorageTypeList.at(i) == "float"){
                         value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
                     }
                     else{
-                        value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
+                        if (storagetype.startsWith("uint"))
+                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
+                        else
+                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(signedDataByte)));
                     }
                     //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
                         //emit LOG_D("MapData value " + QString::number(value), true, true);
@@ -2406,11 +2416,12 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 else if (ecuCalDef->XScaleTypeList.at(i) == "X Axis" || (ecuCalDef->XScaleTypeList.at(i) == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
                 {
                     storagesize = 1;
-                    if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint16")
+                    storagetype = ecuCalDef->XScaleStorageTypeList.at(i);
+                    if (storagetype == "uint16" || storagetype == "int16")
                         storagesize = 2;
-                    if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint24")
+                    else if (storagetype == "uint24" || storagetype == "int24")
                         storagesize = 3;
-                    if (ecuCalDef->XScaleStorageTypeList.at(i) == "uint32" || ecuCalDef->XScaleStorageTypeList.at(i) == "float")
+                    else if (storagetype == "uint32" || storagetype == "int32" || storagetype == "float")
                         storagesize = 4;
                     mapData.clear();
                     for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt(); j++)
@@ -2457,11 +2468,12 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
             {
                 //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " y scale", true, true);
                 storagesize = 1;
-                if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint16")
+                storagetype = ecuCalDef->YScaleStorageTypeList.at(i);
+                if (storagetype == "uint16" || storagetype == "int16")
                     storagesize = 2;
-                if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint24")
+                else if (storagetype == "uint24" || storagetype == "int24")
                     storagesize = 3;
-                if (ecuCalDef->YScaleStorageTypeList.at(i) == "uint32" || ecuCalDef->YScaleStorageTypeList.at(i) == "float")
+                else if (storagetype == "uint32" || storagetype == "int32" || storagetype == "float")
                     storagesize = 4;
                 mapData.clear();
                 for (unsigned j = 0; j < ecuCalDef->YSizeList.at(i).toUInt(); j++)
@@ -2856,7 +2868,6 @@ double FileActions::calculate_value_from_expression(QStringList expression)
 {
     double value = 0;
 
-    //emit LOG_D("Calculate value from expression", true, true);
     if (expression.length() == 1)
     {
         QString valueString = expression.at(0);
@@ -2864,8 +2875,6 @@ double FileActions::calculate_value_from_expression(QStringList expression)
             valueString.remove(0, 2);
         value = valueString.toDouble();
     }
-
-    //emit LOG_D("Calculate value from expression", true, true);
 
     while (expression.length() > 1)
     {
