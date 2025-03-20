@@ -376,9 +376,11 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '2D/3D'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QStringList xScaleCellText = ecuCalDef->XScaleData.at(mapIndex).split(",");
-        ecuCalDef->MaxValueList[mapIndex] = "-1000";
-        ecuCalDef->MinValueList[mapIndex] = "1000";
-
+        if (ecuCalDef->MinValueList[mapIndex] == " ")
+            ecuCalDef->MinValueList[mapIndex] = "1000";
+        if (ecuCalDef->MaxValueList[mapIndex] == " ")
+            ecuCalDef->MaxValueList[mapIndex] = "-1000";
+/*
         //qDebug() << "xScaleCellText:" << xScaleCellText;
         for (int i = 0; i < mapDataCellText.length(); i++)
         {
@@ -387,7 +389,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             if (mapDataCellText.at(i).toFloat() > ecuCalDef->MaxValueList.at(mapIndex).toFloat())
                 ecuCalDef->MaxValueList[mapIndex] = QString::number(mapDataCellText.at(i).toFloat() * 2);
         }
-
+*/
         for (int i = 0; i < xSize; i++)
         {
             QTableWidgetItem *cellItem = new QTableWidgetItem;

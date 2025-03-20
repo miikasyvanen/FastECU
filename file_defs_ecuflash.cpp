@@ -393,6 +393,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             ecuCalDef->ScalingFineIncList.append(QString::number(ecuCalDef->ScalingCoarseIncList.at(scaling_index).toFloat() / 10.0f));
             ecuCalDef->ScalingStorageTypeList.append(rom_child.attribute("storagetype"," "));
             ecuCalDef->ScalingEndianList.append(rom_child.attribute("endian"," "));
+            emit LOG_D("Scaling " + rom_child.attribute("name"," ") + " min / max: " + rom_child.attribute("min"," ") + " / " + rom_child.attribute("max"," "), true, true);
             QString selection_name;
             QString selection_value;
             if (rom_child.attribute("storagetype"," ") == "bloblist")
@@ -798,6 +799,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
                 ecuCalDef->FromByteList.replace(def_map_index, ecuCalDef->ScalingFromByteList.at(k));
                 ecuCalDef->ToByteList.replace(def_map_index, ecuCalDef->ScalingToByteList.at(k));
                 ecuCalDef->FormatList.replace(def_map_index, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
+                emit LOG_D("Map " + ecuCalDef->NameList.at(def_map_index) + " scaling " + ecuCalDef->ScalingNameList.at(k) + " min / max: " + ecuCalDef->ScalingMinValueList.at(k) + " / " + ecuCalDef->ScalingMaxValueList.at(k), true, true);
             }
             if (ecuCalDef->ScalingNameList.at(k) == ecuCalDef->XScaleScalingNameList.at(def_map_index))
             {
@@ -825,46 +827,6 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
                 ecuCalDef->YScaleToByteList.replace(def_map_index, ecuCalDef->ScalingToByteList.at(k));
                 ecuCalDef->YScaleFormatList.replace(def_map_index, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
             }
-        }
-        if (ecuCalDef->NameList.at(def_map_index) == "Air Fuel Learning Loads" || ecuCalDef->NameList.at(def_map_index) == "Injector Capacity")
-        {
-/*
-            emit LOG_D("";
-            emit LOG_D("Map data";
-            emit LOG_D(ecuCalDef->NameList.at(def_map_index);
-            emit LOG_D(ecuCalDef->AddressList.at(def_map_index);
-            emit LOG_D(ecuCalDef->TypeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->StorageTypeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->UnitsList.at(def_map_index);
-            emit LOG_D(ecuCalDef->FromByteList.at(def_map_index);
-            emit LOG_D(ecuCalDef->ToByteList.at(def_map_index);
-            emit LOG_D(ecuCalDef->FormatList.at(def_map_index);
-            emit LOG_D(ecuCalDef->MapData.at(def_map_index);
-            emit LOG_D("";
-            emit LOG_D("X Axis data";
-            emit LOG_D(ecuCalDef->XSizeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleNameList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleAddressList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleTypeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleScalingNameList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleStorageTypeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleUnitsList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleFromByteList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleToByteList.at(def_map_index);
-            emit LOG_D(ecuCalDef->XScaleData.at(def_map_index);
-            emit LOG_D("";
-            emit LOG_D("Y Axis data";
-            emit LOG_D(ecuCalDef->YSizeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleNameList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleAddressList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleTypeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleScalingNameList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleStorageTypeList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleUnitsList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleFromByteList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleToByteList.at(def_map_index);
-            emit LOG_D(ecuCalDef->YScaleData.at(def_map_index);
-            */
         }
     }
     //emit LOG_D("EcuFlash scalings parsed, start parsing calibration maps";

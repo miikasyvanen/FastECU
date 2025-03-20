@@ -185,8 +185,8 @@ FileActions::EcuCalDefStructure *FileActions::read_romraider_ecu_base_def(EcuCal
                                         ecuCalDef->YSizeList.replace(i, Table.attribute("sizey", "1"));
                                     ecuCalDef->StartPosList.replace(i, Table.attribute("startpos", "1"));
                                     ecuCalDef->IntervalList.replace(i, Table.attribute("interval", "1"));
-                                    ecuCalDef->MinValueList.replace(i, Table.attribute("minvalue","0"));
-                                    ecuCalDef->MaxValueList.replace(i, Table.attribute("maxvalue","0"));
+                                    ecuCalDef->MinValueList.replace(i, Table.attribute("minvalue"," "));
+                                    ecuCalDef->MaxValueList.replace(i, Table.attribute("maxvalue"," "));
 
                                     ecuCalDef->StorageTypeList.replace(i, storage_type);
                                     ecuCalDef->EndianList.replace(i, Table.attribute("endian"," "));
