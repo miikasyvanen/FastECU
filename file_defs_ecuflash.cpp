@@ -858,42 +858,8 @@ FileActions::EcuCalDefStructure *FileActions::add_ecuflash_def_list_item(EcuCalD
     ecuCalDef->StateList.append(" ");
     ecuCalDef->MapScalingNameList.append(" ");
     ecuCalDef->MapData.append(" ");
-
-    ecuCalDef->ScaleTypeList[0].append(" ");
-    ecuCalDef->ScaleNameList[0].append(" ");
-    ecuCalDef->ScaleAddressList[0].append(" ");
-    ecuCalDef->ScaleMinValueList[0].append(" ");
-    ecuCalDef->ScaleMaxValueList[0].append(" ");
-    ecuCalDef->ScaleUnitsList[0].append(" ");
-    ecuCalDef->ScaleFormatList[0].append(" ");
-    ecuCalDef->ScaleFineIncList[0].append(" ");
-    ecuCalDef->ScaleCoarseIncList[0].append(" ");
-    ecuCalDef->ScaleStorageTypeList[0].append(" ");
-    ecuCalDef->ScaleEndianList[0].append(" ");
-    ecuCalDef->ScaleLogParamList[0].append(" ");
-    ecuCalDef->ScaleFromByteList[0].append(" ");
-    ecuCalDef->ScaleToByteList[0].append(" ");
-    ecuCalDef->ScaleStaticDataList[0].append(" ");
-    ecuCalDef->ScaleScalingNameList[0].append(" ");
-    ecuCalDef->ScaleData[0].append(" ");
-
-    ecuCalDef->ScaleTypeList[1].append(" ");
-    ecuCalDef->ScaleNameList[1].append(" ");
-    ecuCalDef->ScaleAddressList[1].append(" ");
-    ecuCalDef->ScaleMinValueList[1].append(" ");
-    ecuCalDef->ScaleMaxValueList[1].append(" ");
-    ecuCalDef->ScaleUnitsList[1].append(" ");
-    ecuCalDef->ScaleFormatList[1].append(" ");
-    ecuCalDef->ScaleFineIncList[1].append(" ");
-    ecuCalDef->ScaleCoarseIncList[1].append(" ");
-    ecuCalDef->ScaleStorageTypeList[1].append(" ");
-    ecuCalDef->ScaleEndianList[1].append(" ");
-    ecuCalDef->ScaleLogParamList[1].append(" ");
-    ecuCalDef->ScaleFromByteList[1].append(" ");
-    ecuCalDef->ScaleToByteList[1].append(" ");
-    ecuCalDef->ScaleStaticDataList[1].append(" ");
-    ecuCalDef->ScaleScalingNameList[1].append(" ");
-    ecuCalDef->ScaleData[1].append(" ");
+    ecuCalDef->MapCellColorMin.append(" ");
+    ecuCalDef->MapCellColorMax.append(" ");
 
     ecuCalDef->XScaleTypeList.append(" ");
     ecuCalDef->XScaleNameList.append(" ");

@@ -625,6 +625,8 @@ FileActions::EcuCalDefStructure *FileActions::add_romraider_def_list_item(EcuCal
     ecuCalDef->StateList.append(" ");
     ecuCalDef->MapScalingNameList.append(" ");
     ecuCalDef->MapData.append(" ");
+    ecuCalDef->MapCellColorMin.append(" ");
+    ecuCalDef->MapCellColorMax.append(" ");
 
     ecuCalDef->XScaleTypeList.append(" ");
     ecuCalDef->XScaleNameList.append(" ");
