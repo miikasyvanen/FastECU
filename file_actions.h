@@ -259,27 +259,8 @@ public:
         QStringList StateList;
         QStringList MapScalingNameList;
         QStringList MapData;
-
-        QStringList ScaleTypeList[2];
-        QStringList ScaleNameList[2];
-        QStringList ScaleAddressList[2];
-        QStringList ScaleSizeList[2];
-        QStringList ScaleStartPosList[2];
-        QStringList ScaleIntervalList[2];
-        QStringList ScaleMinValueList[2];
-        QStringList ScaleMaxValueList[2];
-        QStringList ScaleUnitsList[2];
-        QStringList ScaleFormatList[2];
-        QStringList ScaleFineIncList[2];
-        QStringList ScaleCoarseIncList[2];
-        QStringList ScaleStorageTypeList[2];
-        QStringList ScaleEndianList[2];
-        QStringList ScaleLogParamList[2];
-        QStringList ScaleFromByteList[2];
-        QStringList ScaleToByteList[2];
-        QStringList ScaleStaticDataList[2];
-        QStringList ScaleScalingNameList[2];
-        QStringList ScaleData[2];
+        QStringList MapCellColorMin;
+        QStringList MapCellColorMax;
 
         QStringList XScaleTypeList;
         QStringList XScaleNameList;

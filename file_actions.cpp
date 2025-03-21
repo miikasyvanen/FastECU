@@ -2343,7 +2343,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
             //else
             //    storagesize = ecuCalDef->SelectionsDataList.at(i).split(",").at(0).length() / 2;
-            int8_t dataByte = 0;
+            uint8_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16);
             for (int k = 0; k < storagesize; k++)
             {
@@ -2379,7 +2379,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     }
                     else
                     {
-                        dataByte = (dataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
+                        if (storagetype.startsWith("uint"))
+                            dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                        else
+                            dataByte = (dataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
                         mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                     }
                 }
@@ -2401,6 +2404,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
                         //emit LOG_D("MapData value " + QString::number(value), true, true);
                 }
+                //if (ecuCalDef->NameList.at(i) == "Base Timing A")
+                //    emit LOG_D("MapData value: " + QString::number(i) + ": 0x" + QString::number(dataByte, 16) + " | " + QString::number(value, 'g', float_precision), true, true);
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
             }
             ecuCalDef->MapData.replace(i, mapData);
