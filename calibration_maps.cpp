@@ -295,7 +295,7 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
     }
     else if (xSize > 1 && (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis"))
     {
-        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type: 'Static'";
+        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type: 'Static'";
 
         QStringList xScaleCellText;
         if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
@@ -311,12 +311,14 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
                 xScaleCellDataText = xScaleCellText.at(i);
             else
                 xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->XScaleFormatList.at(mapIndex)));
+            qDebug() << "xScaleCellDataText:" << xScaleCellDataText;
             //qDebug() << "Y: xSize" << i << "/" << xSize;
 
             cellItem->setTextAlignment(Qt::AlignCenter);
             cellItem->setFont(cellFont);
             if (i < xScaleCellText.count())
                 cellItem->setText(xScaleCellDataText);
+            qDebug() << "cellItem->text():" << cellItem->text();
             ui->mapDataTableWidget->setItem(0, i + xSizeOffset, cellItem);
 /*
             if (ySize > 1)
@@ -373,16 +375,12 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
 
     if (ecuCalDef->TypeList.at(mapIndex) == "2D" || ecuCalDef->TypeList.at(mapIndex) == "3D")
     {
-        //qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '2D/3D'";
+        qDebug() << "Map:" << ecuCalDef->NameList.at(mapIndex) << "type '2D/3D'";
         QStringList mapDataCellText = ecuCalDef->MapData.at(mapIndex).split(",");
         QStringList xScaleCellText = ecuCalDef->XScaleData.at(mapIndex).split(",");
 
         ecuCalDef->MapCellColorMin[mapIndex] = QString::number(mapDataCellText.at(0).toFloat());
-        //if (ecuCalDef->MinValueList.at(mapIndex) != " ")
-        //    ecuCalDef->MapCellColorMin[mapIndex] = ecuCalDef->MinValueList.at(mapIndex);
         ecuCalDef->MapCellColorMax[mapIndex] = QString::number(mapDataCellText.at(0).toFloat());
-        //if (ecuCalDef->MaxValueList.at(mapIndex) != " ")
-        //    ecuCalDef->MapCellColorMax[mapIndex] = ecuCalDef->MaxValueList.at(mapIndex);
 
         for (int i = 0; i < (xSize * ySize); i++)
         {
@@ -398,14 +396,24 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         {
             QTableWidgetItem *cellItem = new QTableWidgetItem;
             QString xScaleCellDataText;
-            xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->FormatList.at(mapIndex)));
+            qDebug() << "xScaleCellText length:" << xScaleCellText.length() << xScaleCellText;
+
+            if (xScaleCellText.at(i) == " ") {
+                xScaleCellText.insert(i, QString::number(i));
+                xScaleCellDataText = xScaleCellText.at(i);
+            }
+            else if (ecuCalDef->XScaleTypeList.at(mapIndex) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(mapIndex) == "Static X Axis")
+                xScaleCellDataText = xScaleCellText.at(i);
+            else
+                xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->FormatList.at(mapIndex)));
+
+            qDebug() << "xScaleCellDataText:" << xScaleCellDataText;
 
             cellItem->setTextAlignment(Qt::AlignCenter);
             cellItem->setFont(cellFont);
             if (i < xScaleCellText.count())
                 cellItem->setText(xScaleCellDataText);
             ui->mapDataTableWidget->setItem(0, i + xSizeOffset, cellItem);
-            //qDebug() << "xScaleCellText:" << xScaleCellText;
 
             QFontMetrics fm(cellFont);
             int width = fm.horizontalAdvance(xScaleCellDataText) + 20;

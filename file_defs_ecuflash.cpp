@@ -393,7 +393,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             ecuCalDef->ScalingFineIncList.append(QString::number(ecuCalDef->ScalingCoarseIncList.at(scaling_index).toFloat() / 10.0f));
             ecuCalDef->ScalingStorageTypeList.append(rom_child.attribute("storagetype"," "));
             ecuCalDef->ScalingEndianList.append(rom_child.attribute("endian"," "));
-            emit LOG_D("Scaling " + rom_child.attribute("name"," ") + " min / max: " + rom_child.attribute("min"," ") + " / " + rom_child.attribute("max"," "), true, true);
+            //emit LOG_D("Scaling " + rom_child.attribute("name"," ") + " min / max: " + rom_child.attribute("min"," ") + " / " + rom_child.attribute("max"," "), true, true);
             QString selection_name;
             QString selection_value;
             if (rom_child.attribute("storagetype"," ") == "bloblist")
@@ -457,11 +457,13 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                 {
                     if (ecuCalDef->XSizeList.at(def_map_index) == "" || ecuCalDef->XSizeList.at(def_map_index) == " ")
                         ecuCalDef->XSizeList.replace(def_map_index, rom_child.attribute("elements", " "));
+                    ecuCalDef->YSizeList.replace(def_map_index, "1");
                 }
                 if (rom_child.attribute("type"," ") == "Y Axis")
                 {
                     if (ecuCalDef->YSizeList.at(def_map_index) == "" || ecuCalDef->YSizeList.at(def_map_index) == " ")
                         ecuCalDef->YSizeList.replace(def_map_index, rom_child.attribute("elements", " "));
+                    ecuCalDef->XSizeList.replace(def_map_index, "1");
                 }
                 if (ecuCalDef->StartPosList.at(def_map_index) == " ")
                     ecuCalDef->StartPosList.replace(def_map_index, rom_child.attribute("startpos", "1"));
@@ -631,6 +633,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 ScaleType = "Static X Axis";
                             if (ecuCalDef->XSizeList.at(def_map_index) == " " || ecuCalDef->XSizeList.at(def_map_index) == "")
                                 ecuCalDef->XSizeList.replace(def_map_index, rom_scale_child.attribute("elements", " "));
+                            ecuCalDef->YSizeList.replace(def_map_index, "1");
                             if (ecuCalDef->XScaleNameList.at(def_map_index) == " ")
                                 ecuCalDef->XScaleNameList.replace(def_map_index, rom_scale_child.attribute("name"," "));
                             if (ecuCalDef->XScaleAddressList.at(def_map_index) == " ")
@@ -681,7 +684,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                     }
                                     rom_scale_child_data = rom_scale_child_data.nextSibling().toElement();
                                 }
-                                LOG_D("Scale " + ecuCalDef->XScaleNameList.at(def_map_index) + " data: " + StaticYScaleData, true, true);
+                                //emit LOG_D("Scale " + ecuCalDef->XScaleNameList.at(def_map_index) + " data: " + StaticYScaleData, true, true);
                                 ecuCalDef->XScaleStaticDataList.replace(def_map_index, StaticYScaleData);
                             }
                         }
@@ -799,7 +802,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
                 ecuCalDef->FromByteList.replace(def_map_index, ecuCalDef->ScalingFromByteList.at(k));
                 ecuCalDef->ToByteList.replace(def_map_index, ecuCalDef->ScalingToByteList.at(k));
                 ecuCalDef->FormatList.replace(def_map_index, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
-                emit LOG_D("Map " + ecuCalDef->NameList.at(def_map_index) + " scaling " + ecuCalDef->ScalingNameList.at(k) + " min / max: " + ecuCalDef->ScalingMinValueList.at(k) + " / " + ecuCalDef->ScalingMaxValueList.at(k), true, true);
+                //emit LOG_D("Map " + ecuCalDef->NameList.at(def_map_index) + " scaling " + ecuCalDef->ScalingNameList.at(k) + " min / max: " + ecuCalDef->ScalingMinValueList.at(k) + " / " + ecuCalDef->ScalingMaxValueList.at(k), true, true);
             }
             if (ecuCalDef->ScalingNameList.at(k) == ecuCalDef->XScaleScalingNameList.at(def_map_index))
             {

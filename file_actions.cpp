@@ -2357,6 +2357,8 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         else
         {
             //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " is normal map", true, true);
+            if (ecuCalDef->NameList.at(i) == "Front Oxygen Sensor Scaling")
+                emit LOG_D("Map: " + ecuCalDef->NameList.at(i) + " xSize: " + ecuCalDef->XSizeList.at(i) + " and ySize: " + ecuCalDef->YSizeList.at(i), true, true);
 
             for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
             {

@@ -232,18 +232,30 @@ void MainWindow::inc_dec_value(QString action)
                             if (map_min_value != " " && map_item_value < map_min_value.toFloat()) {
                                 map_item_value = map_min_value.toFloat();
                                 new_rom_data_value = QString::number(fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value))));
-                                new_rom_data_value = QString::number(qRound(new_rom_data_value.toFloat()));
+                                map_data_value.dword_value = new_rom_data_value.toUInt();
+                                if (map_value_storagetype == "float")
+                                    map_data_value.dword_value = (uint32_t)(qRound(map_data_value.float_value));
+                                else
+                                    new_rom_data_value = QString::number(qRound(new_rom_data_value.toFloat()));
                                 break;
                             }
                             if (map_max_value != " " && map_item_value > map_max_value.toFloat()) {
                                 map_item_value = map_max_value.toFloat();
                                 new_rom_data_value = QString::number(fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value))));
-                                new_rom_data_value = QString::number(qRound(new_rom_data_value.toFloat()));
+                                map_data_value.dword_value = new_rom_data_value.toUInt();
+                                if (map_value_storagetype == "float")
+                                    map_data_value.dword_value = (uint32_t)(qRound(map_data_value.float_value));
+                                else
+                                    new_rom_data_value = QString::number(qRound(new_rom_data_value.toFloat()));
                                 break;
                             }
 
                             new_rom_data_value = QString::number(fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value))));
-                            new_rom_data_value = QString::number(qRound(new_rom_data_value.toFloat()));
+                            map_data_value.dword_value = new_rom_data_value.toUInt();
+                            if (map_value_storagetype == "float")
+                                map_data_value.dword_value = (uint32_t)(qRound(map_data_value.float_value));
+                            else
+                                new_rom_data_value = QString::number(qRound(new_rom_data_value.toFloat()));
                             if (map_value_storagetype.startsWith("uint")) {
                                 if (map_value_storagetype == "uint8" && new_rom_data_value.toUInt() > 0xff) {
                                     new_rom_data_value = rom_data_value;
@@ -408,12 +420,11 @@ void MainWindow::set_value()
 
                             uint16_t map_value_index = j * map_x_size + i;
                             QString rom_data_value = get_rom_data_value(rom_number, map_data_address, map_value_index, map_value_storagetype, map_value_endian);
-
+/*
                             map_data_value.float_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value)));
-
                             if (map_value_storagetype.startsWith("uint"))
                                 map_data_value.dword_value = (uint32_t)(qRound(map_data_value.float_value));
-
+*/
                             if (text.at(0) == '+'){
                                 QStringList mapItemText = text.split("+");
                                 map_item_value = map_item_value + mapItemText[1].toFloat();
@@ -442,7 +453,11 @@ void MainWindow::set_value()
                                 map_item_value = map_max_value.toFloat();
 
                             rom_data_value = QString::number(fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value))));
-                            rom_data_value = QString::number(qRound(rom_data_value.toFloat()));
+                            map_data_value.dword_value = rom_data_value.toUInt();
+                            if (map_value_storagetype == "float")
+                                map_data_value.dword_value = (uint32_t)(qRound(map_data_value.float_value));
+                            else
+                                rom_data_value = QString::number(qRound(rom_data_value.toFloat()));
                             map_item_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_from_byte, rom_data_value));
 
                             map_data_cell_text.replace(j * map_x_size + i, QString::number(map_item_value));
