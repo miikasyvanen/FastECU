@@ -408,7 +408,6 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         {
             QTableWidgetItem *cellItem = new QTableWidgetItem;
             QString xScaleCellDataText;
-            //qDebug() << "xScaleCellText length:" << xScaleCellText.length() << xScaleCellText;
 
             if (xScaleCellText.at(i) == " ") {
                 xScaleCellText.insert(i, QString::number(i));

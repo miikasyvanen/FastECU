@@ -165,6 +165,8 @@ void MainWindow::inc_dec_value(QString action)
                 int last_row = selected_range.begin()->bottomRow() - 1;
 
                 if (selected_range.begin()->leftColumn() == 0 && mapYSize > 1){
+                    if (ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static Y Axis" || ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static X Axis")
+                        return;
                     map_data_cell_text = ecuCalDef[rom_number]->YScaleData.at(map_number).split(",");
                     map_coarse_inc_value = ecuCalDef[rom_number]->YScaleCoarseIncList[map_number].toFloat();
                     map_fine_inc_value = ecuCalDef[rom_number]->YScaleFineIncList[map_number].toFloat();
@@ -181,6 +183,8 @@ void MainWindow::inc_dec_value(QString action)
                     mapXSize = 1;
                 }
                 else if (selected_range.begin()->topRow() == 0 && mapXSize > 1){
+                    if (ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static Y Axis" || ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static X Axis")
+                        return;
                     map_data_cell_text = ecuCalDef[rom_number]->XScaleData.at(map_number).split(",");
                     map_coarse_inc_value = ecuCalDef[rom_number]->XScaleCoarseIncList[map_number].toFloat();
                     map_fine_inc_value = ecuCalDef[rom_number]->XScaleFineIncList[map_number].toFloat();
@@ -372,7 +376,8 @@ void MainWindow::set_value()
                     int lastRow = selected_range.begin()->bottomRow() - 1;
 
                     if (selected_range.begin()->leftColumn() == 0 && map_y_size > 1){
-                        //qDebug() << "Y scale";
+                        if (ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static Y Axis" || ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static X Axis")
+                            return;
                         map_data_cell_text = ecuCalDef[rom_number]->YScaleData.at(map_number).split(",");
                         map_format = ecuCalDef[rom_number]->YScaleFormatList[map_number];
                         map_value_to_byte = ecuCalDef[rom_number]->YScaleToByteList[map_number];
@@ -387,7 +392,8 @@ void MainWindow::set_value()
                         map_x_size = 1;
                     }
                     else if (selected_range.begin()->topRow() == 0 && map_x_size > 1){
-                        //qDebug() << "X scale";
+                        if (ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static Y Axis" || ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static X Axis")
+                            return;
                         map_data_cell_text = ecuCalDef[rom_number]->XScaleData.at(map_number).split(",");
                         map_format = ecuCalDef[rom_number]->XScaleFormatList[map_number];
                         map_value_to_byte = ecuCalDef[rom_number]->XScaleToByteList[map_number];
@@ -531,6 +537,8 @@ void MainWindow::interpolate_value(QString action)
                 int lastRow = selected_range.begin()->bottomRow() - 1;
 
                 if (selected_range.begin()->leftColumn() == 0 && map_y_size > 1){
+                    if (ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static Y Axis" || ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static X Axis")
+                        return;
                     map_data_cell_text = ecuCalDef[rom_number]->YScaleData.at(map_number).split(",");
                     map_format = ecuCalDef[rom_number]->YScaleFormatList[map_number];
                     map_value_to_byte = ecuCalDef[rom_number]->YScaleToByteList[map_number];
@@ -545,6 +553,8 @@ void MainWindow::interpolate_value(QString action)
                     map_x_size = 1;
                 }
                 else if (selected_range.begin()->topRow() == 0 && map_x_size > 1){
+                    if (ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static Y Axis" || ecuCalDef[rom_number]->XScaleTypeList.at(map_number) == "Static X Axis")
+                        return;
                     map_data_cell_text = ecuCalDef[rom_number]->XScaleData.at(map_number).split(",");
                     map_format = ecuCalDef[rom_number]->XScaleFormatList[map_number];
                     map_value_to_byte = ecuCalDef[rom_number]->XScaleToByteList[map_number];
@@ -692,26 +702,26 @@ void MainWindow::copy_value()
 
 void MainWindow::paste_value()
 {
-    int mapRomNumber = 0;
-    int mapNumber = 0;
+    int rom_number = 0;
+    int map_number = 0;
 
     QMdiSubWindow* w = ui->mdiArea->activeSubWindow();
     if (w)
     {
         QStringList mapWindowString = w->objectName().split(",");
-        mapRomNumber = mapWindowString.at(0).toInt();
-        mapNumber = mapWindowString.at(1).toInt();
+        rom_number = mapWindowString.at(0).toInt();
+        map_number = mapWindowString.at(1).toInt();
 
         QTableWidget* mapTableWidget = w->findChild<QTableWidget*>(w->objectName());
         if (mapTableWidget){
             if (!mapTableWidget->selectedRanges().isEmpty()){
 
-                QStringList mapDataCellText = ecuCalDef[mapRomNumber]->MapData.at(mapNumber).split(",");
+                QStringList mapDataCellText = ecuCalDef[rom_number]->MapData.at(map_number).split(",");
                 QString pasteString = QApplication::clipboard()->text();
                 QStringList rows = pasteString.split('\n');
                 //QString mapFormat = ecuCalDef[mapRomNumber]->FormatList[mapNumber];
-                int mapXSize = ecuCalDef[mapRomNumber]->XSizeList[mapNumber].toInt();
-                int mapYSize = ecuCalDef[mapRomNumber]->YSizeList[mapNumber].toInt();
+                int mapXSize = ecuCalDef[rom_number]->XSizeList[map_number].toInt();
+                int mapYSize = ecuCalDef[rom_number]->YSizeList[map_number].toInt();
 
                 if (!mapTableWidget->selectedRanges().isEmpty()){
                     QList<QTableWidgetSelectionRange> selected_range = mapTableWidget->selectedRanges();
@@ -728,7 +738,7 @@ void MainWindow::paste_value()
                                     mapDataCellText.replace((i + firstRow) * mapXSize + (j + firstCol), columns[j]);
                         }
                     }
-                    ecuCalDef[mapRomNumber]->MapData.replace(mapNumber, mapDataCellText.join(","));
+                    ecuCalDef[rom_number]->MapData.replace(map_number, mapDataCellText.join(","));
                     set_maptablewidget_items();
                 }
             }
@@ -1139,8 +1149,20 @@ void MainWindow::set_maptablewidget_items()
 
                     cellItem->setTextAlignment(Qt::AlignCenter);
                     cellItem->setFont(cellFont);
+
+                    QString xScaleCellDataText;
+
+                    if (xScaleCellText.at(i) == " ") {
+                        xScaleCellText.insert(i, QString::number(i));
+                        xScaleCellDataText = xScaleCellText.at(i);
+                    }
+                    else if (ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) == "Static Y Axis" || ecuCalDef[mapRomNumber]->XScaleTypeList.at(mapNumber) == "Static X Axis")
+                        xScaleCellDataText = xScaleCellText.at(i);
+                    else
+                        xScaleCellDataText = QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber)));
+
                     if (i < xScaleCellText.count())
-                        cellItem->setText(QString::number(xScaleCellText.at(i).toFloat(), 'f', get_mapvalue_decimal_count(ecuCalDef[mapRomNumber]->XScaleFormatList.at(mapNumber))));
+                        cellItem->setText(xScaleCellDataText);
                 }
             }
             if (ySize > 1)
