@@ -2826,37 +2826,33 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             operators.append(expression.at(i));
             stack++;
         }
-        else if (expression.at(i) == '+')
+        else if (expression.at(i) == '+' || expression.at(i) == '-')
         {
             isOperator = true;
             if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == '/' || operators.at(stack - 1) == '*'))
             {
-                numbers.append(operators.at(stack - 1));
-                output++;
-                operators.replace(stack - 1, expression.at(i));
+                while (operators.length() > 0 && (operators.at(stack - 1) == '/' || operators.at(stack - 1) == '*'))
+                {
+                    qDebug() << "Stack:" << stack << "operators:" << operators.length();
+                    numbers.append(operators.at(stack - 1));
+                    stack--;
+                    operators.removeAt(stack);
+                    output++;
+                    if (!stack || !operators.length()) {
+                        qDebug() << "Stack:" << stack << "operators:" << operators.length();
+                        break;
+                    }
+                }
+                operators.append(expression.at(i));
+                stack++;
             }
             else
             {
+                qDebug() << "Append to operators:" << expression.at(i);
                 operators.append(expression.at(i));
                 stack++;
             }
         }
-        else if (expression.at(i) == '-')
-        {
-            isOperator = true;
-            if ((operators.length() > 0 && i > 0) && (operators.at(stack - 1) == '/' || operators.at(stack - 1) == '*'))
-            {
-                numbers.append(operators.at(stack - 1));
-                output++;
-                operators.replace(stack - 1, expression.at(i));
-            }
-            else
-            {
-                operators.append(expression.at(i));
-                stack++;
-            }
-        }
-
         i++;
     }
     while (operators.length() > 0)
@@ -2883,6 +2879,7 @@ double FileActions::calculate_value_from_expression(QStringList expression)
         value = valueString.toDouble();
     }
 
+    qDebug() << "Expression:" << expression;
     while (expression.length() > 1)
     {
         for (int i = 0; i < expression.length(); i++)

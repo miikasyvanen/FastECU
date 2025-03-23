@@ -506,7 +506,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                         if (ecuCalDef->ToByteList.at(def_map_index) == " ")
                             ecuCalDef->ToByteList.replace(def_map_index, rom_scale_child.attribute("frexpr", " "));
                         if (ecuCalDef->FormatList.at(def_map_index) == " ")
-                            ecuCalDef->FormatList.replace(def_map_index, convert_value_format(rom_scale_child.attribute("format", " ")));
+                            ecuCalDef->FormatList.replace(def_map_index, rom_scale_child.attribute("format", " "));
 
                         QString selection_name;
                         QString selection_value;
@@ -579,7 +579,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 if (ecuCalDef->XScaleToByteList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleToByteList.replace(def_map_index, rom_scale_sub_child.attribute("frexpr", " "));
                                 if (ecuCalDef->XScaleFormatList.at(def_map_index) == " ")
-                                    ecuCalDef->XScaleFormatList.replace(def_map_index, convert_value_format(rom_scale_sub_child.attribute("format", " ")));
+                                    ecuCalDef->XScaleFormatList.replace(def_map_index, rom_scale_sub_child.attribute("format", " "));
                             }
                         }
                         else if (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "3D")
@@ -623,7 +623,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 if (ecuCalDef->YScaleToByteList.at(def_map_index) == " ")
                                     ecuCalDef->YScaleToByteList.replace(def_map_index, rom_scale_sub_child.attribute("frexpr", " "));
                                 if (ecuCalDef->YScaleFormatList.at(def_map_index) == " ")
-                                    ecuCalDef->YScaleFormatList.replace(def_map_index, convert_value_format(rom_scale_sub_child.attribute("format", " ")));
+                                    ecuCalDef->YScaleFormatList.replace(def_map_index, rom_scale_sub_child.attribute("format", " "));
                             }
                         }
                         else if (ScaleType == "Static Y Axis" || ScaleType == "Static X Axis" || (ScaleType == "Y Axis" && ecuCalDef->TypeList.at(def_map_index) == "2D"))
@@ -670,7 +670,7 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
                                 if (ecuCalDef->XScaleToByteList.at(def_map_index) == " ")
                                     ecuCalDef->XScaleToByteList.replace(def_map_index, rom_scale_sub_child.attribute("frexpr", " "));
                                 if (ecuCalDef->XScaleFormatList.at(def_map_index) == " ")
-                                    ecuCalDef->XScaleFormatList.replace(def_map_index, convert_value_format(rom_scale_sub_child.attribute("format", " ")));
+                                    ecuCalDef->XScaleFormatList.replace(def_map_index, rom_scale_sub_child.attribute("format", " "));
                             }
                             if (ScaleType == "Static Y Axis" || ScaleType == "Static X Axis")
                             {
@@ -802,7 +802,6 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuflash_def_scalings(EcuCal
                 ecuCalDef->FromByteList.replace(def_map_index, ecuCalDef->ScalingFromByteList.at(k));
                 ecuCalDef->ToByteList.replace(def_map_index, ecuCalDef->ScalingToByteList.at(k));
                 ecuCalDef->FormatList.replace(def_map_index, convert_value_format(ecuCalDef->ScalingFormatList.at(k)));
-                //emit LOG_D("Map " + ecuCalDef->NameList.at(def_map_index) + " scaling " + ecuCalDef->ScalingNameList.at(k) + " min / max: " + ecuCalDef->ScalingMinValueList.at(k) + " / " + ecuCalDef->ScalingMaxValueList.at(k), true, true);
             }
             if (ecuCalDef->ScalingNameList.at(k) == ecuCalDef->XScaleScalingNameList.at(def_map_index))
             {
