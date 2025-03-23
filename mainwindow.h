@@ -47,6 +47,7 @@
 #include <logbox.h>
 #include <settings.h>
 #include <dtc_operations.h>
+#include <hexedit/hexedit.h>
 
 // Flash modules
 // BDM
@@ -351,6 +352,7 @@ private:
     void toggle_can_listener();
     int simulate_obd();
     void show_dtc_window();
+    void show_hex_editor();
     void show_subaru_biu_window();
     void show_terminal_window();
     void show_subaru_get_key_window();

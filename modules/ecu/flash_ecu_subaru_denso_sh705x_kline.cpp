@@ -1558,20 +1558,18 @@ QByteArray FlashEcuSubaruDensoSH705xKline::send_sid_36_transferdata(uint32_t add
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(serial_read_timeout);
-        
+
         if (received.length() > 4)
         {
             if ((uint8_t)received.at(4) != 0x76)
             {
                 emit LOG_E("Write data failed!", true, true);
-                
                 return received;
             }
         }
         else
         {
             emit LOG_E("Write data failed!", true, true);
-            
             return received;
         }
         float pleft = (float)blockno / (float)maxblocks * 100;
