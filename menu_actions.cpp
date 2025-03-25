@@ -285,11 +285,11 @@ void MainWindow::inc_dec_value(QString action)
                                     new_rom_data_value = rom_data_value;
                                     break;
                                 }
-                                else if (map_value_storagetype == "int16" && ((rom_data_value.toInt() <= 0x7fff && new_rom_data_value.toInt() > 0x7fff) || ((uint16_t)rom_data_value.toInt() >= 0x8000 && (uint16_t)new_rom_data_value.toInt() < 0x8000 && new_rom_data_value.toInt() != 0x00))) {
+                                else if (map_value_storagetype == "int16" && ((rom_data_value.toUInt() <= 0x7fff && new_rom_data_value.toUInt() > 0x7fff) || ((uint16_t)rom_data_value.toInt() >= 0x8000 && (uint16_t)new_rom_data_value.toInt() < 0x8000 && new_rom_data_value.toInt() != 0x00))) {
                                     new_rom_data_value = rom_data_value;
                                     break;
                                 }
-                                else if ((map_value_storagetype == "int32" || map_value_storagetype == "float") && ((rom_data_value.toInt() <= 0x7fffffff && new_rom_data_value.toInt() > 0x7fffffff) || ((uint32_t)rom_data_value.toInt() >= 0x80000000 && (uint32_t)new_rom_data_value.toInt() < 0x80000000 && new_rom_data_value.toInt() != 0x00))) {
+                                else if ((map_value_storagetype == "int32" || map_value_storagetype == "float") && ((rom_data_value.toUInt() <= 0x7fffffff && new_rom_data_value.toUInt() > 0x7fffffff) || ((uint32_t)rom_data_value.toInt() >= 0x80000000 && (uint32_t)new_rom_data_value.toInt() < 0x80000000 && new_rom_data_value.toInt() != 0x00))) {
                                     new_rom_data_value = rom_data_value;
                                     break;
                                 }
@@ -417,9 +417,6 @@ void MainWindow::set_value()
                         }
                     }
 
-                    emit LOG_D("Map data min value: " + map_min_value, true, true);
-                    emit LOG_D("Map data max value: " + map_max_value, true, true);
-
                     for (int j = firstRow; j <= lastRow; j++)
                     {
                         for (int i = firstCol; i <= lastCol; i++)
@@ -428,11 +425,7 @@ void MainWindow::set_value()
 
                             uint16_t map_value_index = j * map_x_size + i;
                             QString rom_data_value = get_rom_data_value(rom_number, map_data_address, map_value_index, map_value_storagetype, map_value_endian);
-/*
-                            map_data_value.float_value = fileActions->calculate_value_from_expression(fileActions->parse_stringlist_from_expression_string(map_value_to_byte, QString::number(map_item_value)));
-                            if (map_value_storagetype.startsWith("uint"))
-                                map_data_value.dword_value = (uint32_t)(qRound(map_data_value.float_value));
-*/
+
                             if (text.at(0) == '+'){
                                 QStringList mapItemText = text.split("+");
                                 map_item_value = map_item_value + mapItemText[1].toFloat();
@@ -1312,13 +1305,13 @@ void MainWindow::set_rom_data_value(uint8_t rom_number, uint32_t data_address, u
 
     for (int k = 0; k < storagesize; k++)
     {
-        if (endian == "little")
+        if (endian == "little" || storagetype == "float")
         {
             ecuCalDef[rom_number]->FullRomData[byte_address + k] = (uint8_t)(map_data_value.byte_value[storagesize - 1 - k]);
         }
         else
         {
-            ecuCalDef[rom_number]->FullRomData[byte_address + k] = (uint8_t)(map_data_value.byte_value[storagesize - 1 - k]);
+            ecuCalDef[rom_number]->FullRomData[byte_address + k] = (uint8_t)(map_data_value.byte_value[k]);
         }
     }
 }

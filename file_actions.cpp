@@ -2314,19 +2314,24 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     QString storagetype = 0;
     QString mapData;
 
+    int32_t signedDataByte = 0;
+    uint32_t dataByte = 0;
+    uint32_t startPos = 0;
+    uint32_t interval = 0;
+    uint32_t byteAddress = 0;
+
     union mapData{
-        int8_t oneSByteValue[4];
-        int16_t twoSByteValue[2];
-        int32_t fourSByteValue;
-        uint8_t oneByteValue[4];
-        uint16_t twoByteValue[2];
-        uint32_t fourByteValue;
-        float floatValue;
+        int8_t sbyte_value[4];
+        int16_t sword_value[2];
+        int32_t sdword_value;
+        uint8_t byte_alue[4];
+        uint16_t word_alue[2];
+        uint32_t dword_value;
+        float float_value;
     } mapDataValue;
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
-        //emit LOG_D("Start parsing map" + " " + i + " " + ecuCalDef->NameList.at(i), true, true);
         storagesize = 1;
         storagetype = ecuCalDef->StorageTypeList.at(i);
         if (storagetype == "uint16" || storagetype == "int16")
@@ -2338,11 +2343,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         mapData.clear();
         if (ecuCalDef->StorageTypeList.at(i) == "bloblist")
         {
-            //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " is bloblist", true, true);
-            //if (ecuCalDef->SelectionsValueList.at(i) != " ")
-                storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
-            //else
-            //    storagesize = ecuCalDef->SelectionsDataList.at(i).split(",").at(0).length() / 2;
+            storagesize = ecuCalDef->SelectionsValueList.at(i).split(",").at(0).length() / 2;
             uint8_t dataByte = 0;
             uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16);
             for (int k = 0; k < storagesize; k++)
@@ -2350,74 +2351,56 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 dataByte = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                 mapData.append(QString("%1").arg(dataByte,2,16,QLatin1Char('0')));
             }
-            //emit LOG_D("Selectable " + ecuCalDef->NameList.at(i) + " -> addr: 0x" + QString::number(byteAddress, 16) + " -> value: 0x" + mapData, true, true);
             ecuCalDef->MapData.replace(i, mapData);
-            //emit LOG_D("Mapdata " + ecuCalDef->MapData.at(i), true, true);
         }
         else
         {
-            //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " is normal map", true, true);
-            if (ecuCalDef->NameList.at(i) == "Front Oxygen Sensor Scaling")
-                emit LOG_D("Map: " + ecuCalDef->NameList.at(i) + " xSize: " + ecuCalDef->XSizeList.at(i) + " and ySize: " + ecuCalDef->YSizeList.at(i), true, true);
-
             for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
             {
-                int32_t signedDataByte = 0;
-                uint32_t dataByte = 0;
-                uint32_t startPos = ecuCalDef->StartPosList.at(i).toUInt(&bStatus,16);
-                uint32_t interval = ecuCalDef->IntervalList.at(i).toUInt(&bStatus,16);
-                uint32_t byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
+                signedDataByte = 0;
+                dataByte = 0;
+                startPos = ecuCalDef->StartPosList.at(i).toUInt(&bStatus,16);
+                interval = ecuCalDef->IntervalList.at(i).toUInt(&bStatus,16);
+                byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
+                mapDataValue.dword_value = 0;
 
-                //emit LOG_D("Map value address: 0x" QString::number(byteAddress, 16), true, true);
                 if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                     byteAddress -= 0x8000;
                 for (int k = 0; k < storagesize; k++)
                 {
-                    //emit LOG_D("Check endian";
                     if (ecuCalDef->EndianList.at(i) == "little" || ecuCalDef->StorageTypeList.at(i) == "float")
                     {
-                        dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                        mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
+                        mapDataValue.byte_alue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
                     }
                     else
                     {
                         if (storagetype.startsWith("uint"))
                             dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
                         else
-                            dataByte = (dataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
-                        mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                            signedDataByte = (signedDataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
                     }
                 }
-                //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
-                    //emit LOG_D("dataByte: " + dataByte + " " + mapDataValue.twoByteValue[0] + " " + mapDataValue.twoByteValue[1], true, true);
                 double value = 0;
-                signedDataByte = dataByte;
                 if (ecuCalDef->TypeList.at(i) != "Selectable")
                 {
-                    if (ecuCalDef->StorageTypeList.at(i) == "float"){
-                        value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
-                    }
-                    else{
+                    if (ecuCalDef->StorageTypeList.at(i) == "float")
+                        value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(mapDataValue.float_value, 'g', float_precision)));
+                    else
+                    {
                         if (storagetype.startsWith("uint"))
                             value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
                         else
                             value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(signedDataByte)));
                     }
-                    //if (ecuCalDef->NameList.at(i) == "Volumetric Efficiency")
-                        //emit LOG_D("MapData value " + QString::number(value), true, true);
                 }
-                //if (ecuCalDef->NameList.at(i) == "Base Timing A")
-                //    emit LOG_D("MapData value: " + QString::number(i) + ": 0x" + QString::number(dataByte, 16) + " | " + QString::number(value, 'g', float_precision), true, true);
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
             }
             ecuCalDef->MapData.replace(i, mapData);
 
             if (ecuCalDef->XSizeList.at(i).toUInt() > 1)
             {
-                //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " " + "x scale", true, true);
                 if (ecuCalDef->XScaleTypeList.at(i) == "Static Y Axis" || ecuCalDef->XScaleTypeList.at(i) == "Static X Axis")
                 {
-                    //emit LOG_D("Static X scale", true, true);
                     ecuCalDef->XScaleData.replace(i, ecuCalDef->XScaleStaticDataList.at(i));
                 }
                 else if (ecuCalDef->XScaleTypeList.at(i) == "X Axis" || (ecuCalDef->XScaleTypeList.at(i) == "Y Axis" && ecuCalDef->TypeList.at(i) == "2D"))
@@ -2433,12 +2416,12 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     mapData.clear();
                     for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt(); j++)
                     {
-                        uint32_t dataByte = 0;
-                        uint32_t startPos = ecuCalDef->XScaleStartPosList.at(i).toUInt(&bStatus,16);
-                        uint32_t interval = ecuCalDef->XScaleIntervalList.at(i).toUInt(&bStatus,16);
-                        uint32_t byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
+                        dataByte = 0;
+                        startPos = ecuCalDef->XScaleStartPosList.at(i).toUInt(&bStatus,16);
+                        interval = ecuCalDef->XScaleIntervalList.at(i).toUInt(&bStatus,16);
+                        byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
+                        mapDataValue.dword_value = 0;
 
-                        //emit LOG_D("X Scale value address: 0x" + QString::number(byteAddress, 16), true, true);
                         if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                             byteAddress -= 0x8000;
 
@@ -2446,34 +2429,38 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                         {
                             if (ecuCalDef->XScaleEndianList.at(i) == "little" || ecuCalDef->XScaleStorageTypeList.at(i) == "float")
                             {
-                                dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                                mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
+                                mapDataValue.byte_alue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
                             }
                             else
                             {
-                                dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                                mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                                if (storagetype.startsWith("uint"))
+                                    dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                                else
+                                    signedDataByte = (signedDataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
                             }
                         }
                         double value = 0;
                         if (ecuCalDef->XScaleTypeList.at(i) != "Selectable")
                         {
                             if (ecuCalDef->XScaleStorageTypeList.at(i) == "float")
-                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
+                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(mapDataValue.float_value, 'g', float_precision)));
                             else
-                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(dataByte)));
+                            {
+                                if (storagetype.startsWith("uint"))
+                                    value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(dataByte)));
+                                else
+                                    value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(signedDataByte)));
+                            }
                         }
                         mapData.append(QString::number(value, 'g', float_precision) + ",");
                     }
                     ecuCalDef->XScaleData.replace(i, mapData);
                 }
-                //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " x scale ready", true, true);
             }
             else
                 ecuCalDef->XScaleData.replace(i, " ");
             if (ecuCalDef->YSizeList.at(i).toUInt() > 1)
             {
-                //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " y scale", true, true);
                 storagesize = 1;
                 storagetype = ecuCalDef->YScaleStorageTypeList.at(i);
                 if (storagetype == "uint16" || storagetype == "int16")
@@ -2485,43 +2472,47 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 mapData.clear();
                 for (unsigned j = 0; j < ecuCalDef->YSizeList.at(i).toUInt(); j++)
                 {
-                    uint32_t dataByte = 0;
-                    uint32_t startPos = ecuCalDef->YScaleStartPosList.at(i).toUInt(&bStatus,16);
-                    uint32_t interval = ecuCalDef->YScaleIntervalList.at(i).toUInt(&bStatus,16);
-                    uint32_t byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
+                    dataByte = 0;
+                    startPos = ecuCalDef->YScaleStartPosList.at(i).toUInt(&bStatus,16);
+                    interval = ecuCalDef->YScaleIntervalList.at(i).toUInt(&bStatus,16);
+                    byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
+                    mapDataValue.dword_value = 0;
 
-                    //emit LOG_D("Y Scale value address: " + ecuCalDef->NameList.at(i) + " " + ecuCalDef->YScaleNameList.at(i) + " " + byteAddress, true, true);
                     if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                         byteAddress -= 0x8000;
                     for (int k = 0; k < storagesize; k++)
                     {
                         if (ecuCalDef->YScaleEndianList.at(i) == "little" || ecuCalDef->YScaleStorageTypeList.at(i) == "float")
                         {
-                            dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                            mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
+                            mapDataValue.byte_alue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
                         }
                         else
                         {
-                            dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                            mapDataValue.oneByteValue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                            if (storagetype.startsWith("uint"))
+                                dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
+                            else
+                                signedDataByte = (signedDataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
                         }
                     }
                     double value = 0;
                     if (ecuCalDef->YScaleTypeList.at(i) != "Selectable")
                     {
                         if (ecuCalDef->YScaleStorageTypeList.at(i) == "float")
-                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(mapDataValue.floatValue, 'g', float_precision)));
+                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(mapDataValue.float_value, 'g', float_precision)));
                         else
-                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(dataByte)));
+                        {
+                            if (storagetype.startsWith("uint"))
+                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(dataByte)));
+                            else
+                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(signedDataByte)));
+                        }
                     }
                     mapData.append(QString::number(value, 'g', float_precision) + ",");
                 }
                 ecuCalDef->YScaleData.replace(i, mapData);
-                //emit LOG_D("Map " + ecuCalDef->NameList.at(i) + " x scale ready", true, true);
             }
             else
                 ecuCalDef->YScaleData.replace(i, " ");
-            //emit LOG_D("Map " + i + " parsed", true, true);
         }
     }
 
@@ -2879,7 +2870,7 @@ double FileActions::calculate_value_from_expression(QStringList expression)
         value = valueString.toDouble();
     }
 
-    qDebug() << "Expression:" << expression;
+    //qDebug() << "Expression:" << expression;
     while (expression.length() > 1)
     {
         for (int i = 0; i < expression.length(); i++)
