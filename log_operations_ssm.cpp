@@ -325,7 +325,7 @@ void MainWindow::log_ssm_values()
                     }
                 }
             }
-
+/*
             for (int i = 0; i < logValues->dashboard_log_value_id.length(); i++)
             {
                 for (int j = 0; j < logValues->log_value_id.length(); j++)
@@ -339,7 +339,7 @@ void MainWindow::log_ssm_values()
                         output.append((uint8_t)logValues->log_value_address.at(j).toUInt(&ok,16));
                     }
                 }
-            }
+            }*/
         }
         serial->write_serial_data_echo_check(add_ssm_header(output, false));
         delay(10);
@@ -450,7 +450,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                 }
             }
         }
-
+/*
         //emit LOG_D("indexOf " + logValues->log_value_id.indexOf(QString(logValues->dashboard_log_value_id.at(2)))+1, true, true);
         for (int i = 0; i < logValues->dashboard_log_value_id.length(); i++)
         {
@@ -493,7 +493,7 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
                 }
             }
         }
-
+*/
         //emit LOG_D(parse_message_to_hex(received), true, true);
         //emit LOG_D(" ", true, true);
         logging_request_active = false;
@@ -535,7 +535,7 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
                 if (((value) & (1 << (ecu_bit))))
                 {
                     logValues->log_value_enabled.replace(i, "1");
-                    //emit LOG_D("Enabled: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i) + " " + logValues->log_value_enabled.at(i), true, true);
+                    emit LOG_D("Byte: 0x" + QString::number(value, 16) + " - ECU byte index " + QString::number(ecu_byte_index) + " and bit " + QString::number(ecu_bit) +  " is enabled: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i) + " " + logValues->log_value_enabled.at(i), true, true);
                     enabled_log_value_count++;
                 }
                 else
