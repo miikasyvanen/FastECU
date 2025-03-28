@@ -2824,13 +2824,13 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             {
                 while (operators.length() > 0 && (operators.at(stack - 1) == '/' || operators.at(stack - 1) == '*'))
                 {
-                    qDebug() << "Stack:" << stack << "operators:" << operators.length();
+                    //qDebug() << "Stack:" << stack << "operators:" << operators.length();
                     numbers.append(operators.at(stack - 1));
                     stack--;
                     operators.removeAt(stack);
                     output++;
                     if (!stack || !operators.length()) {
-                        qDebug() << "Stack:" << stack << "operators:" << operators.length();
+                        //qDebug() << "Stack:" << stack << "operators:" << operators.length();
                         break;
                     }
                 }
@@ -2839,7 +2839,7 @@ QStringList FileActions::parse_stringlist_from_expression_string(QString express
             }
             else
             {
-                qDebug() << "Append to operators:" << expression.at(i);
+                //qDebug() << "Append to operators:" << expression.at(i);
                 operators.append(expression.at(i));
                 stack++;
             }
