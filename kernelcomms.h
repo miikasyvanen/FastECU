@@ -69,6 +69,7 @@
 // Subcommands
 #define SUB_KERNEL_SUB_CMD_READ             0x00
 #define SUB_KERNEL_SUB_CMD_WRITE            0x01
+#define SUB_KERNEL_SUB_CMD_READ_BSR         0x02
 
 // IR ok response
 #define SUB_KERNEL_JTAG_IR_ACK              0x31
