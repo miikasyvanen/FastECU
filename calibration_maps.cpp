@@ -379,10 +379,10 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
         cellItem->setTextAlignment(Qt::AlignCenter);
         cellItem->setFont(cellFont);
         cellItem->setForeground(Qt::black);
+        cellItem->setBackground(Qt::white);
 
         cellItem->setText(QString::number(mapDataCellText.at(0).toFloat(), 'f', getMapValueDecimalCount(ecuCalDef->FormatList.at(mapIndex))));
         ui->mapDataTableWidget->setItem(0, 0, cellItem);
-
     }
 
     if (ecuCalDef->TypeList.at(mapIndex) == "2D" || ecuCalDef->TypeList.at(mapIndex) == "3D")
@@ -450,8 +450,12 @@ void CalibrationMaps::setMapTableWidgetItems(FileActions::EcuCalDefStructure *ec
             int mapItemColorBlue = mapItemColor & 0xff;
             //qDebug() << mapItemColorRed << mapItemColorGreen << mapItemColorBlue;
             cellItem->setBackground(QBrush(QColor(mapItemColorRed , mapItemColorGreen, mapItemColorBlue, 255)));
-            if (ecuCalDef->TypeList.at(mapIndex) == "1D")
+            if (ecuCalDef->NameList.at(mapIndex) == "MAP Sensor Scale")
+                qDebug() << "MAP Sensor Scale type" << ecuCalDef->TypeList.at(mapIndex);
+            if (ecuCalDef->TypeList.at(mapIndex) == "1D") {
                 cellItem->setForeground(Qt::black);
+                cellItem->setBackground(Qt::white);
+            }
             else
                 cellItem->setForeground(Qt::black);
 
