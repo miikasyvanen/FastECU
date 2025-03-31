@@ -449,7 +449,8 @@ FileActions::EcuCalDefStructure *FileActions::read_ecuflash_ecu_def(EcuCalDefStr
             if ((!map_defined && !base_defined) || (map_defined && base_defined))
             {
                 QString type = rom_child.attribute("type"," ");
-                if (type == "1D" || type == "X Axis" || type == "Y Axis")
+                //if (type == "1D" || type == "X Axis" || type == "Y Axis")
+                if (type == "X Axis" || type == "Y Axis")
                     type = "2D";
                 if (ecuCalDef->NameList.at(def_map_index) == " ")
                     ecuCalDef->NameList.replace(def_map_index, rom_child.attribute("name", " "));
