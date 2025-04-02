@@ -21,7 +21,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class Settings : public QWidget
+class Settings : public QDialog
 {
     Q_OBJECT
 

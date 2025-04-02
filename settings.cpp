@@ -2,7 +2,7 @@
 #include "ui_settings.h"
 
 Settings::Settings(FileActions::ConfigValuesStructure *configValues, QWidget *parent)
-    : QWidget(parent),
+    : QDialog(parent),
     ui(new Ui::Settings)
 {
     ui->setupUi(this);
