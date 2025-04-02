@@ -20,6 +20,13 @@ MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *paren
     qApp->installEventFilter(this);
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
+    int id = QFontDatabase::addApplicationFont(":/fonts/FastECU_bars.ttf");
+    if (id >= 0)
+    {
+        QString family = QFontDatabase::applicationFontFamilies(id).at(0);
+        QFont monospace(family);
+    }
+
     QPixmap startUpSplashImage(":/images/startup_splash.jpg");
     int startUpSplashProgressBarValue = 0;
 

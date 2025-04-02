@@ -28,6 +28,7 @@
 #include <QStackedWidget>
 #include <QSplashScreen>
 #include <QAtomicInteger>
+#include <QFontDatabase>
 
 #include <QFuture>
 #include <QDebug>
