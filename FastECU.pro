@@ -1,4 +1,4 @@
-QT       += core gui xml serialport remoteobjects websockets
+QT += core gui xml serialport remoteobjects websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += charts
@@ -281,6 +281,14 @@ DISTFILES += \
     flatpak/fi.fastecu.FastECU_256x256.png \
     flatpak/fi.fastecu.FastECU_32x32.png \
     flatpak/fi.fastecu.FastECU_64x64.png \
+    flatpak/flatpak/fi.fastecu.FastECU.desktop \
+    flatpak/flatpak/fi.fastecu.FastECU.ico \
+    flatpak/flatpak/fi.fastecu.FastECU.metainfo.xml \
+    flatpak/flatpak/fi.fastecu.FastECU_128x128.png \
+    flatpak/flatpak/fi.fastecu.FastECU_16x16.png \
+    flatpak/flatpak/fi.fastecu.FastECU_256x256.png \
+    flatpak/flatpak/fi.fastecu.FastECU_32x32.png \
+    flatpak/flatpak/fi.fastecu.FastECU_64x64.png \
     hexedit/images/find.png \
     hexedit/images/open.png \
     hexedit/images/qhexedit.ico \

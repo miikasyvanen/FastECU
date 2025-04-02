@@ -1104,6 +1104,7 @@ void QHexEdit::paintEvent(QPaintEvent *event)
                     painter.fillRect(r, c);
                     QFont prevFont = painter.font();
                     QFont barFont("fastecu_bars_128");
+                    //QFont barFont("FastECU_bars");
                     painter.setFont(barFont);
                     painter.setPen(QPen(_barFontColor));
                     painter.drawText(pxPosBarX2, pxPosY, QChar(ch));

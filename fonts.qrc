@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>fonts/DejaVuSansMono.ttf</file>
+        <file>fonts/FastECU_bars.ttf</file>
     </qresource>
 </RCC>
