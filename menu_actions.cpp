@@ -1340,9 +1340,15 @@ int MainWindow::get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, 
     QColor color;
     float color_scale = (1 - (mapDataValue - mapMinValue) / (mapMaxValue - mapMinValue)) * scale_start;
     float color_value = scale_start - color_scale;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     double r = 0;
     double g = 0;
     double b = 0;
+#else
+    float r = 0;
+    float g = 0;
+    float b = 0;
+#endif
 
     if (color_value < 0)
         color_value = 0;
