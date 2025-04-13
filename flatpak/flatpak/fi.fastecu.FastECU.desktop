@@ -2,7 +2,7 @@
 Name=FastECU
 GenericName=FastECU
 Comment=FastECU engine management tuning software. 
-Exec=fi.fastecu.FastECU
+Exec=FastECU
 Terminal=false
 Icon=fi.fastecu.FastECU
 Type=Application
