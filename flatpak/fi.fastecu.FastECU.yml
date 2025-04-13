@@ -30,13 +30,13 @@ modules:
     make_install_args:
       - -j4
     post-install:
-      - install -Dm644 flatpak/${FLATPAK_ID}.desktop -t /app/share/applications
-      - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo
-      - install -Dm644 flatpak/${FLATPAK_ID}_16x16.png /app/share/icons/hicolor/16x16/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/${FLATPAK_ID}_32x32.png /app/share/icons/hicolor/32x32/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/${FLATPAK_ID}_64x64.png /app/share/icons/hicolor/64x64/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/${FLATPAK_ID}_128x128.png /app/share/icons/hicolor/128x128/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/${FLATPAK_ID}_256x256.png /app/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/resources/${FLATPAK_ID}.desktop -t /app/share/applications
+      - install -Dm644 flatpak/resources/${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo
+      - install -Dm644 flatpak/resources/${FLATPAK_ID}_16x16.png /app/share/icons/hicolor/16x16/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/resources/${FLATPAK_ID}_32x32.png /app/share/icons/hicolor/32x32/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/resources/${FLATPAK_ID}_64x64.png /app/share/icons/hicolor/64x64/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/resources/${FLATPAK_ID}_128x128.png /app/share/icons/hicolor/128x128/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/resources/${FLATPAK_ID}_256x256.png /app/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png
     sources:
       - type: git
         url: https://github.com/miikasyvanen/FastECU.git

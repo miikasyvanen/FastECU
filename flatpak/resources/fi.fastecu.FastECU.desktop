@@ -7,5 +7,5 @@ Terminal=false
 Icon=fi.fastecu.FastECU
 Type=Application
 X-KDE-PluginInfo-Website=http://flatpak.org
-Categories=Qt;KDE;Development
+Categories=Qt;KDE;Utility
 
