@@ -19,6 +19,12 @@
   <categories>
     <category>Utility</category>
   </categories>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/miikasyvanen/FastECU/commit/6a72cff3d3a8d7d52bf165d80ed5c38300b645a5/fastecu_maps.png</image>
+      <caption>FastECU</caption>
+    </screenshot>
+  </screenshots>
   <url type="homepage">https://github.com/miikasyvanen/FastECU</url>
   <url type="bugtracker">https://github.com/miikasyvanen/fastecu/issues</url>
   <url type="donation">https://www.paypal.com/paypalme/miikasyvanen</url>
