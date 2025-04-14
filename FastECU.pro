@@ -281,14 +281,6 @@ DISTFILES += \
     flatpak/fi.fastecu.FastECU_256x256.png \
     flatpak/fi.fastecu.FastECU_32x32.png \
     flatpak/fi.fastecu.FastECU_64x64.png \
-    flatpak/flatpak/fi.fastecu.FastECU.desktop \
-    flatpak/flatpak/fi.fastecu.FastECU.ico \
-    flatpak/flatpak/fi.fastecu.FastECU.metainfo.xml \
-    flatpak/flatpak/fi.fastecu.FastECU_128x128.png \
-    flatpak/flatpak/fi.fastecu.FastECU_16x16.png \
-    flatpak/flatpak/fi.fastecu.FastECU_256x256.png \
-    flatpak/flatpak/fi.fastecu.FastECU_32x32.png \
-    flatpak/flatpak/fi.fastecu.FastECU_64x64.png \
     flatpak/resources/fi.fastecu.FastECU.desktop \
     flatpak/resources/fi.fastecu.FastECU.ico \
     flatpak/resources/fi.fastecu.FastECU.metainfo.xml \
