@@ -46,6 +46,9 @@ signals:
     void LOG_I(QString message, bool timestamp, bool linefeed);
     void LOG_D(QString message, bool timestamp, bool linefeed);
 
+public slots:
+    void set_progressbar_value_by_client(int value);
+
 private:
     FileActions::EcuCalDefStructure *ecuCalDef;
     QString cmd_type;

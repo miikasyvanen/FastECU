@@ -2229,6 +2229,8 @@ FLASH_CLASS* MainWindow::connect_signals_and_run_module(FLASH_CLASS *object)
     QObject::connect(object, &FLASH_CLASS::LOG_W, syslogger, &SystemLogger::log_messages);
     QObject::connect(object, &FLASH_CLASS::LOG_I, syslogger, &SystemLogger::log_messages);
     QObject::connect(object, &FLASH_CLASS::LOG_D, syslogger, &SystemLogger::log_messages);
+    QObject::connect(remote_utility, &RemoteUtility::SET_PROGRESSBAR_BY_CLIENT,
+                     object, &FLASH_CLASS::set_progressbar_value_by_client);
 
     object->run();
     return object;

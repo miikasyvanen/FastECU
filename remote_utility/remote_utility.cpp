@@ -28,6 +28,10 @@ RemoteUtility::RemoteUtility(QString peerAddress,
     }
     QObject::connect(remote_utility, &RemoteUtilityReplica::stateChanged,
                         this, &RemoteUtility::utilityRemoteStateChanged);
+    QObject::connect(remote_utility, &RemoteUtilityReplica::LOG_I,
+                     this, &RemoteUtility::LOG_I);
+    QObject::connect(remote_utility, &RemoteUtilityReplica::SET_PROGRESSBAR_BY_CLIENT,
+                     this, &RemoteUtility::SET_PROGRESSBAR_BY_CLIENT);
 }
 
 RemoteUtility::~RemoteUtility()

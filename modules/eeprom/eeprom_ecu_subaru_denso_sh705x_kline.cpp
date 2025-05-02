@@ -1194,6 +1194,15 @@ void EepromEcuSubaruDensoSH705xKline::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
+void EepromEcuSubaruDensoSH705xKline::set_progressbar_value_by_client(int value)
+{
+    if (ui->progressbar)
+    {
+        ui->progressbar->setValue(value);
+    }
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
 void EepromEcuSubaruDensoSH705xKline::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);

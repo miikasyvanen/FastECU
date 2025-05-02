@@ -35,6 +35,9 @@ public:
 
     void run();
 
+public slots:
+    void set_progressbar_value_by_client(int value);
+
 signals:
     void external_logger(QString message);
     void external_logger(int value);

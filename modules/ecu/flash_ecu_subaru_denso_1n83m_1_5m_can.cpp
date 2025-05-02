@@ -1664,6 +1664,15 @@ void FlashEcuSubaruDenso1N83M_1_5MCan::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
+void FlashEcuSubaruDenso1N83M_1_5MCan::set_progressbar_value_by_client(int value)
+{
+    if (ui->progressbar)
+    {
+        ui->progressbar->setValue(value);
+    }
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
 void FlashEcuSubaruDenso1N83M_1_5MCan::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);

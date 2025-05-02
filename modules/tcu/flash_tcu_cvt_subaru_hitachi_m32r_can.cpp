@@ -1301,6 +1301,15 @@ void FlashTcuCvtSubaruHitachiM32rCan::set_progressbar_value(int value)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
+void FlashTcuCvtSubaruHitachiM32rCan::set_progressbar_value_by_client(int value)
+{
+    if (ui->progressbar)
+    {
+        ui->progressbar->setValue(value);
+    }
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
 void FlashTcuCvtSubaruHitachiM32rCan::delay(int timeout)
 {
     QTime dieTime = QTime::currentTime().addMSecs(timeout);

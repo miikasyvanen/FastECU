@@ -35,6 +35,7 @@ signals:
     void LOG_W(QString message, bool timestamp = true, bool linefeed = true);
     void LOG_I(QString message, bool timestamp = true, bool linefeed = true);
     void LOG_D(QString message, bool timestamp = true, bool linefeed = true);
+    void SET_PROGRESSBAR_BY_CLIENT(int value);
 
 private:
     QString peerAddress;
