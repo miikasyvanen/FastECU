@@ -1032,8 +1032,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
         }
 
         emit LOG_I(" erased", false, true);
-        //emit LOG_E("Wrong response from ECU: " + parse_message_to_hex(received), true, true);
-        //return STATUS_ERROR;
     }
 
     timer.start();
