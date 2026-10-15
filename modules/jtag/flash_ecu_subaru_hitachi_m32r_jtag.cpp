@@ -189,18 +189,18 @@ int FlashEcuSubaruHitachiM32rJtag::read_idcode()
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_ID + 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
+
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        
+
         return STATUS_ERROR;
     }
     emit LOG_I("Device ID request ok", true, true);
-    
+
 
     QByteArray response = received.mid(9, 4);
     uint32_t dev_id;
@@ -241,18 +241,18 @@ int FlashEcuSubaruHitachiM32rJtag::read_usercode()
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_READ_USERCODE + 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
+
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        
+
         return STATUS_ERROR;
     }
     emit LOG_I("User code request ok", true, true);
-    
+
 
     QByteArray response = received.mid(9, 4);
     uint32_t dev_id;
@@ -271,7 +271,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_usercode()
     emit LOG_I("ROM: 0x" + rom, true, true);
     emit LOG_I("ISA: 0x" + isa, true, true);
     emit LOG_I("SDI: 0x" + sdi, true, true);
-    
+
 
     return STATUS_SUCCESS;
 }
@@ -397,18 +397,18 @@ int FlashEcuSubaruHitachiM32rJtag::read_tool_rom_code()
                 if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_JTAG_COMMAND + 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
                 {
                     emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                    
+
                     return STATUS_ERROR;
                 }
             }
             else
             {
                 emit LOG_E("No valid response from ECU", true, true);
-                
+
                 return STATUS_ERROR;
             }
             emit LOG_I("MON_CODE transfer ok", true, true);
-            
+
         }
 
     }
@@ -431,18 +431,18 @@ int FlashEcuSubaruHitachiM32rJtag::read_tool_rom_code()
         if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_JTAG_COMMAND + 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
+
             return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        
+
         return STATUS_ERROR;
     }
     emit LOG_I("MON_CODE transfer ok", true, true);
-    
+
 
     output.clear();
     output.append((uint8_t)SUB_KERNEL_JTAG_COMMAND & 0xFF);
@@ -525,18 +525,18 @@ int FlashEcuSubaruHitachiM32rJtag::read_tool_rom_code()
             if ((uint8_t)received.at(0) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(1) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(4) != (SUB_KERNEL_JTAG_COMMAND + 0x40) || (uint8_t)received.at(8) != SUB_KERNEL_JTAG_IR_ACK)
             {
                 emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                
+
                 return STATUS_ERROR;
             }
         }
         else
         {
             emit LOG_E("No valid response from ECU", true, true);
-            
+
             return STATUS_ERROR;
         }
         emit LOG_I("MON_DATA transfer ok", true, true);
-        
+
 
         delay(100);
     }
@@ -654,7 +654,7 @@ void FlashEcuSubaruHitachiM32rJtag::write_jtag_ir(QString desc, QString code)
     msg.append("0D"); // Additional CR
     output = msg.toUtf8();
     serial->write_serial_data(output);
-    
+
 
     response = read_response();
     emit LOG_I("Response: " + parse_message_to_hex(response), true, true);
@@ -675,7 +675,7 @@ QByteArray FlashEcuSubaruHitachiM32rJtag::read_jtag_dr(QString desc)
     msg.append("0D"); // Additional CR
     output = msg.toUtf8();
     serial->write_serial_data(output);
-    
+
 
     response = read_response();
     if (response.at(0) == 0x7f)
@@ -713,7 +713,7 @@ QByteArray FlashEcuSubaruHitachiM32rJtag::write_jtag_dr(QString desc, QString da
     msg.append("0D"); // Additional CR
     output = msg.toUtf8();
     serial->write_serial_data(output);
-    
+
 
     response = read_response();
     emit LOG_I("Response: " + parse_message_to_hex(response), true, true);
