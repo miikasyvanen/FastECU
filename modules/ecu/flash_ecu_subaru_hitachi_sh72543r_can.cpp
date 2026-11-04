@@ -376,9 +376,9 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
 
     uint32_t pagesize = 0x400;
 
-    start_addr = 0x0;
-
-    length = 0x200000;    // hack for testing
+    // start and length come from the selected memory model (romsize): 2 MB for SH72543R, 2.5 MB for SH72544R
+    if (length == 0)
+        length = 0x200000;
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
