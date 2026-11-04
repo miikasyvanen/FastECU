@@ -23,6 +23,7 @@ enum mcu_type {
     N83M_4MB,
     N83M_1_5MB,
     SH72543R,
+    SH72544R,
     MH8104,
     MH5006,
     MH8111,
@@ -241,6 +242,13 @@ const struct flashblock fblocks_N83M_1_5MB[] = {
 const struct flashblock fblocks_SH72543R[] = {
     {0x00000000,    0x00006000},
     {0x00006000,    0x001FA000},
+};
+
+// Hitachi SH72544R, 2.5 MB (Subaru 2019+ FA20DIT, e.g. Levorg 2.0 STI LF9F000R, WRX LF9G...):
+// the boot block's flash table runs to 0x27FFFF and the diagnostic memory window is 0..0x27FFFF.
+const struct flashblock fblocks_SH72544R[] = {
+    {0x00000000,    0x00006000},
+    {0x00006000,    0x0027A000},
 };
 
 const struct flashblock fblocks_SH7055[] = {
@@ -532,6 +540,7 @@ const struct flashdev_t flashdevices[] = {
     { "N83M_4MB",     N83M_4MB, 3984 * 1024, 3, fblocks_N83M_4MB,   rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "N83M_1_5MB", N83M_1_5MB, 1488 * 1024, 3, fblocks_N83M_1_5MB, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "SH72543R", SH72543R, 2 * 1024 * 1024, 2, fblocks_SH72543R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
+    { "SH72544R", SH72544R, 2560 * 1024, 2, fblocks_SH72544R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // read only; rblocks, kblocks, eblocks not updated
     { "MH8104", MH8104, 512 * 1024, 4, fblocks_MH8104, rblocks_MH8104, kblocks_MH8104, eblocks_MH8104 },
     { "MH5006", MH5006, 1024 * 1024, 4, fblocks_MH5006, rblocks_MH5006, kblocks_MH5006, eblocks_MH5006 },
     { "MH8111", MH8111, 3 * 512 * 1024, 4, fblocks_MH8111, rblocks_MH8111, kblocks_MH8111, eblocks_MH8111 },
