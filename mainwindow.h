@@ -341,7 +341,9 @@ private:
     void toggle_log_to_file();
     void set_maptablewidget_items();
     QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian);
-    void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, float map_value);
+    void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, QString map_value);
+    QString settle_raw_integer(double raw_value, const QString &map_value_storagetype, bool *saturated = nullptr);
+    void report_refused_edit(const QString &reason);
     int get_mapvalue_decimal_count(QString valueFormat);
     int get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, float mapDataValue, int mapIndex);
     bool check_rom_data_value(QString storagetype, QString rom_data_value, QString new_rom_data_value);
