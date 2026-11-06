@@ -97,7 +97,7 @@ QByteArray ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(QByteArray romD
         checksum_ok = false;
 
         QByteArray balance_value_array;
-        uint16_t balance_value = (uint16_t)(romData.at(checksum_3_balance_value_address) << 8) + (uint16_t)(romData.at(checksum_3_balance_value_address + 1));
+        uint16_t balance_value = ((uint8_t)romData.at(checksum_3_balance_value_address) << 8) + (uint8_t)romData.at(checksum_3_balance_value_address + 1);
 
         msg.clear();
         msg.append(QString("Balance value before: 0x%1").arg(balance_value,4,16,QLatin1Char('0')).toUtf8());
