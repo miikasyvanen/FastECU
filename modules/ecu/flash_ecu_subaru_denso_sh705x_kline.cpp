@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoSH705xKline::FlashEcuSubaruDensoSH705xKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -509,7 +509,6 @@ int FlashEcuSubaruDensoSH705xKline::read_mem(uint32_t start_addr, uint32_t lengt
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t datalen = 6;
     uint32_t pagesize = 0x0400;
@@ -1333,7 +1332,6 @@ int FlashEcuSubaruDensoSH705xKline::flash_block(const uint8_t *src, uint32_t sta
 uint8_t FlashEcuSubaruDensoSH705xKline::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
-    uint8_t data[chksum_data.length()];
 /*
     for (int i = 0; i < chksum_data.length(); i++)
     {
@@ -1598,12 +1596,6 @@ QByteArray FlashEcuSubaruDensoSH705xKline::generate_seed_key(QByteArray requeste
         0x3563, 0x6B70, 0x6E74, 0x88F0
     };
 
-    const uint16_t keytogenerateindex_2[]={
-        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
-        0x15BB, 0xF998, 0x8723, 0x9E05,
-        0x7092, 0xD683, 0xBA03, 0x59E1,
-        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
-    };
 
     const uint8_t indextransformation[]={
         0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
@@ -1633,12 +1625,6 @@ QByteArray FlashEcuSubaruDensoSH705xKline::generate_ecutek_seed_key(QByteArray r
         0x3563, 0x6B70, 0x6E74, 0x88F0
     };
 
-    const uint16_t keytogenerateindex_2[]={
-        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
-        0x15BB, 0xF998, 0x8723, 0x9E05,
-        0x7092, 0xD683, 0xBA03, 0x59E1,
-        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
-    };
 
     const uint8_t indextransformation[]={
         0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,

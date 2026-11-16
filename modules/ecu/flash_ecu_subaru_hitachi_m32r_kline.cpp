@@ -3,9 +3,9 @@
 
 FlashEcuSubaruHitachiM32rKline::FlashEcuSubaruHitachiM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -469,7 +469,6 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
 
     timer.start();
 
@@ -553,7 +552,6 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         msg = QString("Kernel read addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
 
-        len_done += cplen;
         addr += (numblocks * pagesize);
         willget -= pagesize;
     }
@@ -1178,7 +1176,6 @@ QByteArray FlashEcuSubaruHitachiM32rKline::send_subaru_sid_b8_change_baudrate_38
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.clear();
     output.append((uint8_t)0xB8);

@@ -3,9 +3,9 @@
 
 FlashEcuSubaruUnisiaJecsM32rBootMode::FlashEcuSubaruUnisiaJecsM32rBootMode(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -254,7 +254,6 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
 
         uint32_t numblocks = 1;
         unsigned curspeed = 0, tleft;
-        uint32_t curblock = (addr / pagesize);
         float pleft = 0;
         unsigned long chrono;
 

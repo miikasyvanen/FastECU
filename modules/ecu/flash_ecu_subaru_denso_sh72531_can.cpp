@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoSH72531Can::FlashEcuSubaruDensoSH72531Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -856,7 +856,6 @@ int FlashEcuSubaruDensoSH72531Can::read_memory(uint32_t start_addr, uint32_t len
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
 
@@ -1180,9 +1179,8 @@ int FlashEcuSubaruDensoSH72531Can::write_memory()
 int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
-    uint32_t start_address, end_addr;
+    uint32_t start_address;
     uint32_t pl_len;
     uint16_t maxblocks;
     uint16_t blockctr;
@@ -1202,15 +1200,12 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
     maxblocks = pl_len / 256;
-    end_addr = (start_address + (maxblocks * 256)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - start_address;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
     msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
     emit LOG_I(msg, true, true);
 
-    int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
@@ -1233,9 +1228,7 @@ int FlashEcuSubaruDensoSH72531Can::reflash_block(const uint8_t *newdata, const s
         for (int i = 0; i < 256; i++)
         {
             output[i + 9] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
-            data_bytes_sent++;
         }
-        data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
         //delay(20);

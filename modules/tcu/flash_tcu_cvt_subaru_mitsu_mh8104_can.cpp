@@ -3,9 +3,9 @@
 
 FlashTcuCvtSubaruMitsuMH8104Can::FlashTcuCvtSubaruMitsuMH8104Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -408,7 +408,6 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
 
@@ -688,7 +687,6 @@ int FlashTcuCvtSubaruMitsuMH8104Can::write_mem_subaru_tcu_mitsu_can()
 int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
     uint32_t start_address, end_addr;
     uint32_t pl_len;
@@ -796,7 +794,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         float pleft = (float)blockctr / (float)maxblocks * 100;
         set_progressbar_value(pleft);
     }
-    qDebug() << "Data bytes sent:" << hex << data_bytes_sent;
+    qDebug() << "Data bytes sent:" << Qt::hex << data_bytes_sent;
 
     send_log_window_message("Closing out Flashing of this block...", true, true);
     qDebug() << "Closing out Flashing of this block...";

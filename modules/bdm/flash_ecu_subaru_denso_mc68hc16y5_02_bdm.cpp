@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoMC68HC16Y5_02_BDM::FlashEcuSubaruDensoMC68HC16Y5_02_BDM(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -26,7 +26,6 @@ void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::run()
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
-    bool ok = false;
 
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -150,7 +149,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
 
     timer.start();
 
@@ -165,7 +163,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t
 
         uint32_t numblocks = 1;
         unsigned curspeed = 0, tleft;
-        uint32_t curblock = (addr / pagesize);
         float pleft = 0;
         unsigned long chrono;
 
@@ -236,7 +233,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t
         emit LOG_I(msg, true, true);
         delay(1);
 
-        len_done += cplen;
         addr += (numblocks * pagesize);
         willget -= pagesize;
     }
@@ -253,7 +249,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     QByteArray received;
     QByteArray msg;
 
-    unsigned blockno;
 
     // Clear receive buffer
     received = serial->read_serial_data(serial_read_short_timeout);
@@ -271,10 +266,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
         emit LOG_I("Unable to open kernel file for reading", true, true);
         return -1;
     }
-    uint32_t file_len = file.size();
-    uint32_t pl_len = file_len;
     QByteArray pl_encr = file.readAll();
-    uint32_t len = pl_len;
     ecuCalDef->FullRomData.clear();
     ecuCalDef->FullRomData.append(pl_encr);
     QScopedArrayPointer<uint8_t> data_array(new uint8_t[pl_encr.length()]);

@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -232,8 +232,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
     QByteArray msg;
     QByteArray pl_encr;
     uint32_t start_address = 0;
-    uint32_t file_len = 0;
-    uint32_t pl_len = 0;
     uint32_t len = 0;
     uint8_t chk_sum = 0;
 
@@ -257,8 +255,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
         return -1;
     }
 
-    file_len = file.size();
-    pl_len = (file_len + 3) & ~3;
     pl_encr = file.readAll();
     while (pl_encr.length() % 0x10)
         pl_encr.append((uint8_t)0x00);
@@ -364,7 +360,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
     QByteArray mapdata;
 
     uint32_t pagesize = 0;
-    uint32_t end_addr = 0;
     uint32_t datalen = 0;
     uint32_t cplen = 0;
 
@@ -377,12 +372,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         start_addr = 0;
         length = 0x028000;
     }
-    end_addr = start_addr + length;
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
 
     timer.start();
 
@@ -393,7 +386,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
 
         uint32_t numblocks = 1;
         unsigned curspeed = 0, tleft;
-        uint32_t curblock = (addr / pagesize);
         float pleft = 0;
         unsigned long chrono;
 
@@ -473,7 +465,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         emit LOG_I(msg, true, true);
         delay(1);
 
-        len_done += cplen;
         addr += (numblocks * pagesize);
         willget -= pagesize;
     }
@@ -492,7 +483,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
     QByteArray filedata;
     QByteArray output;
     QByteArray received;
-    uint16_t chksum;
 
     filedata = ecuCalDef->FullRomData;
 
@@ -896,12 +886,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
  */
 int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
-    int errval;
 
     uint32_t start = 0;
     uint32_t len = 0;
     uint32_t datalen = 0;
-    uint16_t pagesize = 0x200;
     uint16_t chksum;
 
     QByteArray output;
@@ -977,7 +965,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
     uint32_t remain = len;
     uint32_t byteindex = flashbytesindex;
     uint32_t datalen = 0;
-    uint32_t blockstart = start;
     uint32_t imgcrc32 = 0;
     uint32_t flashblockstart = start;
     uint16_t blocksize = 0x200;

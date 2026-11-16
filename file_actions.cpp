@@ -2536,7 +2536,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
         msgBox.setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
                         "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
         QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
-        QPushButton *doItButton = msgBox.addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox.addButton(tr("DO IT!"), QMessageBox::NoRole);
         msgBox.exec();
 
         if (msgBox.clickedButton() == okButton)
@@ -2684,7 +2684,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
         msgBox.setText("WARNING! There is no checksum module for this ROM!\
                             Be aware that if this ROM need checksum correction it must be done with another software!");
         QPushButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
-        QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+        msgBox.addButton(QMessageBox::Ok);
         msgBox.exec();
 
         if (msgBox.clickedButton() == cancelButton)

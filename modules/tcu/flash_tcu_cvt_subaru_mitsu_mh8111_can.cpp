@@ -5,9 +5,9 @@
 
 FlashTcuCvtSubaruMitsuMH8111Can::FlashTcuCvtSubaruMitsuMH8111Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -692,7 +692,6 @@ int FlashTcuCvtSubaruMitsuMH8111Can::write_mem()
 int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
     uint32_t start_address, end_addr;
     uint32_t pl_len;
@@ -757,7 +756,6 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
     if (try_count == 6)
         return STATUS_ERROR;
 
-    int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
@@ -778,7 +776,6 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
         {
             output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
             //output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
-            data_bytes_sent++;
         }
         data_len -= 256;
 

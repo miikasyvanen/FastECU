@@ -78,7 +78,6 @@ SOURCES += \
     dataterminal.cpp \
     definition_file_convert.cpp \
     dtc_operations.cpp \
-    ecu_operations.cpp \
     file_actions.cpp \
     file_defs_ecuflash.cpp \
     file_defs_romraider.cpp \
@@ -155,7 +154,6 @@ HEADERS += \
     dataterminal.h \
     definition_file_convert.h \
     dtc_operations.h \
-    ecu_operations.h \
     error_codes.h \
     file_actions.h \
     get_key_operations_subaru.h \

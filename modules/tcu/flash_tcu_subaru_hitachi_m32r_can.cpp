@@ -5,9 +5,9 @@
 
 FlashTcuSubaruHitachiM32rCan::FlashTcuSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -443,7 +443,6 @@ int FlashTcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
 
@@ -733,7 +732,6 @@ int FlashTcuSubaruHitachiM32rCan::write_mem()
 int FlashTcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
     uint32_t start_address, end_addr;
     uint32_t pl_len;

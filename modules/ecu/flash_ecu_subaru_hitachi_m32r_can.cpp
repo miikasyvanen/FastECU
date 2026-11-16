@@ -3,9 +3,9 @@
 
 FlashEcuSubaruHitachiM32rCan::FlashEcuSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -849,7 +849,6 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
 
@@ -1127,15 +1126,13 @@ int FlashEcuSubaruHitachiM32rCan::write_mem()
 int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
-    uint32_t start_address, end_addr;
+    uint32_t start_address;
     uint32_t pl_len;
     uint16_t maxblocks;
     uint16_t blockctr;
     uint32_t blockaddr;
 
-    uint32_t pagesize = 0x100;
 
     QByteArray output;
     QByteArray received;
@@ -1151,8 +1148,6 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
     maxblocks = pl_len / 256;
-    end_addr = (start_address + (maxblocks * 256)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - start_address;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
@@ -1196,7 +1191,6 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         return STATUS_ERROR;
     }
 
-    int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
@@ -1216,9 +1210,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         for (int i = 0; i < 256; i++)
         {
             output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
-            data_bytes_sent++;
         }
-        data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(receive_timeout);

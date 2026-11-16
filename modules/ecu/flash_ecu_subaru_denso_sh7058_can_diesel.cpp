@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoSH7058CanDiesel::FlashEcuSubaruDensoSH7058CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     // EURO4 0xFFFF4000 0x3000
     // EURO5 0xFFFEE000 0x2000
@@ -161,12 +161,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     QByteArray seed_key;
     QByteArray msg;
 
-    uint32_t ram_value = 0;
-    uint32_t seed_alter = 0;
-    uint32_t xor_multi = 0x01000193;
-    uint8_t xor_byte_1 = 0;
-    uint8_t xor_byte_2 = 0;
-    uint32_t et_rr_seed = 0;
 
     if (!serial->is_serial_port_open())
     {
@@ -801,7 +795,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::read_mem(uint32_t start_addr, uint32_t l
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t datalen = 6;
     uint32_t pagesize = 0x0400;
@@ -1203,7 +1196,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
     QByteArray msg;
 
     uint32_t datalen = 0;
-    uint16_t chksum;
 
     emit LOG_I("Check max message length", true, false);
     datalen = 0;
@@ -1653,7 +1645,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
 uint8_t FlashEcuSubaruDensoSH7058CanDiesel::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
-    uint8_t data[chksum_data.length()];
 
     for (unsigned i = 0; i < len; i++)
     {

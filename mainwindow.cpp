@@ -12,9 +12,9 @@ const QColor MainWindow::GREEN_LIGHT_ON = QColor(64, 255, 64);
 
 MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
     , peerAddress(peerAddress)
     , peerPassword(peerPassword)
+    , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     qApp->installEventFilter(this);
@@ -514,12 +514,12 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     char *data = challenge.data();
     char *cKey = key.data();
 
-    int decrypted_len, encrypted_len;
+    int encrypted_len;
 
     // Encrypt the original data
     encrypted_len = cipher.encrypt_aes128_ecb((unsigned char*)data, strlen(data), (unsigned char*)cKey, encrypted);
     // Decrypt the encrypted data
-    decrypted_len = cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
+    cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
     QByteArray challengeReply(QByteArray::fromRawData((const char*)encrypted, 16));
     emit LOG_D("Key: " + parse_message_to_hex(key), true, true);
     emit LOG_D("Challenge: " + parse_message_to_hex(challenge), true, true);
@@ -1075,7 +1075,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 msgBox.setText("WARNING! There is no checksum module for this ROM!\
                                     Be aware that if this ROM need checksum correction it must be done with another software!");
                 QPushButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
-                QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+                msgBox.addButton(QMessageBox::Ok);
                 msgBox.exec();
 
                 if (msgBox.clickedButton() == cancelButton)
@@ -1729,7 +1729,6 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
 {
     const QModelIndex index = ui->calibrationDataTreeWidget->selectionModel()->currentIndex();
     QString selectedText = index.data(Qt::DisplayRole).toString();
-    int hierarchyLevel=1;
     QModelIndex seekRoot = index;
     QString selectedRom;
 
@@ -1738,14 +1737,11 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
     while(seekRoot.parent() != QModelIndex())
     {
         seekRoot = seekRoot.parent();
-        hierarchyLevel++;
     }
 
     if (ui->calibrationDataTreeWidget->indexOfTopLevelItem(item) > -1){
-        hierarchyLevel = 1;
     }
     else if (ui->calibrationDataTreeWidget->indexOfTopLevelItem(item->parent()) > -1){
-        hierarchyLevel = 2;
 
         QTreeWidgetItem *selectedFilesTreeItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
         QTreeWidgetItem *selectedDataTreeItem = item;
@@ -1758,11 +1754,9 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
             {
                 if (ecuCalDef[romNumber]->VisibleList.at(i) == "1")
                 {
-                    int map_index = 0;
                     QList<QMdiSubWindow *> list = ui->mdiArea->findChildren<QMdiSubWindow *>();
                     foreach(QMdiSubWindow *w, list)
                     {
-                        map_index++;
                         if (w->objectName().startsWith(QString::number(romIndex) + "," + QString::number(i) + "," + ecuCalDef[romNumber]->NameList.at(i)))
                         {
                             if (w->objectName() == ui->mdiArea->activeSubWindow()->objectName())
@@ -1946,7 +1940,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::close_app()
 {
-    FileActions::ConfigValuesStructure *configValues = &fileActions->ConfigValuesStruct;
 
     qApp->exit();
 }
@@ -2198,13 +2191,11 @@ void MainWindow::remove_ecu_definition_file()
 
 void MainWindow::add_new_logger_definition_file()
 {
-    QObject* obj = sender();
 
 }
 
 void MainWindow::remove_logger_definition_file()
 {
-    QObject* obj = sender();
 
 }
 

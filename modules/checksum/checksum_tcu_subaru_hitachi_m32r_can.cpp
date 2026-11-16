@@ -13,7 +13,6 @@ ChecksumTcuSubaruHitachiM32rCan::~ChecksumTcuSubaruHitachiM32rCan()
 QByteArray ChecksumTcuSubaruHitachiM32rCan::calculate_checksum(QByteArray romData)
 {
     QByteArray msg;
-    uint32_t checksum = 0;
     uint32_t checksum_1_value_calculated = 0;
     uint32_t checksum_1_balance_value_stored = 0;
     uint32_t checksum_1_balance_value_address = 0x8020;

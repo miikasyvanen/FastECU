@@ -33,7 +33,6 @@ void FlashEcuSubaruUnisiaJecs::run()
 
     //result = init_flash_denso_kline_04(ecuCalDef, cmd_type);
 
-    bool ok = false;
 
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -162,7 +161,6 @@ int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
 
     uint32_t addr = start_addr;
     uint32_t willget = length;
-    uint32_t len_done = 0;  //total data written to file
     uint32_t cplen = 0;
     uint32_t timeout = 0;
 

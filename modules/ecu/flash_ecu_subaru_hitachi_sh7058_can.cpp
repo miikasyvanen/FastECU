@@ -5,9 +5,9 @@
 
 FlashEcuSubaruHitachiSH7058Can::FlashEcuSubaruHitachiSH7058Can(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -804,7 +804,6 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     serial->set_is_iso14230_connection(false);
     serial->set_is_can_connection(false);
@@ -867,7 +866,7 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setWindowTitle("Are we ready to go?");
         msgBox.setText("Init was OK?, Press OK to continue");
-        QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+        msgBox.addButton(QMessageBox::Ok);
         QPushButton *doItCancel = msgBox.addButton(tr("Cancel"), QMessageBox::NoRole);
         msgBox.exec();
         if (msgBox.clickedButton() == doItCancel)
@@ -1086,9 +1085,8 @@ int FlashEcuSubaruHitachiSH7058Can::write_mem_subaru_ecu_hitachi_can()
 int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
-    uint32_t start_address, end_addr;
+    uint32_t start_address;
     uint32_t pl_len;
     uint16_t maxblocks;
     uint16_t blockctr;
@@ -1110,8 +1108,6 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
     maxblocks = pl_len / blocksize;
-    end_addr = (start_address + (maxblocks * blocksize)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - start_address;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
@@ -1173,7 +1169,6 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
         {
             output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
         }
-        data_len -= blocksize;
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(5000);
         
@@ -1386,7 +1381,6 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_81_start_communicatio
 {
     QByteArray output;
     QByteArray received;
-    uint8_t loop_cnt = 0;
 
     output.clear();
     output.append((uint8_t)0x81);
@@ -1407,7 +1401,6 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_83_request_timings()
 {
     QByteArray output;
     QByteArray received;
-    uint8_t loop_cnt = 0;
 
     output.clear();
     output.append((uint8_t)0x83);
@@ -1430,7 +1423,6 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_10_start_diagnostic()
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x85);
@@ -1448,7 +1440,6 @@ QByteArray FlashEcuSubaruHitachiSH7058Can::send_subaru_sid_b8_change_baudrate_38
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.clear();
     output.append((uint8_t)0xB8);

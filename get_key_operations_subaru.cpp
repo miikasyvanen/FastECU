@@ -324,7 +324,6 @@ uint8_t GetKeyOperationsSubaru::get_bit(uint32_t value, int bit_num)
 int GetKeyOperationsSubaru::linear_approx_test()
 {
 
-    uint16_t cIndexOfMax, dIndexOfMax;
 
     uint16_t **approxTable = new uint16_t*[0x20];
     for(int i = 0; i < 0x20; i++) approxTable[i] = new uint16_t[0x10];

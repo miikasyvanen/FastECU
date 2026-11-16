@@ -3,9 +3,9 @@
 
 FlashTcuSubaruHitachiM32rKline::FlashTcuSubaruHitachiM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -588,7 +588,6 @@ QByteArray FlashTcuSubaruHitachiM32rKline::send_sid_b0_block_write(uint32_t data
 {
     QByteArray output;
     QByteArray received;
-    int i;
 
     output.append((uint8_t)0xb0);
     output.append((uint8_t)(dataaddr >> 16) & 0xFF);

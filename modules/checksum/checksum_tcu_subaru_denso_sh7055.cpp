@@ -34,7 +34,6 @@ QByteArray ChecksumTcuSubaruDensoSH7055::calculate_checksum(QByteArray romData)
     QString msg;
     uint16_t checksum = 0;
     bool ok = false;
-    bool checksum_ok = false;
 
     for (int i = 0; i < checksum_areas.length(); i += 2)
     {

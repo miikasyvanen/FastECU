@@ -3,9 +3,9 @@
 
 FlashTcuSubaruDensoSH705xCan::FlashTcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     // TCU 0xFFFF3000 0x2000
 
@@ -1329,7 +1329,6 @@ int FlashTcuSubaruDensoSH705xCan::read_mem(uint32_t start_addr, uint32_t length)
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t datalen = 6;
     uint32_t pagesize = 0x0400;
@@ -1727,7 +1726,6 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_write()
     QByteArray msg;
 
     uint32_t datalen = 0;
-    uint16_t chksum;
 
     emit LOG_I("Check max message length", true, false);
     datalen = 0;
@@ -2163,7 +2161,6 @@ int FlashTcuSubaruDensoSH705xCan::flash_block(const uint8_t *src, uint32_t start
 uint8_t FlashTcuSubaruDensoSH705xCan::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
-    uint8_t data[chksum_data.length()];
 /*
     for (int i = 0; i < chksum_data.length(); i++)
     {

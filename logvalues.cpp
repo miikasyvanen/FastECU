@@ -36,7 +36,6 @@ void MainWindow::change_log_values(int tab_index, QString protocol)
     tab_widget->addTab(digital_widget, "Digital");
     tab_widget->addTab(switch_widget, "Switches");
 
-    QLabel *title_label;
     QLabel *log_value_label;
     QComboBox *log_value_combobox;
     QComboBox *log_units_combobox;

@@ -4,7 +4,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-#include <ecu_operations.h>
+#define STATUS_SUCCESS	0x00
+#define STATUS_ERROR	0x01
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -44,7 +45,6 @@ private:
     uint16_t fFunction(uint16_t wordInput, uint16_t keyInput);
     void findApprox(uint16_t **approxTable);
 
-    EcuOperations *ecuOperations;
     Ui::EcuOperationsWindow *ui;
 
 };

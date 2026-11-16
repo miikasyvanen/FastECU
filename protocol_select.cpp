@@ -3,8 +3,8 @@
 
 ProtocolSelect::ProtocolSelect(FileActions::ConfigValuesStructure *configValues, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::ProtocolSelect)
     , configValues(configValues)
+    , ui(new Ui::ProtocolSelect)
 {
     ui->setupUi(this);
 

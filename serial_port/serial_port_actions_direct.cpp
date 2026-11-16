@@ -912,7 +912,6 @@ QByteArray SerialPortActionsDirect::append_ssm_header(QByteArray output)
 QByteArray SerialPortActionsDirect::append_iso9141_header(QByteArray output)
 {
     uint8_t chk_sum = 0;
-    uint8_t msglength = output.length();
 
     output.insert(0, kline_startbyte);
     output.insert(1, kline_target_id);

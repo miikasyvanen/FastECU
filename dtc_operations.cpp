@@ -3,8 +3,8 @@
 
 DtcOperations::DtcOperations(SerialPortActions *serial, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::DtcOperationsWindow)
     , serial(serial)
+    , ui(new Ui::DtcOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -49,7 +49,6 @@ void DtcOperations::closeEvent(QCloseEvent *event)
 
 void DtcOperations::run()
 {
-    int result = STATUS_ERROR;
 
     // Set serial port
     serial->set_is_iso14230_connection(false);
@@ -134,7 +133,6 @@ int DtcOperations::five_baud_init(QString protocol)
     QByteArray output;
     QByteArray received;
     QByteArray response;
-    int result = STATUS_SUCCESS;
 
     five_baud_init_iso9141_ok = false;
     five_baud_init_iso14230_ok = false;
@@ -252,7 +250,6 @@ int DtcOperations::iso15765_init()
     QByteArray output;
     QByteArray received;
     QByteArray response;
-    int result = STATUS_SUCCESS;
 
     serial->reset_connection();
     serial->set_is_iso14230_connection(false);

@@ -8,16 +8,16 @@ SerialPortActions::SerialPortActions(QString peerAddress,
                                      QWebSocket *web_socket,
                                      QObject *parent)
     : QObject{parent}
+    , serial_direct(nullptr)
+    , serial_remote(nullptr)
     , peerAddress(peerAddress)
     , password(password)
+    , heartbeatInterval(0)
     , webSocket(web_socket == nullptr ?
                     new QWebSocket("",QWebSocketProtocol::VersionLatest,this)
                     :
                     web_socket)
     , socket(new WebSocketIoDevice(webSocket, webSocket))
-    , serial_direct(nullptr)
-    , serial_remote(nullptr)
-    , heartbeatInterval(0)
 {
 
     if (isDirectConnection())
@@ -61,8 +61,12 @@ void SerialPortActions::startOverNetwok(void)
     //Start node when Web Socket will be up
     QObject::connect(webSocket, &QWebSocket::connected, this, &SerialPortActions::websocket_connected);
     node.setHeartbeatInterval(heartbeatInterval);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)   // QWebSocket::errorOccurred is new in Qt 6.5
+    QObject::connect(webSocket, &QWebSocket::errorOccurred,
+#else
     QObject::connect(webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
-                     this, [=](QAbstractSocket::SocketError error)
+#endif
+                     this, [this](QAbstractSocket::SocketError error)
                      { emit LOG_D(QString(this->metaObject()->className()) + " startOverNetwok QWebSocket error: " + QMetaEnum::fromType<QAbstractSocket::SocketError>().valueToKey(error), true, true); });
     //WebSocket over SSL
     QUrl url("wss://"+peerAddress);
@@ -906,7 +910,6 @@ int SerialPortActions::set_j2534_ioctl(uint32_t parameter, int value)
 QByteArray SerialPortActions::five_baud_init(QByteArray output)
 {
     QByteArray response;
-    bool result = STATUS_SUCCESS;
     this->set_comm_busy(true);
 
     if (isDirectConnection())

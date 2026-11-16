@@ -292,7 +292,6 @@ void MainWindow::log_ssm_values()
 {
     QByteArray output;
     QByteArray received;
-    uint16_t value_count = 0;
     bool ok = false;
 
     if (ecu_init_complete)// && !log_params_request_started)
@@ -317,7 +316,6 @@ void MainWindow::log_ssm_values()
                 {
                     if (logValues->lower_panel_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
                     {
-                        value_count++;
                         //emit LOG_D(logValues->log_value_id.at(i) << "at" << logValues->log_value_address.at(i) << "enabled, length" << logValues->log_value_length.at(i), true, true);
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 16));
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 8));
@@ -332,7 +330,6 @@ void MainWindow::log_ssm_values()
                 {
                     if (logValues->dashboard_log_value_id.at(i) == logValues->log_value_id.at(j) && logValues->log_value_protocol.at(j) == protocol)
                     {
-                        value_count++;
                         //emit LOG_D(logValues->log_value_id.at(i) << "at" << logValues->log_value_address.at(i) << "enabled, length" << logValues->log_value_length.at(i), true, true);
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 16));
                         output.append((uint8_t)(logValues->log_value_address.at(j).toUInt(&ok,16) >> 8));
@@ -397,13 +394,10 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
     QString params;
 
     uint16_t log_value_index = 0;
-    uint16_t value_index = 0;
 
     double timer_elapsed = log_speed_timer->elapsed();
     if (timer_elapsed < 1)
         timer_elapsed = 1;
-    double data_received = received.length();
-    double log_speed = 1000.0f / timer_elapsed * data_received;
 
     //emit LOG_D((uint16_t)log_speed << "values read per second:" << data_received << "bytes at" << timer_elapsed << "milliseconds", true, true);
 
@@ -508,8 +502,6 @@ QString MainWindow::parse_log_params(QByteArray received, QString protocol)
 
 void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
 {
-    uint16_t enabled_log_value_count = 0;
-    uint16_t enabled_log_switch_count = 0;
     uint16_t log_value_count = logValues->log_value_id.length();
     uint16_t log_switch_count = logValues->log_switch_id.length();
 
@@ -536,7 +528,6 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
                 {
                     logValues->log_value_enabled.replace(i, "1");
                     emit LOG_D("Byte: 0x" + QString::number(value, 16) + " - ECU byte index " + QString::number(ecu_byte_index) + " and bit " + QString::number(ecu_bit) +  " is enabled: " + logValues->log_value_id.at(i) + " " + logValues->log_value_name.at(i) + " " + logValues->log_value_enabled.at(i), true, true);
-                    enabled_log_value_count++;
                 }
                 else
                 {
@@ -568,7 +559,6 @@ void MainWindow::parse_log_value_list(QByteArray received, QString protocol)
                 {
                     logValues->log_switch_enabled.replace(i, "1");
                     //emit LOG_D("Switch: " + logValues->log_switch_id.at(i) + " " + logValues->log_switch_name.at(i) + " " + logValues->log_switch_enabled.at(i), true, true);
-                    enabled_log_switch_count++;
                 }
                 else
                     logValues->log_switch_enabled.replace(i, "0");

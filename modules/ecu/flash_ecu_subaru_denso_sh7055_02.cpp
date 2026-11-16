@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoSH7055_02::FlashEcuSubaruDensoSH7055_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -395,7 +395,6 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
     QByteArray mapdata;
 
     uint32_t pagesize = 0;
-    uint32_t end_addr = 0;
     uint32_t datalen = 0;
     uint32_t cplen = 0;
 
@@ -408,7 +407,6 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
         start_addr = 0;
         length = 0x080000;
     }
-    end_addr = start_addr + length;
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
@@ -510,7 +508,6 @@ int FlashEcuSubaruDensoSH7055_02::write_mem(bool test_write)
     QByteArray filedata;
     QByteArray output;
     QByteArray received;
-    uint16_t chksum;
 
     filedata = ecuCalDef->FullRomData;
 
@@ -1268,7 +1265,6 @@ QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_27_request_seed()
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
@@ -1291,7 +1287,6 @@ QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_27_send_seed_key(QByteArray se
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x02);

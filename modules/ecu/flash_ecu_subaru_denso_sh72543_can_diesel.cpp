@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoSH72543CanDiesel::FlashEcuSubaruDensoSH72543CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -839,7 +839,6 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
 
@@ -1168,9 +1167,8 @@ int FlashEcuSubaruDensoSH72543CanDiesel::write_memory()
 int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
-    uint32_t start_addr, end_addr;
+    uint32_t start_addr;
     uint32_t length;
     uint16_t maxblocks;
     uint16_t blockctr;
@@ -1182,7 +1180,6 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
     uint32_t blocksize = 0x100;
 
     uint32_t byteindex = fdt->fblocks[blockno].start;
-    uint32_t remain = fdt->fblocks[blockno].len;
     unsigned long chrono;
     unsigned curspeed, tleft;
     QElapsedTimer timer;
@@ -1197,7 +1194,6 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
     start_addr = fdt->fblocks[blockno].start;
     length = fdt->fblocks[blockno].len;
     maxblocks = length / blocksize;
-    end_addr = (start_addr + (maxblocks * blocksize)) & 0xFFFFFFFF;
     emit LOG_I("Setting flash start: 0x" + QString::number(start_addr, 16) + " and length: 0x" + QString::number(length, 16), true, true);
 
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
