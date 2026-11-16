@@ -394,7 +394,18 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             {
                                 if (reader.name().toUtf8() == "value")
                                 {
-                                    configValues->calibration_files_directory = reader.attributes().value("data").toString();
+                                    QString cal_dir = reader.attributes().value("data").toString();
+                                    // A relative path (the shipped default is "calibrations/") would be
+                                    // resolved against the process working directory; resolve it against
+                                    // the FastECU config directory instead.
+                                    if (cal_dir.length() && QDir::isRelativePath(cal_dir))
+                                    {
+                                        cal_dir = QDir(configValues->version_config_directory).absoluteFilePath(cal_dir);
+                                        if (!cal_dir.endsWith("/"))
+                                            cal_dir.append("/");
+                                    }
+                                    if (cal_dir.length())
+                                        configValues->calibration_files_directory = cal_dir;
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -2127,6 +2138,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
+        QDir().mkpath(configValues->calibration_files_directory);
         emit LOG_D("Save file to: " + configValues->calibration_files_directory + "read.bin", true, true);
         save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "read.bin");
 
