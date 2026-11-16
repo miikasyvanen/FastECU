@@ -9,9 +9,7 @@ FlashEcuSubaruHitachiM32rCan::FlashEcuSubaruHitachiM32rCan(SerialPortActions *se
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from ECU");
@@ -22,6 +20,13 @@ FlashEcuSubaruHitachiM32rCan::FlashEcuSubaruHitachiM32rCan(SerialPortActions *se
 void FlashEcuSubaruHitachiM32rCan::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
 
@@ -83,11 +88,11 @@ void FlashEcuSubaruHitachiM32rCan::run()
                     emit LOG_I("Reading ROM from ECU Subaru using CAN", true, true);
                     result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
-                else if (cmd_type == "test_write" || cmd_type == "write")
+                else if (cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     emit LOG_I("Writing ROM to Subaru Hitachi WA12212970WWW using CAN", true, true);
-                    result = write_mem(test_write);
+                    result = write_mem();
                 }
             }
             emit external_logger("Finished");
@@ -1035,7 +1040,7 @@ int FlashEcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
  * @return success
  */
 
-int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
+int FlashEcuSubaruHitachiM32rCan::write_mem()
 {
     QByteArray filedata;
 
@@ -1092,7 +1097,7 @@ int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
         {
             if (block_modified[blockno])
             {
-                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno))
                 {
                     emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -1119,7 +1124,7 @@ int FlashEcuSubaruHitachiM32rCan::write_mem(bool test_write)
  *
  * @return success
  */
-int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
     int errval;

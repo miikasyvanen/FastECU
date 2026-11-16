@@ -761,10 +761,7 @@ void MainWindow::set_flash_arrow_state()
                 }
                 if (action->text() == "Test write to ecu")
                 {
-                    if (configValues->flash_protocol_test_write.at(configValues->flash_protocol_selected_id.toInt()) == "yes")
-                        action->setEnabled(true);
-                    else
-                        action->setEnabled(false);
+                    action->setEnabled(flash_protocol_test_write_allowed());
                 }
                 if (action->text() == "Write to ecu")
                 {
@@ -987,8 +984,26 @@ int MainWindow::can_listener()
     return 1;
 }
 
+bool MainWindow::flash_protocol_test_write_allowed()
+{
+    // Test write needs an external kernel that FastECU uploads and can tell not to
+    // erase/write. With the ECU's on-board kernel it would be a real write.
+    int id = configValues->flash_protocol_selected_id.toInt();
+    if (id < 0 || id >= configValues->flash_protocol_test_write.length() || id >= configValues->flash_protocol_kernel.length())
+        return false;
+    return configValues->flash_protocol_test_write.at(id) == "yes"
+        && !configValues->flash_protocol_kernel.at(id).trimmed().isEmpty();
+}
+
 int MainWindow::start_ecu_operations(QString cmd_type)
 {
+    if (cmd_type == "test_write" && !flash_protocol_test_write_allowed())
+    {
+        emit LOG_E("Test write is not supported with flash method '" + configValues->flash_protocol_selected_protocol_name + "'", true, true);
+        QMessageBox::warning(this, tr("Test write"), "Test write is only supported with flash methods that use an external kernel!");
+        return 0;
+    }
+
     set_realtime_state(false);
     toggle_realtime();
 

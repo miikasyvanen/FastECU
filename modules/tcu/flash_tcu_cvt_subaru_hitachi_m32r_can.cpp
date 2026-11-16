@@ -11,9 +11,7 @@ FlashTcuCvtSubaruHitachiM32rCan::FlashTcuCvtSubaruHitachiM32rCan(SerialPortActio
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from TCU");
@@ -24,6 +22,13 @@ FlashTcuCvtSubaruHitachiM32rCan::FlashTcuCvtSubaruHitachiM32rCan(SerialPortActio
 void FlashTcuCvtSubaruHitachiM32rCan::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
@@ -51,14 +56,8 @@ void FlashTcuCvtSubaruHitachiM32rCan::run()
     {
         emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-    }
     else if (cmd_type == "write")
     {
-        test_write = false;
         emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
@@ -94,11 +93,11 @@ void FlashTcuCvtSubaruHitachiM32rCan::run()
                     //emit LOG_I("Not yet implemented: Reading ROM from TCU Subaru Hitachi using CAN", true, true);
                     result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
-                else if (cmd_type == "test_write" || cmd_type == "write")
+                else if (cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     //emit LOG_I("Not yet implemented: Writing ROM to TCU Subaru Hitachi using CAN", true, true);
-                    result = write_mem(test_write);
+                    result = write_mem();
                 }
             }
             emit external_logger("Finished");
@@ -781,7 +780,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t leng
  * @return success
  */
 
-int FlashTcuCvtSubaruHitachiM32rCan::write_mem(bool test_write)
+int FlashTcuCvtSubaruHitachiM32rCan::write_mem()
 {
     QByteArray filedata;
 
@@ -837,7 +836,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::write_mem(bool test_write)
         {
             if (block_modified[blockno])
             {
-                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno))
                 {
                     emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -863,7 +862,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::write_mem(bool test_write)
  *
  * @return success
  */
-int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
     int errval;

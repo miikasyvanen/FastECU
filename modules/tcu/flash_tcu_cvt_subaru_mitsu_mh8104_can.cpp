@@ -9,9 +9,7 @@ FlashTcuCvtSubaruMitsuMH8104Can::FlashTcuCvtSubaruMitsuMH8104Can(SerialPortActio
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from TCU");
@@ -22,6 +20,13 @@ FlashTcuCvtSubaruMitsuMH8104Can::FlashTcuCvtSubaruMitsuMH8104Can(SerialPortActio
 void FlashTcuCvtSubaruMitsuMH8104Can::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
@@ -51,15 +56,8 @@ void FlashTcuCvtSubaruMitsuMH8104Can::run()
         send_log_window_message("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
         //qDebug() << "Read memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        send_log_window_message("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-        //qDebug() << "Test write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
-    }
     else if (cmd_type == "write")
     {
-        test_write = false;
         send_log_window_message("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
         //qDebug() << "Write memory with flashmethod" << flash_method << "and kernel" << ecuCalDef->Kernel;
     }
@@ -95,11 +93,11 @@ void FlashTcuCvtSubaruMitsuMH8104Can::run()
                     send_log_window_message("Reading ROM from TCU Subaru Mitsubishi using CAN", true, true);
                     result = read_mem_subaru_tcu_mitsu_can(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
-                else if (cmd_type == "test_write" || cmd_type == "write")
+                else if (cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     send_log_window_message("Writing ROM to TCU Subaru Mitsubishi using CAN", true, true);
-                    result = write_mem_subaru_tcu_mitsu_can(test_write);
+                    result = write_mem_subaru_tcu_mitsu_can();
                 }
             }
             emit external_logger("Finished");
@@ -605,7 +603,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
  * @return success
  */
 
-int FlashTcuCvtSubaruMitsuMH8104Can::write_mem_subaru_tcu_mitsu_can(bool test_write)
+int FlashTcuCvtSubaruMitsuMH8104Can::write_mem_subaru_tcu_mitsu_can()
 {
     QByteArray filedata;
 
@@ -661,7 +659,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::write_mem_subaru_tcu_mitsu_can(bool test_wr
         {
             if (block_modified[blockno])
             {
-                if (reflash_block_subaru_tcu_mitsu_can(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block_subaru_tcu_mitsu_can(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno))
                 {
                     send_log_window_message("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -687,7 +685,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::write_mem_subaru_tcu_mitsu_can(bool test_wr
  *
  * @return success
  */
-int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
     int errval;

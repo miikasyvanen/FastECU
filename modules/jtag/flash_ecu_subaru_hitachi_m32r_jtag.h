@@ -76,7 +76,6 @@ private:
 
     bool kill_process = false;
     bool kernel_alive = false;
-    bool test_write = false;
 
     int result;
     int mcu_type_index;
@@ -110,7 +109,7 @@ private:
 
     int init_jtag();
     int read_mem(uint32_t start_addr, uint32_t length);
-    int write_mem(bool test_write);
+    int write_mem();
 
     void hard_reset_jtag();
     int read_idcode();

@@ -396,6 +396,7 @@ private slots:
     void check_serial_ports();
     void open_serial_port();
     int can_listener();
+    bool flash_protocol_test_write_allowed();
     int start_ecu_operations(QString cmd_type);
     void close_calibration();
     void close_calibration_map(QObject* obj);

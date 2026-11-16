@@ -9,9 +9,7 @@ FlashEcuSubaruHitachiM32rJtag::FlashEcuSubaruHitachiM32rJtag(SerialPortActions *
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from TCU");
@@ -22,6 +20,13 @@ FlashEcuSubaruHitachiM32rJtag::FlashEcuSubaruHitachiM32rJtag(SerialPortActions *
 void FlashEcuSubaruHitachiM32rJtag::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
@@ -47,14 +52,8 @@ void FlashEcuSubaruHitachiM32rJtag::run()
     {
         emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-    }
     else if (cmd_type == "write")
     {
-        test_write = false;
         emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
@@ -90,8 +89,8 @@ void FlashEcuSubaruHitachiM32rJtag::run()
             {
                 emit external_logger("Writing ROM, please wait...");
                 emit LOG_I("Writing ROM to ECU Subaru Hitachi using K-Line", true, true);
-                //result = write_mem_subaru_denso_can_02_32bit(test_write);
-                result = write_mem(test_write);
+                //result = write_mem_subaru_denso_can_02_32bit();
+                result = write_mem();
             }
             emit external_logger("Finished");
 
@@ -148,7 +147,7 @@ int FlashEcuSubaruHitachiM32rJtag::read_mem(uint32_t start_addr, uint32_t length
     return STATUS_SUCCESS;
 }
 
-int FlashEcuSubaruHitachiM32rJtag::write_mem(bool test_write)
+int FlashEcuSubaruHitachiM32rJtag::write_mem()
 {
 
 

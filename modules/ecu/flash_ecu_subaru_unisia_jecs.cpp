@@ -9,9 +9,7 @@ FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, Fi
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from ECU");
@@ -22,6 +20,13 @@ FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, Fi
 void FlashEcuSubaruUnisiaJecs::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
