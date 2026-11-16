@@ -1,18 +1,21 @@
-# Depending of build platform, build flatpak with one of following command
+# FastECU Flatpak manifest. Fetches the sources of the given release tag from GitHub,
+# so this file alone is enough to build FastECU:
 #
-# x86_64:
-# flatpak-builder --arch=x86_64 --force-clean --user --disable-cache --install-deps-from=flathub --repo=repo --install ./fastecu ./fi.fastecu.FastECU.yml
+#   flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+#   flatpak-builder --user --install-deps-from=flathub --force-clean --install build-dir fi.fastecu.FastECU.yml
+#   flatpak run fi.fastecu.FastECU
 #
-# aarch64:
-# flatpak-builder --arch=aarch64 --force-clean --user --disable-cache --install-deps-from=flathub --repo=repo --install ./fastecu ./fi.fastecu.FastECU.yml
-#
+# deployment/build_flatpak.sh builds the local source tree instead (it swaps the sources
+# block below), and puts this manifest with the tag set to the current version into the
+# release zip. Keep the sources block last in this file.
 id: fi.fastecu.FastECU
 runtime: org.kde.Platform
-runtime-version: '5.15-22.08'
+runtime-version: '6.10'
 sdk: org.kde.Sdk
 command: FastECU
 finish-args:
   - --share=ipc
+  - --share=network
   - --socket=fallback-x11
   - --socket=wayland
   - --device=all
@@ -21,24 +24,17 @@ modules:
   - name: FastECU
     buildsystem: qmake
     config-opts:
-      - FastECU.pro
-      - CONFIG += release
-      - CONFIG += flatpak
-    make_args:
-      - -j4
-      - qmake_all
-    make_install_args:
-      - -j4
+      - CONFIG+=release
+      - CONFIG-=debug_and_release
+      - CONFIG+=flatpak
+    build-options:
+      env:
+        MAKEFLAGS: -j8
     post-install:
-      - install -Dm644 flatpak/resources/${FLATPAK_ID}.desktop -t /app/share/applications
-      - install -Dm644 flatpak/resources/${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo
-      - install -Dm644 flatpak/resources/${FLATPAK_ID}_16x16.png /app/share/icons/hicolor/16x16/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/resources/${FLATPAK_ID}_32x32.png /app/share/icons/hicolor/32x32/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/resources/${FLATPAK_ID}_64x64.png /app/share/icons/hicolor/64x64/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/resources/${FLATPAK_ID}_128x128.png /app/share/icons/hicolor/128x128/apps/${FLATPAK_ID}.png
-      - install -Dm644 flatpak/resources/${FLATPAK_ID}_256x256.png /app/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png
+      - install -Dm644 deployment/flatpak/resources/${FLATPAK_ID}.desktop -t /app/share/applications
+      - install -Dm644 deployment/flatpak/resources/${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo
+      - for s in 16 32 64 128 256; do install -Dm644 deployment/flatpak/resources/${FLATPAK_ID}_${s}x${s}.png /app/share/icons/hicolor/${s}x${s}/apps/${FLATPAK_ID}.png; done
     sources:
       - type: git
         url: https://github.com/miikasyvanen/FastECU.git
-        branch: master
-
+        tag: 0.1.0-beta.6

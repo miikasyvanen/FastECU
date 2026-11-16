@@ -14,6 +14,7 @@
     <p>FastECU engine management system tuning software is a software package which allows to read, tune and write vehicle ECUs and TCUs and modify BIU parameters at the moment.</p>
   </description>
   <releases>
+    <release version="0.1.0-beta.6" date="2026-11-16"/>
     <release version="0.1.0-beta.5" date="2025-04-13"/>
   </releases>
   <categories>

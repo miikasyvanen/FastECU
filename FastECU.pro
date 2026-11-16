@@ -278,23 +278,19 @@ DISTFILES += \
     config/protocols.cfg \
     external/FastECU-mc68hc16-bdm.ino \
     fastecu.rc \
-    flatpak/fi.fastecu.FastECU.desktop \
-    flatpak/fi.fastecu.FastECU.ico \
-    flatpak/fi.fastecu.FastECU.metainfo.xml \
-    flatpak/fi.fastecu.FastECU.yml \
-    flatpak/fi.fastecu.FastECU_128x128.png \
-    flatpak/fi.fastecu.FastECU_16x16.png \
-    flatpak/fi.fastecu.FastECU_256x256.png \
-    flatpak/fi.fastecu.FastECU_32x32.png \
-    flatpak/fi.fastecu.FastECU_64x64.png \
-    flatpak/resources/fi.fastecu.FastECU.desktop \
-    flatpak/resources/fi.fastecu.FastECU.ico \
-    flatpak/resources/fi.fastecu.FastECU.metainfo.xml \
-    flatpak/resources/fi.fastecu.FastECU_128x128.png \
-    flatpak/resources/fi.fastecu.FastECU_16x16.png \
-    flatpak/resources/fi.fastecu.FastECU_256x256.png \
-    flatpak/resources/fi.fastecu.FastECU_32x32.png \
-    flatpak/resources/fi.fastecu.FastECU_64x64.png \
+    deployment/build_flatpak.sh \
+    deployment/build_linux_appimage.sh \
+    deployment/build_windows.sh \
+    deployment/flatpak/fi.fastecu.FastECU.yml \
+    deployment/flatpak/resources/fi.fastecu.FastECU.desktop \
+    deployment/flatpak/resources/fi.fastecu.FastECU.ico \
+    deployment/flatpak/resources/fi.fastecu.FastECU.metainfo.xml \
+    deployment/flatpak/resources/fi.fastecu.FastECU_128x128.png \
+    deployment/flatpak/resources/fi.fastecu.FastECU_16x16.png \
+    deployment/flatpak/resources/fi.fastecu.FastECU_256x256.png \
+    deployment/flatpak/resources/fi.fastecu.FastECU_32x32.png \
+    deployment/flatpak/resources/fi.fastecu.FastECU_64x64.png \
+    deployment/linux/Containerfile \
     hexedit/images/find.png \
     hexedit/images/open.png \
     hexedit/images/qhexedit.ico \

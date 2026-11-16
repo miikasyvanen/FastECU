@@ -54,6 +54,7 @@ compile_commands.json
 
 *_qmlcache.qrc
 
-# Windows cross builds (build_windows.sh)
-/build-win-*/
-/FastECU-win32-*.exe
+# deployment/ build scripts: build files, downloaded tools, finished packages
+/deployment/build/
+/deployment/tools/
+/deployment/dist/

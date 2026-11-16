@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=FastECU
+Exec=FastECU
+Icon=fastecu
+Comment=Open Source Tuning Software
+Terminal=false
+Categories=Qt;Science;
+MimeType=application/vnd.sqlite3;
