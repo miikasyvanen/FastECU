@@ -829,11 +829,11 @@ int FlashEcuSubaruDensoSH705xDensoCan::get_changed_blocks(const uint8_t *src, in
         emit LOG_I(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
-            return -1;
+            return STATUS_ERROR;
         }
         delay(5);
     }
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -909,13 +909,13 @@ int FlashEcuSubaruDensoSH705xDensoCan::check_romcrc(const uint8_t *src, uint32_t
         emit LOG_I("\tNO", false, true);
         *modified = 1;
         serial->read_serial_data(serial_read_short_timeout);
-        return 0;
+        return STATUS_SUCCESS;
     }
 
     emit LOG_I("\tYES", false, true);
     *modified = 0;
     serial->read_serial_data(serial_read_short_timeout);
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 unsigned int FlashEcuSubaruDensoSH705xDensoCan::crc32(const unsigned char *buf, unsigned int len)
@@ -1113,7 +1113,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::reflash_block(const uint8_t *newdata, con
     if (blockno >= fdt->numblocks)
     {
         emit LOG_E("Block " + QString::number(blockno) + " out of range!", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     block_start = fdt->fblocks[blockno].start;

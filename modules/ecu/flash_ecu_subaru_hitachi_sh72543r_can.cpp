@@ -729,7 +729,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
 
     if (blockno >= fdt->numblocks) {
         emit LOG_I("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_address = fdt->fblocks[blockno].start;

@@ -674,7 +674,7 @@ int FlashEcuSubaruHitachiM32rKline::reflash_block(const uint8_t *newdata, const 
 
     if (blockno >= fdt->numblocks) {
         emit LOG_E("Block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_address = fdt->fblocks[blockno].start;

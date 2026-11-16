@@ -702,7 +702,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
 
     if (blockno >= fdt->numblocks) {
         send_log_window_message("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_address = fdt->fblocks[blockno].start;

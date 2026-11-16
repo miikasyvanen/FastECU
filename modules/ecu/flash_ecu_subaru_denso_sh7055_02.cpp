@@ -295,7 +295,7 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
     if (!file.open(QIODevice::ReadOnly ))
     {
         emit LOG_E("Unable to open kernel file for reading", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     file_len = file.size();
@@ -642,12 +642,12 @@ int FlashEcuSubaruDensoSH7055_02::get_changed_blocks(const uint8_t *src, int *mo
         emit LOG_I(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
-            return -1;
+            return STATUS_ERROR;
         }
     }
     emit LOG_D("ROM CRC check ready", true, true);
 
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -752,13 +752,13 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc(const uint8_t *src, uint32_t star
         emit LOG_I(msg, false, true);
         *modified = 1;
         serial->read_serial_data(serial_read_short_timeout);
-        return 0;
+        return STATUS_SUCCESS;
     }
     msg.append(QString("\tYES").toUtf8());
     emit LOG_I(msg, false, true);
     *modified = 0;
     serial->read_serial_data(serial_read_short_timeout);
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 unsigned int FlashEcuSubaruDensoSH7055_02::crc32(const unsigned char *buf, unsigned int len)

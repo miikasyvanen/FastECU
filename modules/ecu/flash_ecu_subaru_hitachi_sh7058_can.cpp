@@ -1102,7 +1102,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
 
     if (blockno >= fdt->numblocks) {
         emit LOG_I("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_address = fdt->fblocks[blockno].start;

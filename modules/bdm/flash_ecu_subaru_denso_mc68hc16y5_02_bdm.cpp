@@ -264,7 +264,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
     if (!file.open(QIODevice::ReadOnly ))
     {
         emit LOG_I("Unable to open kernel file for reading", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
     QByteArray pl_encr = file.readAll();
     ecuCalDef->FullRomData.clear();

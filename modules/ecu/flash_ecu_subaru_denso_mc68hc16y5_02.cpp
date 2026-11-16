@@ -252,7 +252,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
     if (!file.open(QIODevice::ReadOnly ))
     {
         emit LOG_E("Unable to open kernel file for reading", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     pl_encr = file.readAll();
@@ -622,12 +622,12 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::get_changed_blocks(const uint8_t *src, int
         emit LOG_I(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
-            return -1;
+            return STATUS_ERROR;
         }
     }
     emit LOG_D("ROM CRC check ready", true, true);
 
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 /*******************************************************
@@ -713,13 +713,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
         emit LOG_I(msg, false, true);
         *modified = 1;
         serial->read_serial_data(serial_read_short_timeout);
-        return 0;
+        return STATUS_SUCCESS;
     }
     msg.append(QString("\tYES").toUtf8());
     emit LOG_I(msg, false, true);
     *modified = 0;
     serial->read_serial_data(serial_read_short_timeout);
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 unsigned int FlashEcuSubaruDensoMC68HC16Y5_02::crc32(const unsigned char *buf, unsigned int len)
@@ -1234,9 +1234,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_received_message(QByteArray msg, QBy
 {
     for (int i = 0; i < msg.length(); i++)
     {
-        if (received.length() > i - 1)
-            if (msg.at(i) != received.at(i))
-                return 0;
+        if (i >= received.length() || msg.at(i) != received.at(i))
+            return 0;
     }
 
     return 1;

@@ -1188,7 +1188,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
 
     if (blockno >= fdt->numblocks) {
         emit LOG_I("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_addr = fdt->fblocks[blockno].start;
