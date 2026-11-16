@@ -53,3 +53,7 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Windows cross builds (build_windows.sh)
+/build-win-*/
+/FastECU-win32-*.exe

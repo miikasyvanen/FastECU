@@ -18,11 +18,18 @@ DEFINES += QT_DEPRECATED_WARNINGS #QT_SSL
 
 win32 {
     #LIBS += -LC:\Qt\5.9.9\mingw53_32\lib\libQt5OpenGL.a -lopengl32 -lsetupapi
-    #OpenSSL library must be stated first because in case
-    #of static build it cannot be linked static, dynamic only
-    QMAKE_LFLAGS += -L\"C:\Program Files (x86)\OpenSSL-Win32\bin\" \
-                    -L\"C:\Program Files\OpenSSL-Win32\bin\" \
-                    -lcrypto-3
+    contains(QMAKE_HOST.os, Windows) {
+        #OpenSSL library must be stated first because in case
+        #of static build it cannot be linked static, dynamic only
+        QMAKE_LFLAGS += -L\"C:\Program Files (x86)\OpenSSL-Win32\bin\" \
+                        -L\"C:\Program Files\OpenSSL-Win32\bin\" \
+                        -lcrypto-3
+        INCLUDEPATH += "C:\Program Files (x86)\OpenSSL-Win32\include" "C:\Program Files\OpenSSL-Win32\include"
+    } else {
+        # Cross-compiling on Linux (MXE): OpenSSL comes from the toolchain
+        # sysroot and links statically into the .exe
+        LIBS += -lcrypto -lws2_32 -lcrypt32 -luser32 -ladvapi32
+    }
     LIBS += -lopengl32 -lsetupapi
     SOURCES += \
     serial_port/J2534_win.cpp
@@ -30,7 +37,6 @@ win32 {
     serial_port/J2534_win.h
     HEADERS += \
     serial_port/J2534_tactrix_win.h
-    INCLUDEPATH += "C:\Program Files (x86)\OpenSSL-Win32\include" "C:\Program Files\OpenSSL-Win32\include"
 }
 unix {
     LIBS += -lcrypto
