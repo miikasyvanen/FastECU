@@ -1095,13 +1095,31 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
 
-            if (configValues->flash_protocol_selected_checksum != "n/a")
-                ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
-
-            if (ecuCalDef[rom_number] == NULL)
+            // The flash modules take the image for the whole memory model of the selected flash
+            // method: a smaller file (e.g. a wrong flash method selected) would make them flash
+            // whatever memory follows the image
+            uint32_t flash_size = 0;
+            for (int i = 0; flashdevices[i].name; i++)
             {
-                ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
+                if (configValues->flash_protocol_selected_mcu == flashdevices[i].name)
+                    flash_size = flashdevices[i].romsize;
+            }
+            if (flash_size && (uint32_t)ecuCalDef[rom_number]->FullRomData.length() < flash_size)
+            {
+                emit LOG_E("ROM file size 0x" + QString::number(ecuCalDef[rom_number]->FullRomData.length(), 16) + " is smaller than the flash size 0x" + QString::number(flash_size, 16) + " of flash method " + configValues->flash_protocol_selected_protocol_name, true, true);
+                QMessageBox::warning(this, tr("Write ROM"), "ROM file is smaller than the flash memory of the selected flash method (" + QString::number(ecuCalDef[rom_number]->FullRomData.length()) + " < " + QString::number(flash_size) + " bytes).\n\nCheck that the right flash method is selected. Write canceled.");
                 return 0;
+            }
+
+            if (configValues->flash_protocol_selected_checksum != "n/a")
+            {
+                FileActions::EcuCalDefStructure *corrected = fileActions->checksum_correction(ecuCalDef[rom_number]);
+                if (corrected == NULL)
+                {
+                    ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
+                    return 0;
+                }
+                ecuCalDef[rom_number] = corrected;
             }
         }
         else
