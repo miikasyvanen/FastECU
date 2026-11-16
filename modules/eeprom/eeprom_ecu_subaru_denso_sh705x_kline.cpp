@@ -240,7 +240,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Initializing K-Line communications", true, true);
     received = send_sid_bf_ssm_init();
-    if (received == "" || (uint8_t)received.at(4) != 0xFF)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0xFF)
     {
         QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
@@ -259,7 +259,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Requesting to start communication", true, true);
     received = send_sid_81_start_communication();
-    if (received == "" || (uint8_t)received.at(4) != 0xC1)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0xC1)
     {
         QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
@@ -269,7 +269,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Requesting timings params", true, true);
     received = send_sid_83_request_timings();
-    if (received == "" || (uint8_t)received.at(4) != 0xC3)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0xC3)
     {
         QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
@@ -279,7 +279,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Requesting seed", true, true);
     received = send_sid_27_request_seed();
-    if (received == "" || (uint8_t)received.at(4) != 0x67)
+    if (received.length() < 10 || (uint8_t)received.at(4) != 0x67)
     {
         QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
@@ -305,7 +305,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Sending seed key to ECU", true, true);
     received = send_sid_27_send_seed_key(seed_key);
-    if (received == "" || (uint8_t)received.at(4) != 0x67)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x67)
     {
         QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
@@ -315,7 +315,7 @@ int EepromEcuSubaruDensoSH705xKline::connect_bootloader()
 
     emit LOG_I("Set session mode", true, true);
     received = send_sid_10_start_diagnostic();
-    if (received == "" || (uint8_t)received.at(4) != 0x50)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x50)
     {
         QString nrc = FileActions::parse_nrc_message(received.mid(4, received.length()-1));
         emit LOG_E(nrc, true, true);
@@ -394,7 +394,7 @@ int EepromEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kern
 
     emit LOG_I("Requesting kernel upload'", true, true);
     received = send_sid_34_request_upload(start_address, len);
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x74)
         return STATUS_ERROR;
     emit LOG_I("Kernel upload request ok, uploading now, please wait...", true, true);
 
@@ -403,13 +403,13 @@ int EepromEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kern
 
     emit LOG_I("Transfer kernel data", true, true);
     received = send_sid_36_transferdata(start_address, pl_encr, len);
-    if (received == "" || (uint8_t)received.at(4) != 0x76)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x76)
         return STATUS_ERROR;
     //emit LOG_I("Kernel uploaded", true, true);
 
     //emit LOG_I("Kernel checksum bypass", true, true);
     received = send_sid_34_request_upload(start_address + len, 4);
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x74)
         return STATUS_ERROR;
 
     cks_bypass.append((uint8_t)0x00);
@@ -422,7 +422,7 @@ int EepromEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kern
     // sid36 transferData for checksum bypass
     //emit LOG_D("Send 'sid36_transfer_data' for chksum bypass", true, true);
     received = send_sid_36_transferdata(start_address + len, cks_bypass, 4);
-    if (received == "" || (uint8_t)received.at(4) != 0x76)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x76)
         return STATUS_ERROR;
 
     //emit LOG_I("Checksum bypass ok", true, true);
@@ -430,7 +430,7 @@ int EepromEcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t kern
 
     emit LOG_I("Jump to kernel", true, true);
     received = send_sid_31_start_routine();
-    if (received == "" || (uint8_t)received.at(4) != 0x71)
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x71)
         return STATUS_ERROR;
     emit LOG_I("Kernel started, initializing...", true, true);
 

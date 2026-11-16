@@ -606,6 +606,7 @@ int FlashEcuSubaruDensoSH7055_02::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_I("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else

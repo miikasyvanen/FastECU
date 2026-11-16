@@ -760,6 +760,7 @@ int FlashTcuSubaruDensoSH705xCan::tcu_relearn_subaru_ssm()
     QMessageBox::information(this, tr("TCU Relearn"), "Start Engine, let revs settle, move stick into D, fully press brake, press OK to continue");
 
     emit LOG_I("Tracking relearn status......", true, true);
+    output.resize(12);   // operator[] does not grow a QByteArray in Qt 6
     output[4] = ((uint8_t)0xA8);
     output[5] = ((uint8_t)0x00);
     output[6] = ((uint8_t)0x00);
@@ -964,7 +965,7 @@ int FlashTcuSubaruDensoSH705xCan::connect_bootloader()
 
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
@@ -1170,7 +1171,7 @@ int FlashTcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel_
     for (blockno = 0; blockno <= maxblocks; blockno++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockno * 128;
         output.clear();
@@ -1553,6 +1554,7 @@ int FlashTcuSubaruDensoSH705xCan::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_E("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -1638,7 +1640,7 @@ int FlashTcuSubaruDensoSH705xCan::check_romcrc(const uint8_t *src, uint32_t addr
     received.clear();
     received = serial->read_serial_data(serial_read_extra_long_timeout);
 
-    if (received.length() > 5)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CRC | 0x40))
         {
@@ -1743,7 +1745,7 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_write()
 
     received = serial->read_serial_data(serial_read_timeout);
 
-    if (received.length() > 9)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_GET_MAX_MSG_SIZE | 0x40))
         {
@@ -1782,7 +1784,7 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_write()
 
     received = serial->read_serial_data(serial_read_timeout);
 
-    if (received.length() > 9)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_GET_MAX_BLK_SIZE | 0x40))
         {
@@ -1832,7 +1834,7 @@ int FlashTcuSubaruDensoSH705xCan::init_flash_write()
 
     received = serial->read_serial_data(serial_read_timeout);
 
-    if (received.length() > 5)
+    if (received.length() > 8)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CMD | 0x40))
         {
@@ -1904,7 +1906,7 @@ int FlashTcuSubaruDensoSH705xCan::reflash_block(const uint8_t *newdata, const st
 
     received = serial->read_serial_data(serial_read_medium_timeout);
 
-    if (received.length() > 7)
+    if (received.length() > 10)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_PROG_VOLT | 0x40))
         {
@@ -2132,7 +2134,7 @@ int FlashTcuSubaruDensoSH705xCan::flash_block(const uint8_t *src, uint32_t start
             //delay(200);
             received = serial->read_serial_data(serial_read_extra_long_timeout);
 
-            if (received.length() > 7)
+            if (received.length() > 8)
             {
                 if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CMD + 0x40))
                 {

@@ -336,7 +336,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     received = serial->read_serial_data(200);
     
 
-    if (received.length() > 5)
+    if (received.length() > 6)
     {
         if ((uint8_t)received.at(5) != 0xA0 && (uint8_t)received.at(6) != 0x20)
         {
@@ -476,7 +476,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             delay(200);
             received = serial->read_serial_data(200);
             
-            if (received.length() > 5)
+            if (received.length() > 9)
             {
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
                 {
@@ -701,7 +701,7 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
             delay(200);
             received = serial->read_serial_data(200);
             
-            if (received.length() > 5)
+            if (received.length() > 9)
             {
                 if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
                 {
@@ -1200,7 +1200,7 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 256;
         output.clear();
@@ -1277,6 +1277,11 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
         }
         try_count++;
     }
+    if (!connected)
+    {
+        emit LOG_E("No valid response to request transfer exit (0x37)", true, true);
+        return STATUS_ERROR;
+    }
 
     delay(100);
 
@@ -1296,7 +1301,12 @@ int FlashEcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     delay(1000);
     received = serial->read_serial_data(500);
     emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-    if (received.length() != 7)
+    // The positive response can also come at once, without "response pending" (7F 31 78) first
+    if (received.length() > 6 && (uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
+    {
+        emit LOG_I("Checksum verified", true, true);
+    }
+    else if (received.length() != 7)
     {
         emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
         

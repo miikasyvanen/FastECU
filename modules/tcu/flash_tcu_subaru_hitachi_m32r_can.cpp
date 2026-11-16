@@ -308,7 +308,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
@@ -395,6 +395,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader()
     emit LOG_I("Checking if jump successful and kernel alive...", true, true);
     qDebug() << "Checking if jump successful and kernel alive...";
 
+    output.resize(8);   // operator[] does not grow a QByteArray in Qt 6
     output[4] = (uint8_t)0x31;
     output[5] = (uint8_t)0x02;
     output[6] = (uint8_t)0x02;
@@ -800,7 +801,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 128;
         output.clear();
@@ -966,7 +967,7 @@ int FlashTcuSubaruHitachiM32rCan::erase_mem()
 
     received = serial->read_serial_data(200);
     emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x31 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x01)
+    if (received.length() < 7 || (uint8_t)received.at(4) != 0x31 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x01)
     {
         emit LOG_I("Erasing error! Do not panic, do not reset the TCU immediately. The kernel is most likely still running and receiving commands!", true, true);
         //return STATUS_ERROR;

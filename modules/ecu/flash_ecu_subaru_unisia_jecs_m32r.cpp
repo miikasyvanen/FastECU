@@ -465,6 +465,11 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         emit LOG_D("Changing baudrate to 19200", true, true);
         serial->change_port_speed("19200");
 
+        if (!kernel_alive)
+        {
+            emit LOG_E("ECU did not enter flash mode, write canceled", true, true);
+            return STATUS_ERROR;
+        }
     }
 
     if (!serial->get_use_openport2_adapter())
@@ -481,7 +486,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     for (int i = 0; i < 20; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         received.append(serial->read_serial_data(serial_read_medium_timeout));
         emit LOG_I(".", false, false);
@@ -514,10 +519,11 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
 
     emit LOG_I("", true, false);
     received.clear();
+    bool flash_erased = false;
     for (int i = 0; i < 40; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         received.append(serial->read_serial_data(serial_read_medium_timeout));
         emit LOG_I(".", false, false);
@@ -527,6 +533,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
             {
                 emit LOG_I("", false, true);
                 emit LOG_I("Flash erased!", true, true);
+                flash_erased = true;
                 break;
             }
             else
@@ -538,6 +545,12 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
             }
         }
         delay(500);
+    }
+    if (!flash_erased)
+    {
+        emit LOG_E("", false, true);
+        emit LOG_E("Flash erase did not complete, no answer from ECU!", true, true);
+        return STATUS_ERROR;
     }
     received = serial->read_serial_data(serial_read_medium_timeout);
     //delay(500);
@@ -560,7 +573,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     for (int i = 0; i < blocks; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         output.clear();
         output.append((uint8_t)0xAF);

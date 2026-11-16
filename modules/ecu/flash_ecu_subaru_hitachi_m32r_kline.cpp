@@ -449,7 +449,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         emit LOG_I("ECU ID = " + ecuid, true, true);
 
         received = send_subaru_sid_b8_change_baudrate_38400();
-        if (received == "" || (uint8_t)received.at(4) != 0xf8)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xf8)
             return STATUS_ERROR;
 
         serial->change_port_speed("38400");
@@ -457,7 +457,7 @@ int FlashEcuSubaruHitachiM32rKline::read_mem(uint32_t start_addr, uint32_t lengt
         // Checking connection after baudrate change with SSM Init
         received = send_sid_bf_ssm_init();
         emit LOG_D("Init response: " + parse_message_to_hex(received), true, true);
-        if (received == "" || (uint8_t)received.at(4) != 0xff)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
     }
 

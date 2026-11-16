@@ -364,7 +364,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_short_timeout);
-    if (received.length() > 5)
+    if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x62 || (uint8_t)received.at(5) != 0x10)
         {
@@ -556,7 +556,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::connect_bootloader()
         
         delay(50);
         received = serial->read_serial_data(serial_read_short_timeout);
-        if (received.length() > 5)
+        if (received.length() > 9)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
@@ -748,7 +748,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::connect_bootloader()
         delay(200);
         received = serial->read_serial_data(200);
         
-        if (received.length() > 5)
+        if (received.length() > 9)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
@@ -984,6 +984,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::read_memory(uint32_t start_addr, uint32_t le
 
         //length = 256;
 
+        output.resize(9);   // operator[] does not grow a QByteArray in Qt 6
         output[5] = (uint8_t)((addr >> 24) & 0xFF);
         output[6] = (uint8_t)((addr >> 16) & 0xFF);
         output[7] = (uint8_t)(addr >> 8);
@@ -1227,7 +1228,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const 
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 256;
         output.clear();
@@ -1310,6 +1311,11 @@ int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const 
         }
         try_count++;
     }
+    if (!connected)
+    {
+        emit LOG_E("No valid response to request transfer exit (0x37)", true, true);
+        return STATUS_ERROR;
+    }
 
     delay(100);
 
@@ -1330,7 +1336,12 @@ int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const 
     delay(1000);
     received = serial->read_serial_data(500);
     emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-    if (received.length() != 7)
+    // The positive response can also come at once, without "response pending" (7F 31 78) first
+    if (received.length() > 6 && (uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
+    {
+        emit LOG_I("Checksum verified", true, true);
+    }
+    else if (received.length() != 7)
     {
         emit LOG_E("No valid response from ECU, checksum not verified", true, true);
         

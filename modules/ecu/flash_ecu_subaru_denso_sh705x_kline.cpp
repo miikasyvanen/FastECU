@@ -721,6 +721,7 @@ int FlashEcuSubaruDensoSH705xKline::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_E("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -805,7 +806,7 @@ int FlashEcuSubaruDensoSH705xKline::check_romcrc(const uint8_t *src, uint32_t ad
     received.clear();
     received = serial->read_serial_data(serial_read_extra_long_timeout);
     
-    if (received.length() > 5)
+    if (received.length() > 8)
     {
         if ((uint8_t)received.at(0) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(1) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(4) == (SUB_KERNEL_CRC | 0x40))
         {

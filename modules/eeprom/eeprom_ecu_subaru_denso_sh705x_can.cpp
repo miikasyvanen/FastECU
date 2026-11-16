@@ -534,7 +534,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x01)
         {
@@ -842,7 +842,7 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel
     for (blockno = 0; blockno <= maxblocks; blockno++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockno * 128;
         output.clear();

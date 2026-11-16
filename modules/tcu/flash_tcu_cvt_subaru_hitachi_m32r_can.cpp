@@ -333,7 +333,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
@@ -936,7 +936,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 128;
         output.clear();
@@ -1012,7 +1012,7 @@ int FlashTcuCvtSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const
     emit LOG_I("Sent: " + parse_message_to_hex(output), true, true);
     delay(200);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 4)
+    if (received.length() > 6)
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02)
         {

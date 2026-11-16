@@ -351,11 +351,11 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0xA8;
-    output[5] = (uint8_t)0x00;
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0xD7;
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xD7);
 
     
     serial->write_serial_data_echo_check(output);
@@ -374,11 +374,11 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0xA8;
-    output[5] = (uint8_t)0x00;
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x01;
-    output[8] = (uint8_t)0x3B;
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x01);
+    output.append((uint8_t)0x3B);
 
     
     serial->write_serial_data_echo_check(output);
@@ -391,8 +391,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xDF);
-    output[4] = (uint8_t)0x10;
-    output[5] = (uint8_t)0x03;
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x03);
 
     
     serial->write_serial_data_echo_check(output);
@@ -405,7 +405,7 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE1);
-    output[4] = (uint8_t)0x04;
+    output.append((uint8_t)0x04);
 
     
     serial->write_serial_data_echo_check(output);
@@ -418,8 +418,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xB0);
-    output[4] = (uint8_t)0x10;
-    output[5] = (uint8_t)0x03;
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x03);
 
     
     serial->write_serial_data_echo_check(output);
@@ -432,8 +432,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xB0);
-    output[4] = (uint8_t)0x85;
-    output[5] = (uint8_t)0x02;
+    output.append((uint8_t)0x85);
+    output.append((uint8_t)0x02);
 
     
     serial->write_serial_data_echo_check(output);
@@ -446,8 +446,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xDF);
-    output[4] = (uint8_t)0x85;
-    output[5] = (uint8_t)0x02;
+    output.append((uint8_t)0x85);
+    output.append((uint8_t)0x02);
 
     
     serial->write_serial_data_echo_check(output);
@@ -460,8 +460,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xB0);
-    output[4] = (uint8_t)0x85;
-    output[5] = (uint8_t)0x02;
+    output.append((uint8_t)0x85);
+    output.append((uint8_t)0x02);
 
     
     serial->write_serial_data_echo_check(output);
@@ -474,8 +474,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xDF);
-    output[4] = (uint8_t)0x85;
-    output[5] = (uint8_t)0x02;
+    output.append((uint8_t)0x85);
+    output.append((uint8_t)0x02);
 
     
     serial->write_serial_data_echo_check(output);
@@ -488,9 +488,9 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xDF);
-    output[4] = (uint8_t)0x28;
-    output[5] = (uint8_t)0x03;
-    output[6] = (uint8_t)0x01;
+    output.append((uint8_t)0x28);
+    output.append((uint8_t)0x03);
+    output.append((uint8_t)0x01);
 
     
     serial->write_serial_data_echo_check(output);
@@ -504,8 +504,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0x27;
-    output[5] = (uint8_t)0x01;
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x01);
     
     serial->write_serial_data_echo_check(output);
     delay(200);
@@ -534,8 +534,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0x27;
-    output[5] = (uint8_t)0x02;
+    output.append((uint8_t)0x27);
+    output.append((uint8_t)0x02);
     output.append(seed_key);
 
     
@@ -557,11 +557,11 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0xA8;
-    output[5] = (uint8_t)0x00;
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0xD5;
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0xD5);
 
     
     serial->write_serial_data_echo_check(output);
@@ -574,11 +574,11 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0xA8;
-    output[5] = (uint8_t)0x00;
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x01;
-    output[8] = (uint8_t)0x3B;
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x01);
+    output.append((uint8_t)0x3B);
 
     
     serial->write_serial_data_echo_check(output);
@@ -591,11 +591,11 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0xA8;
-    output[5] = (uint8_t)0x00;
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0x1C;
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x1C);
 
     
     serial->write_serial_data_echo_check(output);
@@ -608,11 +608,11 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0xA8;
-    output[5] = (uint8_t)0x00;
-    output[6] = (uint8_t)0x00;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0x0E;
+    output.append((uint8_t)0xA8);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x0E);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x0F);
@@ -628,8 +628,8 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0x10;
-    output[5] = (uint8_t)0x02;
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x02);
 
     
     serial->write_serial_data_echo_check(output);
@@ -641,10 +641,10 @@ int FlashEcuSubaruHitachiSH7058Can::connect_bootloader_subaru_ecu_hitachi_can()
 
     output[4] = (uint8_t)0x34;
     output[5] = (uint8_t)0x04;
-    output[6] = (uint8_t)0x33;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0x00;
-    output[9] = (uint8_t)0x00;
+    output.append((uint8_t)0x33);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -677,8 +677,8 @@ else
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x07);
     output.append((uint8_t)0xE0);
-    output[4] = (uint8_t)0x10;
-    output[5] = (uint8_t)0x43;
+    output.append((uint8_t)0x10);
+    output.append((uint8_t)0x43);
     
     serial->write_serial_data_echo_check(output);
     delay(200);
@@ -764,10 +764,10 @@ else
 
     output[4] = (uint8_t)0x34;
     output[5] = (uint8_t)0x04;
-    output[6] = (uint8_t)0x33;
-    output[7] = (uint8_t)0x00;
-    output[8] = (uint8_t)0x00;
-    output[9] = (uint8_t)0x00;
+    output.append((uint8_t)0x33);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
+    output.append((uint8_t)0x00);
     output.append((uint8_t)0x10);
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -842,7 +842,7 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
         // SSM init
         serial->change_port_speed("4800");
         received = send_sid_bf_ssm_init();
-        if (received == "" || (uint8_t)received.at(4) != 0xff)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
 
         if (received.length() < 13)
@@ -878,14 +878,14 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
         received = send_subaru_sid_b8_change_baudrate_38400();
         //LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
         //emit LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
-        if (received == "" || (uint8_t)received.at(4) != 0xf8)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xf8)
             return STATUS_ERROR;
 
         serial->change_port_speed("38400");
 
         // Checking connection after baudrate change with SSM Init
         received = send_sid_bf_ssm_init();
-        if (received == "" || (uint8_t)received.at(4) != 0xff)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
     }
 
@@ -922,12 +922,13 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
 
         //length = 7FFF0;
 
+        output.resize(11);   // header + address + size + checksum; operator[] does not grow a QByteArray in Qt 6
         output[6] = (uint8_t)((addr >> 16) & 0xFF);
         output[7] = (uint8_t)((addr >> 8) & 0xFF);
         output[8] = (uint8_t)(addr & 0xFF);
         output[9] = (uint8_t)(pagesize - 1) & 0xFF;
-        output.remove(10, 1);
-        output[10] = (calculate_checksum(output, false));
+        output.resize(10);
+        output.append(calculate_checksum(output, false));
 
         emit LOG_D("Send msg: " + parse_message_to_hex(output), true, true);
         serial->write_serial_data_echo_check(output);
@@ -1155,7 +1156,7 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * blocksize;
         output.clear();
@@ -1170,13 +1171,13 @@ int FlashEcuSubaruHitachiSH7058Can::reflash_block_subaru_ecu_hitachi_can(const u
         
         for (unsigned int i = 0; i < blocksize; i++)
         {
-            output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
+            output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
         }
         data_len -= blocksize;
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(5000);
         
-        if ((uint8_t)received.at(4) != 0xF6)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xF6)
         {
             emit LOG_I("Write data failed!", true, true);
             return STATUS_ERROR;

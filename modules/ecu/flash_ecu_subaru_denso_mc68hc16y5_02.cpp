@@ -595,6 +595,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_I("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -706,7 +707,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
 
     ecucrc32 = 0;
     imgcrc32 = crc32(src, pagesize);
-    if (received.length() > 3)
+    if (received.length() > 8)
         ecucrc32 = (uint8_t)received.at(5) << 24 | (uint8_t)received.at(6) << 16 | (uint8_t)received.at(7) << 8 | (uint8_t)received.at(8);
         //ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
     msg.clear();

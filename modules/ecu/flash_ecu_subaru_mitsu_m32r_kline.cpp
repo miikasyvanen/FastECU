@@ -566,7 +566,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * blocksize;
         output.clear();
@@ -577,7 +577,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
 
         for (uint32_t i = 0; i < blocksize; i++)
         {
-            output[i + 4] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
+            output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
         }
         data_len -= blocksize;
 

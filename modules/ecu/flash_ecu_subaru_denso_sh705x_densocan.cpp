@@ -789,6 +789,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_E("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -874,7 +875,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::check_romcrc(const uint8_t *src, uint32_t
     received.clear();
     received = serial->read_serial_data(serial_read_extra_long_timeout);
     
-    if (received.length() > 5)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CRC | 0x40))
         {
@@ -978,7 +979,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::init_flash_write()
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 9)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_GET_MAX_MSG_SIZE | 0x40))
         {
@@ -1017,7 +1018,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::init_flash_write()
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 9)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_GET_MAX_BLK_SIZE | 0x40))
         {
@@ -1067,7 +1068,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::init_flash_write()
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 5)
+    if (received.length() > 8)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CMD | 0x40))
         {
@@ -1139,7 +1140,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::reflash_block(const uint8_t *newdata, con
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 7)
+    if (received.length() > 10)
     {
         if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_PROG_VOLT | 0x40))
         {
@@ -1367,7 +1368,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
             //delay(200);
             received = serial->read_serial_data(serial_read_extra_long_timeout);
             
-            if (received.length() > 7)
+            if (received.length() > 8)
             {
                 if ((uint8_t)received.at(4) != ((SUB_KERNEL_START_COMM >> 8) & 0xFF) || (uint8_t)received.at(5) != (SUB_KERNEL_START_COMM & 0xFF) || (uint8_t)received.at(8) != (SUB_KERNEL_CMD + 0x40))
                 {

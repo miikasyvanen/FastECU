@@ -211,7 +211,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
 
         received = send_subaru_sid_b8_change_baudrate_38400();
         //emit LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
-        if (received == "" || (uint8_t)received.at(4) != 0xf8)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xf8)
             return STATUS_ERROR;
 
         serial->change_port_speed("38400");
@@ -219,7 +219,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
         // Checking connection after baudrate change with SSM Init
         received = send_sid_bf_ssm_init();
         emit LOG_D("Init response: " + parse_message_to_hex(received), true, true);
-        if (received == "" || (uint8_t)received.at(4) != 0xff)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
     }
 
@@ -349,7 +349,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
     for (int i = 0; i < filesize; i+=0x80)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         output.clear();
         for (int j = 0; j < 0x80; j++)
@@ -420,7 +420,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         for (int i = 0; i < 20; i++)
         {
             if (kill_process)
-                return 0;
+                return STATUS_ERROR;
 
             received.append(serial->read_serial_data(10));
             emit LOG_I(".", false, false);
@@ -458,7 +458,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     for (int i = 0; i < 20; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         received.append(serial->read_serial_data(10));
         emit LOG_I(".", false, false);
@@ -504,7 +504,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     for (int i = 0; i < blocks; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         output.clear();
         output.append((uint8_t)0x80);

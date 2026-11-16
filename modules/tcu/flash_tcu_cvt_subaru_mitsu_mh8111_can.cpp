@@ -267,7 +267,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
@@ -376,7 +376,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x02 || (uint8_t)received.at(7) != 0x03)
         {
@@ -446,7 +446,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::read_mem(uint32_t start_addr, uint32_t leng
     serial->write_serial_data_echo_check(output);
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x74 || (uint8_t)received.at(5) != 0x20 || (uint8_t)received.at(6) != 0x01 || (uint8_t)received.at(7) != 0x04)
         {
@@ -761,7 +761,7 @@ int FlashTcuCvtSubaruMitsuMH8111Can::reflash_block(const uint8_t *newdata, const
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 256;
         output.clear();

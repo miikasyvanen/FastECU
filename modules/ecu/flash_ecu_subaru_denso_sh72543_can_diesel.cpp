@@ -187,7 +187,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::connect_bootloader()
 
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 6)
     {
         if ((uint8_t)received.at(4) == 0x62 && (uint8_t)received.at(5) == 0xF1 && (uint8_t)received.at(6) == 0x82)
         {
@@ -360,7 +360,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::connect_bootloader()
     serial->write_serial_data_echo_check(output);
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x62 || (uint8_t)received.at(5) != 0x10)
         {
@@ -541,7 +541,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::connect_bootloader()
         serial->write_serial_data_echo_check(output);
         delay(50);
         received = serial->read_serial_data(serial_read_timeout);
-        if (received.length() > 5)
+        if (received.length() > 9)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
@@ -728,7 +728,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::connect_bootloader()
         output.append((uint8_t)0x61);
         serial->write_serial_data_echo_check(output);
         received = serial->read_serial_data(serial_read_timeout);
-        if (received.length() > 5)
+        if (received.length() > 9)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
@@ -1203,7 +1203,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_addr + blockctr * blocksize;
         output.clear();
@@ -1306,6 +1306,11 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
         }
         try_count++;
     }
+    if (!connected)
+    {
+        emit LOG_E("No valid response to request transfer exit (0x37)", true, true);
+        return STATUS_ERROR;
+    }
 
     delay(100);
 
@@ -1323,7 +1328,12 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
     output.append((uint8_t)0x01);
     serial->write_serial_data_echo_check(output);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() != 7)
+    // The positive response can also come at once, without "response pending" (7F 31 78) first
+    if (received.length() > 6 && (uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
+    {
+        emit LOG_I("Checksum verified", true, true);
+    }
+    else if (received.length() != 7)
     {
         emit LOG_I("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
         emit LOG_I("Checksum not verified", true, true);

@@ -428,7 +428,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
     received = serial->read_serial_data(serial_read_timeout);
     
 
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
@@ -746,7 +746,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * blocksize;
         output.clear();
@@ -761,7 +761,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
         
         for (int i = 0; i < blocksize; i++)
         {
-            output[i + 8] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
+            output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
         }
         serial->write_serial_data_echo_check(output);
         delay(10);
@@ -943,7 +943,7 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     delay(200);
     received = serial->read_serial_data(serial_read_timeout);
     
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {

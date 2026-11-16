@@ -753,15 +753,18 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         try_count++;
         //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x74)
-        send_log_window_message("No or bad response received", true, true);
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x74)
+    {
+        send_log_window_message("No or bad response to request download (0x34): " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
         //return STATUS_ERROR;
 
     int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 128;
         output.clear();
@@ -824,8 +827,8 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         try_count++;
         //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x77)
-        send_log_window_message("No or bad response received", true, true);
+    if (received.length() < 5 || (uint8_t)received.at(4) != 0x77)
+        send_log_window_message("No or bad response to request transfer exit (0x37): " + parse_message_to_hex(received), true, true);
         //return STATUS_ERROR;
 
     delay(100);
@@ -863,8 +866,11 @@ int FlashTcuCvtSubaruMitsuMH8104Can::reflash_block_subaru_tcu_mitsu_can(const ui
         try_count++;
         //delay(try_timeout);
     }
-    if (received == "" || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
-        send_log_window_message("No or bad response received", true, true);
+    if (received.length() < 7 || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+    {
+        send_log_window_message("Checksum not verified: " + parse_message_to_hex(received), true, true);
+        return STATUS_ERROR;
+    }
         //return STATUS_ERROR;
 
     send_log_window_message("Checksum verified...", true, true);
@@ -918,7 +924,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::erase_subaru_tcu_mitsu_can()
     send_log_window_message("Received msg: " + parse_message_to_hex(received), true, true);
     delay(5000);
 
-    if ((uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
+    if (received.length() < 7 || (uint8_t)received.at(4) != 0x71 || (uint8_t)received.at(5) != 0x01 || (uint8_t)received.at(6) != 0x02)
     {
         send_log_window_message("Erasing error! Do not panic, do not reset the TCU immediately. The kernel is most likely still running and receiving commands!", true, true);
         //return STATUS_ERROR;
