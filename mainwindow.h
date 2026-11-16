@@ -340,8 +340,24 @@ private:
     void toggle_realtime();
     void toggle_log_to_file();
     void set_maptablewidget_items();
-    QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian);
-    void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, float map_value);
+    // Part of a calibration table selected for editing: map data, X axis or Y axis
+    struct MapEditTarget {
+        enum Part { MapData, XScale, YScale } part = MapData;
+        int rom_number = 0;
+        int map_number = 0;
+        QStringList cells;          // values of the selected part, in display units
+        int stride = 1;             // index = row * stride + col
+        int first_row = 0, last_row = 0, first_col = 0, last_col = 0;   // in value coordinates
+        int max_rows = 1, max_cols = 1;
+        QString storagetype, endian, to_byte, from_byte, min_value, max_value;
+        float coarse_inc = 0, fine_inc = 0;
+        uint32_t address = 0, interval = 1, start_pos = 1;
+    };
+    bool get_map_edit_target(int table_row, int table_col, int table_last_row, int table_last_col, MapEditTarget &t);
+    void store_map_edit_target(const MapEditTarget &t);
+    QString map_value_to_rom_value(const MapEditTarget &t, double map_value, bool *clamped = nullptr);
+    QString get_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, uint32_t interval = 1, uint32_t start_pos = 1);
+    void set_rom_data_value(uint8_t map_rom_number, uint32_t map_data_address, uint16_t map_value_index, QString map_value_storagetype, QString map_value_endian, QString rom_value, uint32_t interval = 1, uint32_t start_pos = 1);
     int get_mapvalue_decimal_count(QString valueFormat);
     int get_map_cell_colors(FileActions::EcuCalDefStructure *ecuCalDef, float mapDataValue, int mapIndex);
     bool check_rom_data_value(QString storagetype, QString rom_data_value, QString new_rom_data_value);
