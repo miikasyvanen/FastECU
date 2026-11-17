@@ -155,6 +155,8 @@ void EepromEcuSubaruDensoSH705xKline::run()
             if (save_and_exit)
                 break;
         }
+        this->close();
+        break;
     case QMessageBox::Cancel:
         LOG_D("Operation canceled", true, true);
         this->close();

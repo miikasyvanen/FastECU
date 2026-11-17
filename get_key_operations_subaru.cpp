@@ -295,20 +295,34 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
     //emit LOG_I("Plaintext: " + QString::number(plainText, 16) + " Ciphertext: " + QString::number(cipherText, 16), true, true);
     //emit LOG_I("x2Text: " + QString::number(x2Text, 16) + " x3 Text: " + QString::number(x3Text, 16), true, true);
 
-    for (k2 = 0; k2 < 0x10000; k2++)
+    // 32-bit counter: a uint16_t never reaches 0x10000 and would loop forever
+    uint32_t key;
+    for (key = 0; key < 0x10000; key++)
     {
-        if ((fFunction(x2Text, k2) ^ (plainText & 0xffff)) == x3Text) break;
+        if ((fFunction(x2Text, key) ^ (plainText & 0xffff)) == x3Text) break;
     }
+    if (key == 0x10000)
+    {
+        emit LOG_E("No matching k2 found", true, true);
+        return STATUS_ERROR;
+    }
+    k2 = key;
 
     emit LOG_I("Predicted k2: 0x" + QString::number(k2, 16), true, true);
     emit LOG_I("Moving on to k3", true, true);
 
     // k3 using last plaintext, ciphertext pair
 
-    for (k3 = 0; k3 < 0x10000; k3++)
+    for (key = 0; key < 0x10000; key++)
     {
-        if ((fFunction(x3Text, k3) ^ (cipherText & 0xffff)) == x2Text) break;
+        if ((fFunction(x3Text, key) ^ (cipherText & 0xffff)) == x2Text) break;
     }
+    if (key == 0x10000)
+    {
+        emit LOG_E("No matching k3 found", true, true);
+        return STATUS_ERROR;
+    }
+    k3 = key;
 
     emit LOG_I("Predicted k3: 0x" + QString::number(k3, 16), true, true);
     emit LOG_I("End Time", true, true);
@@ -440,7 +454,7 @@ void GetKeyOperationsSubaru::findApprox(uint16_t **approxTable)
         {
             for (e = 0; e < 0x20; e++)
             {
-                if (applyMask(e, d) ^ applyMask(sBox(e), c) == 0)
+                if ((applyMask(e, d) ^ applyMask(sBox(e), c)) == 0)
                 {
                     approxTable[d][c]++;
                     //emit LOG_I(QString::number(d) + "," + QString::number(c) + "," + QString::number(approxTable[d][c]), true, true);

@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
             freopen("CONOUT$", "w", stderr);
         }
     }
+#else
+    Q_UNUSED(debug_console) // the console option only matters on Windows
 #endif
 
     int return_code;

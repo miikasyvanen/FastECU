@@ -160,6 +160,8 @@ void EepromEcuSubaruDensoSH705xCan::run()
             if (save_and_exit)
                 break;
         }
+        this->close();
+        break;
     case QMessageBox::Cancel:
         emit LOG_D("Operation canceled", true, true);
         this->close();

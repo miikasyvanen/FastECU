@@ -1174,6 +1174,7 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
     inbuf.svcid = 5; // info
     inbuf.infosvcid = 1; // serial
 
+    Q_UNUSED(inbuf) // kept for the disabled vendor serial-number IOCTL below
     outbuf.length = sizeof(outbuf.data) - 1;
 /*
     if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))
