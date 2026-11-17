@@ -717,7 +717,7 @@ void MainWindow::set_realtime_state(bool state)
 
 void MainWindow::toggle_realtime()
 {
-    QAction *logger;
+    QAction *logger = nullptr;
     QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
     foreach (QMenu *menu, menus) {
         foreach (QAction *action, menu->actions()) {
@@ -743,7 +743,8 @@ void MainWindow::toggle_realtime()
             if (connect_to_ecu())
             {
                 QMessageBox::information(this, tr("ECU connection"), "Unable to connect to ECU");
-                logger->setChecked(false);
+                if (logger)
+                    logger->setChecked(false);
                 return;
             }
         }

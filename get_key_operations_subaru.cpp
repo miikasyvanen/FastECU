@@ -90,7 +90,7 @@ int GetKeyOperationsSubaru::load_and_apply_linear_approx()
         {11, 8}, {15, 12}, {3, 16}, {7, 4}
     };
 
-    uint32_t plainText, cipherText;
+    uint32_t plainText = 0, cipherText = 0;
     uint16_t x2Text, x3Text, k4, k1, k2, k3, x1, x4, fOutcome;
     int counter[4][0x20], nybble, subkey, j, k, total;
     bool alreadyExists[0x20000/4];
