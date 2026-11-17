@@ -2340,9 +2340,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
     ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
 
+    const uint romSize = (uint)ecuCalDef->FullRomData.length();
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
-        if (ecuCalDef->AddressList.at(i).toUInt() > ecuCalDef->FullRomData.length() || ecuCalDef->XScaleAddressList.at(i).toUInt() > ecuCalDef->FullRomData.length() || ecuCalDef->YScaleAddressList.at(i).toUInt() > ecuCalDef->FullRomData.length())
+        if (ecuCalDef->AddressList.at(i).toUInt() > romSize || ecuCalDef->XScaleAddressList.at(i).toUInt() > romSize || ecuCalDef->YScaleAddressList.at(i).toUInt() > romSize)
         {
             QMessageBox::warning(this, tr("File size error"), "Error in expected ROM size!");
             ecuCalDef->NameList.clear();

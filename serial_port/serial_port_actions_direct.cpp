@@ -385,7 +385,7 @@ QStringList SerialPortActionsDirect::check_serial_ports()
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
     QStringList j2534_interfaces;
     installed_drivers = getAllJ2534DriversNames();
-    for (const QString installed_vendor : installed_drivers.keys())
+    for (const QString &installed_vendor : installed_drivers.keys())
     {
         j2534_interfaces.append(installed_vendor);
     }
