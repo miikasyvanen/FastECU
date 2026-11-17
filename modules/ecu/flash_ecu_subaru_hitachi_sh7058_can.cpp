@@ -910,7 +910,7 @@ int FlashEcuSubaruHitachiSH7058Can::read_mem_subaru_ecu_hitachi_can(uint32_t sta
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 

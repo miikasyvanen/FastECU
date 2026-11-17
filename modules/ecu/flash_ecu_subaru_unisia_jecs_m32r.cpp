@@ -301,7 +301,7 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         //uint32_t curblock = (addr / pagesize);
         float pleft = 0;
         unsigned long chrono;
@@ -566,7 +566,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     uint32_t start = 0;
     uint32_t byteindex = 0;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     QElapsedTimer timer;
 
     emit LOG_I("Uploading file " + flashdata_filename + " to flash, please wait...", true, true);

@@ -321,7 +321,7 @@ int FlashEcuSubaruMitsuM32rKline::read_mem(uint32_t start_addr, uint32_t length)
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -474,7 +474,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     uint32_t byteindex = fdt->fblocks[blockno].start;
     uint8_t blocksize = 0x80;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     QElapsedTimer timer;
 
     QByteArray output;

@@ -163,7 +163,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::read_mem(uint32_t start_addr, uint32_t
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -382,7 +382,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, co
     QByteArray msg;
     QElapsedTimer timer;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     uint32_t blocksize = 0x20;
     uint32_t start = fdt->rblocks[blockno].start;
     uint32_t len = ecuCalDef->FullRomData.length();

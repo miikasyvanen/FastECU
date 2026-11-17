@@ -386,7 +386,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -978,7 +978,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
     QByteArray msg;
 
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
 
     flashblocksize = 0x1000;
 

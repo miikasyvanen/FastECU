@@ -515,7 +515,7 @@ int FlashEcuSubaruHitachiSH72543rCan::read_mem(uint32_t start_addr, uint32_t len
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -719,7 +719,7 @@ int FlashEcuSubaruHitachiSH72543rCan::reflash_block(const uint8_t *newdata, cons
     uint32_t byteindex = fdt->fblocks[blockno].start;
     uint16_t blocksize = 0x100;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     QElapsedTimer timer;
 
     QByteArray output;

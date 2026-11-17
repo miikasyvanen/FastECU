@@ -952,7 +952,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::read_memory(uint32_t start_addr, uint32
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -1182,7 +1182,7 @@ int FlashEcuSubaruDensoSH72543CanDiesel::reflash_block(const uint8_t *newdata, c
 
     uint32_t byteindex = fdt->fblocks[blockno].start;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     QElapsedTimer timer;
 
     set_progressbar_value(0);

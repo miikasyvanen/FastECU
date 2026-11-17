@@ -476,7 +476,7 @@ int FlashTcuCvtSubaruMitsuMH8104Can::read_mem_subaru_tcu_mitsu_can(uint32_t star
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 

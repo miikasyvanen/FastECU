@@ -972,7 +972,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::read_memory(uint32_t start_addr, uint32_t le
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 

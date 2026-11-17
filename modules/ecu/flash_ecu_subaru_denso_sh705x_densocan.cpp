@@ -605,7 +605,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::read_mem(uint32_t start_addr, uint32_t le
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -1196,7 +1196,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::flash_block(const uint8_t *src, uint32_t 
     QElapsedTimer timer;
 
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
 
     flashblocksize = 0x1000;
 
