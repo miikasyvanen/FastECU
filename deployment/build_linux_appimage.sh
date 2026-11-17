@@ -28,7 +28,8 @@ DEPLOY="$(cd "$(dirname "$0")" && pwd)"
 SRC="$(dirname "$DEPLOY")"
 VERSION="$(grep -oP 'software_version = "\K[^"]+' "$SRC/file_actions.h")"
 QT_VERSION="${QT_VERSION:-6.9.3}"
-IMAGE="fastecu-build-${BASE/:/}-qt$QT_VERSION-$ARCH"
+# Fully qualified: a short name makes podman ask which registry to pull it from
+IMAGE="localhost/fastecu-build-${BASE/:/}-qt$QT_VERSION-$ARCH"
 TOOLS="$DEPLOY/tools/$ARCH"
 
 if [ "$ARCH" != "$(uname -m)" ] && ! grep -qs '^enabled' "/proc/sys/fs/binfmt_misc/qemu-$ARCH"; then
@@ -56,7 +57,7 @@ if [ "${REBUILD_IMAGE:-0}" = 1 ] || ! podman image exists "$IMAGE"; then
 fi
 
 # label=disable: let the container read/write the bind mount without relabeling it (SELinux)
-podman run --rm --platform "$PLATFORM" --security-opt label=disable -v "$SRC":/src \
+podman run --rm --pull=never --platform "$PLATFORM" --security-opt label=disable -v "$SRC":/src \
     -e JOBS="${JOBS:-$(nproc)}" -e VERSION="$VERSION" -e ARCH="$ARCH" \
     "$IMAGE" bash -euo pipefail -c '
         D=/src/deployment
