@@ -677,8 +677,8 @@ long J2534::PassThruReadVersion(char *pApiVersion,char *pDllVersion,char *pFirmw
     QByteArray received;
     long result = STATUS_NOERROR;
 
-    strncpy(pApiVersion, API_VERSION, strlen(API_VERSION));
-    strncpy(pDllVersion, DLL_VERSION, strlen(DLL_VERSION));
+    qstrncpy(pApiVersion, API_VERSION, 80);
+    qstrncpy(pDllVersion, DLL_VERSION, 80);
     //strncpy(pFirmwareVersion, fw_version, strlen(fw_version));
 
     output = "\r\n\r\nati\r\n";
@@ -690,9 +690,9 @@ long J2534::PassThruReadVersion(char *pApiVersion,char *pDllVersion,char *pFirmw
     QString response = QString::fromUtf8(received);
     QStringList fw_ver = response.split("ari ");
     fw_ver = fw_ver.at(fw_ver.length()-1).split("\r\n");
-    std::string fw_ver_str = fw_ver.at(0).toUtf8().data();
-    char *str = fw_ver.at(0).toUtf8().data();
-    strncpy(pFirmwareVersion, str, strlen(str));
+    // Keep the QByteArray alive while copying; J2534 version buffers are 80 chars
+    const QByteArray fw_ver_str = fw_ver.at(0).toUtf8();
+    qstrncpy(pFirmwareVersion, fw_ver_str.constData(), 80);
 
     return result;
 }
