@@ -57,7 +57,10 @@ if [ "${REBUILD_IMAGE:-0}" = 1 ] || ! podman image exists "$IMAGE"; then
 fi
 
 # label=disable: let the container read/write the bind mount without relabeling it (SELinux)
-podman run --rm --pull=never --platform "$PLATFORM" --security-opt label=disable -v "$SRC":/src \
+# --init: bash would be PID 1, which ignores SIGINT/SIGTERM; -it: Ctrl+C reaches make
+TTY=()
+[ -t 0 ] && [ -t 1 ] && TTY=(-it)
+podman run --rm --init "${TTY[@]}" --pull=never --platform "$PLATFORM" --security-opt label=disable -v "$SRC":/src \
     -e JOBS="${JOBS:-$(nproc)}" -e VERSION="$VERSION" -e ARCH="$ARCH" \
     "$IMAGE" bash -euo pipefail -c '
         D=/src/deployment
