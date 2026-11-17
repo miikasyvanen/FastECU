@@ -145,6 +145,7 @@ FlashEcuSubaruDensoSH7058CanDiesel::~FlashEcuSubaruDensoSH7058CanDiesel()
 
 void FlashEcuSubaruDensoSH7058CanDiesel::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -1338,6 +1339,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
  */
 int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
+    Q_UNUSED(test_write)
     uint32_t block_start;
     uint32_t block_len;
     uint32_t datalen = 0;

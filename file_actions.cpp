@@ -1612,6 +1612,7 @@ QString FileActions::parse_hex_ecuid(uint8_t byte)
 
 FileActions::EcuCalDefStructure *FileActions::parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii)
 {
+    Q_UNUSED(is_ascii)
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QString cal_id_ascii;
@@ -1667,6 +1668,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_ecuflash_def_files(Fil
 
 FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii)
 {
+    Q_UNUSED(is_ascii)
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QString cal_id_ascii;

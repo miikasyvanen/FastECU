@@ -141,6 +141,7 @@ FlashEcuSubaruUnisiaJecs::~FlashEcuSubaruUnisiaJecs()
 
 void FlashEcuSubaruUnisiaJecs::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 

@@ -136,6 +136,7 @@ FlashEcuSubaruDensoSH7055_02::~FlashEcuSubaruDensoSH7055_02()
 
 void FlashEcuSubaruDensoSH7055_02::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 
@@ -926,6 +927,7 @@ int FlashEcuSubaruDensoSH7055_02::init_flash_write()
  */
 int FlashEcuSubaruDensoSH7055_02::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
+    Q_UNUSED(test_write)
     uint32_t start = 0;
     uint32_t len = 0;
     uint32_t datalen = 0;

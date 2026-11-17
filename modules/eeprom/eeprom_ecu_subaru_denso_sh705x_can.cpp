@@ -183,6 +183,7 @@ EepromEcuSubaruDensoSH705xCan::~EepromEcuSubaruDensoSH705xCan()
 
 void EepromEcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

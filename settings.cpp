@@ -43,6 +43,7 @@ Settings::~Settings()
 
 void Settings::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     qDebug() << "Save config file before exit, bye bye!";
     save_config_file();
 }

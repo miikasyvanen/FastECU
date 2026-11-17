@@ -178,6 +178,7 @@ EepromEcuSubaruDensoSH705xKline::~EepromEcuSubaruDensoSH705xKline()
 
 void EepromEcuSubaruDensoSH705xKline::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 

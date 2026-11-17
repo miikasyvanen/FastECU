@@ -37,7 +37,9 @@ bool SerialPortActionsDirect::is_serial_port_open()
 
 bool SerialPortActionsDirect::set_kline_timings(uint32_t parameter, int value)
 {
-    _P1_MAX = value;
+    // Only P1_MAX is adjustable on the direct (non-J2534) serial path
+    if (parameter == SERIAL_P1_MAX)
+        _P1_MAX = value;
     return STATUS_SUCCESS;
 }
 

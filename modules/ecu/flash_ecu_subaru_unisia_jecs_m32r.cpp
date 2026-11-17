@@ -131,6 +131,7 @@ FlashEcuSubaruUnisiaJecsM32r::~FlashEcuSubaruUnisiaJecsM32r()
 
 void FlashEcuSubaruUnisiaJecsM32r::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     //vBattTimer->stop();
     kill_process = true;
 }

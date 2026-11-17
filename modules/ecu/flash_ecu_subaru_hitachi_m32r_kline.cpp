@@ -129,6 +129,7 @@ FlashEcuSubaruHitachiM32rKline::~FlashEcuSubaruHitachiM32rKline()
 
 void FlashEcuSubaruHitachiM32rKline::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

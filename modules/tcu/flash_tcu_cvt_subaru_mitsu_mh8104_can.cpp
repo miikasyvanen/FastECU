@@ -131,6 +131,7 @@ FlashTcuCvtSubaruMitsuMH8104Can::~FlashTcuCvtSubaruMitsuMH8104Can()
 
 void FlashTcuCvtSubaruMitsuMH8104Can::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

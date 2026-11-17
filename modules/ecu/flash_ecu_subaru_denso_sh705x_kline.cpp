@@ -139,6 +139,7 @@ FlashEcuSubaruDensoSH705xKline::~FlashEcuSubaruDensoSH705xKline()
 
 void FlashEcuSubaruDensoSH705xKline::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 
@@ -1031,6 +1032,7 @@ int FlashEcuSubaruDensoSH705xKline::init_flash_write()
  */
 int FlashEcuSubaruDensoSH705xKline::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
+    Q_UNUSED(test_write)
     uint32_t block_start;
     uint32_t block_len;
     uint32_t datalen = 0;

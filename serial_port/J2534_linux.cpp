@@ -188,6 +188,7 @@ long J2534::PassThruOpen(const void *pName, unsigned long *pDeviceID)
 
 long J2534::PassThruClose(unsigned long DeviceID)
 {
+    Q_UNUSED(DeviceID)
     QByteArray output;
     QByteArray received;
     long result = STATUS_NOERROR;
@@ -206,6 +207,7 @@ long J2534::PassThruClose(unsigned long DeviceID)
 
 long J2534::PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, unsigned long Flags, unsigned long Baudrate, unsigned long *pChannelID)
 {
+    Q_UNUSED(DeviceID)
     QByteArray output;
     QByteArray received;
     unsigned long chanID = (unsigned long)pChannelID;
@@ -263,6 +265,7 @@ long J2534::PassThruDisconnect(unsigned long ChannelID)
 
 long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsigned long *pNumMsgs, unsigned long Timeout)
 {
+    Q_UNUSED(ChannelID)
     QByteArray received;
     QByteArray msg;
     long result = STATUS_NOERROR;
@@ -550,6 +553,7 @@ long J2534::PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsign
 
 long J2534::PassThruWriteMsgs(unsigned long ChannelID, const PASSTHRU_MSG *pMsg, unsigned long *pNumMsgs, unsigned long Timeout)
 {
+    Q_UNUSED(Timeout)
     QByteArray output;
     QByteArray received;
     long result = STATUS_NOERROR;
@@ -608,6 +612,7 @@ long J2534::PassThruStopPeriodicMsg(unsigned long ChannelID, unsigned long MsgID
 
 long J2534::PassThruStartMsgFilter(unsigned long ChannelID, unsigned long FilterType, const PASSTHRU_MSG *pMaskMsg, const PASSTHRU_MSG *pPatternMsg, const PASSTHRU_MSG *pFlowControlMsg, unsigned long *pMsgID)
 {
+    Q_UNUSED(pMsgID)
     QByteArray output;
     QByteArray received;
     long result = STATUS_NOERROR;
@@ -642,6 +647,8 @@ long J2534::PassThruStartMsgFilter(unsigned long ChannelID, unsigned long Filter
 
 long J2534::PassThruStopMsgFilter(unsigned long ChannelID, unsigned long MsgID)
 {
+    Q_UNUSED(ChannelID)
+    Q_UNUSED(MsgID)
     long result = STATUS_NOERROR;
 
     return result;
@@ -649,6 +656,7 @@ long J2534::PassThruStopMsgFilter(unsigned long ChannelID, unsigned long MsgID)
 
 long J2534::PassThruSetProgrammingVoltage(unsigned long DeviceID, unsigned long Pin, unsigned long Voltage)
 {
+    Q_UNUSED(DeviceID)
     QByteArray output;
     QByteArray received;
     long result = STATUS_NOERROR;
@@ -664,6 +672,7 @@ long J2534::PassThruSetProgrammingVoltage(unsigned long DeviceID, unsigned long 
 
 long J2534::PassThruReadVersion(char *pApiVersion,char *pDllVersion,char *pFirmwareVersion,unsigned long DeviceID)
 {
+    Q_UNUSED(DeviceID)
     QByteArray output;
     QByteArray received;
     long result = STATUS_NOERROR;
@@ -692,6 +701,11 @@ long J2534::PassThruGetLastError(char *pErrorDescription)
 {
     long result = STATUS_NOERROR;
 
+    // No error text is tracked on Linux; return an empty string so callers
+    // never print an uninitialised buffer.
+    if (pErrorDescription)
+        pErrorDescription[0] = '\0';
+
     return result;
 }
 
@@ -712,6 +726,7 @@ int J2534::is_valid_sconfig_param(SCONFIG s)
 
 void J2534::dump_sbyte_array(const SBYTE_ARRAY* s)
 {
+    Q_UNUSED(s)
     //emit LOG_D("SBYTE_ARRAY size =" << s->NumOfBytes;
     //DBGPRINT(("SBYTE_ARRAY size=%u\n",s->NumOfBytes));
     //DBGDUMP((s->BytePtr,s->NumOfBytes,0));

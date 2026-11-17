@@ -43,6 +43,7 @@ DtcOperations::~DtcOperations()
 
 void DtcOperations::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     serial->reset_connection();
     kill_process = true;
 }

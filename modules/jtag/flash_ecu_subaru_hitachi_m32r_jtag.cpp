@@ -124,6 +124,7 @@ FlashEcuSubaruHitachiM32rJtag::~FlashEcuSubaruHitachiM32rJtag()
 
 void FlashEcuSubaruHitachiM32rJtag::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -142,6 +143,8 @@ int FlashEcuSubaruHitachiM32rJtag::init_jtag()
 
 int FlashEcuSubaruHitachiM32rJtag::read_mem(uint32_t start_addr, uint32_t length)
 {
+    Q_UNUSED(start_addr)
+    Q_UNUSED(length)
 
 
     return STATUS_SUCCESS;

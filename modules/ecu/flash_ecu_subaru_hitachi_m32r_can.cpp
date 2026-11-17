@@ -126,6 +126,7 @@ FlashEcuSubaruHitachiM32rCan::~FlashEcuSubaruHitachiM32rCan()
 
 void FlashEcuSubaruHitachiM32rCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

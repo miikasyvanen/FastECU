@@ -137,6 +137,7 @@ FlashEcuSubaruUnisiaJecsM32rBootMode::~FlashEcuSubaruUnisiaJecsM32rBootMode()
 
 void FlashEcuSubaruUnisiaJecsM32rBootMode::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

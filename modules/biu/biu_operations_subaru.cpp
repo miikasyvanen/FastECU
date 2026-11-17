@@ -122,6 +122,7 @@ void BiuOperationsSubaru::close_results_windows()
 
 void BiuOperationsSubaru::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     qDebug() << "Closing BIU log window";
     keep_alive_timer->stop();
     if (biuOpsSubaruSwitchesIo != nullptr) biuOpsSubaruSwitchesIo->close();

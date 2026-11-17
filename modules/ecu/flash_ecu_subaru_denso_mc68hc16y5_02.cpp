@@ -140,6 +140,7 @@ FlashEcuSubaruDensoMC68HC16Y5_02::~FlashEcuSubaruDensoMC68HC16Y5_02()
 
 void FlashEcuSubaruDensoMC68HC16Y5_02::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 
@@ -886,6 +887,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
  */
 int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
+    Q_UNUSED(test_write)
 
     uint32_t start = 0;
     uint32_t len = 0;

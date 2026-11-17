@@ -126,6 +126,7 @@ FlashTcuSubaruHitachiM32rKline::~FlashTcuSubaruHitachiM32rKline()
 
 void FlashTcuSubaruHitachiM32rKline::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -451,6 +452,7 @@ int FlashTcuSubaruHitachiM32rKline::connect_bootloader()
  *
  */int FlashTcuSubaruHitachiM32rKline::read_b0(uint32_t start_addr, uint32_t length)
 {
+    Q_UNUSED(start_addr)
 
     QByteArray received;
     QByteArray msg;

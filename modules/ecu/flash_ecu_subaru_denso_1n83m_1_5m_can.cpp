@@ -127,6 +127,7 @@ void FlashEcuSubaruDenso1N83M_1_5MCan::run()
 
 void FlashEcuSubaruDenso1N83M_1_5MCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

@@ -119,6 +119,7 @@ FlashEcuSubaruDensoMC68HC16Y5_02_BDM::~FlashEcuSubaruDensoMC68HC16Y5_02_BDM()
 
 void FlashEcuSubaruDensoMC68HC16Y5_02_BDM::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 
@@ -375,6 +376,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::write_mem()
 
 int FlashEcuSubaruDensoMC68HC16Y5_02_BDM::flash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
+    Q_UNUSED(newdata)
     QByteArray output;
     QByteArray received;
     QByteArray msg;

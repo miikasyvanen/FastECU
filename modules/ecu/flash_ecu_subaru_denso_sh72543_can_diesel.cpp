@@ -127,6 +127,7 @@ void FlashEcuSubaruDensoSH72543CanDiesel::run()
 
 void FlashEcuSubaruDensoSH72543CanDiesel::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

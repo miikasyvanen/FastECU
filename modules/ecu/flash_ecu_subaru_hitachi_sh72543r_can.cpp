@@ -124,6 +124,7 @@ FlashEcuSubaruHitachiSH72543rCan::~FlashEcuSubaruHitachiSH72543rCan()
 
 void FlashEcuSubaruHitachiSH72543rCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

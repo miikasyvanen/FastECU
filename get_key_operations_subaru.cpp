@@ -36,6 +36,7 @@ GetKeyOperationsSubaru::~GetKeyOperationsSubaru()
 
 void GetKeyOperationsSubaru::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     //kill_process = true;
     //ecuOperations->kill_process = true;
 }

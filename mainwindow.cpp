@@ -1696,6 +1696,7 @@ void MainWindow::checkbox_state_changed(int state)
 
 void MainWindow::calibration_files_treewidget_item_selected(QTreeWidgetItem* item)
 {
+    Q_UNUSED(item)
     QList<QTreeWidgetItem *> itemList;
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
 
@@ -1935,6 +1936,7 @@ void MainWindow::close_calibration_map(QObject* obj)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     close_app();
 }
 

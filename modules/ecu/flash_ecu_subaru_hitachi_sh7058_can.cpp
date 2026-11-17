@@ -141,6 +141,7 @@ FlashEcuSubaruHitachiSH7058Can::~FlashEcuSubaruHitachiSH7058Can()
 
 void FlashEcuSubaruHitachiSH7058Can::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 

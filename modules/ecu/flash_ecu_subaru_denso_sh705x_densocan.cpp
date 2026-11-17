@@ -143,6 +143,7 @@ FlashEcuSubaruDensoSH705xDensoCan::~FlashEcuSubaruDensoSH705xDensoCan()
 
 void FlashEcuSubaruDensoSH705xDensoCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -1098,6 +1099,7 @@ int FlashEcuSubaruDensoSH705xDensoCan::init_flash_write()
  */
 int FlashEcuSubaruDensoSH705xDensoCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
+    Q_UNUSED(test_write)
     uint32_t block_start;
     uint32_t block_len;
     uint32_t datalen = 0;
