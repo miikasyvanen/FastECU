@@ -1073,8 +1073,8 @@ bool SerialPortActions::get_is_tx_done()
 {
     if (isDirectConnection())
         return serial_direct->get_is_tx_done();
-    //else
-    //    return qtrohelper::slot_sync(serial_remote->get_is_tx_done());
+    else
+        return qtrohelper::slot_sync(serial_remote->get_is_tx_done());
 }
 
 int SerialPortActions::clear_rx_buffer()

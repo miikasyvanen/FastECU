@@ -1046,6 +1046,9 @@ bool SerialPortActionsDirect::get_is_tx_done()
 {
 #if defined Q_OS_UNIX
     return j2534->get_is_tx_done();
+#else
+    // The Windows J2534 DLL has no TX-done flag; report done so callers never wait on it
+    return true;
 #endif
 }
 
