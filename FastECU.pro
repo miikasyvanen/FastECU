@@ -16,40 +16,22 @@ DEFINES += QT_DEPRECATED_WARNINGS #QT_SSL
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-#Windows common
 win32 {
-    SOURCES += serial_port/J2534_win.cpp
-    HEADERS += serial_port/J2534_win.h \
-               serial_port/J2534_tactrix_win.h
-}
-
-#Windows x32 specific
-win32:contains(QT_ARCH, i386):{
-    message(Building x32)
     #LIBS += -LC:\Qt\5.9.9\mingw53_32\lib\libQt5OpenGL.a -lopengl32 -lsetupapi
     #OpenSSL library must be stated first because in case
     #of static build it cannot be linked static, dynamic only
-    QMAKE_LFLAGS += -L$$shell_quote(C:\Program Files (x86)\OpenSSL-Win32\bin) \
-                    -L$$shell_quote(C:\Program Files\OpenSSL-Win32\bin) \
+    QMAKE_LFLAGS += -L\"C:\Program Files (x86)\OpenSSL-Win32\bin\" \
+                    -L\"C:\Program Files\OpenSSL-Win32\bin\" \
                     -lcrypto-3
     LIBS += -lopengl32 -lsetupapi
-    INCLUDEPATH += $$quote(C:\Program Files (x86)\OpenSSL-Win32\include) \
-                   $$quote(C:\Program Files\OpenSSL-Win32\include)
+    SOURCES += \
+    serial_port/J2534_win.cpp
+    HEADERS += \
+    serial_port/J2534_win.h
+    HEADERS += \
+    serial_port/J2534_tactrix_win.h
+    INCLUDEPATH += "C:\Program Files (x86)\OpenSSL-Win32\include" "C:\Program Files\OpenSSL-Win32\include"
 }
-
-#Windows x64 specific
-win32:contains(QT_ARCH, x86_64):{
-    message(Building x64)
-    INCLUDEPATH +=  $$[QT_INSTALL_PREFIX]/../../Tools/OpenSSLv3/Win_x64/include \
-                    $$[QT_INSTALL_PREFIX]/../Tools/OpenSSLv3/Win_x64/include \
-                    $$quote(C:\Program Files\OpenSSL-Win64\include)
-
-    LIBS += -L$$[QT_INSTALL_PREFIX]/../../Tools/OpenSSLv3/Win_x64/lib \
-            -L$$[QT_INSTALL_PREFIX]/../Tools/OpenSSLv3/Win_x64/lib \
-            -L$$shell_quote(C:\Program Files\OpenSSL-Win64\lib) \
-            -lcrypto
-}
-
 unix {
     LIBS += -lcrypto
     SOURCES += \
