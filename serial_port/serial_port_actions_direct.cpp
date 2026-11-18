@@ -396,13 +396,12 @@ QStringList SerialPortActionsDirect::check_serial_ports()
     return serial_ports;
 }
 
-#if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
-    #if defined(_WIN32) || defined(WIN32)
-        #define REGISTRY_FORMAT QSettings::Registry32Format
-    #else
+#if defined(_WIN32) || defined(WIN32) || defined(_WIN64) || defined(WIN64)
+    #if defined(_WIN64) || defined(WIN64)
         #define REGISTRY_FORMAT QSettings::Registry64Format
+    #else
+        #define REGISTRY_FORMAT QSettings::Registry32Format
     #endif
-
 //Find first connected device
 //TODO find all devices
 QStringList SerialPortActionsDirect::check_j2534_devices(QMap<QString, QString> installed_drivers)
