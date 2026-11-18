@@ -9,9 +9,7 @@ FlashEcuSubaruUnisiaJecs::FlashEcuSubaruUnisiaJecs(SerialPortActions *serial, Fi
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from ECU");
@@ -23,12 +21,18 @@ void FlashEcuSubaruUnisiaJecs::run()
 {
     this->show();
 
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
+
     int result = STATUS_ERROR;
     set_progressbar_value(0);
 
     //result = init_flash_denso_kline_04(ecuCalDef, cmd_type);
 
-    bool ok = false;
 
     mcu_type_string = ecuCalDef->McuType;
     mcu_type_index = 0;
@@ -137,6 +141,7 @@ FlashEcuSubaruUnisiaJecs::~FlashEcuSubaruUnisiaJecs()
 
 void FlashEcuSubaruUnisiaJecs::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 
@@ -157,7 +162,6 @@ int FlashEcuSubaruUnisiaJecs::read_mem(uint32_t start_addr, uint32_t length)
 
     uint32_t addr = start_addr;
     uint32_t willget = length;
-    uint32_t len_done = 0;  //total data written to file
     uint32_t cplen = 0;
     uint32_t timeout = 0;
 

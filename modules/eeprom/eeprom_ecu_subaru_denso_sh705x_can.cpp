@@ -3,9 +3,9 @@
 
 EepromEcuSubaruDensoSH705xCan::EepromEcuSubaruDensoSH705xCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -160,6 +160,8 @@ void EepromEcuSubaruDensoSH705xCan::run()
             if (save_and_exit)
                 break;
         }
+        this->close();
+        break;
     case QMessageBox::Cancel:
         emit LOG_D("Operation canceled", true, true);
         this->close();
@@ -183,6 +185,7 @@ EepromEcuSubaruDensoSH705xCan::~EepromEcuSubaruDensoSH705xCan()
 
 void EepromEcuSubaruDensoSH705xCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -534,7 +537,7 @@ int EepromEcuSubaruDensoSH705xCan::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) == 0x67 && (uint8_t)received.at(5) == 0x01)
         {
@@ -842,7 +845,7 @@ int EepromEcuSubaruDensoSH705xCan::upload_kernel(QString kernel, uint32_t kernel
     for (blockno = 0; blockno <= maxblocks; blockno++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockno * 128;
         output.clear();
@@ -1036,7 +1039,7 @@ int EepromEcuSubaruDensoSH705xCan::read_mem(uint32_t start_addr, uint32_t length
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -1160,7 +1163,6 @@ int EepromEcuSubaruDensoSH705xCan::read_mem(uint32_t start_addr, uint32_t length
 uint8_t EepromEcuSubaruDensoSH705xCan::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
-    uint8_t data[chksum_data.length()];
 /*
     for (int i = 0; i < chksum_data.length(); i++)
     {
@@ -1193,12 +1195,6 @@ QByteArray EepromEcuSubaruDensoSH705xCan::generate_seed_key(QByteArray requested
         0x1895, 0x8961, 0x3ECC, 0x862B
     };
 
-    const uint16_t keytogenerateindex_2[]={
-        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
-        0x15BB, 0xF998, 0x8723, 0x9E05,
-        0x7092, 0xD683, 0xBA03, 0x59E1,
-        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
-    };
 
     const uint8_t indextransformation[]={
         0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,
@@ -1270,12 +1266,6 @@ QByteArray EepromEcuSubaruDensoSH705xCan::generate_ecutek_seed_key(QByteArray re
         0x1895, 0x8961, 0x3ECC, 0x862B
     };
 
-    const uint16_t keytogenerateindex_2[]={
-        0x24B9, 0x9D91, 0xFF0C, 0xB8D5,
-        0x15BB, 0xF998, 0x8723, 0x9E05,
-        0x7092, 0xD683, 0xBA03, 0x59E1,
-        0x6136, 0x9B9A, 0x9CFB, 0x9DDB
-    };
 
     const uint8_t indextransformation[]={
         0x4, 0x2, 0x5, 0x1, 0x8, 0xC, 0xD, 0x8,
@@ -1325,12 +1315,6 @@ QByteArray EepromEcuSubaruDensoSH705xCan::generate_cobb_seed_key(QByteArray requ
     };
 
     // 2012 STi
-    const uint16_t keytogenerateindex_2[]={
-        0x77C1, 0x80BB, 0xD5C1, 0x7A94,
-        0x11F0, 0x25FF, 0xC365, 0x10B4,
-        0x48DA, 0x6720, 0x3255, 0xFA17,
-        0x60BF, 0x780E, 0x9C1D, 0x5A28
-    };
 
     const uint8_t indextransformation[]={
         0x5, 0x6, 0x7, 0x1, 0x9, 0xC, 0xD, 0x8,

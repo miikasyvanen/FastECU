@@ -55,7 +55,6 @@ private:
 
     bool kill_process = false;
     bool kernel_alive = false;
-    bool test_write = false;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
 
@@ -85,8 +84,8 @@ private:
 
     int connect_bootloader();
     int read_mem(uint32_t start_addr, uint32_t length);
-    int write_mem(bool test_write);
-    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int write_mem();
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno);
 
     QByteArray send_sid_bf_ssm_init();
     QByteArray send_sid_a0_block_read(uint32_t addr, uint32_t datalen);

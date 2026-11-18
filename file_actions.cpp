@@ -1,6 +1,8 @@
 //#include "file_actions.h"
 #include "error_codes.h"
 
+#include <cstring>
+
 FileActions::FileActions(QWidget *parent)
     : QWidget(parent)
 {
@@ -394,7 +396,18 @@ FileActions::ConfigValuesStructure *FileActions::read_config_file(ConfigValuesSt
                             {
                                 if (reader.name().toUtf8() == "value")
                                 {
-                                    configValues->calibration_files_directory = reader.attributes().value("data").toString();
+                                    QString cal_dir = reader.attributes().value("data").toString();
+                                    // A relative path (the shipped default is "calibrations/") would be
+                                    // resolved against the process working directory; resolve it against
+                                    // the FastECU config directory instead.
+                                    if (cal_dir.length() && QDir::isRelativePath(cal_dir))
+                                    {
+                                        cal_dir = QDir(configValues->version_config_directory).absoluteFilePath(cal_dir);
+                                        if (!cal_dir.endsWith("/"))
+                                            cal_dir.append("/");
+                                    }
+                                    if (cal_dir.length())
+                                        configValues->calibration_files_directory = cal_dir;
                                     reader.skipCurrentElement();
                                 }
                                 else
@@ -1599,6 +1612,7 @@ QString FileActions::parse_hex_ecuid(uint8_t byte)
 
 FileActions::EcuCalDefStructure *FileActions::parse_ecuid_ecuflash_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii)
 {
+    Q_UNUSED(is_ascii)
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QString cal_id_ascii;
@@ -1654,6 +1668,7 @@ FileActions::EcuCalDefStructure *FileActions::parse_ecuid_ecuflash_def_files(Fil
 
 FileActions::EcuCalDefStructure *FileActions::parse_ecuid_romraider_def_files(FileActions::EcuCalDefStructure *ecuCalDef, bool is_ascii)
 {
+    Q_UNUSED(is_ascii)
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
 
     QString cal_id_ascii;
@@ -2061,6 +2076,39 @@ FileActions::EcuCalDefStructure *FileActions::use_existing_definition_for_rom(Fi
     return ecuCalDef;
 }
 
+// Raw value of one table cell as text (integer, or float for float storage). Big endian
+// unless endian is "little"; floats are always big endian. Same as MainWindow::get_rom_data_value().
+static QString rom_raw_value_text(const QByteArray &rom, uint32_t address, int storagesize, const QString &storagetype, const QString &endian, int float_precision)
+{
+    if (address + storagesize > (uint32_t)rom.length())
+        return "0";
+
+    uint32_t raw = 0;
+    for (int k = 0; k < storagesize; k++)
+    {
+        uint32_t data_byte = (uint8_t)rom.at(address + k);
+        if (endian == "little" && storagetype != "float")
+            raw |= data_byte << (8 * k);
+        else
+            raw = (raw << 8) | data_byte;
+    }
+
+    if (storagetype == "float")
+    {
+        float value;
+        std::memcpy(&value, &raw, sizeof(value));
+        return QString::number(value, 'g', float_precision);
+    }
+    if (storagetype.startsWith("int"))
+    {
+        qint64 value = raw;
+        if (raw & (1u << (8 * storagesize - 1)))
+            value -= (qint64)1 << (8 * storagesize);
+        return QString::number(value);
+    }
+    return QString::number(raw);
+}
+
 FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::EcuCalDefStructure *ecuCalDef, QString filename)
 {
     ConfigValuesStructure *configValues = &ConfigValuesStruct;
@@ -2127,6 +2175,7 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     }
     else
     {
+        QDir().mkpath(configValues->calibration_files_directory);
         emit LOG_D("Save file to: " + configValues->calibration_files_directory + "read.bin", true, true);
         save_subaru_rom_file(ecuCalDef, configValues->calibration_files_directory + "read.bin");
 
@@ -2291,9 +2340,10 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     ecuCalDef->FileSize = QString::number(ecuCalDef->FullRomData.length());
     ecuCalDef->RomInfo.replace(FileSize, QString::number(ecuCalDef->FullRomData.length() / 1024) + "kb");
 
+    const uint romSize = (uint)ecuCalDef->FullRomData.length();
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
-        if (ecuCalDef->AddressList.at(i).toUInt() > ecuCalDef->FullRomData.length() || ecuCalDef->XScaleAddressList.at(i).toUInt() > ecuCalDef->FullRomData.length() || ecuCalDef->YScaleAddressList.at(i).toUInt() > ecuCalDef->FullRomData.length())
+        if (ecuCalDef->AddressList.at(i).toUInt() > romSize || ecuCalDef->XScaleAddressList.at(i).toUInt() > romSize || ecuCalDef->YScaleAddressList.at(i).toUInt() > romSize)
         {
             QMessageBox::warning(this, tr("File size error"), "Error in expected ROM size!");
             ecuCalDef->NameList.clear();
@@ -2314,21 +2364,9 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
     QString storagetype = 0;
     QString mapData;
 
-    int32_t signedDataByte = 0;
-    uint32_t dataByte = 0;
     uint32_t startPos = 0;
     uint32_t interval = 0;
     uint32_t byteAddress = 0;
-
-    union mapData{
-        int8_t sbyte_value[4];
-        int16_t sword_value[2];
-        int32_t sdword_value;
-        uint8_t byte_alue[4];
-        uint16_t word_alue[2];
-        uint32_t dword_value;
-        float float_value;
-    } mapDataValue;
 
     for (int i = 0; i < ecuCalDef->NameList.length(); i++)
     {
@@ -2357,42 +2395,15 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
         {
             for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt() * ecuCalDef->YSizeList.at(i).toUInt(); j++)
             {
-                signedDataByte = 0;
-                dataByte = 0;
                 startPos = ecuCalDef->StartPosList.at(i).toUInt(&bStatus,16);
                 interval = ecuCalDef->IntervalList.at(i).toUInt(&bStatus,16);
                 byteAddress = ecuCalDef->AddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
-                mapDataValue.dword_value = 0;
 
                 if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                     byteAddress -= 0x8000;
-                for (int k = 0; k < storagesize; k++)
-                {
-                    if (ecuCalDef->EndianList.at(i) == "little" || ecuCalDef->StorageTypeList.at(i) == "float")
-                    {
-                        mapDataValue.byte_alue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                    }
-                    else
-                    {
-                        if (storagetype.startsWith("uint"))
-                            dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                        else
-                            signedDataByte = (signedDataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
-                    }
-                }
                 double value = 0;
                 if (ecuCalDef->TypeList.at(i) != "Selectable")
-                {
-                    if (ecuCalDef->StorageTypeList.at(i) == "float")
-                        value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(mapDataValue.float_value, 'g', float_precision)));
-                    else
-                    {
-                        if (storagetype.startsWith("uint"))
-                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(dataByte)));
-                        else
-                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), QString::number(signedDataByte)));
-                    }
-                }
+                    value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->FromByteList.at(i), rom_raw_value_text(ecuCalDef->FullRomData, byteAddress, storagesize, ecuCalDef->StorageTypeList.at(i), ecuCalDef->EndianList.at(i), float_precision)));
                 mapData.append(QString::number(value, 'g', float_precision) + ",");
             }
             ecuCalDef->MapData.replace(i, mapData);
@@ -2416,42 +2427,16 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                     mapData.clear();
                     for (unsigned j = 0; j < ecuCalDef->XSizeList.at(i).toUInt(); j++)
                     {
-                        dataByte = 0;
                         startPos = ecuCalDef->XScaleStartPosList.at(i).toUInt(&bStatus,16);
                         interval = ecuCalDef->XScaleIntervalList.at(i).toUInt(&bStatus,16);
                         byteAddress = ecuCalDef->XScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
-                        mapDataValue.dword_value = 0;
 
                         if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                             byteAddress -= 0x8000;
 
-                        for (int k = 0; k < storagesize; k++)
-                        {
-                            if (ecuCalDef->XScaleEndianList.at(i) == "little" || ecuCalDef->XScaleStorageTypeList.at(i) == "float")
-                            {
-                                mapDataValue.byte_alue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                            }
-                            else
-                            {
-                                if (storagetype.startsWith("uint"))
-                                    dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                                else
-                                    signedDataByte = (signedDataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
-                            }
-                        }
                         double value = 0;
                         if (ecuCalDef->XScaleTypeList.at(i) != "Selectable")
-                        {
-                            if (ecuCalDef->XScaleStorageTypeList.at(i) == "float")
-                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(mapDataValue.float_value, 'g', float_precision)));
-                            else
-                            {
-                                if (storagetype.startsWith("uint"))
-                                    value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(dataByte)));
-                                else
-                                    value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), QString::number(signedDataByte)));
-                            }
-                        }
+                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->XScaleFromByteList.at(i), rom_raw_value_text(ecuCalDef->FullRomData, byteAddress, storagesize, ecuCalDef->XScaleStorageTypeList.at(i), ecuCalDef->XScaleEndianList.at(i), float_precision)));
                         mapData.append(QString::number(value, 'g', float_precision) + ",");
                     }
                     ecuCalDef->XScaleData.replace(i, mapData);
@@ -2472,41 +2457,15 @@ FileActions::EcuCalDefStructure *FileActions::open_subaru_rom_file(FileActions::
                 mapData.clear();
                 for (unsigned j = 0; j < ecuCalDef->YSizeList.at(i).toUInt(); j++)
                 {
-                    dataByte = 0;
                     startPos = ecuCalDef->YScaleStartPosList.at(i).toUInt(&bStatus,16);
                     interval = ecuCalDef->YScaleIntervalList.at(i).toUInt(&bStatus,16);
                     byteAddress = ecuCalDef->YScaleAddressList.at(i).toUInt(&bStatus,16) + (j * storagesize * interval + (startPos - 1) * storagesize);
-                    mapDataValue.dword_value = 0;
 
                     if (ecuCalDef->RomInfo.at(FlashMethod) == "wrx02" && (uint32_t)ecuCalDef->FullRomData.length() < byteAddress)
                         byteAddress -= 0x8000;
-                    for (int k = 0; k < storagesize; k++)
-                    {
-                        if (ecuCalDef->YScaleEndianList.at(i) == "little" || ecuCalDef->YScaleStorageTypeList.at(i) == "float")
-                        {
-                            mapDataValue.byte_alue[k] = (uint8_t)ecuCalDef->FullRomData.at(byteAddress + storagesize - 1 - k);
-                        }
-                        else
-                        {
-                            if (storagetype.startsWith("uint"))
-                                dataByte = (dataByte << 8) + (uint8_t)ecuCalDef->FullRomData.at(byteAddress + k);
-                            else
-                                signedDataByte = (signedDataByte << 8) + ecuCalDef->FullRomData.at(byteAddress + k);
-                        }
-                    }
                     double value = 0;
                     if (ecuCalDef->YScaleTypeList.at(i) != "Selectable")
-                    {
-                        if (ecuCalDef->YScaleStorageTypeList.at(i) == "float")
-                            value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(mapDataValue.float_value, 'g', float_precision)));
-                        else
-                        {
-                            if (storagetype.startsWith("uint"))
-                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(dataByte)));
-                            else
-                                value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), QString::number(signedDataByte)));
-                        }
-                    }
+                        value = calculate_value_from_expression(parse_stringlist_from_expression_string(ecuCalDef->YScaleFromByteList.at(i), rom_raw_value_text(ecuCalDef->FullRomData, byteAddress, storagesize, ecuCalDef->YScaleStorageTypeList.at(i), ecuCalDef->YScaleEndianList.at(i), float_precision)));
                     mapData.append(QString::number(value, 'g', float_precision) + ",");
                 }
                 ecuCalDef->YScaleData.replace(i, mapData);
@@ -2580,7 +2539,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
         msgBox.setText("WARNING! No definition file linked to selected ROM, checksums are not calculated!\n\n"
                         "If you are sure that right protocol is selected and want to correct checksums anyway, press 'DO IT!' -button");
         QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
-        QPushButton *doItButton = msgBox.addButton(tr("DO IT!"), QMessageBox::NoRole);
+        msgBox.addButton(tr("DO IT!"), QMessageBox::NoRole);
         msgBox.exec();
 
         if (msgBox.clickedButton() == okButton)
@@ -2728,7 +2687,7 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
         msgBox.setText("WARNING! There is no checksum module for this ROM!\
                             Be aware that if this ROM need checksum correction it must be done with another software!");
         QPushButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
-        QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+        msgBox.addButton(QMessageBox::Ok);
         msgBox.exec();
 
         if (msgBox.clickedButton() == cancelButton)

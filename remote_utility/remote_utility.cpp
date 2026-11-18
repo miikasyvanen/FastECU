@@ -8,14 +8,14 @@ RemoteUtility::RemoteUtility(QString peerAddress,
     : QObject{parent}
     , peerAddress(peerAddress)
     , password(password)
+    , heartbeatInterval(0)
     , webSocket(web_socket == nullptr ?
                     new QWebSocket("",QWebSocketProtocol::VersionLatest,this)
                     :
                     web_socket)
     , socket(new WebSocketIoDevice(webSocket, webSocket))
-    , keepalive_timer(new QTimer(this))
-    , heartbeatInterval(0)
     , keepalive_interval(7000)
+    , keepalive_timer(new QTimer(this))
     , pings_sequently_missed_limit(5)
 {
     if (peerAddress.startsWith("local:"))
@@ -48,8 +48,12 @@ void RemoteUtility::startOverNetwok()
     //Start node when Web Socket will be up
     QObject::connect(webSocket, &QWebSocket::connected, this, &RemoteUtility::websocket_connected);
     node.setHeartbeatInterval(heartbeatInterval);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)   // QWebSocket::errorOccurred is new in Qt 6.5
+    QObject::connect(webSocket, &QWebSocket::errorOccurred,
+#else
     QObject::connect(webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
-                     this, [=](QAbstractSocket::SocketError error)
+#endif
+                     this, [this](QAbstractSocket::SocketError error)
                      { qDebug() << this->metaObject()->className() << "startOverNetwok QWebSocket error:" << error; });
     //WebSocket over SSL
     QUrl url("wss://"+peerAddress);

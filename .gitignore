@@ -53,3 +53,8 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# deployment/ build scripts: build files, downloaded tools, finished packages
+/deployment/build/
+/deployment/tools/
+/deployment/dist/

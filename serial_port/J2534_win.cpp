@@ -72,7 +72,7 @@ J2534::~J2534()
 #if defined(OP20PT32_USE_LIB)
     #define getPTfn(name) pf##name = ::name;
 #else
-    #define getPTfn(name) if (!(pf##name = (PF_##name*)GetProcAddress(hDLL,"" #name))) return false
+    #define getPTfn(name) if (!(pf##name = (PF_##name*)(void (*)(void))GetProcAddress(hDLL,"" #name))) return false
 #endif
 #else
 #if defined(OP20PT32_USE_LIB)
@@ -225,7 +225,7 @@ long J2534::LoadJ2534DLL(const char* szDLL)
     strcpy(libPath,pathPtr);
     strcat(libPath,"/Contents/Frameworks");
     chdir(libPath); // change to this dir so J2534 .dylib can find any other needed dylibs in the same dir
-    strcat(libPath,"/"");
+    strcat(libPath,"/");
     strcat(libPath,szDLL);
 
     CFRelease(appUrlRef);

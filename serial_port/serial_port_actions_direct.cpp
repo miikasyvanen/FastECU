@@ -37,7 +37,9 @@ bool SerialPortActionsDirect::is_serial_port_open()
 
 bool SerialPortActionsDirect::set_kline_timings(uint32_t parameter, int value)
 {
-    _P1_MAX = value;
+    // Only P1_MAX is adjustable on the direct (non-J2534) serial path
+    if (parameter == SERIAL_P1_MAX)
+        _P1_MAX = value;
     return STATUS_SUCCESS;
 }
 
@@ -383,7 +385,7 @@ QStringList SerialPortActionsDirect::check_serial_ports()
 #if defined(_WIN32) || defined(WIN32) || defined (_WIN64) || defined (WIN64)
     QStringList j2534_interfaces;
     installed_drivers = getAllJ2534DriversNames();
-    for (const QString installed_vendor : installed_drivers.keys())
+    for (const QString &installed_vendor : installed_drivers.keys())
     {
         j2534_interfaces.append(installed_vendor);
     }
@@ -911,7 +913,6 @@ QByteArray SerialPortActionsDirect::append_ssm_header(QByteArray output)
 QByteArray SerialPortActionsDirect::append_iso9141_header(QByteArray output)
 {
     uint8_t chk_sum = 0;
-    uint8_t msglength = output.length();
 
     output.insert(0, kline_startbyte);
     output.insert(1, kline_target_id);
@@ -1044,6 +1045,9 @@ bool SerialPortActionsDirect::get_is_tx_done()
 {
 #if defined Q_OS_UNIX
     return j2534->get_is_tx_done();
+#else
+    // The Windows J2534 DLL has no TX-done flag; report done so callers never wait on it
+    return true;
 #endif
 }
 
@@ -1169,6 +1173,7 @@ bool SerialPortActionsDirect::get_serial_num(char* serial)
     inbuf.svcid = 5; // info
     inbuf.infosvcid = 1; // serial
 
+    Q_UNUSED(inbuf) // kept for the disabled vendor serial-number IOCTL below
     outbuf.length = sizeof(outbuf.data) - 1;
 /*
     if (j2534->PassThruIoctl(devID,TX_IOCTL_APP_SERVICE,&inbuf,&outbuf))

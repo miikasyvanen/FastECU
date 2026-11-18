@@ -62,7 +62,6 @@ private:
 
     bool kill_process = false;
     bool kernel_alive = false;
-    bool test_write = false;
     int result;
     int mcu_type_index;
     int bootloader_start_countdown = 3;

@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoSH7055_02::FlashEcuSubaruDensoSH7055_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -136,6 +136,7 @@ FlashEcuSubaruDensoSH7055_02::~FlashEcuSubaruDensoSH7055_02()
 
 void FlashEcuSubaruDensoSH7055_02::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 
@@ -295,7 +296,7 @@ int FlashEcuSubaruDensoSH7055_02::upload_kernel(QString kernel, uint32_t kernel_
     if (!file.open(QIODevice::ReadOnly ))
     {
         emit LOG_E("Unable to open kernel file for reading", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     file_len = file.size();
@@ -395,7 +396,6 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
     QByteArray mapdata;
 
     uint32_t pagesize = 0;
-    uint32_t end_addr = 0;
     uint32_t datalen = 0;
     uint32_t cplen = 0;
 
@@ -408,7 +408,6 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
         start_addr = 0;
         length = 0x080000;
     }
-    end_addr = start_addr + length;
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
@@ -422,7 +421,7 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -510,7 +509,6 @@ int FlashEcuSubaruDensoSH7055_02::write_mem(bool test_write)
     QByteArray filedata;
     QByteArray output;
     QByteArray received;
-    uint16_t chksum;
 
     filedata = ecuCalDef->FullRomData;
 
@@ -606,6 +604,7 @@ int FlashEcuSubaruDensoSH7055_02::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_I("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -644,12 +643,12 @@ int FlashEcuSubaruDensoSH7055_02::get_changed_blocks(const uint8_t *src, int *mo
         emit LOG_I(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
-            return -1;
+            return STATUS_ERROR;
         }
     }
     emit LOG_D("ROM CRC check ready", true, true);
 
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -754,13 +753,13 @@ int FlashEcuSubaruDensoSH7055_02::check_romcrc(const uint8_t *src, uint32_t star
         emit LOG_I(msg, false, true);
         *modified = 1;
         serial->read_serial_data(serial_read_short_timeout);
-        return 0;
+        return STATUS_SUCCESS;
     }
     msg.append(QString("\tYES").toUtf8());
     emit LOG_I(msg, false, true);
     *modified = 0;
     serial->read_serial_data(serial_read_short_timeout);
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 unsigned int FlashEcuSubaruDensoSH7055_02::crc32(const unsigned char *buf, unsigned int len)
@@ -928,6 +927,7 @@ int FlashEcuSubaruDensoSH7055_02::init_flash_write()
  */
 int FlashEcuSubaruDensoSH7055_02::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
+    Q_UNUSED(test_write)
     uint32_t start = 0;
     uint32_t len = 0;
     uint32_t datalen = 0;
@@ -1017,7 +1017,7 @@ int FlashEcuSubaruDensoSH7055_02::flash_block(const uint8_t *src, uint32_t start
     QByteArray msg;
 
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
 
     flashblocksize = 0x1000;
 
@@ -1267,7 +1267,6 @@ QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_27_request_seed()
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x01);
@@ -1290,7 +1289,6 @@ QByteArray FlashEcuSubaruDensoSH7055_02::send_sid_27_send_seed_key(QByteArray se
     QByteArray output;
     QByteArray received;
     QByteArray msg;
-    uint8_t loop_cnt = 0;
 
     output.append((uint8_t)0x27);
     output.append((uint8_t)0x02);

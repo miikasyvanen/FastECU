@@ -53,7 +53,6 @@ private:
 
     bool kill_process = false;
     bool kernel_alive = false;
-    bool test_write = false;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
 

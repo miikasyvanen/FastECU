@@ -122,6 +122,7 @@ void BiuOperationsSubaru::close_results_windows()
 
 void BiuOperationsSubaru::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     qDebug() << "Closing BIU log window";
     keep_alive_timer->stop();
     if (biuOpsSubaruSwitchesIo != nullptr) biuOpsSubaruSwitchesIo->close();
@@ -1020,7 +1021,7 @@ QString BiuOperationsSubaru::parse_message_to_hex(QByteArray received)
 {
     QByteArray msg;
 
-    for (unsigned long i = 0; i < received.length(); i++)
+    for (qsizetype i = 0; i < received.length(); i++)
     {
         msg.append(QString("%1 ").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUtf8());
     }

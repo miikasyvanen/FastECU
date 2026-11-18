@@ -5,15 +5,13 @@
 
 FlashEcuSubaruMitsuM32rKline::FlashEcuSubaruMitsuM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from TCU");
@@ -24,6 +22,13 @@ FlashEcuSubaruMitsuM32rKline::FlashEcuSubaruMitsuM32rKline(SerialPortActions *se
 void FlashEcuSubaruMitsuM32rKline::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
@@ -47,14 +52,8 @@ void FlashEcuSubaruMitsuM32rKline::run()
     {
         emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-    }
     else if (cmd_type == "write")
     {
-        test_write = false;
         emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
@@ -86,10 +85,10 @@ void FlashEcuSubaruMitsuM32rKline::run()
                     emit LOG_I("Reading ROM from ECU using K-Line", true, true);
                     result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
-                else if (cmd_type == "test_write" || cmd_type == "write")
+                else if (cmd_type == "write")
                 {
                     emit LOG_I("Writing ROM to ECU using K-Line", true, true);
-                    result = write_mem(test_write);
+                    result = write_mem();
                 }
             }
             emit external_logger("Finished");
@@ -123,6 +122,7 @@ FlashEcuSubaruMitsuM32rKline::~FlashEcuSubaruMitsuM32rKline()
 
 void FlashEcuSubaruMitsuM32rKline::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -312,7 +312,6 @@ int FlashEcuSubaruMitsuM32rKline::read_mem(uint32_t start_addr, uint32_t length)
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
 
     timer.start();
 
@@ -322,7 +321,7 @@ int FlashEcuSubaruMitsuM32rKline::read_mem(uint32_t start_addr, uint32_t length)
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -373,7 +372,6 @@ int FlashEcuSubaruMitsuM32rKline::read_mem(uint32_t start_addr, uint32_t length)
         msg = QString("Kernel read addr: 0x%1 length: 0x%2, %3 B/s %4 s").arg(start_address).arg(block_len).arg(curspeed, 6, 10, QLatin1Char(' ')).arg(tleft, 6, 10, QLatin1Char(' ')).toUtf8();
         emit LOG_I(msg, true, true);
 
-        len_done += cplen;
         addr += (numblocks * pagesize);
         willget -= pagesize;
     }
@@ -384,7 +382,7 @@ int FlashEcuSubaruMitsuM32rKline::read_mem(uint32_t start_addr, uint32_t length)
     return STATUS_SUCCESS;
 }
 
-int FlashEcuSubaruMitsuM32rKline::write_mem(bool test_write)
+int FlashEcuSubaruMitsuM32rKline::write_mem()
 {
     QByteArray received;
     QByteArray filedata;
@@ -434,7 +432,7 @@ int FlashEcuSubaruMitsuM32rKline::write_mem(bool test_write)
         {
             if (block_modified[blockno])
             {
-                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno))
                 {
                     emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -462,12 +460,11 @@ int FlashEcuSubaruMitsuM32rKline::write_mem(bool test_write)
  * @return received response
  */
 
-int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
-    uint32_t start_address, end_addr;
+    uint32_t start_address;
     uint32_t pl_len;
     uint16_t maxblocks;
     uint16_t blockctr;
@@ -477,7 +474,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     uint32_t byteindex = fdt->fblocks[blockno].start;
     uint8_t blocksize = 0x80;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     QElapsedTimer timer;
 
     QByteArray output;
@@ -488,14 +485,12 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
 
     if (blockno >= fdt->numblocks) {
         emit LOG_I("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
     maxblocks = pl_len / blocksize;
-    end_addr = (start_address + (maxblocks * blocksize)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - start_address;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
@@ -567,7 +562,7 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * blocksize;
         output.clear();
@@ -578,9 +573,8 @@ int FlashEcuSubaruMitsuM32rKline::reflash_block(const uint8_t *newdata, const st
 
         for (uint32_t i = 0; i < blocksize; i++)
         {
-            output[i + 4] = (uint8_t)(newdata[i + blockaddr] & 0xFF);
+            output.append((uint8_t)(newdata[i + blockaddr] & 0xFF));
         }
-        data_len -= blocksize;
 
         output = add_ssm_header(output, tester_id, target_id, false);
         serial->write_serial_data_echo_check(output);

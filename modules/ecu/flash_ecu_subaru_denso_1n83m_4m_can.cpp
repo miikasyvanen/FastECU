@@ -3,15 +3,13 @@
 
 FlashEcuSubaruDenso1N83M_4MCan::FlashEcuSubaruDenso1N83M_4MCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from ECU");
@@ -27,6 +25,13 @@ FlashEcuSubaruDenso1N83M_4MCan::~FlashEcuSubaruDenso1N83M_4MCan()
 void FlashEcuSubaruDenso1N83M_4MCan::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
@@ -52,14 +57,8 @@ void FlashEcuSubaruDenso1N83M_4MCan::run()
     {
         emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-    }
     else if (cmd_type == "write")
     {
-        test_write = false;
         emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
@@ -95,11 +94,11 @@ void FlashEcuSubaruDenso1N83M_4MCan::run()
                     emit LOG_I("Reading ROM from ECU, Denso 1N83M 4MB using CAN", true, true);
                     result = read_memory(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
-                else if (cmd_type == "test_write" || cmd_type == "write")
+                else if (cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     emit LOG_I("Writing ROM to ECU, Denso 1N83M 4MB using CAN", true, true);
-                    result = write_memory(test_write);
+                    result = write_memory();
                 }
             }
             emit external_logger("Finished");
@@ -128,6 +127,7 @@ void FlashEcuSubaruDenso1N83M_4MCan::run()
 
 void FlashEcuSubaruDenso1N83M_4MCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -365,7 +365,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_short_timeout);
-    if (received.length() > 5)
+    if (received.length() > 7)
     {
         if ((uint8_t)received.at(4) != 0x62 || (uint8_t)received.at(5) != 0x10)
         {
@@ -557,7 +557,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::connect_bootloader()
         
         delay(50);
         received = serial->read_serial_data(serial_read_short_timeout);
-        if (received.length() > 5)
+        if (received.length() > 9)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
@@ -749,7 +749,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::connect_bootloader()
         delay(200);
         received = serial->read_serial_data(200);
         
-        if (received.length() > 5)
+        if (received.length() > 9)
         {
             if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x61)
             {
@@ -862,7 +862,6 @@ int FlashEcuSubaruDenso1N83M_4MCan::read_memory(uint32_t start_addr, uint32_t le
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
 
@@ -973,7 +972,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::read_memory(uint32_t start_addr, uint32_t le
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -985,6 +984,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::read_memory(uint32_t start_addr, uint32_t le
 
         //length = 256;
 
+        output.resize(9);   // operator[] does not grow a QByteArray in Qt 6
         output[5] = (uint8_t)((addr >> 24) & 0xFF);
         output[6] = (uint8_t)((addr >> 16) & 0xFF);
         output[7] = (uint8_t)(addr >> 8);
@@ -1108,7 +1108,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::read_memory(uint32_t start_addr, uint32_t le
  * @return success
  */
 
-int FlashEcuSubaruDenso1N83M_4MCan::write_memory(bool test_write)
+int FlashEcuSubaruDenso1N83M_4MCan::write_memory()
 {
     QByteArray filedata;
 
@@ -1164,7 +1164,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::write_memory(bool test_write)
         {
             if (block_modified[blockno])
             {
-                if (reflash_block(&data_array[0], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[0], &flashdevices[mcu_type_index], blockno))
                 {
                     emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -1191,12 +1191,11 @@ int FlashEcuSubaruDenso1N83M_4MCan::write_memory(bool test_write)
  *
  * @return success
  */
-int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
-    uint32_t start_address, end_addr;
+    uint32_t start_address;
     uint32_t pl_len;
     uint16_t maxblocks;
     uint16_t blockctr;
@@ -1210,25 +1209,22 @@ int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const 
 
     if (blockno >= fdt->numblocks) {
         emit LOG_I("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_address = fdt->fblocks[blockno].start;
     pl_len = fdt->fblocks[blockno].len;
     maxblocks = pl_len / 256;
-    end_addr = (start_address + (maxblocks * 256)) & 0xFFFFFFFF;
-    uint32_t data_len = end_addr - start_address;
 
     QString start_addr = QString("%1").arg((uint32_t)start_address,8,16,QLatin1Char('0')).toUpper();
     QString length = QString("%1").arg((uint32_t)pl_len,8,16,QLatin1Char('0')).toUpper();
     msg = QString("Flash block addr: 0x" + start_addr + " len: 0x" + length).toUtf8();
     emit LOG_I(msg, true, true);
 
-    int data_bytes_sent = 0;
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 256;
         output.clear();
@@ -1247,9 +1243,7 @@ int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const 
         for (int i = 0; i < 256; i++)
         {
             output[i + 9] = (uint8_t)(newdata[i + blockaddr - fdt->fblocks[0].start] & 0xFF);
-            data_bytes_sent++;
         }
-        data_len -= 256;
 
         serial->write_serial_data_echo_check(output);
         //delay(20);
@@ -1311,6 +1305,11 @@ int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const 
         }
         try_count++;
     }
+    if (!connected)
+    {
+        emit LOG_E("No valid response to request transfer exit (0x37)", true, true);
+        return STATUS_ERROR;
+    }
 
     delay(100);
 
@@ -1331,7 +1330,12 @@ int FlashEcuSubaruDenso1N83M_4MCan::reflash_block(const uint8_t *newdata, const 
     delay(1000);
     received = serial->read_serial_data(500);
     emit LOG_I(QString::number(try_count) + ": 0x31 response: " + parse_message_to_hex(received), true, true);
-    if (received.length() != 7)
+    // The positive response can also come at once, without "response pending" (7F 31 78) first
+    if (received.length() > 6 && (uint8_t)received.at(4) == 0x71 && (uint8_t)received.at(5) == 0x01 && (uint8_t)received.at(6) == 0x02)
+    {
+        emit LOG_I("Checksum verified", true, true);
+    }
+    else if (received.length() != 7)
     {
         emit LOG_E("No valid response from ECU, checksum not verified", true, true);
         

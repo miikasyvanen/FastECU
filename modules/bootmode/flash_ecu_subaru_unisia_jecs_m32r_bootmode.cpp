@@ -3,9 +3,9 @@
 
 FlashEcuSubaruUnisiaJecsM32rBootMode::FlashEcuSubaruUnisiaJecsM32rBootMode(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -137,6 +137,7 @@ FlashEcuSubaruUnisiaJecsM32rBootMode::~FlashEcuSubaruUnisiaJecsM32rBootMode()
 
 void FlashEcuSubaruUnisiaJecsM32rBootMode::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -211,7 +212,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
 
         received = send_subaru_sid_b8_change_baudrate_38400();
         //emit LOG_I("0xB8 response: " + parse_message_to_hex(received), true, true);
-        if (received == "" || (uint8_t)received.at(4) != 0xf8)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xf8)
             return STATUS_ERROR;
 
         serial->change_port_speed("38400");
@@ -219,7 +220,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
         // Checking connection after baudrate change with SSM Init
         received = send_sid_bf_ssm_init();
         emit LOG_D("Init response: " + parse_message_to_hex(received), true, true);
-        if (received == "" || (uint8_t)received.at(4) != 0xff)
+        if (received.length() < 5 || (uint8_t)received.at(4) != 0xff)
             return STATUS_ERROR;
     }
 
@@ -253,8 +254,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::read_mem(uint32_t start_addr, uint32_t
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
-        uint32_t curblock = (addr / pagesize);
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -349,7 +349,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::upload_kernel(QString kernel)
     for (int i = 0; i < filesize; i+=0x80)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         output.clear();
         for (int j = 0; j < 0x80; j++)
@@ -420,7 +420,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
         for (int i = 0; i < 20; i++)
         {
             if (kill_process)
-                return 0;
+                return STATUS_ERROR;
 
             received.append(serial->read_serial_data(10));
             emit LOG_I(".", false, false);
@@ -458,7 +458,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     for (int i = 0; i < 20; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         received.append(serial->read_serial_data(10));
         emit LOG_I(".", false, false);
@@ -496,7 +496,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     uint32_t start = 0;
     uint32_t byteindex = 0;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     QElapsedTimer timer;
 
     emit LOG_I("Uploading file " + flashdata_filename + " to flash, please wait...", true, true);
@@ -504,7 +504,7 @@ int FlashEcuSubaruUnisiaJecsM32rBootMode::write_mem()
     for (int i = 0; i < blocks; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         output.clear();
         output.append((uint8_t)0x80);

@@ -45,7 +45,6 @@ private:
 
     bool kill_process = false;
     bool kernel_alive = false;
-    bool test_write = false;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
 
@@ -75,8 +74,8 @@ private:
 
     int connect_bootloader();
     int read_memory(uint32_t start_addr, uint32_t length);
-    int write_memory(bool test_write);
-    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int write_memory();
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno);
     int erase_memory(const struct flashdev_t *fdt, unsigned blockno);
 
     QByteArray generate_can_seed_key(QByteArray requested_seed);

@@ -35,8 +35,8 @@ void MainWindow::change_log_values(int tab_index, QString protocol)
     tab_widget->addTab(gauge_widget, "Gauges");
     tab_widget->addTab(digital_widget, "Digital");
     tab_widget->addTab(switch_widget, "Switches");
+    tab_widget->setCurrentIndex(tab_index);
 
-    QLabel *title_label;
     QLabel *log_value_label;
     QComboBox *log_value_combobox;
     QComboBox *log_units_combobox;
@@ -188,6 +188,7 @@ void MainWindow::change_log_values(int tab_index, QString protocol)
 
 void MainWindow::change_log_gauge_value(int index)
 {
+    Q_UNUSED(index)
     QObject* obj = sender();
     QStringList comboIndex = obj->objectName().split(" ");
     QComboBox *log_gauge_box;
@@ -212,6 +213,7 @@ void MainWindow::change_log_gauge_value(int index)
 
 void MainWindow::change_log_digital_value(int index)
 {
+    Q_UNUSED(index)
     QObject* obj = sender();
     QStringList comboIndex = obj->objectName().split(" ");
     QComboBox *log_digital_box;
@@ -240,6 +242,7 @@ void MainWindow::change_log_digital_value(int index)
 
 void MainWindow::change_log_switch_value(int index)
 {
+    Q_UNUSED(index)
     QObject* obj = sender();
     QStringList comboIndex = obj->objectName().split(" ");
     QComboBox *log_switch_box;

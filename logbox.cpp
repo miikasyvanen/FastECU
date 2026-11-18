@@ -20,6 +20,8 @@ QGroupBox *LogBox::drawLogBoxes(QString type, uint8_t index, uint8_t logBoxCount
 
 QGroupBox *LogBox::drawLogSwitchBox(uint8_t index, uint8_t switchBoxCount, QString title, QString unit, QString value)
 {
+    Q_UNUSED(value)
+    Q_UNUSED(unit)
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect size = screen->geometry();
 
@@ -59,6 +61,7 @@ QGroupBox *LogBox::drawLogSwitchBox(uint8_t index, uint8_t switchBoxCount, QStri
 
 QGroupBox *LogBox::drawLogValueBox(uint8_t index, uint8_t logBoxCount, QString title, QString unit, QString value)
 {
+    Q_UNUSED(value)
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect size = screen->geometry();
 

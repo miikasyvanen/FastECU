@@ -5,15 +5,13 @@
 
 FlashTcuSubaruHitachiM32rCan::FlashTcuSubaruHitachiM32rCan(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from TCU");
@@ -24,6 +22,13 @@ FlashTcuSubaruHitachiM32rCan::FlashTcuSubaruHitachiM32rCan(SerialPortActions *se
 void FlashTcuSubaruHitachiM32rCan::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
@@ -51,14 +56,8 @@ void FlashTcuSubaruHitachiM32rCan::run()
     {
         emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-    }
     else if (cmd_type == "write")
     {
-        test_write = false;
         emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
@@ -93,11 +92,11 @@ void FlashTcuSubaruHitachiM32rCan::run()
                     //emit LOG_I("Not yet implemented: Reading ROM from TCU Subaru Hitachi using CAN", true, true);
                     result = read_mem(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
-                else if (cmd_type == "test_write" || cmd_type == "write")
+                else if (cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     //emit LOG_I("Not yet implemented: Writing ROM to TCU Subaru Hitachi using CAN", true, true);
-                    result = write_mem(test_write);
+                    result = write_mem();
                 }
             }
             emit external_logger("Finished");
@@ -131,6 +130,7 @@ FlashTcuSubaruHitachiM32rCan::~FlashTcuSubaruHitachiM32rCan()
 
 void FlashTcuSubaruHitachiM32rCan::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -309,7 +309,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
@@ -396,6 +396,7 @@ int FlashTcuSubaruHitachiM32rCan::connect_bootloader()
     emit LOG_I("Checking if jump successful and kernel alive...", true, true);
     qDebug() << "Checking if jump successful and kernel alive...";
 
+    output.resize(8);   // operator[] does not grow a QByteArray in Qt 6
     output[4] = (uint8_t)0x31;
     output[5] = (uint8_t)0x02;
     output[6] = (uint8_t)0x02;
@@ -443,7 +444,6 @@ int FlashTcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t pagesize = 0x100;
 
@@ -522,7 +522,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -648,7 +648,7 @@ int FlashTcuSubaruHitachiM32rCan::read_mem(uint32_t start_addr, uint32_t length)
  * @return success
  */
 
-int FlashTcuSubaruHitachiM32rCan::write_mem(bool test_write)
+int FlashTcuSubaruHitachiM32rCan::write_mem()
 {
     QByteArray filedata;
 
@@ -704,7 +704,7 @@ int FlashTcuSubaruHitachiM32rCan::write_mem(bool test_write)
         {
             if (block_modified[blockno])
             {
-                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno, test_write))
+                if (reflash_block(&data_array[flashdevices[mcu_type_index].fblocks->start], &flashdevices[mcu_type_index], blockno))
                 {
                     emit LOG_I("Block " + QString::number(blockno) + " reflash failed.", true, true);
                     return STATUS_ERROR;
@@ -730,10 +730,9 @@ int FlashTcuSubaruHitachiM32rCan::write_mem(bool test_write)
  *
  * @return success
  */
-int FlashTcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
+int FlashTcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno)
 {
 
-    int errval;
 
     uint32_t start_address, end_addr;
     uint32_t pl_len;
@@ -749,7 +748,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
 
     if (blockno >= fdt->numblocks) {
         emit LOG_I("block " + QString::number(blockno) + " out of range !", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     start_address = fdt->fblocks[blockno].start;
@@ -801,7 +800,7 @@ int FlashTcuSubaruHitachiM32rCan::reflash_block(const uint8_t *newdata, const st
     for (blockctr = 0; blockctr < maxblocks; blockctr++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockctr * 128;
         output.clear();
@@ -967,7 +966,7 @@ int FlashTcuSubaruHitachiM32rCan::erase_mem()
 
     received = serial->read_serial_data(200);
     emit LOG_I("Response: " + parse_message_to_hex(received), true, true);
-    if ((uint8_t)received.at(4) != 0x31 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x01)
+    if (received.length() < 7 || (uint8_t)received.at(4) != 0x31 || (uint8_t)received.at(5) != 0x02 || (uint8_t)received.at(6) != 0x01)
     {
         emit LOG_I("Erasing error! Do not panic, do not reset the TCU immediately. The kernel is most likely still running and receiving commands!", true, true);
         //return STATUS_ERROR;

@@ -3,15 +3,13 @@
 
 FlashEcuSubaruUnisiaJecsM32r::FlashEcuSubaruUnisiaJecsM32r(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from ECU");
@@ -22,6 +20,13 @@ FlashEcuSubaruUnisiaJecsM32r::FlashEcuSubaruUnisiaJecsM32r(SerialPortActions *se
 void FlashEcuSubaruUnisiaJecsM32r::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
 
@@ -126,6 +131,7 @@ FlashEcuSubaruUnisiaJecsM32r::~FlashEcuSubaruUnisiaJecsM32r()
 
 void FlashEcuSubaruUnisiaJecsM32r::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     //vBattTimer->stop();
     kill_process = true;
 }
@@ -295,7 +301,7 @@ int FlashEcuSubaruUnisiaJecsM32r::read_mem(uint32_t start_addr, uint32_t length)
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         //uint32_t curblock = (addr / pagesize);
         float pleft = 0;
         unsigned long chrono;
@@ -460,6 +466,11 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
         emit LOG_D("Changing baudrate to 19200", true, true);
         serial->change_port_speed("19200");
 
+        if (!kernel_alive)
+        {
+            emit LOG_E("ECU did not enter flash mode, write canceled", true, true);
+            return STATUS_ERROR;
+        }
     }
 
     if (!serial->get_use_openport2_adapter())
@@ -476,7 +487,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     for (int i = 0; i < 20; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         received.append(serial->read_serial_data(serial_read_medium_timeout));
         emit LOG_I(".", false, false);
@@ -509,10 +520,11 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
 
     emit LOG_I("", true, false);
     received.clear();
+    bool flash_erased = false;
     for (int i = 0; i < 40; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         received.append(serial->read_serial_data(serial_read_medium_timeout));
         emit LOG_I(".", false, false);
@@ -522,6 +534,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
             {
                 emit LOG_I("", false, true);
                 emit LOG_I("Flash erased!", true, true);
+                flash_erased = true;
                 break;
             }
             else
@@ -533,6 +546,12 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
             }
         }
         delay(500);
+    }
+    if (!flash_erased)
+    {
+        emit LOG_E("", false, true);
+        emit LOG_E("Flash erase did not complete, no answer from ECU!", true, true);
+        return STATUS_ERROR;
     }
     received = serial->read_serial_data(serial_read_medium_timeout);
     //delay(500);
@@ -547,7 +566,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     uint32_t start = 0;
     uint32_t byteindex = 0;
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
     QElapsedTimer timer;
 
     emit LOG_I("Uploading file " + flashdata_filename + " to flash, please wait...", true, true);
@@ -555,7 +574,7 @@ int FlashEcuSubaruUnisiaJecsM32r::write_mem()
     for (int i = 0; i < blocks; i++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         output.clear();
         output.append((uint8_t)0xAF);

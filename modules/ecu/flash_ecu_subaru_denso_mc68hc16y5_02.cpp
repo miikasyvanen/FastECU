@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoMC68HC16Y5_02::FlashEcuSubaruDensoMC68HC16Y5_02(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
@@ -140,6 +140,7 @@ FlashEcuSubaruDensoMC68HC16Y5_02::~FlashEcuSubaruDensoMC68HC16Y5_02()
 
 void FlashEcuSubaruDensoMC68HC16Y5_02::closeEvent(QCloseEvent *bar)
 {
+    Q_UNUSED(bar)
     kill_process = true;
 }
 
@@ -232,8 +233,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
     QByteArray msg;
     QByteArray pl_encr;
     uint32_t start_address = 0;
-    uint32_t file_len = 0;
-    uint32_t pl_len = 0;
     uint32_t len = 0;
     uint8_t chk_sum = 0;
 
@@ -254,11 +253,9 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::upload_kernel(QString kernel, uint32_t ker
     if (!file.open(QIODevice::ReadOnly ))
     {
         emit LOG_E("Unable to open kernel file for reading", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
-    file_len = file.size();
-    pl_len = (file_len + 3) & ~3;
     pl_encr = file.readAll();
     while (pl_encr.length() % 0x10)
         pl_encr.append((uint8_t)0x00);
@@ -364,7 +361,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
     QByteArray mapdata;
 
     uint32_t pagesize = 0;
-    uint32_t end_addr = 0;
     uint32_t datalen = 0;
     uint32_t cplen = 0;
 
@@ -377,12 +373,10 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         start_addr = 0;
         length = 0x028000;
     }
-    end_addr = start_addr + length;
 
     uint32_t skip_start = start_addr & (pagesize - 1); //if unaligned, we'll be receiving this many extra bytes
     uint32_t addr = start_addr - skip_start;
     uint32_t willget = (skip_start + length + pagesize - 1) & ~(pagesize - 1);
-    uint32_t len_done = 0;  //total data written to file
 
     timer.start();
 
@@ -392,8 +386,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
-        uint32_t curblock = (addr / pagesize);
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -473,7 +466,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
         emit LOG_I(msg, true, true);
         delay(1);
 
-        len_done += cplen;
         addr += (numblocks * pagesize);
         willget -= pagesize;
     }
@@ -492,7 +484,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
     QByteArray filedata;
     QByteArray output;
     QByteArray received;
-    uint16_t chksum;
 
     filedata = ecuCalDef->FullRomData;
 
@@ -595,6 +586,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_I("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -631,12 +623,12 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::get_changed_blocks(const uint8_t *src, int
         emit LOG_I(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
-            return -1;
+            return STATUS_ERROR;
         }
     }
     emit LOG_D("ROM CRC check ready", true, true);
 
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 /*******************************************************
@@ -706,7 +698,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
 
     ecucrc32 = 0;
     imgcrc32 = crc32(src, pagesize);
-    if (received.length() > 3)
+    if (received.length() > 8)
         ecucrc32 = (uint8_t)received.at(5) << 24 | (uint8_t)received.at(6) << 16 | (uint8_t)received.at(7) << 8 | (uint8_t)received.at(8);
         //ecucrc32 = ((uint8_t)received.at(0) << 24) | ((uint8_t)received.at(1) << 16) | ((uint8_t)received.at(2) << 8) | (uint8_t)received.at(3);
     msg.clear();
@@ -722,13 +714,13 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_romcrc(const uint8_t *src, uint32_t 
         emit LOG_I(msg, false, true);
         *modified = 1;
         serial->read_serial_data(serial_read_short_timeout);
-        return 0;
+        return STATUS_SUCCESS;
     }
     msg.append(QString("\tYES").toUtf8());
     emit LOG_I(msg, false, true);
     *modified = 0;
     serial->read_serial_data(serial_read_short_timeout);
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 unsigned int FlashEcuSubaruDensoMC68HC16Y5_02::crc32(const unsigned char *buf, unsigned int len)
@@ -895,12 +887,11 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::init_flash_write()
  */
 int FlashEcuSubaruDensoMC68HC16Y5_02::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
-    int errval;
+    Q_UNUSED(test_write)
 
     uint32_t start = 0;
     uint32_t len = 0;
     uint32_t datalen = 0;
-    uint16_t pagesize = 0x200;
     uint16_t chksum;
 
     QByteArray output;
@@ -976,7 +967,6 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
     uint32_t remain = len;
     uint32_t byteindex = flashbytesindex;
     uint32_t datalen = 0;
-    uint32_t blockstart = start;
     uint32_t imgcrc32 = 0;
     uint32_t flashblockstart = start;
     uint16_t blocksize = 0x200;
@@ -988,7 +978,7 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::flash_block(const uint8_t *src, uint32_t s
     QByteArray msg;
 
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
 
     flashblocksize = 0x1000;
 
@@ -1246,9 +1236,8 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::check_received_message(QByteArray msg, QBy
 {
     for (int i = 0; i < msg.length(); i++)
     {
-        if (received.length() > i - 1)
-            if (msg.at(i) != received.at(i))
-                return 0;
+        if (i >= received.length() || msg.at(i) != received.at(i))
+            return 0;
     }
 
     return 1;

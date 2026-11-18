@@ -3,15 +3,13 @@
 
 FlashTcuSubaruHitachiM32rKline::FlashTcuSubaruHitachiM32rKline(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     ui->setupUi(this);
 
-    if (cmd_type == "test_write")
-        this->setWindowTitle("Test write ROM " + ecuCalDef->FileName + " to ECU");
-    else if (cmd_type == "write")
+    if (cmd_type == "write")
         this->setWindowTitle("Write ROM " + ecuCalDef->FileName + " to ECU");
     else if (cmd_type == "read")
         this->setWindowTitle("Read ROM from TCU");
@@ -22,6 +20,13 @@ FlashTcuSubaruHitachiM32rKline::FlashTcuSubaruHitachiM32rKline(SerialPortActions
 void FlashTcuSubaruHitachiM32rKline::run()
 {
     this->show();
+
+    if (cmd_type != "read" && cmd_type != "write")
+    {
+        emit LOG_E("Operation '" + cmd_type + "' is not supported with this flash method", true, true);
+        QMessageBox::warning(this, tr("ECU Operation"), "Operation '" + cmd_type + "' is not supported with this flash method!");
+        return;
+    }
 
     int result = STATUS_ERROR;
     set_progressbar_value(0);
@@ -47,14 +52,8 @@ void FlashTcuSubaruHitachiM32rKline::run()
     {
         emit LOG_I("Read memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
-    else if (cmd_type == "test_write")
-    {
-        test_write = true;
-        emit LOG_I("Test write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
-    }
     else if (cmd_type == "write")
     {
-        test_write = false;
         emit LOG_I("Write memory with flashmethod '" + flash_method + "' and kernel '" + ecuCalDef->Kernel + "'", true, true);
     }
 
@@ -89,11 +88,11 @@ void FlashTcuSubaruHitachiM32rKline::run()
                     //result = read_b8_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                     //result = read_b0_subaru_tcu_hitachi_kline(flashdevices[mcu_type_index].fblocks[0].start, flashdevices[mcu_type_index].romsize);
                 }
-                else if (cmd_type == "test_write" || cmd_type == "write")
+                else if (cmd_type == "write")
                 {
                     emit external_logger("Writing ROM, please wait...");
                     emit LOG_I("Not yet implemented: Writing ROM to TCU Subaru Hitachi using CAN", true, true);
-                    //result = write_mem_subaru_denso_can_02_32bit(test_write);
+                    //result = write_mem_subaru_denso_can_02_32bit();
                 }
             }
             emit external_logger("Finished");
@@ -127,6 +126,7 @@ FlashTcuSubaruHitachiM32rKline::~FlashTcuSubaruHitachiM32rKline()
 
 void FlashTcuSubaruHitachiM32rKline::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -452,6 +452,7 @@ int FlashTcuSubaruHitachiM32rKline::connect_bootloader()
  *
  */int FlashTcuSubaruHitachiM32rKline::read_b0(uint32_t start_addr, uint32_t length)
 {
+    Q_UNUSED(start_addr)
 
     QByteArray received;
     QByteArray msg;
@@ -589,7 +590,6 @@ QByteArray FlashTcuSubaruHitachiM32rKline::send_sid_b0_block_write(uint32_t data
 {
     QByteArray output;
     QByteArray received;
-    int i;
 
     output.append((uint8_t)0xb0);
     output.append((uint8_t)(dataaddr >> 16) & 0xFF);

@@ -12,9 +12,9 @@ const QColor MainWindow::GREEN_LIGHT_ON = QColor(64, 255, 64);
 
 MainWindow::MainWindow(QString peerAddress, QString peerPassword, QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
     , peerAddress(peerAddress)
     , peerPassword(peerPassword)
+    , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     qApp->installEventFilter(this);
@@ -514,12 +514,12 @@ QByteArray MainWindow::aes_ecb_test(QByteArray challenge, QByteArray key)
     char *data = challenge.data();
     char *cKey = key.data();
 
-    int decrypted_len, encrypted_len;
+    int encrypted_len;
 
     // Encrypt the original data
     encrypted_len = cipher.encrypt_aes128_ecb((unsigned char*)data, strlen(data), (unsigned char*)cKey, encrypted);
     // Decrypt the encrypted data
-    decrypted_len = cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
+    cipher.decrypt_aes128_ecb(encrypted, encrypted_len, (unsigned char*)cKey, decrypted);
     QByteArray challengeReply(QByteArray::fromRawData((const char*)encrypted, 16));
     emit LOG_D("Key: " + parse_message_to_hex(key), true, true);
     emit LOG_D("Challenge: " + parse_message_to_hex(challenge), true, true);
@@ -761,10 +761,7 @@ void MainWindow::set_flash_arrow_state()
                 }
                 if (action->text() == "Test write to ecu")
                 {
-                    if (configValues->flash_protocol_test_write.at(configValues->flash_protocol_selected_id.toInt()) == "yes")
-                        action->setEnabled(true);
-                    else
-                        action->setEnabled(false);
+                    action->setEnabled(flash_protocol_test_write_allowed());
                 }
                 if (action->text() == "Write to ecu")
                 {
@@ -987,8 +984,26 @@ int MainWindow::can_listener()
     return 1;
 }
 
+bool MainWindow::flash_protocol_test_write_allowed()
+{
+    // Test write needs an external kernel that FastECU uploads and can tell not to
+    // erase/write. With the ECU's on-board kernel it would be a real write.
+    int id = configValues->flash_protocol_selected_id.toInt();
+    if (id < 0 || id >= configValues->flash_protocol_test_write.length() || id >= configValues->flash_protocol_kernel.length())
+        return false;
+    return configValues->flash_protocol_test_write.at(id) == "yes"
+        && !configValues->flash_protocol_kernel.at(id).trimmed().isEmpty();
+}
+
 int MainWindow::start_ecu_operations(QString cmd_type)
 {
+    if (cmd_type == "test_write" && !flash_protocol_test_write_allowed())
+    {
+        emit LOG_E("Test write is not supported with flash method '" + configValues->flash_protocol_selected_protocol_name + "'", true, true);
+        QMessageBox::warning(this, tr("Test write"), "Test write is only supported with flash methods that use an external kernel!");
+        return 0;
+    }
+
     set_realtime_state(false);
     toggle_realtime();
 
@@ -1060,7 +1075,7 @@ int MainWindow::start_ecu_operations(QString cmd_type)
                 msgBox.setText("WARNING! There is no checksum module for this ROM!\
                                     Be aware that if this ROM need checksum correction it must be done with another software!");
                 QPushButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
-                QPushButton *okButton = msgBox.addButton(QMessageBox::Ok);
+                msgBox.addButton(QMessageBox::Ok);
                 msgBox.exec();
 
                 if (msgBox.clickedButton() == cancelButton)
@@ -1080,13 +1095,31 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             ecuCalDef[rom_number]->KernelStartAddr = configValues->flash_protocol_kernel_addr.at(configValues->flash_protocol_selected_id.toInt());
             ecuCalDef[rom_number]->McuType = configValues->flash_protocol_selected_mcu;
 
-            if (configValues->flash_protocol_selected_checksum != "n/a")
-                ecuCalDef[rom_number] = fileActions->checksum_correction(ecuCalDef[rom_number]);
-
-            if (ecuCalDef[rom_number] == NULL)
+            // The flash modules take the image for the whole memory model of the selected flash
+            // method: a smaller file (e.g. a wrong flash method selected) would make them flash
+            // whatever memory follows the image
+            uint32_t flash_size = 0;
+            for (int i = 0; flashdevices[i].name; i++)
             {
-                ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
+                if (configValues->flash_protocol_selected_mcu == flashdevices[i].name)
+                    flash_size = flashdevices[i].romsize;
+            }
+            if (flash_size && (uint32_t)ecuCalDef[rom_number]->FullRomData.length() < flash_size)
+            {
+                emit LOG_E("ROM file size 0x" + QString::number(ecuCalDef[rom_number]->FullRomData.length(), 16) + " is smaller than the flash size 0x" + QString::number(flash_size, 16) + " of flash method " + configValues->flash_protocol_selected_protocol_name, true, true);
+                QMessageBox::warning(this, tr("Write ROM"), "ROM file is smaller than the flash memory of the selected flash method (" + QString::number(ecuCalDef[rom_number]->FullRomData.length()) + " < " + QString::number(flash_size) + " bytes).\n\nCheck that the right flash method is selected. Write canceled.");
                 return 0;
+            }
+
+            if (configValues->flash_protocol_selected_checksum != "n/a")
+            {
+                FileActions::EcuCalDefStructure *corrected = fileActions->checksum_correction(ecuCalDef[rom_number]);
+                if (corrected == NULL)
+                {
+                    ecuCalDef[rom_number]->FullRomData = fullRomDataTmp;
+                    return 0;
+                }
+                ecuCalDef[rom_number] = corrected;
             }
         }
         else
@@ -1663,6 +1696,7 @@ void MainWindow::checkbox_state_changed(int state)
 
 void MainWindow::calibration_files_treewidget_item_selected(QTreeWidgetItem* item)
 {
+    Q_UNUSED(item)
     QList<QTreeWidgetItem *> itemList;
     QTreeWidgetItem *selectedItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
 
@@ -1696,7 +1730,6 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
 {
     const QModelIndex index = ui->calibrationDataTreeWidget->selectionModel()->currentIndex();
     QString selectedText = index.data(Qt::DisplayRole).toString();
-    int hierarchyLevel=1;
     QModelIndex seekRoot = index;
     QString selectedRom;
 
@@ -1705,14 +1738,11 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
     while(seekRoot.parent() != QModelIndex())
     {
         seekRoot = seekRoot.parent();
-        hierarchyLevel++;
     }
 
     if (ui->calibrationDataTreeWidget->indexOfTopLevelItem(item) > -1){
-        hierarchyLevel = 1;
     }
     else if (ui->calibrationDataTreeWidget->indexOfTopLevelItem(item->parent()) > -1){
-        hierarchyLevel = 2;
 
         QTreeWidgetItem *selectedFilesTreeItem = ui->calibrationFilesTreeWidget->selectedItems().at(0);
         QTreeWidgetItem *selectedDataTreeItem = item;
@@ -1725,11 +1755,9 @@ void MainWindow::calibration_data_treewidget_item_selected(QTreeWidgetItem* item
             {
                 if (ecuCalDef[romNumber]->VisibleList.at(i) == "1")
                 {
-                    int map_index = 0;
                     QList<QMdiSubWindow *> list = ui->mdiArea->findChildren<QMdiSubWindow *>();
                     foreach(QMdiSubWindow *w, list)
                     {
-                        map_index++;
                         if (w->objectName().startsWith(QString::number(romIndex) + "," + QString::number(i) + "," + ecuCalDef[romNumber]->NameList.at(i)))
                         {
                             if (w->objectName() == ui->mdiArea->activeSubWindow()->objectName())
@@ -1908,12 +1936,12 @@ void MainWindow::close_calibration_map(QObject* obj)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     close_app();
 }
 
 void MainWindow::close_app()
 {
-    FileActions::ConfigValuesStructure *configValues = &fileActions->ConfigValuesStruct;
 
     qApp->exit();
 }
@@ -2165,13 +2193,11 @@ void MainWindow::remove_ecu_definition_file()
 
 void MainWindow::add_new_logger_definition_file()
 {
-    QObject* obj = sender();
 
 }
 
 void MainWindow::remove_logger_definition_file()
 {
-    QObject* obj = sender();
 
 }
 

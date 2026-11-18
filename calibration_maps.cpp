@@ -161,7 +161,9 @@ CalibrationMaps::~CalibrationMaps()
     delete ui;
 }
 
-void CalibrationMaps::setMapTableWidgetSize(int maxWidth, int maxHeight, int xSize){
+void CalibrationMaps::setMapTableWidgetSize(int maxWidth, int maxHeight, int xSize)
+{
+    Q_UNUSED(xSize)
     int w = 0;
     int h = 0;
 
@@ -592,6 +594,10 @@ void CalibrationMaps::cellPressed(int row, int col)
 
 void CalibrationMaps::cellChanged(int curRow, int curCol, int prevRow, int prevCol)
 {
+    Q_UNUSED(curRow)
+    Q_UNUSED(curCol)
+    Q_UNUSED(prevRow)
+    Q_UNUSED(prevCol)
     //qDebug() << "Startcell =" << startCol << ":" << startRow << " and current cell is" << curCol << ":" << curRow;
 
     int cols = ui->mapDataTableWidget->columnCount();

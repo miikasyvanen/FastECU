@@ -1,0 +1,40 @@
+# FastECU Flatpak manifest. Fetches the sources of the given release tag from GitHub,
+# so this file alone is enough to build FastECU:
+#
+#   flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+#   flatpak-builder --user --install-deps-from=flathub --force-clean --install build-dir fi.fastecu.FastECU.yml
+#   flatpak run fi.fastecu.FastECU
+#
+# deployment/build_flatpak.sh builds the local source tree instead (it swaps the sources
+# block below), and puts this manifest with the tag set to the current version into the
+# release zip. Keep the sources block last in this file.
+id: fi.fastecu.FastECU
+runtime: org.kde.Platform
+runtime-version: '6.10'
+sdk: org.kde.Sdk
+command: FastECU
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=all
+  - --filesystem=home
+modules:
+  - name: FastECU
+    buildsystem: qmake
+    config-opts:
+      - CONFIG+=release
+      - CONFIG-=debug_and_release
+      - CONFIG+=flatpak
+    build-options:
+      env:
+        MAKEFLAGS: -j8
+    post-install:
+      - install -Dm644 deployment/flatpak/resources/${FLATPAK_ID}.desktop -t /app/share/applications
+      - install -Dm644 deployment/flatpak/resources/${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo
+      - for s in 16 32 64 128 256; do install -Dm644 deployment/flatpak/resources/${FLATPAK_ID}_${s}x${s}.png /app/share/icons/hicolor/${s}x${s}/apps/${FLATPAK_ID}.png; done
+    sources:
+      - type: git
+        url: https://github.com/miikasyvanen/FastECU.git
+        tag: 0.1.0-beta.6

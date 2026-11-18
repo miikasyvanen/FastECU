@@ -3,9 +3,9 @@
 
 FlashEcuSubaruDensoSH7058CanDiesel::FlashEcuSubaruDensoSH7058CanDiesel(SerialPortActions *serial, FileActions::EcuCalDefStructure *ecuCalDef, QString cmd_type, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::EcuOperationsWindow)
     , ecuCalDef(ecuCalDef)
     , cmd_type(cmd_type)
+    , ui(new Ui::EcuOperationsWindow)
 {
     // EURO4 0xFFFF4000 0x3000
     // EURO5 0xFFFEE000 0x2000
@@ -145,6 +145,7 @@ FlashEcuSubaruDensoSH7058CanDiesel::~FlashEcuSubaruDensoSH7058CanDiesel()
 
 void FlashEcuSubaruDensoSH7058CanDiesel::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     kill_process = true;
 }
 
@@ -161,12 +162,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     QByteArray seed_key;
     QByteArray msg;
 
-    uint32_t ram_value = 0;
-    uint32_t seed_alter = 0;
-    uint32_t xor_multi = 0x01000193;
-    uint8_t xor_byte_1 = 0;
-    uint8_t xor_byte_2 = 0;
-    uint32_t et_rr_seed = 0;
 
     if (!serial->is_serial_port_open())
     {
@@ -425,7 +420,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::connect_bootloader()
     
     delay(50);
     received = serial->read_serial_data(serial_read_timeout);
-    if (received.length() > 5)
+    if (received.length() > 9)
     {
         if ((uint8_t)received.at(4) != 0x67 || (uint8_t)received.at(5) != 0x01)
         {
@@ -649,7 +644,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::upload_kernel(QString kernel, uint32_t k
     for (blockno = 0; blockno <= maxblocks; blockno++)
     {
         if (kill_process)
-            return 0;
+            return STATUS_ERROR;
 
         blockaddr = start_address + blockno * 128;
         output.clear();
@@ -801,7 +796,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::read_mem(uint32_t start_addr, uint32_t l
     QByteArray pagedata;
     QByteArray mapdata;
     uint32_t cplen = 0;
-    uint32_t timeout = 0;
 
     uint32_t datalen = 6;
     uint32_t pagesize = 0x0400;
@@ -841,7 +835,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::read_mem(uint32_t start_addr, uint32_t l
             return STATUS_ERROR;
 
         uint32_t numblocks = 1;
-        unsigned curspeed = 0, tleft;
+        unsigned curspeed = 0, tleft = 0;
         float pleft = 0;
         unsigned long chrono;
 
@@ -1028,6 +1022,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::write_mem(bool test_write)
             {
                 emit LOG_E("*** ERROR IN FLASH PROCESS ***", true, true);
                 emit LOG_E("Don't power off your ECU, kernel is still running and you can try flashing again!", true, true);
+                return STATUS_ERROR;
             }
         }
         else
@@ -1067,11 +1062,11 @@ int FlashEcuSubaruDensoSH7058CanDiesel::get_changed_blocks(const uint8_t *src, i
         emit LOG_I(msg, true, false);
         // do CRC comparison with ECU //
         if (check_romcrc(&src[bs], bs, blen, &modified[blockno])) {
-            return -1;
+            return STATUS_ERROR;
         }
         delay(5);
     }
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -1113,7 +1108,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc(const uint8_t *src, uint32_
     received.clear();
     received = serial->read_serial_data(serial_read_extra_long_timeout);
     
-    if (received.length() > 5)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_CRC | 0x40))
         {
@@ -1149,13 +1144,13 @@ int FlashEcuSubaruDensoSH7058CanDiesel::check_romcrc(const uint8_t *src, uint32_
         emit LOG_I("\tNO", false, true);
         *modified = 1;
         serial->read_serial_data(serial_read_short_timeout);
-        return 0;
+        return STATUS_SUCCESS;
     }
 
     emit LOG_I("\tYES", false, true);
     *modified = 0;
     serial->read_serial_data(serial_read_short_timeout);
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 unsigned int FlashEcuSubaruDensoSH7058CanDiesel::crc32(const unsigned char *buf, unsigned int len)
@@ -1202,7 +1197,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
     QByteArray msg;
 
     uint32_t datalen = 0;
-    uint16_t chksum;
 
     emit LOG_I("Check max message length", true, false);
     datalen = 0;
@@ -1220,7 +1214,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 9)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_GET_MAX_MSG_SIZE | 0x40))
         {
@@ -1261,7 +1255,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 9)
+    if (received.length() > 12)
     {
         if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_GET_MAX_BLK_SIZE | 0x40))
         {
@@ -1313,7 +1307,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 5)
+    if (received.length() > 8)
     {
         if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_CMD | 0x40))
         {
@@ -1345,6 +1339,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::init_flash_write()
  */
 int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write)
 {
+    Q_UNUSED(test_write)
     uint32_t block_start;
     uint32_t block_len;
     uint32_t datalen = 0;
@@ -1360,7 +1355,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block(const uint8_t *newdata, co
     if (blockno >= fdt->numblocks)
     {
         emit LOG_E("Block " + QString::number(blockno) + " out of range!", true, true);
-        return -1;
+        return STATUS_ERROR;
     }
 
     block_start = fdt->fblocks[blockno].start;
@@ -1387,7 +1382,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::reflash_block(const uint8_t *newdata, co
     
     received = serial->read_serial_data(serial_read_medium_timeout);
     
-    if (received.length() > 7)
+    if (received.length() > 10)
     {
         if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_PROG_VOLT | 0x40))
         {
@@ -1444,7 +1439,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
     QElapsedTimer timer;
 
     unsigned long chrono;
-    unsigned curspeed, tleft;
+    unsigned curspeed = 0, tleft = 0;
 
     flashblocksize = 0x1000;
 
@@ -1620,7 +1615,7 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
             //delay(200);
             received = serial->read_serial_data(serial_read_extra_long_timeout);
             
-            if (received.length() > 7)
+            if (received.length() > 8)
             {
                 if ((uint8_t)received.at(4) == ((SUB_KERNEL_START_COMM >> 8) & 0xFF) && (uint8_t)received.at(5) == (SUB_KERNEL_START_COMM & 0xFF) && (uint8_t)received.at(8) == (SUB_KERNEL_CMD + 0x40))
                 {
@@ -1652,7 +1647,6 @@ int FlashEcuSubaruDensoSH7058CanDiesel::flash_block(const uint8_t *src, uint32_t
 uint8_t FlashEcuSubaruDensoSH7058CanDiesel::cks_add8(QByteArray chksum_data, unsigned len)
 {
     uint16_t sum = 0;
-    uint8_t data[chksum_data.length()];
 
     for (unsigned i = 0; i < len; i++)
     {

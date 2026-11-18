@@ -45,7 +45,7 @@ QByteArray ChecksumEcuSubaruDensoSH705xDiesel::calculate_checksum(QByteArray rom
         {
             qDebug() << "ROM has all checksums disabled";
             QMessageBox::information(nullptr, QObject::tr("32-bit checksum"), "ROM has all checksums disabled");
-            return 0;
+            return QByteArray();
         }
 
         if (checksum_dword_addr_lo == 0 && checksum_dword_addr_hi == 0 && checksum_diff == 0x5aa5a55a)

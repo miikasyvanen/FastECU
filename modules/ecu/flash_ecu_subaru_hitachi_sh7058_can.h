@@ -55,7 +55,6 @@ private:
 
     bool kill_process = false;
     bool kernel_alive = false;
-    bool test_write = false;
     bool request_denso_kernel_init = false;
     bool request_denso_kernel_id = false;
 
@@ -86,11 +85,11 @@ private:
     int connect_bootloader_subaru_ecu_hitachi_can();
     //int upload_kernel_subaru_denso_can_02_32bit(QString kernel, uint32_t kernel_start_addr);
     int read_mem_subaru_ecu_hitachi_can(uint32_t start_addr, uint32_t length);
-    int write_mem_subaru_ecu_hitachi_can(bool test_write);
+    int write_mem_subaru_ecu_hitachi_can();
     //int get_changed_blocks_denso_can_02_32bit(const uint8_t *src, int *modified);
     //int check_romcrc_denso_can_02_32bit(const uint8_t *src, uint32_t start_addr, uint32_t len, int *modified);
     //int flash_block_denso_can_02_32bit(const uint8_t *src, uint32_t start, uint32_t len);
-    int reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int reflash_block_subaru_ecu_hitachi_can(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno);
     int erase_subaru_ecu_hitachi_can();
 
     QByteArray send_subaru_sid_10_start_diagnostic();

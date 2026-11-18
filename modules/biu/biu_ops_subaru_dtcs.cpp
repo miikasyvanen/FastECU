@@ -28,6 +28,7 @@ BiuOpsSubaruDtcs::~BiuOpsSubaruDtcs()
 
 void BiuOpsSubaruDtcs::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event)
     qDebug() << "Closing BIU DTC window";
 }
 

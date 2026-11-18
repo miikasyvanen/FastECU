@@ -3,8 +3,8 @@
 
 VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::VehicleSelect)
     , configValues(configValues)
+    , ui(new Ui::VehicleSelect)
 {
     ui->setupUi(this);
 
@@ -46,7 +46,6 @@ VehicleSelect::VehicleSelect(FileActions::ConfigValuesStructure *configValues, Q
     ui->car_model_tree_widget->setFont(font);
     ui->car_version_tree_widget->setFont(font);
 
-    int index = configValues->flash_protocol_selected_id.toInt();
 
     QStringList car_makes;
     QStringList car_makes_sorted;

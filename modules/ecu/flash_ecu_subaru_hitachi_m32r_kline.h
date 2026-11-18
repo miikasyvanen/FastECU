@@ -53,7 +53,6 @@ private:
 
     bool kill_process = false;
     bool kernel_alive = false;
-    bool test_write = false;
 
     int result;
     int mcu_type_index;
@@ -84,8 +83,8 @@ private:
 
     int connect_bootloader_subaru_ecu_hitachi_kline();
     int read_mem(uint32_t start_addr, uint32_t length);
-    int write_mem(bool test_write);
-    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno, bool test_write);
+    int write_mem();
+    int reflash_block(const uint8_t *newdata, const struct flashdev_t *fdt, unsigned blockno);
 
     QByteArray send_sid_bf_ssm_init();
     QByteArray send_subaru_sid_b8_change_baudrate_38400();
