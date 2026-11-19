@@ -75,6 +75,7 @@
 #include <modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.h>
 #include <modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h>
+#include <modules/ecu/flash_ecu_subaru_rh850_di_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_sh72531_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_1n83m_4m_can.h>
 #include <modules/ecu/flash_ecu_subaru_denso_1n83m_1_5m_can.h>

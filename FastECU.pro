@@ -150,6 +150,7 @@ SOURCES += \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.cpp \
+    modules/ecu/flash_ecu_subaru_rh850_di_can.cpp \
     modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.cpp \
     modules/ecu/flash_ecu_subaru_unisia_jecs.cpp \
     modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.cpp \
@@ -224,6 +225,7 @@ HEADERS += \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.h \
     modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.h \
     modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h \
+    modules/ecu/flash_ecu_subaru_rh850_di_can.h \
     modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.h \
     modules/ecu/flash_ecu_subaru_unisia_jecs.h \
     modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.h \
