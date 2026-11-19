@@ -1,5 +1,8 @@
 #include "flash_ecu_subaru_rh850_di_can.h"
 #include <QCloseEvent>
+#include <QFile>
+#include <QDir>
+#include <QCoreApplication>
 
 /*
  * Subaru DI (RH850, 2022+) UDS-native read/write over CAN.
@@ -128,6 +131,8 @@ void FlashEcuSubaruRH850DICan::run()
         return;
     }
 
+    load_keys();
+
     if (connect_ecu() != STATUS_SUCCESS) { emit external_logger("Finished"); return; }
 
     if (cmd_type == "read") {
@@ -193,6 +198,12 @@ int FlashEcuSubaruRH850DICan::engine_security(uint8_t seed_level, const uint8_t 
 {
     uint32_t tx = (seed_level == SEC_GATEWAY) ? CAN_GATEWAY_TX : CAN_ENGINE_TX;
     uint32_t rx = (seed_level == SEC_GATEWAY) ? CAN_GATEWAY_RX : CAN_ENGINE_RX;
+
+    if (is_zero_key(aes_key)) {
+        emit LOG_E("No AES key set for level " + QString::number(seed_level) +
+                   " - add it to rh850_di_keys.txt (gateway_l7 / engine_read_l5 / engine_flash_l1).", true, true);
+        return STATUS_ERROR;
+    }
 
     if (seed_level != SEC_GATEWAY) {
         QByteArray s; s.append((uint8_t)0x10); s.append((uint8_t)0x03);
@@ -331,6 +342,54 @@ int FlashEcuSubaruRH850DICan::write_mem(bool test_write)
 }
 
 // ---- helpers ----
+
+bool FlashEcuSubaruRH850DICan::is_zero_key(const uint8_t *k)
+{
+    for (int i = 0; i < 16; i++) if (k[i]) return false;
+    return true;
+}
+
+bool FlashEcuSubaruRH850DICan::load_keys()
+{
+    auto hex_to = [](const QString &h, uint8_t *dst, int n) -> bool {
+        QByteArray b = QByteArray::fromHex(h.trimmed().toLatin1());
+        if (b.length() != n) return false;
+        for (int i = 0; i < n; i++) dst[i] = (uint8_t)b.at(i);
+        return true;
+    };
+    QStringList paths = { QCoreApplication::applicationDirPath() + "/rh850_di_keys.txt",
+                          QDir::currentPath() + "/rh850_di_keys.txt" };
+    QString found;
+    for (const QString &p : paths) if (QFile::exists(p)) { found = p; break; }
+    if (found.isEmpty()) {
+        emit LOG_W("rh850_di_keys.txt not found - AES keys unset. Read/write will stop at security.", true, true);
+        return false;
+    }
+    QFile f(found);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
+    int loaded = 0;
+    while (!f.atEnd()) {
+        QString line = QString::fromLatin1(f.readLine()).trimmed();
+        if (line.startsWith('#') || !line.contains(':')) continue;
+        QString tag = line.section(':', 0, 0).trimmed().toLower();
+        QString val = line.section(':', 1).trimmed();
+        if      (tag == "gateway_l7"      && hex_to(val, aes_gateway_key, 16)) loaded++;
+        else if (tag == "engine_read_l5"  && hex_to(val, aes_read_key, 16))    loaded++;
+        else if (tag == "engine_flash_l1" && hex_to(val, aes_write_key, 16))   loaded++;
+        else if (tag == "feistel") {
+            uint8_t fk[8];
+            if (hex_to(val, fk, 8)) {
+                for (int i = 0; i < 4; i++) {
+                    feistel_enc_key[i]     = (fk[2*i] << 8) | fk[2*i+1];
+                    feistel_dec_key[3 - i] = feistel_enc_key[i];
+                }
+                loaded++;
+            }
+        }
+    }
+    emit LOG_I(QString("Loaded %1 key(s) from %2").arg(loaded).arg(found), true, true);
+    return loaded > 0;
+}
 
 QByteArray FlashEcuSubaruRH850DICan::uds_request(uint32_t tx_id, uint32_t rx_id, QByteArray payload, uint16_t timeout, bool expect_reply)
 {

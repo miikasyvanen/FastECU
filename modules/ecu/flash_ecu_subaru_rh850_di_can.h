@@ -113,6 +113,15 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
+    // Load AES SecurityAccess keys from a file so they need not be compiled in.
+    // Looks for "rh850_di_keys.txt" in the app dir then the current dir. Lines:
+    //   gateway_l7:      <32 hex chars>
+    //   engine_read_l5:  <32 hex chars>
+    //   engine_flash_l1: <32 hex chars>
+    //   feistel:         <16 hex chars>   (optional; default is the validated key)
+    bool load_keys();
+    bool is_zero_key(const uint8_t *k);
+
     int  connect_ecu();
     int  identify();
     int  gateway_disarm();
