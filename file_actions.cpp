@@ -2654,6 +2654,14 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
+            * Renesas RH850 DI (2022+ Subaru DIT, LHB* calibrations)
+            */
+            else if (flashMethod.startsWith("sub_ecu_subaru_rh850_di_can"))
+            {
+                chksumModuleAvailable = true;
+                ecuCalDef->FullRomData = ChecksumEcuSubaruRh850Di::calculate_checksum(ecuCalDef->FullRomData);
+            }
+            /*
             * Hitachi TCU
             */
             else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_can"))
