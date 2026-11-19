@@ -1,4 +1,5 @@
 #include "flash_ecu_subaru_rh850_di_can.h"
+#include "serial_port_actions.h"
 #include <QCloseEvent>
 #include <QFile>
 #include <QDir>
