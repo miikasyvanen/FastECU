@@ -173,6 +173,11 @@ int FlashEcuSubaruRH850DICan::identify()
 
 int FlashEcuSubaruRH850DICan::gateway_disarm()
 {
+    if (is_zero_key(aes_gateway_key)) {
+        emit LOG_W("No gateway key set - skipping gateway disarm and trying the engine directly.", true, true);
+        emit LOG_W("If engine security then fails, the central gateway requires its L7 key.", true, true);
+        return STATUS_SUCCESS;
+    }
     emit LOG_I("Disarming central gateway (0x763)...", true, true);
     // Extended session
     QByteArray s; s.append((uint8_t)0x10); s.append((uint8_t)0x03);
