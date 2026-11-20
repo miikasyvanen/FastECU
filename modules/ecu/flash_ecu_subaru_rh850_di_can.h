@@ -86,12 +86,17 @@ private:
     const uint8_t SEC_WRITE    = 0x01;       // engine FLASH seed (FLASH_ROM)
 
     /* AES-128 SecurityAccess keys (16 bytes each).
-     * NOTE: the working keys for a given car are NOT the ones in the RayTuned
-     * seed_keys.txt (verified against a known seed/answer pair: no match). Supply
-     * the real per-ECU keys here (from the key set, or recovered via seed-test). */
-    uint8_t aes_gateway_key[16] = {0};       // gateway (L7)
-    uint8_t aes_read_key[16]    = {0};       // engine read (L5)
-    uint8_t aes_write_key[16]   = {0};       // engine flash (L1)
+     * Engine read (L5) and flash (L1) keys recovered from the engine ROM key
+     * table (CPU ~0x152C20/0x152C40) and verified against live SecurityAccess
+     * answers; constant across 2022-2024 WRX. Gateway (L7) is not in the engine
+     * ROM (separate central-gateway module) -> left zero; with no gateway key the
+     * module skips the gateway disarm and authenticates the engine directly.
+     * load_keys() can still override any of these from rh850_di_keys.txt. */
+    uint8_t aes_gateway_key[16] = {0};       // gateway (L7) - supply via keyfile if needed
+    uint8_t aes_read_key[16]    = {0xE8,0xCC,0x52,0xD5,0xD8,0xF2,0x07,0x06,
+                                   0x42,0x48,0x13,0x12,0x6F,0xA7,0xAB,0xDD}; // engine read (L5)
+    uint8_t aes_write_key[16]   = {0x66,0x7E,0x30,0x78,0x21,0x99,0x76,0xB4,
+                                   0xED,0xF3,0xD4,0x3B,0xD1,0xD8,0xFF,0xC9}; // engine flash (L1)
 
     /* Feistel flash transport key (validated 2026-11-18 on a 2024 WRX image). */
     uint16_t feistel_enc_key[4] = {0xB740, 0x42DA, 0xA7CA, 0x5FB1};
