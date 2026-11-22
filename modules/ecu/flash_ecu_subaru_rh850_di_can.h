@@ -85,18 +85,30 @@ private:
     const uint8_t SEC_READ     = 0x05;       // engine READ_MEMORY seed
     const uint8_t SEC_WRITE    = 0x01;       // engine FLASH seed (FLASH_ROM)
 
-    /* AES-128 SecurityAccess keys (16 bytes each).
-     * Engine read (L5) and flash (L1) keys recovered from the engine ROM key
-     * table (CPU ~0x152C20/0x152C40) and verified against live SecurityAccess
-     * answers; constant across 2022-2024 WRX. Gateway (L7) is not in the engine
-     * ROM (separate central-gateway module) -> left zero; with no gateway key the
-     * module skips the gateway disarm and authenticates the engine directly.
-     * load_keys() can still override any of these from rh850_di_keys.txt. */
-    uint8_t aes_gateway_key[16] = {0};       // gateway (L7) - supply via keyfile if needed
+    /* AES-128 SecurityAccess keys (16 bytes each), all compiled in - no keyfile.
+     *
+     * Engine read (L5) and flash (L1): recovered from the engine ROM key table
+     * (CPU ~0x152C20/0x152C40) and verified against live SecurityAccess answers;
+     * constant across 2022-2024 WRX. Independently confirmed byte-for-byte
+     * against Atlas's ENGINE_12002_AES_VERSION_1 table.
+     *
+     * Gateway (L7): NOT in the engine ROM (separate central-gateway module), so
+     * it couldn't be recovered the same way. Pulled instead from Atlas's
+     * CGW_12265 profile, which carries multiple key versions and we don't yet
+     * know which one our gateway runs - so all three are kept here and
+     * gateway_disarm() tries them in order until one is accepted. None of
+     * these three has been confirmed against a live gateway seed/answer yet. */
     uint8_t aes_read_key[16]    = {0xE8,0xCC,0x52,0xD5,0xD8,0xF2,0x07,0x06,
                                    0x42,0x48,0x13,0x12,0x6F,0xA7,0xAB,0xDD}; // engine read (L5)
     uint8_t aes_write_key[16]   = {0x66,0x7E,0x30,0x78,0x21,0x99,0x76,0xB4,
                                    0xED,0xF3,0xD4,0x3B,0xD1,0xD8,0xFF,0xC9}; // engine flash (L1)
+
+    static const int GATEWAY_KEY_CANDIDATES = 3;
+    uint8_t aes_gateway_keys[GATEWAY_KEY_CANDIDATES][16] = {
+        {0x1B,0xF6,0x34,0x4A,0xA6,0x25,0x6C,0x70,0xE4,0x5D,0x87,0x54,0xCD,0x65,0x3F,0xB2}, // CGW_12265 v2
+        {0x76,0x92,0xE7,0x93,0x2F,0x23,0xA9,0x01,0x56,0x8D,0xDF,0xA5,0xFF,0x58,0x06,0x25}, // CGW_12265 v3
+        {0x1B,0x8E,0x5C,0xE1,0xCA,0x38,0xAE,0xB6,0xB4,0xAC,0x07,0xC6,0x2F,0xC8,0xD7,0x69}, // CGW_12265 v4
+    };
 
     /* Feistel flash transport key (validated 2026-11-18 on a 2024 WRX image). */
     uint16_t feistel_enc_key[4] = {0xB740, 0x42DA, 0xA7CA, 0x5FB1};
@@ -118,13 +130,6 @@ private:
 
     void closeEvent(QCloseEvent *event);
 
-    // Load AES SecurityAccess keys from a file so they need not be compiled in.
-    // Looks for "rh850_di_keys.txt" in the app dir then the current dir. Lines:
-    //   gateway_l7:      <32 hex chars>
-    //   engine_read_l5:  <32 hex chars>
-    //   engine_flash_l1: <32 hex chars>
-    //   feistel:         <16 hex chars>   (optional; default is the validated key)
-    bool load_keys();
     bool is_zero_key(const uint8_t *k);
 
     int  connect_ecu();
