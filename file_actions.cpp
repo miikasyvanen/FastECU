@@ -2653,6 +2653,12 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
                 chksumModuleAvailable = true;
                 ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(ecuCalDef->FullRomData);
             }
+            else if (flashMethod.startsWith("sub_ecu_hitachi_sh72544r"))
+            {
+                // Same SH725xx checksum routine; it takes the 2.5 MB end of flash from the image size.
+                chksumModuleAvailable = true;
+                ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(ecuCalDef->FullRomData);
+            }
             /*
             * Renesas RH850 DI (2022+ Subaru DIT, LHB* calibrations)
             */

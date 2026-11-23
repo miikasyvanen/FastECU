@@ -24,6 +24,7 @@ enum mcu_type {
     N83M_1_5MB,
     SH72543R,
     SH72544R,
+    RH850_DI,
     MH8104,
     MH5006,
     MH8111,
@@ -249,6 +250,12 @@ const struct flashblock fblocks_SH72543R[] = {
 const struct flashblock fblocks_SH72544R[] = {
     {0x00000000,    0x00006000},
     {0x00006000,    0x0027A000},
+};
+
+// Renesas RH850 (Subaru 2022+ DIT, "LHB*" calibrations). The image file covers CPU 0x10000-0x3FFFFF (file offset 0 is
+// CPU 0x10000, 4032 KB); the boot area 0x0-0xFFFF is not part of it. One block: used for the ROM size check only.
+const struct flashblock fblocks_RH850_DI[] = {
+    {0x00000000,    0x003F0000},
 };
 
 const struct flashblock fblocks_SH7055[] = {
@@ -541,6 +548,7 @@ const struct flashdev_t flashdevices[] = {
     { "N83M_1_5MB", N83M_1_5MB, 1488 * 1024, 3, fblocks_N83M_1_5MB, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "SH72543R", SH72543R, 2 * 1024 * 1024, 2, fblocks_SH72543R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // rblocks, kblocks, eblocks not updated
     { "SH72544R", SH72544R, 2560 * 1024, 2, fblocks_SH72544R, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // read only; rblocks, kblocks, eblocks not updated
+    { "RH850_DI", RH850_DI, 4032 * 1024, 1, fblocks_RH850_DI, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },  // image size for the checksum module; rblocks, kblocks, eblocks not used
     { "MH8104", MH8104, 512 * 1024, 4, fblocks_MH8104, rblocks_MH8104, kblocks_MH8104, eblocks_MH8104 },
     { "MH5006", MH5006, 1024 * 1024, 4, fblocks_MH5006, rblocks_MH5006, kblocks_MH5006, eblocks_MH5006 },
     { "MH8111", MH8111, 3 * 512 * 1024, 4, fblocks_MH8111, rblocks_MH8111, kblocks_MH8111, eblocks_MH8111 },
