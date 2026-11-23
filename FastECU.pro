@@ -132,6 +132,7 @@ SOURCES += \
     modules/checksum/checksum_ecu_subaru_hitachi_m32r_kline.cpp \
     modules/checksum/checksum_ecu_subaru_hitachi_sh7058.cpp \
     modules/checksum/checksum_ecu_subaru_hitachi_sh72543r.cpp \
+    modules/checksum/checksum_ecu_subaru_rh850_di.cpp \
     modules/checksum/checksum_tcu_mitsu_mh8104_can.cpp \
     modules/checksum/checksum_tcu_subaru_denso_sh7055.cpp \
     modules/checksum/checksum_tcu_subaru_hitachi_m32r_can.cpp \
@@ -149,6 +150,7 @@ SOURCES += \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.cpp \
     modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.cpp \
+    modules/ecu/flash_ecu_subaru_rh850_di_can.cpp \
     modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.cpp \
     modules/ecu/flash_ecu_subaru_unisia_jecs.cpp \
     modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.cpp \
@@ -205,6 +207,7 @@ HEADERS += \
     modules/checksum/checksum_ecu_subaru_hitachi_m32r_kline.h \
     modules/checksum/checksum_ecu_subaru_hitachi_sh7058.h \
     modules/checksum/checksum_ecu_subaru_hitachi_sh72543r.h \
+    modules/checksum/checksum_ecu_subaru_rh850_di.h \
     modules/checksum/checksum_tcu_mitsu_mh8104_can.h \
     modules/checksum/checksum_tcu_subaru_denso_sh7055.h \
     modules/checksum/checksum_tcu_subaru_hitachi_m32r_can.h \
@@ -222,6 +225,7 @@ HEADERS += \
     modules/ecu/flash_ecu_subaru_hitachi_m32r_kline.h \
     modules/ecu/flash_ecu_subaru_hitachi_sh7058_can.h \
     modules/ecu/flash_ecu_subaru_hitachi_sh72543r_can.h \
+    modules/ecu/flash_ecu_subaru_rh850_di_can.h \
     modules/ecu/flash_ecu_subaru_mitsu_m32r_kline.h \
     modules/ecu/flash_ecu_subaru_unisia_jecs.h \
     modules/ecu/flash_ecu_subaru_unisia_jecs_m32r.h \

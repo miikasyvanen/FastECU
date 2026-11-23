@@ -36,6 +36,7 @@
 #include "modules/checksum/checksum_ecu_subaru_hitachi_m32r_can.h"
 #include "modules/checksum/checksum_ecu_subaru_hitachi_sh7058.h"
 #include "modules/checksum/checksum_ecu_subaru_hitachi_sh72543r.h"
+#include "modules/checksum/checksum_ecu_subaru_rh850_di.h"
 
 #include "modules/checksum/checksum_tcu_subaru_denso_sh7055.h"
 #include "modules/checksum/checksum_tcu_subaru_hitachi_m32r_can.h"
