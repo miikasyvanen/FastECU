@@ -991,6 +991,10 @@ bool MainWindow::flash_protocol_test_write_allowed()
     int id = configValues->flash_protocol_selected_id.toInt();
     if (id < 0 || id >= configValues->flash_protocol_test_write.length() || id >= configValues->flash_protocol_kernel.length())
         return false;
+    // Modules that implement their own dry run on the ECU's on-board loader (stop before erase)
+    static const QStringList own_dry_run = { "sub_tcu_hitachi_m32r_kline", "sub_tcu_hitachi_m32r_kline_recovery" };
+    if (own_dry_run.contains(configValues->flash_protocol_selected_protocol_name))
+        return configValues->flash_protocol_test_write.at(id) == "yes";
     return configValues->flash_protocol_test_write.at(id) == "yes"
         && !configValues->flash_protocol_kernel.at(id).trimmed().isEmpty();
 }
