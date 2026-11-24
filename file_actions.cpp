@@ -2688,8 +2688,10 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             }
             else if (flashMethod.startsWith("sub_tcu_hitachi_m32r_kline"))
             {
+                // 0x5FFFF-generation K-Line TCUs (16-bit balance @0x8022 + additive @0x8000/0x8004);
+                // ChecksumTcuSubaruHitachiM32rCan (32-bit whole-file balance) breaks these images
                 chksumModuleAvailable = true;
-                ecuCalDef->FullRomData = ChecksumTcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
+                ecuCalDef->FullRomData = ChecksumTcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
             }
             /*
             * Mitsu TCU
