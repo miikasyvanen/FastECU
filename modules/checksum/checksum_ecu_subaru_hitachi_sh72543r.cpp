@@ -69,7 +69,7 @@ QByteArray ChecksumEcuSubaruHitachiSh72543r::calculate_checksum(QByteArray romDa
         romData.replace(balance_value_array_start, balance_value_array.length(), balance_value_array);
 
         qDebug() << "Checksums corrected";
-        QMessageBox::information(nullptr, QObject::tr("Subaru Hitachi SH725xx ECU Checksum"), "Checksums corrected");
+        QMessageBox::information(nullptr, QObject::tr("Subaru Hitachi SH7254x ECU Checksum"), "Checksums corrected");
     }
 
     return romData;
