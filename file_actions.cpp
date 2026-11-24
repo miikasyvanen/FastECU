@@ -2630,13 +2630,24 @@ FileActions::EcuCalDefStructure *FileActions::checksum_correction(FileActions::E
             */
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_kline"))
             {
-                chksumModuleAvailable = true;
-                if (ecuCalDef->RomId.startsWith("3"))
+                // The generation is told by the ECU ID: 3 and 2E use this K-line generation's own checksum, 4 and 6 the CAN one.
+                // The ECU ID is read from the ROM itself (5 bytes at 0x80F8, as hex), not from RomId: RomId is the matched
+                // definition's xmlid, which on these ROMs is the ASCII CAL ID (e.g. D5254EC3), not the ECU ID.
+                QString ecuId = ecuCalDef->RomId;
+                if (ecuCalDef->FullRomData.length() >= 0x80F8 + 5)
+                    ecuId = QString(ecuCalDef->FullRomData.mid(0x80F8, 5).toHex()).toUpper();
+                if (ecuId.startsWith("3") || ecuId.startsWith("2E"))
+                {
+                    chksumModuleAvailable = true;
                     ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rKline::calculate_checksum(ecuCalDef->FullRomData);
-                if (ecuCalDef->RomId.startsWith("4"))
+                }
+                else if (ecuId.startsWith("4") || ecuId.startsWith("6"))
+                {
+                    chksumModuleAvailable = true;
                     ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
-                if (ecuCalDef->RomId.startsWith("6"))
-                    ecuCalDef->FullRomData = ChecksumEcuSubaruHitachiM32rCan::calculate_checksum(ecuCalDef->FullRomData);
+                }
+                else
+                    emit LOG_W("No Hitachi M32R checksum scheme for ECU ID " + ecuId, true, true);
             }
             else if (flashMethod.startsWith("sub_ecu_hitachi_m32r_can"))
             {
