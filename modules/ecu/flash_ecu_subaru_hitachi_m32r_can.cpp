@@ -337,9 +337,10 @@ int FlashEcuSubaruHitachiM32rCan::connect_bootloader()
     received = serial->read_serial_data(200);
     
 
-    if (received.length() > 6)
+    // In car the reply can be only 6 bytes (e.g. 00 00 07 E8 E8 00), so byte 6 is optional
+    if (received.length() > 5)
     {
-        if ((uint8_t)received.at(5) != 0xA0 && (uint8_t)received.at(6) != 0x20)
+        if ((uint8_t)received.at(5) != 0xA0 && (received.length() < 7 || (uint8_t)received.at(6) != 0x20))
         {
             emit LOG_I("In Car Programming, Accessing...", true, true);
             delay(800);
