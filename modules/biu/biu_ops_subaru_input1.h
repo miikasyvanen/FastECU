@@ -20,7 +20,9 @@ public:
     ~BiuOpsSubaruInput1();
 
 private:
-    QByteArray *biu_tt_result;
+    // copy taken when the window opens; a later read must not change what
+    // this window writes
+    QByteArray biu_tt_result;
     Ui::BiuOpsSubaruInput1Window *ui;
 
 private slots:

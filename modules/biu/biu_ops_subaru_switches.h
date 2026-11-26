@@ -41,6 +41,9 @@ private:
     //QLabel *label;
 
     QStringList *switch_result;
+    int row_count = 0;
+
+    void build_switch_results(QStringList *switch_result);
 
     //SerialPortActions *serial;
     Ui::BiuOpsSubaruSwitchesWindow *ui;

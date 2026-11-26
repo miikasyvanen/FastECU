@@ -24,8 +24,10 @@ public:
     ~BiuOpsSubaruInput2();
 
 private:
-    QByteArray *biu_option_result;
+    // copy taken when the window opens (see BiuOpsSubaruInput1)
+    QByteArray biu_option_result;
     QStringList *biu_option_names;
+    int byte_count;
     Ui::BiuOpsSubaruInput2Window *ui;
 
 private slots:

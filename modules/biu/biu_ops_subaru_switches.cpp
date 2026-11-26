@@ -12,6 +12,13 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
 
     this->switch_result = switch_result;
 
+    build_switch_results(switch_result);
+}
+
+void BiuOpsSubaruSwitches::build_switch_results(QStringList *switch_result)
+{
+    row_count = switch_result->length() / 2;
+
     QFont custom_font("Courier New", 7);
 
     QLabel *label;
@@ -46,7 +53,6 @@ BiuOpsSubaruSwitches::BiuOpsSubaruSwitches(QStringList *switch_result, QWidget *
 
         row_num++;
     }
-
 }
 
 BiuOpsSubaruSwitches::~BiuOpsSubaruSwitches()
@@ -56,6 +62,19 @@ BiuOpsSubaruSwitches::~BiuOpsSubaruSwitches()
 
 void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)
 {
+    // A reply with a different number of bytes changes the row count, so the
+    // labels would not match: rebuild the grid in that case.
+    if (switch_result->length() / 2 != row_count)
+    {
+        QLayoutItem *item;
+        while ((item = ui->gridLayout->takeAt(0)) != nullptr)
+        {
+            delete item->widget();
+            delete item;
+        }
+        build_switch_results(switch_result);
+        return;
+    }
 
     QLabel* current_label;
 
@@ -73,5 +92,3 @@ void BiuOpsSubaruSwitches::update_switch_results(QStringList *switch_result)
         }
     }
 }
-
-

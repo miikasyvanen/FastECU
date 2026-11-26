@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QWidget>
 #include <QDialog>
+#include <QPointer>
 
 #include <modules/biu/biu_ops_subaru_switches.h>
 #include <modules/biu/biu_ops_subaru_data.h>
@@ -397,6 +398,7 @@ private:
     BiuOpsSubaruSwitches* update_biu_ops_subaru_switches_window(BiuOpsSubaruSwitches *biuOpsSubaruSwitches);
     BiuOpsSubaruData* update_biu_ops_subaru_data_window(BiuOpsSubaruData *biuOpsSubaruData);
     void close_results_windows();
+    void prepare_biu_set_cmd(uint8_t write_target, const QByteArray &cmd_settings);
     void closeEvent(QCloseEvent *event);
 
     SerialPortActions *serial;
@@ -416,20 +418,27 @@ private:
     BiuOpsSubaruData *biuOpsSubaruDataDest;
     BiuOpsSubaruData *biuOpsSubaruDataFactory;
 
-    BiuOpsSubaruInput1 *biuOpsSubaruInput1;
-    BiuOpsSubaruInput2 *biuOpsSubaruInput2;
+    QPointer<BiuOpsSubaruInput1> biuOpsSubaruInput1;
+    QPointer<BiuOpsSubaruInput2> biuOpsSubaruInput2;
 
     QByteArray cmd, output;
     int counter;
     uint8_t current_command;
     ConnectionState connection_state;
+    // true only for the live-data reads that keep_alive() re-sends every
+    // second; everything else falls back to tester present after one send
+    bool repeat_command;
+    // set while a request/response exchange is in progress; the serial read
+    // runs processEvents(), so clicks and timers can re-enter
+    bool comm_busy;
 
     Ui::BiuOperationsSubaruWindow *ui;
 
 private slots:
     void keep_alive();
     void parse_biu_cmd();
-    void prepare_biu_set_cmd(QByteArray cmd_settings);
+    void prepare_biu_tt_set_cmd(QByteArray cmd_settings);
+    void prepare_biu_option_set_cmd(QByteArray cmd_settings);
     void prepare_biu_msg();
     void send_biu_msg();
 
