@@ -2901,10 +2901,11 @@ QString FileActions::parse_nrc_message(QByteArray nrc)
 {
     QString ret = "Unknown error code";
 
-    if (nrc.length() > 2 && (uint8_t)nrc.at(0) == 0x7f)
+    // nrc can be empty (e.g. mid() past the end of a short reply): at() on an empty QByteArray crashes in release builds
+    if (nrc.isEmpty() || (uint8_t)nrc.at(0) != 0x7f)
+        return "Not a valid answer";
+    if (nrc.length() > 2)
         ret = neg_rsp_codes.value((uint8_t)nrc.at(2), ret);
-    if ((uint8_t)nrc.at(0) == 0x7f)
-        ret = "Not a valid answer";
 
     return ret;
 }
