@@ -13,6 +13,7 @@ enum mcu_type {
     MC68HC16Y5,
     MC68HC16Y5_TPU,
     SH7051,
+    SH7054,
     SH7055,
     SH7058,
     SH7058_1block,
@@ -289,6 +290,36 @@ const struct eepromblock eblocks_SH7055[] = {
     {0x00000000,    0x00000100},
 };
 
+// SH7054F (Denso K-Line TCU): 384 kB flash, 4 kB x 8, 32 kB, 64 kB x 5 (EB0..EB13), 16 kB RAM 0xFFFF8000-0xFFFFBFFF
+const struct flashblock fblocks_SH7054[] = {
+    {0x00000000,    0x00001000},
+    {0x00001000,    0x00001000},
+    {0x00002000,    0x00001000},
+    {0x00003000,    0x00001000},
+    {0x00004000,    0x00001000},
+    {0x00005000,    0x00001000},
+    {0x00006000,    0x00001000},
+    {0x00007000,    0x00001000},
+    {0x00008000,    0x00008000},
+    {0x00010000,    0x00010000},
+    {0x00020000,    0x00010000},
+    {0x00030000,    0x00010000},
+    {0x00040000,    0x00010000},
+    {0x00050000,    0x00010000},
+};
+
+const struct ramblock rblocks_SH7054[] = {
+    {0xFFFF8000,    0x00004000},//0xFFFFBFFF // 16k
+};
+
+const struct kernelblock kblocks_SH7054[] = {
+    {0xFFFF8004,    0x00003FFC},//0xFFFFBFFF
+};
+
+const struct eepromblock eblocks_SH7054[] = {
+    {0x00000000,    0x00000100},
+};
+
 const struct flashblock fblocks_SH7051[] = {
     {0x00000000,    0x00040000},
 };
@@ -537,6 +568,7 @@ const struct flashdev_t flashdevices[] = {
     { "MC68HC16Y5", MC68HC16Y5, 160 * 1024, 10, fblocks_MC68HC16Y5, rblocks_MC68HC16Y5, kblocks_MC68HC16Y5, eblocks_MC68HC16Y5 },
     { "MC68HC16Y5_TPU", MC68HC16Y5_TPU, 4 * 1024, 4, fblocks_MC68HC16Y5_TPU, rblocks_MC68HC16Y5, kblocks_MC68HC16Y5, eblocks_MC68HC16Y5 },
     { "SH7051", SH7051, 256 * 1024, 1, fblocks_SH7051, rblocks_SH7051, kblocks_SH7051, eblocks_SH7051 },
+    { "SH7054", SH7054, 384 * 1024, 14, fblocks_SH7054, rblocks_SH7054, kblocks_SH7054, eblocks_SH7054 },
     { "SH7055", SH7055, 512 * 1024, 16, fblocks_SH7055, rblocks_SH7055, kblocks_SH7055, eblocks_SH7055 },
     { "SH7058", SH7058, 1024 * 1024, 16, fblocks_SH7058, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },
     { "SH7058_1block", SH7058, 1024 * 1024, 1, fblocks_SH7058_1block, rblocks_SH7058, kblocks_SH7058, eblocks_SH7058 },

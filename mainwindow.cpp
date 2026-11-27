@@ -1250,6 +1250,11 @@ int MainWindow::start_ecu_operations(QString cmd_type)
             FlashTcuSubaruDensoSH705xKline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
             connect_signals_and_run_module(&flash_module);
         }
+        else if (configValues->flash_protocol_selected_protocol_name.startsWith("sub_tcu_denso_sh7054_kline"))
+        {
+            FlashTcuSubaruDensoSH7054Kline flash_module(serial, ecuCalDef[rom_number], cmd_type, this);
+            connect_signals_and_run_module(&flash_module);
+        }
         /*
         * Denso EEPROM
         */

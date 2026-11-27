@@ -163,6 +163,7 @@ SOURCES += \
     modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8111_can.cpp \
     modules/tcu/flash_tcu_subaru_denso_sh705x_can.cpp \
     modules/tcu/flash_tcu_subaru_denso_sh705x_kline.cpp \
+    modules/tcu/flash_tcu_subaru_denso_sh7054_kline.cpp \
     modules/tcu/flash_tcu_subaru_hitachi_m32r_can.cpp \
     modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.cpp \
     protocol_select.cpp \
@@ -240,6 +241,7 @@ HEADERS += \
     modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8111_can.h \
     modules/tcu/flash_tcu_subaru_denso_sh705x_can.h \
     modules/tcu/flash_tcu_subaru_denso_sh705x_kline.h \
+    modules/tcu/flash_tcu_subaru_denso_sh7054_kline.h \
     modules/tcu/flash_tcu_subaru_hitachi_m32r_can.h \
     modules/tcu/flash_tcu_subaru_hitachi_m32r_kline.h \
     protocol_select.h \
@@ -348,7 +350,8 @@ DISTFILES += \
     kernels/ssmk_mc68hc916y5.bin \
     kernels/ssmk_tcu_can_sh7055_35.bin \
     kernels/ssmk_tcu_can_sh7058.bin \
-    kernels/ssmk_tcu_kline_sh7055.bin
+    kernels/ssmk_tcu_kline_sh7055.bin \
+    kernels/ssmk_tcu_kline_sh7054.bin
 
 RC_FILE = fastecu.rc
 

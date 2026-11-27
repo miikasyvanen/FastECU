@@ -85,6 +85,7 @@
 #include <modules/tcu/flash_tcu_cvt_subaru_hitachi_m32r_can.h>
 #include <modules/tcu/flash_tcu_subaru_denso_sh705x_can.h>
 #include <modules/tcu/flash_tcu_subaru_denso_sh705x_kline.h>
+#include <modules/tcu/flash_tcu_subaru_denso_sh7054_kline.h>
 #include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8104_can.h>
 #include <modules/tcu/flash_tcu_cvt_subaru_mitsu_mh8111_can.h>
 
