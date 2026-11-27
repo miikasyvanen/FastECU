@@ -347,7 +347,8 @@ DISTFILES += \
     kernels/ssmk_kline_sh7058.bin \
     kernels/ssmk_mc68hc916y5.bin \
     kernels/ssmk_tcu_can_sh7055_35.bin \
-    kernels/ssmk_tcu_can_sh7058.bin
+    kernels/ssmk_tcu_can_sh7058.bin \
+    kernels/ssmk_tcu_kline_sh7055.bin
 
 RC_FILE = fastecu.rc
 
