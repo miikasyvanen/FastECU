@@ -387,11 +387,11 @@ int FlashTcuSubaruDensoSH705xKline::upload_kernel(QString kernel, uint32_t addr)
 
     pl_encr = file.readAll();
 
-    // TCU: the image (with the 2-byte checksum at its end) is padded with zeros to a multiple of 128 bytes. The Denso TCU bootloaders
-    // traced so far (CAN, SH7055 / SH7058) take a kernel only at their fixed RAM window and only in whole 128-byte blocks, and the first
-    // K-Line TCU test answered 7F 34 22 to the ECU-style request (0xFFFF6004, length 0x1A08); the kernel is ssmk_tcu_kline_sh7055.bin,
-    // linked at 0xFFFF9000 (protocols.cfg kernel_addr). The ECU K-Line checksum convention is kept: the low 16 bits of the dword sum
-    // over the whole image, the checksum included, come to 0x5AA5.
+    // TCU: the image (with the 2-byte checksum at its end) is padded with zeros to a multiple of 128 bytes. The Denso SH7055 K-Line TCU
+    // bootloader (boot block of 04 BXT 63FE2TA2 / 05 FXT 86FE7WA1 and siblings) takes a 34 range from 0xFFFF8000 up to 0xFFFFDFFF (the
+    // first test's 0xFFFF6004 got 7F 34 22), checks that the low 16 bits of the dword sum are 0x5AA5 on 31 01 01 and then always jumps to
+    // 0xFFFF8004, wherever the image was loaded: so ssmk_tcu_kline_sh7055.bin is linked at 0xFFFF8004 and uploaded there (protocols.cfg
+    // kernel_addr; a kernel loaded at 0xFFFF9000 was started at 0xFFFF8004 and the TCU reset). The ECU K-Line checksum convention is kept.
     pl_len = (pl_encr.length() + 2 + 127) & ~127;
     while ((uint32_t)pl_encr.length() < pl_len - 2)
         pl_encr.append((uint8_t)0x00);
