@@ -67,6 +67,9 @@ private:
     int bootloader_start_countdown = 3;
 
     uint8_t tester_id;
+    QString ecu_id;                                // SSM ECU ID (read path), for the file name
+    static constexpr uint32_t cal_id_addr = 0x200;      // protocols.cfg cal_id_addr
+    static constexpr uint32_t cal_id_length = 8;
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
@@ -113,6 +116,7 @@ private:
     QByteArray request_kernel_id();
 
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
+    QByteArray send_sid_bf_ssm_init();
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     int check_received_message(QByteArray msg, QByteArray received);
     QString parse_message_to_hex(QByteArray received);

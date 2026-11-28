@@ -59,6 +59,8 @@ public:
 
     unsigned long vBatt = 0;
 
+    // LEC line state "open" (J2534 VOLTAGE_OFF) for set_lec_lines(); see SerialPortActions::lecLineOpen.
+    static constexpr int lecLineOpen = 2;
     int requestToSendEnabled = 0;
     int requestToSendDisabled = 1;
     int dataTerminalEnabled = 0;

@@ -4,7 +4,10 @@
  * Line End Check pulse (200 ms), 'M' FF B4 at 9600 -> 4D 00 B3, then the 'S' frame (address, length, (b ^ 0x55) + 0x10
  * payload coding, 8-bit sum), with the TCU's raw magic word 0x30B1 instead of 0x3161; the boot block jumps to 0xFFFF8004
  * (kernel ssmk_tcu_kline_sh7054.bin, RAM below 0xFFFFC000). Traced from the TCU ROM: FastECU-RE RE_FINDINGS_9060013300.md.
- * Target 0x18 (TCU). Read only. Not yet run on a TCU; whether the TCU's entry pin is on the Line End Check line is assumed.
+ * Target 0x18 (TCU). Read only. Not yet run on a TCU.
+ * The TCU's Line End Check input is on OBD pin 11 (LEC1 / RTS), not pin 9 like the 02 ECUs (wiring diagram). The boot block (0x1064) wants
+ * that input high at reset, more than 0.2 s and less than 9.9 s later a 177 .. 216 ms low pulse, then high again; the 12 V pulse on a
+ * grounded line gives that if the TCU input inverts, as on the 02 ECUs (RE_FINDINGS_9060013300.md cont. 5 / 6).
  */
 #include "flash_tcu_subaru_denso_sh7054_kline.h"
 #include "serial_port_actions.h"
@@ -87,7 +90,12 @@ void FlashTcuSubaruDensoSH7054Kline::run()
     target_id = 0x18;
     // Open serial port
     serial->open_serial_port();
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    // Read: LEC lines open while the unit powers up for the first box, so it starts its own program like in a car and answers the SSM ID
+    // request; they are grounded before the ignition cycle for the bootloader (connect_bootloader). Write: grounded from the start.
+    if (cmd_type == "read")
+        serial->set_lec_lines(SerialPortActions::lecLineOpen, SerialPortActions::lecLineOpen);
+    else
+        serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
     serial->read_serial_data(10);
 
     int ret = QMessageBox::warning(this, tr("Connecting to TCU"),
@@ -193,41 +201,46 @@ int FlashTcuSubaruDensoSH7054Kline::connect_bootloader()
 
     if (cmd_type == "read")
     {
+        // Read: the TCU ID from its own program (the LEC lines were open when it powered up for the first box) for the file name; the CAL ID
+        // comes from the read ROM (read_mem). The boot block looks for the Line End Check pulse only at power-up with the line held
+        // (FastECU-RE RE_FINDINGS_9060013300.md cont. 5), so the lines are grounded and the ignition cycled once more.
         serial->change_port_speed("4800");
-
         emit LOG_I("Requesting TCU ID", true, true);
         received = send_sid_bf_ssm_init();
-        if (received.length() > 4)
-        {
-            if ((uint8_t)received.at(4) != 0xFF)
-            {
-                emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                return STATUS_ERROR;
-            }
-        }
-        else
+        if (received.length() <= 4)
         {
             emit LOG_E("No valid response from TCU", true, true);
             return STATUS_ERROR;
         }
-
+        if ((uint8_t)received.at(4) != 0xFF)
+        {
+            emit LOG_E("Wrong response from TCU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            return STATUS_ERROR;
+        }
         received.remove(0, 8);
         received.remove(5, received.length() - 5);
-
-        QString msg;
+        ecu_id.clear();
         for (int i = 0; i < received.length(); i++)
-            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            ecu_id.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        emit LOG_I("TCU ID: " + ecu_id, true, true);
 
-        QString ecuid = msg;
-        emit LOG_I("TCU ID: " + ecuid, true, true);
-        if (cmd_type == "read")
-            ecuCalDef->RomId = ecuid + "_";
+        serial->change_port_speed("9600");
+        serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+        serial->read_serial_data(10);
+        int ret = QMessageBox::warning(this, tr("Connecting to TCU"),
+                                       tr("Turn ignition OFF and back ON and press OK to start initializing connection to TCU bootloader"),
+                                       QMessageBox::Ok | QMessageBox::Cancel,
+                                       QMessageBox::Ok);
+        if (ret != QMessageBox::Ok)
+            return STATUS_ERROR;
     }
-
-    serial->change_port_speed("9600");
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
-    serial->read_serial_data(10);
-    QMessageBox::information(this, tr("TCU Operation"), "Connecting to bootloader, turn ign off / on and click OK to continue");
+    else
+    {
+        // Write: no ID read. The LEC lines have been grounded since the port was opened and the unit was powered up for the
+        // "Turn ignition ON" box, so the boot block is still inside its Line End Check window (0.2 .. 9.9 s after reset).
+        serial->change_port_speed("9600");
+        serial->read_serial_data(10);
+    }
 
     if (flash_method.endsWith("_ecutek"))
         memcpy(bootloader_init_response_fxt02_ok, bootloader_init_response_ecutek_fxt02_ok, 3);
@@ -236,11 +249,10 @@ int FlashTcuSubaruDensoSH7054Kline::connect_bootloader()
     else
         memcpy(bootloader_init_response_fxt02_ok, bootloader_init_response_stock_fxt02_ok, 3);
 
-    // Start countdown
-    if (connect_bootloader_start_countdown(bootloader_start_countdown))
-        return STATUS_ERROR;
-
-    serial->pulse_lec_2_line(200);
+    // The boot block looks for the Line End Check pulse only right after power-up (0.2 .. 9.9 s after reset; pulse 177 .. 216 ms),
+    // so pulse shortly after the user has (re)started the ignition and clicked OK.
+    delay(500);
+    serial->pulse_lec_1_line(200);   // TCU: Line End Check on OBD pin 11 (LEC1)
     serial->read_serial_data(10);
     delay(190);
 
@@ -510,6 +522,28 @@ int FlashTcuSubaruDensoSH7054Kline::read_mem(uint32_t start_addr, uint32_t lengt
     }
 
     ecuCalDef->FullRomData = mapdata;
+
+    // Name the read like the other protocols: CAL ID (from the ROM; protocols.cfg cal_id_addr / cal_id_length) + ECU ID (SSM, read
+    // path) + the date / time mainwindow appends.
+    if (cmd_type == "read")
+    {
+        QString cal_id;
+        if (start_addr <= cal_id_addr && cal_id_addr + cal_id_length <= start_addr + (uint32_t)mapdata.length())
+        {
+            const QByteArray raw = mapdata.mid(cal_id_addr - start_addr, cal_id_length);
+            for (char c : raw)
+                if (c >= 0x20 && c <= 0x7E)
+                    cal_id.append(QChar(c));
+        }
+        cal_id = cal_id.trimmed();
+        if (!cal_id.isEmpty())
+            emit LOG_I("CAL ID: " + cal_id, true, true);
+        ecuCalDef->RomId.clear();
+        if (!cal_id.isEmpty())
+            ecuCalDef->RomId.append(cal_id + "_");
+        if (!ecu_id.isEmpty())
+            ecuCalDef->RomId.append(ecu_id + "_");
+    }
     set_progressbar_value(100);
 
     return STATUS_SUCCESS;
@@ -561,7 +595,9 @@ int FlashTcuSubaruDensoSH7054Kline::write_mem(bool test_write)
     }
     emit LOG_I(" (total: " + QString::number(bcnt) + ")", false, true);
 
-    serial->set_lec_lines(serial->get_requestToSendEnabled(), serial->get_dataTerminalDisabled());
+    // TCU: pin 11 (RTS / LEC1) is the TCU's Line End Check input, not a programming voltage supply; keep both lines grounded
+    // until the TCU's FWE line is known (RE_FINDINGS_9060013300.md cont. 4 / 6).
+    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
 
     if (bcnt)
     {
@@ -1371,26 +1407,6 @@ int FlashTcuSubaruDensoSH7054Kline::check_received_message(uint8_t *req_response
             return STATUS_ERROR;
         }
     }
-    return STATUS_SUCCESS;
-}
-
-/*
- * Countdown prior power on
- *
- * @return
- */
-int FlashTcuSubaruDensoSH7054Kline::connect_bootloader_start_countdown(int timeout)
-{
-    for (int i = timeout; i > 0; i--)
-    {
-        if (kill_process)
-            return STATUS_ERROR;
-        emit LOG_I("Starting in " + QString::number(i), true, true);
-        delay(1000);
-    }
-    emit LOG_I("Switch Ignition ON!", true, true);
-    delay(250);
-
     return STATUS_SUCCESS;
 }
 

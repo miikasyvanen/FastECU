@@ -73,7 +73,12 @@ void FlashEcuSubaruDensoMC68HC16Y5_02::run()
     // Open serial port
     serial->open_serial_port();
     //serial->set_serial_port_baudrate("9600");
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    // Read: LEC lines open while the unit powers up for the first box, so it starts its own program like in a car and answers the SSM ID
+    // request; they are grounded before the ignition cycle for the bootloader (connect_bootloader). Write: grounded from the start.
+    if (cmd_type == "read")
+        serial->set_lec_lines(SerialPortActions::lecLineOpen, SerialPortActions::lecLineOpen);
+    else
+        serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
     serial->read_serial_data(10);
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
@@ -153,6 +158,36 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::connect_bootloader()
     {
         emit LOG_E("ERROR: Serial port is not open.", true, true);
         return STATUS_ERROR;
+    }
+
+    if (cmd_type == "read")
+    {
+        // Read: the ECU ID from its own program (the LEC lines were open when it powered up for the first box) for the file name; the
+        // CAL ID comes from the read ROM (read_mem). The TPU boot code looks for the Line End Check pulse only right after power-up with
+        // the line held (FastECU-RE RE_FINDINGS_HC16Y5_TPU.md), so the lines are grounded and the ignition cycled once more.
+        serial->change_port_speed("4800");
+        emit LOG_I("Requesting ECU ID", true, true);
+        received = send_sid_bf_ssm_init();
+        if (received.length() > 12 && (uint8_t)received.at(4) == 0xFF)
+        {
+            received.remove(0, 8);
+            received.remove(5, received.length() - 5);
+            ecu_id.clear();
+            for (int i = 0; i < received.length(); i++)
+                ecu_id.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            emit LOG_I("ECU ID: " + ecu_id, true, true);
+        }
+        else
+            emit LOG_I("No ECU ID (normal if a kernel is already running); the file name gets the CAL ID only", true, true);
+        serial->change_port_speed("9600");
+        serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+        serial->read_serial_data(10);
+        int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                       tr("Turn ignition OFF and back ON and press OK to start initializing connection to ECU bootloader"),
+                                       QMessageBox::Ok | QMessageBox::Cancel,
+                                       QMessageBox::Ok);
+        if (ret != QMessageBox::Ok)
+            return STATUS_ERROR;
     }
 
     delay(200);
@@ -471,6 +506,28 @@ int FlashEcuSubaruDensoMC68HC16Y5_02::read_mem(uint32_t start_addr, uint32_t len
     }
 
     ecuCalDef->FullRomData = mapdata;
+
+    // Name the read like the other protocols: CAL ID (from the ROM; protocols.cfg cal_id_addr / cal_id_length) + ECU ID (SSM, read
+    // path) + the date / time mainwindow appends.
+    if (cmd_type == "read")
+    {
+        QString cal_id;
+        if (start_addr <= cal_id_addr && cal_id_addr + cal_id_length <= start_addr + (uint32_t)mapdata.length())
+        {
+            const QByteArray raw = mapdata.mid(cal_id_addr - start_addr, cal_id_length);
+            for (char c : raw)
+                if (c >= 0x20 && c <= 0x7E)
+                    cal_id.append(QChar(c));
+        }
+        cal_id = cal_id.trimmed();
+        if (!cal_id.isEmpty())
+            emit LOG_I("CAL ID: " + cal_id, true, true);
+        ecuCalDef->RomId.clear();
+        if (!cal_id.isEmpty())
+            ecuCalDef->RomId.append(cal_id + "_");
+        if (!ecu_id.isEmpty())
+            ecuCalDef->RomId.append(ecu_id + "_");
+    }
     set_progressbar_value(100);
 
     return STATUS_SUCCESS;
@@ -1193,6 +1250,26 @@ QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::request_kernel_id()
     request_denso_kernel_id = false;
 
     return kernelid;
+}
+
+/*
+ * SSM init (BF): the ECU ID of the running program
+ *
+ * @return received
+ */
+QByteArray FlashEcuSubaruDensoMC68HC16Y5_02::send_sid_bf_ssm_init()
+{
+    QByteArray output;
+    QByteArray received;
+
+    output.clear();
+    output.append((uint8_t)0xBF);
+    output = add_ssm_header(output, tester_id, target_id, false);
+    serial->write_serial_data_echo_check(output);
+
+    received = serial->read_serial_data(serial_read_timeout);
+
+    return received;
 }
 
 /*

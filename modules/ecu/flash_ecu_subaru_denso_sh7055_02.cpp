@@ -72,7 +72,12 @@ void FlashEcuSubaruDensoSH7055_02::run()
     target_id = 0x10;
     // Open serial port
     serial->open_serial_port();
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+    // Read: LEC lines open while the unit powers up for the first box, so it starts its own program like in a car and answers the SSM ID
+    // request; they are grounded before the ignition cycle for the bootloader (connect_bootloader). Write: grounded from the start.
+    if (cmd_type == "read")
+        serial->set_lec_lines(SerialPortActions::lecLineOpen, SerialPortActions::lecLineOpen);
+    else
+        serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
     serial->read_serial_data(10);
 
     int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
@@ -178,41 +183,46 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
 
     if (cmd_type == "read")
     {
+        // Read: the ECU ID from its own program (the LEC lines were open when it powered up for the first box) for the file name; the CAL ID
+        // comes from the read ROM (read_mem). The boot block looks for the Line End Check pulse only at power-up with the line held
+        // (FastECU-RE RE_FINDINGS_9060013300.md cont. 5), so the lines are grounded and the ignition cycled once more.
         serial->change_port_speed("4800");
-
         emit LOG_I("Requesting ECU ID", true, true);
         received = send_sid_bf_ssm_init();
-        if (received.length() > 4)
-        {
-            if ((uint8_t)received.at(4) != 0xFF)
-            {
-                emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-                return STATUS_ERROR;
-            }
-        }
-        else
+        if (received.length() <= 4)
         {
             emit LOG_E("No valid response from ECU", true, true);
             return STATUS_ERROR;
         }
-
+        if ((uint8_t)received.at(4) != 0xFF)
+        {
+            emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
+            return STATUS_ERROR;
+        }
         received.remove(0, 8);
         received.remove(5, received.length() - 5);
-
-        QString msg;
+        ecu_id.clear();
         for (int i = 0; i < received.length(); i++)
-            msg.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+            ecu_id.append(QString("%1").arg((uint8_t)received.at(i),2,16,QLatin1Char('0')).toUpper());
+        emit LOG_I("ECU ID: " + ecu_id, true, true);
 
-        QString ecuid = msg;
-        emit LOG_I("ECU ID: " + ecuid, true, true);
-        if (cmd_type == "read")
-            ecuCalDef->RomId = ecuid + "_";
+        serial->change_port_speed("9600");
+        serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
+        serial->read_serial_data(10);
+        int ret = QMessageBox::warning(this, tr("Connecting to ECU"),
+                                       tr("Turn ignition OFF and back ON and press OK to start initializing connection to ECU bootloader"),
+                                       QMessageBox::Ok | QMessageBox::Cancel,
+                                       QMessageBox::Ok);
+        if (ret != QMessageBox::Ok)
+            return STATUS_ERROR;
     }
-
-    serial->change_port_speed("9600");
-    serial->set_lec_lines(serial->get_requestToSendDisabled(), serial->get_dataTerminalDisabled());
-    serial->read_serial_data(10);
-    QMessageBox::information(this, tr("ECU Operation"), "Connecting to bootloader, turn ign off / on and click OK to continue");
+    else
+    {
+        // Write: no ID read. The LEC lines have been grounded since the port was opened and the unit was powered up for the
+        // "Turn ignition ON" box, so the boot block is still inside its Line End Check window (0.2 .. 9.9 s after reset).
+        serial->change_port_speed("9600");
+        serial->read_serial_data(10);
+    }
 
     if (flash_method.endsWith("_ecutek"))
         memcpy(bootloader_init_response_fxt02_ok, bootloader_init_response_ecutek_fxt02_ok, 3);
@@ -221,11 +231,10 @@ int FlashEcuSubaruDensoSH7055_02::connect_bootloader()
     else
         memcpy(bootloader_init_response_fxt02_ok, bootloader_init_response_stock_fxt02_ok, 3);
 
-    // Start countdown
-    if (connect_bootloader_start_countdown(bootloader_start_countdown))
-        return STATUS_ERROR;
-
-    serial->pulse_lec_2_line(200);
+    // The boot block looks for the Line End Check pulse only right after power-up (0.2 .. 9.9 s after reset; pulse 177 .. 216 ms,
+    // FastECU-RE RE_FINDINGS_9060013300.md cont. 5), so pulse shortly after the user has (re)started the ignition and clicked OK.
+    delay(500);
+    serial->pulse_lec_2_line(200);   // 02 ECU: Line End Check on OBD pin 9 (LEC2)
     serial->read_serial_data(10);
     delay(190);
 
@@ -494,6 +503,28 @@ int FlashEcuSubaruDensoSH7055_02::read_mem(uint32_t start_addr, uint32_t length)
     }
 
     ecuCalDef->FullRomData = mapdata;
+
+    // Name the read like the other protocols: CAL ID (from the ROM; protocols.cfg cal_id_addr / cal_id_length) + ECU ID (SSM, read
+    // path) + the date / time mainwindow appends.
+    if (cmd_type == "read")
+    {
+        QString cal_id;
+        if (start_addr <= cal_id_addr && cal_id_addr + cal_id_length <= start_addr + (uint32_t)mapdata.length())
+        {
+            const QByteArray raw = mapdata.mid(cal_id_addr - start_addr, cal_id_length);
+            for (char c : raw)
+                if (c >= 0x20 && c <= 0x7E)
+                    cal_id.append(QChar(c));
+        }
+        cal_id = cal_id.trimmed();
+        if (!cal_id.isEmpty())
+            emit LOG_I("CAL ID: " + cal_id, true, true);
+        ecuCalDef->RomId.clear();
+        if (!cal_id.isEmpty())
+            ecuCalDef->RomId.append(cal_id + "_");
+        if (!ecu_id.isEmpty())
+            ecuCalDef->RomId.append(ecu_id + "_");
+    }
     set_progressbar_value(100);
 
     return STATUS_SUCCESS;
@@ -1355,26 +1386,6 @@ int FlashEcuSubaruDensoSH7055_02::check_received_message(uint8_t *req_response, 
             return STATUS_ERROR;
         }
     }
-    return STATUS_SUCCESS;
-}
-
-/*
- * Countdown prior power on
- *
- * @return
- */
-int FlashEcuSubaruDensoSH7055_02::connect_bootloader_start_countdown(int timeout)
-{
-    for (int i = timeout; i > 0; i--)
-    {
-        if (kill_process)
-            return STATUS_ERROR;
-        emit LOG_I("Starting in " + QString::number(i), true, true);
-        delay(1000);
-    }
-    emit LOG_I("Switch Ignition ON!", true, true);
-    delay(250);
-
     return STATUS_SUCCESS;
 }
 

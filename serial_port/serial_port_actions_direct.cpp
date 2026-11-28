@@ -304,6 +304,20 @@ int SerialPortActionsDirect::pulse_lec_2_line(int timeout)
 
 int SerialPortActionsDirect::line_end_check_1_toggled(int state)
 {
+    if (state == lecLineOpen)
+    {
+        // Open (floating) pin, as in a car: lets a unit start its own program at power-up (RE_FINDINGS_HC16Y5_TPU.md /
+        // RE_FINDINGS_9060013300.md: the 02 boot blocks wait in their Line End Check loop when the line is held). A plain serial
+        // cable cannot float RTS / DTR: it gets the disabled level.
+        if (use_openport2_adapter)
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_11, VOLTAGE_OFF);
+        else
+        {
+            serial->setRequestToSend(requestToSendDisabled);
+            setRequestToSend = true;
+        }
+        return STATUS_SUCCESS;
+    }
     if (state == requestToSendEnabled)
     {
         if (use_openport2_adapter)
@@ -337,6 +351,20 @@ int SerialPortActionsDirect::line_end_check_1_toggled(int state)
 
 int SerialPortActionsDirect::line_end_check_2_toggled(int state)
 {
+    if (state == lecLineOpen)
+    {
+        // Open (floating) pin, as in a car: lets a unit start its own program at power-up (RE_FINDINGS_HC16Y5_TPU.md /
+        // RE_FINDINGS_9060013300.md: the 02 boot blocks wait in their Line End Check loop when the line is held). A plain serial
+        // cable cannot float RTS / DTR: it gets the disabled level.
+        if (use_openport2_adapter)
+            j2534->PassThruSetProgrammingVoltage(devID, J1962_PIN_9, VOLTAGE_OFF);
+        else
+        {
+            serial->setDataTerminalReady(dataTerminalDisabled);
+            setDataTerminalReady = true;
+        }
+        return STATUS_SUCCESS;
+    }
     if (state == dataTerminalEnabled)
     {
         if (use_openport2_adapter)

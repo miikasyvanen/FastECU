@@ -66,9 +66,11 @@ private:
 
     int result;
     int mcu_type_index;
-    int bootloader_start_countdown = 3;
 
     uint8_t tester_id;
+    QString ecu_id;                                // SSM ECU / TCU ID (read path), for the file name
+    static constexpr uint32_t cal_id_addr = 0x2000;      // protocols.cfg cal_id_addr
+    static constexpr uint32_t cal_id_length = 8;
     uint8_t target_id;
 
     uint16_t receive_timeout = 500;
@@ -121,7 +123,6 @@ private:
     QByteArray add_ssm_header(QByteArray output, uint8_t tester_id, uint8_t target_id, bool dec_0x100);
     uint8_t calculate_checksum(QByteArray output, bool dec_0x100);
     int check_received_message(uint8_t *req_response, QByteArray received);
-    int connect_bootloader_start_countdown(int timeout);
     QString parse_message_to_hex(QByteArray received);
     void set_progressbar_value(int value);
     void delay(int timeout);

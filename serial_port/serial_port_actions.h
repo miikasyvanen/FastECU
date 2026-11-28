@@ -23,6 +23,10 @@ signals:
     void LOG_D(QString message, bool timestamp, bool linefeed);
 
 public:
+    // LEC line state for set_lec_lines(): the pin left open (J2534 VOLTAGE_OFF), as in a car. Plain serial cables have no open state and
+    // drive the line to its disabled level instead; so does an older remote client. The enabled / disabled states stay the per-cable values.
+    static constexpr int lecLineOpen = SerialPortActionsDirect::lecLineOpen;
+
     explicit SerialPortActions(QString peerAddress="",
                                QString password="",
                                QWebSocket *web_socket=nullptr,
