@@ -628,7 +628,29 @@ int FlashEcuSubaruHitachiSH72543rCan::write_mem()
     QString filename;
 
     filedata = ecuCalDef->FullRomData;
-                                      
+
+    // Refuse to start (before anything is erased) if the image does not cover every flashed block of the
+    // memory model. Otherwise the transfer loop would read past the end of the image, e.g. a 2 MB file
+    // opened against the 2.5 MB SH72544R model.
+    uint32_t rom_end = 0;
+    for (unsigned b = 0; b < flashdevices[mcu_type_index].numblocks; b++)
+    {
+        uint32_t end = flashdevices[mcu_type_index].fblocks[b].start + flashdevices[mcu_type_index].fblocks[b].len;
+        if (end > rom_end)
+            rom_end = end;
+    }
+    if ((uint32_t)filedata.length() < rom_end)
+    {
+        emit LOG_E("ROM image is " + QString::number(filedata.length()) + " bytes, memory model " + QString(flashdevices[mcu_type_index].name)
+                   + " needs " + QString::number(rom_end) + " bytes. Nothing was erased.", true, true);
+        return STATUS_ERROR;
+    }
+    if ((uint32_t)filedata.length() != flashdevices[mcu_type_index].romsize)
+    {
+        emit LOG_I("Note: ROM image size " + QString::number(filedata.length()) + " differs from model size "
+                   + QString::number(flashdevices[mcu_type_index].romsize), true, true);
+    }
+
     QScopedArrayPointer<uint8_t> data_array(new uint8_t[filedata.length()]);
 
     int block_modified[16] = {0,1,1};   // assume blocks after 0x8000 are modified
@@ -914,20 +936,24 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     received = serial->read_serial_data(serial_read_timeout);
     
 
+    // On the 2.5 MB SH72544R a failed session change stops the write here, before seed/key and erase.
+    // The 2 MB path keeps its previous (lenient) behaviour.
+    bool strict = flashdevices[mcu_type_index].romsize > 0x200000;
+
     if (received.length() > 5)
     {
         if ((uint8_t)received.at(4) != 0x50 || (uint8_t)received.at(5) != 0x43)
         {
             emit LOG_E("Wrong response from ECU: " + FileActions::parse_nrc_message(received.mid(4, received.length()-1)), true, true);
-            
-            //return STATUS_ERROR;
+            if (strict)
+                return STATUS_ERROR;
         }
     }
     else
     {
         emit LOG_E("No valid response from ECU", true, true);
-        
-        //return STATUS_ERROR;
+        if (strict)
+            return STATUS_ERROR;
     }
 
     emit LOG_I("Starting seed request...", true, true);
@@ -1037,6 +1063,22 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
 
     emit LOG_I("Settting flash start & length...", true, true);
 
+    // The download window is the flashed block of the selected memory model: 0x006000 / 0x1FA000 for SH72543R
+    // (2 MB, unchanged from the previous hard-coded values) and 0x006000 / 0x27A000 for SH72544R (2.5 MB).
+    // Address and length are sent as 3 bytes each (format 0x33).
+    if (flashdevices[mcu_type_index].numblocks < 2)
+    {
+        emit LOG_E("Memory model has no flash block to write", true, true);
+        return STATUS_ERROR;
+    }
+    uint32_t dl_start = flashdevices[mcu_type_index].fblocks[1].start;
+    uint32_t dl_len = flashdevices[mcu_type_index].fblocks[1].len;
+    if (dl_start > 0xFFFFFF || dl_len > 0xFFFFFF)
+    {
+        emit LOG_E("Download window does not fit 3-byte address/length", true, true);
+        return STATUS_ERROR;
+    }
+
     output.clear();
     output.append((uint8_t)0x00);
     output.append((uint8_t)0x00);
@@ -1045,13 +1087,14 @@ int FlashEcuSubaruHitachiSH72543rCan::erase_mem()
     output.append((uint8_t)0x34);
     output.append((uint8_t)0x04);
     output.append((uint8_t)0x33);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x60);
-    output.append((uint8_t)0x00);
-    output.append((uint8_t)0x1F);
-    output.append((uint8_t)0xA0);
-    output.append((uint8_t)0x00);
-    
+    output.append((uint8_t)((dl_start >> 16) & 0xFF));
+    output.append((uint8_t)((dl_start >> 8) & 0xFF));
+    output.append((uint8_t)(dl_start & 0xFF));
+    output.append((uint8_t)((dl_len >> 16) & 0xFF));
+    output.append((uint8_t)((dl_len >> 8) & 0xFF));
+    output.append((uint8_t)(dl_len & 0xFF));
+    emit LOG_I("Request download: " + parse_message_to_hex(output.mid(4)), true, true);
+
     serial->write_serial_data_echo_check(output);
     delay(200);
     received = serial->read_serial_data(serial_read_timeout);
